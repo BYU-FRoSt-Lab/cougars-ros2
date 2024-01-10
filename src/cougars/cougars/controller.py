@@ -33,12 +33,6 @@ class Controller(Node):
         self.nav_publisher = self.create_publisher(
             PID, "pid_request", QOS_PROFILE, callback_group=self.main_callback_group
         )
-        self.echo_publisher = self.create_publisher(
-            Echo, "echo_data", QOS_PROFILE, callback_group=self.aux_callback_group
-        )
-        self.gps_publisher = self.create_publisher(
-            GPS, "gps_data", QOS_PROFILE, callback_group=self.aux_callback_group
-        )
         self.timer = self.create_timer(
             PID_PUB_TIMER_PERIOD,
             self.timer_callback,
@@ -52,18 +46,6 @@ class Controller(Node):
             self.emergency_stop_callback,
             callback_group=self.main_callback_group,
         )
-
-        # Create the clients
-        self.echo_cli = self.create_client(
-            GetEcho, "echo_service", callback_group=self.aux_callback_group
-        )
-        while not self.echo_cli.wait_for_service(timeout_sec=SERVICE_TIMEOUT):
-            self.get_logger().info("Echo service not available, waiting...")
-        self.gps_cli = self.create_client(
-            GetGPS, "gps_service", callback_group=self.aux_callback_group
-        )
-        while not self.gps_cli.wait_for_service(timeout_sec=SERVICE_TIMEOUT):
-            self.get_logger().info("GPS service not available, waiting...")
 
         # Set initial variables
         self.state = States.RUN
@@ -83,41 +65,6 @@ class Controller(Node):
         response.stopped = True
         return response
 
-    # Gets the echo data from the echo service and publishes it
-    def get_echo(self):
-        echo_msg = Echo()
-
-        self.echo_future = self.echo_cli.call_async(ECHO_REQ)
-        while not self.echo_future.done():
-            pass
-        current_echo = self.echo_future.result()
-
-        echo_msg.header = current_echo.header
-        echo_msg.distance = current_echo.distance
-        echo_msg.conf_level = current_echo.conf_level
-        echo_msg.profile_data = current_echo.profile_data
-        self.echo_publisher.publish(echo_msg)
-
-        return echo_msg
-
-    # Gets the gps data from the gps service and publishes it
-    def get_gps(self):
-        gps_msg = GPS()
-
-        self.gps_future = self.gps_cli.call_async(GPS_REQ)
-        while not self.gps_future.done():
-            pass
-        current_gps = self.gps_future.result()
-
-        gps_msg.header = current_gps.header
-        gps_msg.latitude = current_gps.latitude
-        gps_msg.longitude = current_gps.longitude
-        gps_msg.altitude = current_gps.altitude
-        gps_msg.siv = current_gps.siv
-        self.gps_publisher.publish(gps_msg)
-
-        return gps_msg
-
     # Runs the state machine and high-level controller, publishes to pid_request
     def timer_callback(self):
         pid_msg = PID()
@@ -126,9 +73,6 @@ class Controller(Node):
             ###############################################
             # HIGH-LEVEL CONTROLLER CODE STARTS HERE
             ###############################################
-
-            # echo_msg = self.get_echo()
-            # gps_msg = self.get_gps()
 
             # TODO: Adjust this simple state machine
             # For a faster update time, adjust PID_PUB_TIMER_PERIOD
