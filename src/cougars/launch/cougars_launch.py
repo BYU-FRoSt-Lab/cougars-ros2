@@ -4,20 +4,17 @@ import launch_ros.actions
 def generate_launch_description():
     return launch.LaunchDescription([
         launch.actions.ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '-a', '-o', '~/ros2_ws/rosbag/'],
+            cmd=['ros2', 'bag', 'record', '-a'],
             output='screen'),
         launch_ros.actions.Node(
-            package='frost_uuv',
+            package='cougars',
             executable='controller'),
         launch_ros.actions.Node(
-            package='frost_uuv',
+            package='cougars',
             executable='leak_sub'),
         launch_ros.actions.Node(
-            package='frost_uuv',
+            package='cougars',
             executable='voltage_sub'),
-        launch_ros.actions.Node(
-            package='frost_uuv',
-            executable='humidity_sub'),
         # launch_ros.actions.Node(
         #   package='seatrac',
         #   executable='modem_pub'),

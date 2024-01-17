@@ -26,7 +26,6 @@ setup(
             'controller = cougars.controller:main',
             'leak_sub = cougars.leak_sub:main',
             'voltage_sub = cougars.voltage_sub:main',
-            'humidity_sub = cougars.humidity_sub:main',
         ],
     },
 )

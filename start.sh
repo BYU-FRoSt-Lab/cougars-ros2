@@ -20,7 +20,7 @@ sleep 5
 
 cd ~/ros2_ws
 source install/setup.bash
-ros2 launch frost_uuv frost_uuv_launch.py
+ros2 launch cougars cougars_launch.py
 
 killall micro_ros_agent
 wait
