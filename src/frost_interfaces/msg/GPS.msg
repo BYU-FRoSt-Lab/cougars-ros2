@@ -1,4 +1,3 @@
-# MAKE SURE TO MODIFY "GPS.src" AS WELL
 std_msgs/Header header
 float64 longitude
 float64 latitude

@@ -15,7 +15,6 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Nav.msg"
   "msg/Echo.msg"
   "msg/Modem.msg"
   "msg/GPS.msg"
@@ -26,8 +25,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Leak.msg"
   "msg/PID.msg"
   "srv/EmergencyStop.srv"
-  "srv/GetEcho.srv"
-  "srv/GetGPS.srv"
   DEPENDENCIES std_msgs
 )
 
