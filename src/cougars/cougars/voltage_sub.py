@@ -5,6 +5,7 @@ from frost_interfaces.msg import Volt
 from rclpy.qos import qos_profile_sensor_data
 
 SERVICE_TIMEOUT = 1  # seconds
+CRITICAL_VOLTAGE = 14.0
 
 
 class VoltageSubscriber(Node):
@@ -26,8 +27,9 @@ class VoltageSubscriber(Node):
         return self.future.result()
 
     def listener_callback(self, msg):
-        error = "ERROR: Low Voltage (" + str(msg.voltage) + ")"
-        self.send_request(error)
+        if msg.voltage < CRITICAL_VOLTAGE:
+            error = "ERROR: Low Voltage (" + str(msg.voltage) + ")"
+            self.send_request(error)
 
 
 def main(args=None):
