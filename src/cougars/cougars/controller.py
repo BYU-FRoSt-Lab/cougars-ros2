@@ -1,14 +1,12 @@
 import rclpy
 from rclpy.node import Node
 from enum import Enum
-from frost_interfaces.msg import PID, IMU, Depth, Echo, GPS
-from frost_interfaces.srv import EmergencyStop, GetEcho, GetGPS
+from frost_interfaces.msg import PID, Echo, GPS
+from frost_interfaces.srv import EmergencyStop
 
 PID_PUB_TIMER_PERIOD = 1  # seconds
 SERVICE_TIMEOUT = 1  # seconds
 QOS_PROFILE = 10
-ECHO_REQ = GetEcho.Request()
-GPS_REQ = GetGPS.Request()
 
 
 class States(Enum):
