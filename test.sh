@@ -2,35 +2,39 @@
 
 cd ~/microros_ws
 source install/setup.bash
-ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
+ros2 run micro_ros_agent micro_ros_agent multiserial --devs "/dev/ttyACM0 /dev/ttyACM1" -b 6000000 &
 sleep 5
 
 cd ~/ros2_ws
 source install/setup.bash
 
 echo ""
-echo "TESTING PID REQUEST..."
+echo "LISTING FOUND TOPICS..."
+ros2 topic list
+
+echo ""
+echo "PUBLISHING TO TOPIC 'PID_REQUEST'..."
 ros2 topic pub -1 /pid_request frost_interfaces/msg/PID '{velocity: 0.0, yaw: 90.0, pitch: 0.0, roll: 0.0, depth: 0.0}'
 
 echo ""
-echo "CALLING GPS SERVICE..."
-ros2 service call /gps_service frost_interfaces/srv/GetGPS "{test: True}"
+echo "LISTENING TO TOPIC 'IMU_DATA'..."
+ros2 topic echo --once /imu_data
 
 echo ""
-echo "CALLING ECHO SERVICE..."
-ros2 service call /echo_service frost_interfaces/srv/GetEcho "{test: True}"
+echo "LISTENING TO TOPIC 'DEPTH_DATA'..."
+ros2 topic echo --once /depth_data
 
 echo ""
-echo "READING LEAK DATA (TRIGGER LEAK SENSOR)..."
+echo "LISTENING TO TOPIC 'LEAK_DETECTED'..."
 ros2 topic echo --once /leak_detected
 
 echo ""
-echo "READING HUMIDITY DATA (TRIGGER HUMIDITY SENSOR)..."
-ros2 topic echo --once /humidity
+echo "LISTENING TO TOPIC 'VOLTAGE'..."
+ros2 topic echo --once /voltage
 
 echo ""
-echo "READING VOLTAGE DATA (TRIGGER VOLTAGE SENSOR)..."
-ros2 topic echo --once /voltage
+echo "LISTENING TO TOPIC 'ECHO_DATA'..."
+ros2 topic echo --once /echo_data
 
 echo ""
 echo "TEST COMPLETE"

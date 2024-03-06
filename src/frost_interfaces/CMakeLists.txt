@@ -20,7 +20,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/GPS.msg"
   "msg/IMU.msg"
   "msg/Depth.msg"
-  "msg/Humid.msg"
   "msg/Volt.msg"
   "msg/Leak.msg"
   "msg/PID.msg"
