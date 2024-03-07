@@ -39,6 +39,3 @@ ros2 topic echo --once /gps_data
 
 echo ""
 echo "TEST COMPLETE"
-
-killall micro_ros_agent
-wait
