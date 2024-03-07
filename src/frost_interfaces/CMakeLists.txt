@@ -16,7 +16,8 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Echo.msg"
-  "msg/Modem.msg"
+  "msg/ModemRec.msg"
+  "msg/ModemSend.msg"
   "msg/GPS.msg"
   "msg/IMU.msg"
   "msg/Depth.msg"
