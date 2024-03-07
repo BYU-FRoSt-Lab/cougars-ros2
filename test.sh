@@ -1,9 +1,6 @@
 #!/bin/bash
 
-cd ~/microros_ws
-source install/setup.bash
-ros2 run micro_ros_agent micro_ros_agent multiserial --devs "/dev/ttyACM0 /dev/ttyACM1" -b 6000000 &
-sleep 5
+# Run 'agent.sh' in a different terminal before running this
 
 cd ~/ros2_ws
 source install/setup.bash
