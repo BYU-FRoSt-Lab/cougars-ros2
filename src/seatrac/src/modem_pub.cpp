@@ -9,59 +9,69 @@
 #include <seatrac_driver/messages/Messages.h>
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
+#include "frost_interfaces/msg/ModemRec.hpp"
 
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
 // The class needs to inherit from both the ROS node and driver classes
 class ModemDataPublisher : public rclcpp::Node, public SeatracDriver {
+private:
+  //copies the fields from the acofix struct into the modem ros message
+  void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acofix) {
+    //TODO: add code to copy acofix into msg
+  }
+
 public:
   ModemDataPublisher()
       : Node("modem_data_publisher"), SeatracDriver("/dev/ttyUSB0"), count_(0) {
     publisher_ =
-        this->create_publisher<std_msgs::msg::String>("modem_data", 10);
+        this->create_publisher<frost_interfaces::msg::ModemRec>("modem_rec", 10);
     timer_ = this->create_wall_timer(
         5000ms, std::bind(&ModemDataPublisher::timer_callback, this));
-    this->ping_beacon(BEACON_ID_10);
-  }
-
-  void ping_beacon(BID_E target, AMSGTYPE_E pingType = MSG_REQU) {
-    messages::PingSend::Request req;
-    req.target = target;
-    req.pingType = pingType;
-    this->send(sizeof(req), (const uint8_t *)&req);
   }
 
   // this method is called on any message returned by the beacon.
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
     switch (msgId) {
-    default:
-      break;
-    case CID_PING_ERROR: {
-      messages::PingError response;
-      response = data;
+      case CID_DAT_RECEIVE: {
+        messages::DataReceive response;     //struct that contains response fields
+        response = data;                    //operator overload fills in response struct with correct data
 
-      auto message = std_msgs::msg::String();
-      message.data = "ERROR: No modem ping response detected";
-      RCLCPP_INFO(this->get_logger(), message.data.c_str());
-      publisher_->publish(message);
+        auto msg = frost_interfaces::msg::ModemRec();
+        msg.msgId = CID_DAT_RECEIVE;
+        msg.packetLen = response.packetLen;
+        msg.packetData = response.packetData; //TODO: make sure this syntax to copy lists works
+        cpyFixtoRosmsg(msg, response.acoFix);
+        //TODO: add rclcpp info log here? not sure how to implement
+        publisher_->publish(msg);
+      } break;
+      case CID_DAT_ERROR: {
+        messages::DataError response;
+        response = data;
+        //TODO: find out how/if to send error msgs over ros
+      } break;
 
-      this->ping_beacon(response.beaconId);
-    } break;
-    case CID_PING_RESP: {
-      messages::PingResp response;
-      response = data;
+      case CID_PING_RESP: {
+        messages::PingResp response;
+        response = data;
 
-      auto message = std_msgs::msg::String();
-      message.data = "TODO: Add modem ping message type here";
-      RCLCPP_INFO(this->get_logger(), message.data.c_str());
-      publisher_->publish(message);
+        auto msg = frost_interfaces::msg::ModemRec();
+        msg.msgId = CID_PING_RESP;
+        cpyFixtoRosmsg(msg, response.acoFix);
 
-      this->ping_beacon(response.acoFix.srcId);
-    } break;
-    case CID_STATUS:
-      break;
+        publisher_->publish(msg);
+      } break;
+      case CID_PING_ERROR: {
+        messages::PingError response;
+        response = data;
+        //TODO: find out how/if to send error msgs over ros
+      } break;
+
+      case CID_STATUS:
+        //TODO: determine if we want to send status msgs over ros
+              //they could potentially include some calibration info
+        break;
     }
   }
 
