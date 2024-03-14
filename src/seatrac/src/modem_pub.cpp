@@ -18,8 +18,35 @@ using namespace narval::seatrac;
 class ModemDataPublisher : public rclcpp::Node, public SeatracDriver {
 private:
   //copies the fields from the acofix struct into the modem ros message
-  void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acofix) {
-    //TODO: add code to copy acofix into msg
+  inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acofix) {
+    msg.attitudeYaw = acoFix.attitudeYaw;
+    msg.attitudePitch = acoFix.attitudePitch;
+    msg.attitudeRoll = acoFix.attitudeRoll;
+    msg.depthLocal = acoFix.depthLocal;
+    msg.VOS = acoFix.vos;
+    msg.rssi = acoFix.rssi;
+
+    msg.rangeValid = (acoFix.flags & 0x1)? true:false;
+    msg.usblValid = (acoFix.flags & 0x2)? true:false;
+    msg.positionValid = (acoFix.flags & 0x4)? true:false;
+
+    if(msg.rangeValid) {
+      msg.rangeCount = acoFix.range.count;
+      msg.rangeTime = acoFix.range.time;
+      msg.rangeDist = acoFix.range.dist;
+    }
+    if(msg.usblValid) {
+      msg.usblChannels = acoFix.usbl.channelCount;
+      std::memcpy(msg.usblRSSI, acoFix.usbl.rssi, acoFix.usbl.channelCount); //TODO: make sure this works
+      msg.usblAzimuth = acoFix.usbl.azimuth;
+      msg.usblElecation = acoFix.usbl.elevation;
+      msg.usblFitError = acoFix.usbl.fitError;
+    }
+    if(msg.positionValid) {
+      msg.positionEasting = acoFix.position.easting;
+      msg.positionNorthing = acoFix.position.positionNorthing;
+      msg.positionDepth = acoFix.position.depth;
+    }
   }
 
 public:
@@ -41,7 +68,7 @@ public:
         auto msg = frost_interfaces::msg::ModemRec();
         msg.msgId = CID_DAT_RECEIVE;
         msg.packetLen = response.packetLen;
-        msg.packetData = response.packetData; //TODO: make sure this syntax to copy lists works
+        std::memcpy(msg.packetData, response.packetData, response.packetLen);
         cpyFixtoRosmsg(msg, response.acoFix);
         //TODO: add rclcpp info log here? not sure how to implement
         publisher_->publish(msg);
@@ -76,6 +103,7 @@ public:
   }
 
 private:
+  //TODO: do we need timer_callback?
   void timer_callback() {
     // Code here will execute every 5000ms
   }

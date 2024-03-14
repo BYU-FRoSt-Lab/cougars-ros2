@@ -2,7 +2,7 @@ std_msgs/Header header
 
 uint8 msgId         # CID_E command identification code (type of message sent)
 uint8 packetLen     # packet length for data send messages
-uint8[] packetData    # packet data for data send messages
+uint8[31] packetData    # packet data for data send messages
 
 ### the following values relate to the current beacon when the message was computed ###
 int16 attitudeYaw
@@ -21,7 +21,7 @@ uint16 rangeDist    # divide by 10 for range in meters
 ### USBL Fields ###
 bool usblValid      # usbl fields only valid if true
 uint8 usblChannels  # number of usbl channels used to compute signal (usually 3/4)
-int16[] usblRSSI
+int16[4] usblRSSI
 int16 usblAzimuth   # azimuth of sending beacon relative to receiving beacon
 int16 usblElevation
 int16 usblFitError
