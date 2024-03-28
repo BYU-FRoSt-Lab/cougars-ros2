@@ -10,9 +10,15 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "frost_interfaces/msg/ModemRec.hpp"
+#include "frost_interfaces/msg/ModemSend.hpp"
+
+using std::placeholders::_1;
 
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
+
+//TODO: change name to represent that it is both a publisher and subscriber
+// figured it'd probably be easier to have one serial connection to the modem
 
 // The class needs to inherit from both the ROS node and driver classes
 class ModemDataPublisher : public rclcpp::Node, public SeatracDriver {
@@ -21,8 +27,13 @@ public:
       : Node("modem_data_publisher"), SeatracDriver("/dev/ttyUSB0"), count_(0) {
     publisher_ =
         this->create_publisher<frost_interfaces::msg::ModemRec>("modem_rec", 10);
-    timer_ = this->create_wall_timer(
-        5000ms, std::bind(&ModemDataPublisher::timer_callback, this));
+    subscriber_ = 
+        this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
+                      std::bind(&ModemDataPublisher::modem_send_callback, this, _1));
+
+
+    // timer_ = this->create_wall_timer( //TODO: may not need timer
+    //     5000ms, std::bind(&ModemDataPublisher::timer_callback, this));
   }
 
   // this method is called on any message returned by the beacon.
@@ -71,14 +82,25 @@ public:
   }
 
 private:
+
   //TODO: do we need timer_callback?
-  void timer_callback() {
-    // Code here will execute every 5000ms
-  }
-  rclcpp::TimerBase::SharedPtr timer_;
+  // void timer_callback() {
+  //   // Code here will execute every 5000ms
+  // }
+  // rclcpp::TimerBase::SharedPtr timer_;
+
   rclcpp::Publisher<frost_interfaces::msg::ModemRec>::SharedPtr publisher_;
+  rclcpp::Subscription<frost_interfaces::msg::ModemSend>::SharedPtr subscriber_;
+
   size_t count_;
-    //copies the fields from the acofix struct into the modem ros message
+
+  //recieves command to modem from the ModemRec topic and sends the command
+  // to the modem
+  void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr msg) {
+    //TODO: implement logic to send command to modem
+  }
+
+  //copies the fields from the acofix struct into the modem ros message
   inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acofix) {
     msg.attitudeYaw = acoFix.attitudeYaw;
     msg.attitudePitch = acoFix.attitudePitch;
