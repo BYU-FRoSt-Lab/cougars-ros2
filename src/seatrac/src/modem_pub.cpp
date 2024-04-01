@@ -17,6 +17,14 @@ using std::placeholders::_1;
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
+/*
+Questions to ask Nelson: 
+1. how to run in ros
+2. how to integrate in project
+3. how to log errors
+*/
+
+
 //TODO: change name to represent that it is both a publisher and subscriber
 // figured it'd probably be easier to have one serial connection to the modem
 
@@ -30,13 +38,10 @@ public:
     subscriber_ = 
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemDataPublisher::modem_send_callback, this, _1));
-
-
-    // timer_ = this->create_wall_timer( //TODO: may not need timer
-    //     5000ms, std::bind(&ModemDataPublisher::timer_callback, this));
   }
 
   // this method is called on any message returned by the beacon.
+  // it copies the modem data to a ros message of type ModemRec
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
     switch (msgId) {
       case CID_DAT_RECEIVE: {
@@ -48,6 +53,7 @@ public:
         msg.packetLen = response.packetLen;
         std::memcpy(msg.packetData, response.packetData, response.packetLen);
         cpyFixtoRosmsg(msg, response.acoFix);
+
         //TODO: add rclcpp info log here? not sure how to implement
         publisher_->publish(msg);
       } break;
@@ -72,6 +78,7 @@ public:
         messages::PingError response;
         response = data;
         //TODO: find out how/if to send error msgs over ros
+        //Maybe just error log it?
       } break;
 
       case CID_STATUS:
@@ -83,12 +90,6 @@ public:
 
 private:
 
-  //TODO: do we need timer_callback?
-  // void timer_callback() {
-  //   // Code here will execute every 5000ms
-  // }
-  // rclcpp::TimerBase::SharedPtr timer_;
-
   rclcpp::Publisher<frost_interfaces::msg::ModemRec>::SharedPtr publisher_;
   rclcpp::Subscription<frost_interfaces::msg::ModemSend>::SharedPtr subscriber_;
 
@@ -96,11 +97,35 @@ private:
 
   //recieves command to modem from the ModemRec topic and sends the command
   // to the modem
-  void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr msg) {
-    //TODO: implement logic to send command to modem
+  void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr rosmsg) {
+    //TODO: add type casts as necessary
+    CID_E msgId = rosmsg.msgId;
+    switch(rosmsg.msgId) {
+      default: break; //TODO: print bad id error.
+      case CID_DAT_SEND: {
+        messages::DataSend message; //struct contains message to send to modem
+
+        message.destId    = rosmsg.destId;
+        message.msgType   = rosmsg.msgType;
+        message.packetLen = std::min(rosmsg.packetLen, 31);
+        //TODO: add log report of modem message sent
+
+        std::memcpy(message.packetData, rosmsg.packetData, message.packetLen);
+        this->send(sizeof(message), (const uint8_t*)&message);
+
+      } break;
+
+      case CID_PING_SEND: {
+        messages::PingSend::Request req;
+        req.target    = rosmsg.destId;
+        req.pingType  = rosmsg.msgType;
+        this->send(sizeof(req), (const uint8_t*)&req);
+      } break;
+      //add case for calibration
+    }
   }
 
-  //copies the fields from the acofix struct into the modem ros message
+  //copies the fields from the acofix struct into the ModemRec ros message
   inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acofix) {
     msg.attitudeYaw = acoFix.attitudeYaw;
     msg.attitudePitch = acoFix.attitudePitch;
