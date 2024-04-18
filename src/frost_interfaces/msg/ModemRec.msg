@@ -1,34 +1,34 @@
 std_msgs/Header header
 
-uint8 msgId         # CID_E command identification code (type of message sent)
-uint8 packetLen     # packet length for data send messages
-uint8[31] packetData    # packet data for data send messages
+uint8 msg_id         # CID_E command identification code (type of message sent)
+uint8 packet_len     # packet length for data send messages
+uint8[31] packet_data    # packet data for data send messages
 
 ### the following values relate to the current beacon when the message was computed ###
-int16 attitudeYaw
-int16 attitudePitch 
-int16 attitudeRoll
-int16 depthLocal    # local (receiving beacon) depth
-uint16 VOS          # velocity of sound
-uint16 RSSI         # recieved signal strength indicator
+int16 attitude_yaw
+int16 attitude_pitch 
+int16 attitude_roll
+int16 depth_local    # local (receiving beacon) depth
+uint16 vos          # velocity of sound
+uint16 rssi         # recieved signal strength indicator
 
 ### range fields ###
-bool rangeValid     # range fields are only valid if this is true
-uint32 rangeCount   # number of 16kHz timer intervals counted between req and resp
-int32 rangeTime     # divide by 10 mil for seconds 
-uint16 rangeDist    # divide by 10 for range in meters
+bool range_valid     # range fields are only valid if this is true
+uint32 range_count   # number of 16kHz timer intervals counted between req and resp
+int32 range_time     # divide by 10 mil for seconds 
+uint16 range_dist    # divide by 10 for range in meters
 
 ### USBL Fields ###
-bool usblValid      # usbl fields only valid if true
-uint8 usblChannels  # number of usbl channels used to compute signal (usually 3/4)
-int16[4] usblRSSI
-int16 usblAzimuth   # azimuth of sending beacon relative to receiving beacon
-int16 usblElevation
-int16 usblFitError
+bool usbl_valid      # usbl fields only valid if true
+uint8 usbl_channels  # number of usbl channels used to compute signal (usually 3/4)
+int16[4] usbl_rssi
+int16 usbl_azimuth   # azimuth of sending beacon relative to receiving beacon
+int16 usbl_elevation
+int16 usbl_fit_error
 
 ### position fields ###
-bool positionValid
-int16 positionEasting
-int16 positionNorthing
-int16 positionDepth
+bool position_valid
+int16 position_easting
+int16 position_northing
+int16 position_depth
 
