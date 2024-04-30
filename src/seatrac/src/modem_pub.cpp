@@ -9,8 +9,8 @@
 #include <seatrac_driver/messages/Messages.h>
 
 #include "rclcpp/rclcpp.hpp"
-#include "frost_interfaces/msg/ModemRec.hpp"
-#include "frost_interfaces/msg/ModemSend.hpp"
+#include "frost_interfaces/msg/modem_rec.hpp"
+#include "frost_interfaces/msg/modem_send.hpp"
 
 using std::placeholders::_1;
 

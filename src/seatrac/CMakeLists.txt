@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(frost_interfaces REQUIRED)
 
 #find_package(seatrac_driver REQUIRED)
 if(NOT TARGET seatrac_driver)
@@ -23,7 +24,7 @@ if(NOT TARGET seatrac_driver)
 endif()
 
 add_executable(modem_pub src/modem_pub.cpp)
-ament_target_dependencies(modem_pub rclcpp std_msgs)
+ament_target_dependencies(modem_pub rclcpp std_msgs frost_interfaces)
 target_link_libraries(modem_pub
     seatrac_driver
 )
