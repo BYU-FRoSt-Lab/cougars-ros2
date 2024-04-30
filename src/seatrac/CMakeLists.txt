@@ -8,7 +8,19 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(seatrac_driver REQUIRED)
+
+#find_package(seatrac_driver REQUIRED)
+if(NOT TARGET seatrac_driver)
+    find_package(seatrac_driver QUIET)
+    if(NOT TARGET seatrac_driver)
+        include(FetchContent)
+        FetchContent_Declare(seatrac_driver
+            GIT_REPOSITORY https://Clayton314@bitbucket.org/frostlab/seatrac_driver.git
+            GIT_TAG        main
+        )
+        FetchContent_MakeAvailable(seatrac_driver)
+    endif()
+endif()
 
 add_executable(modem_pub src/modem_pub.cpp)
 ament_target_dependencies(modem_pub rclcpp std_msgs)
