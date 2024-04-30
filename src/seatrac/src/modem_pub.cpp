@@ -44,14 +44,17 @@ public:
   // it copies the modem data to a ros message of type ModemRec
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
     switch (msgId) {
+      default: {
+        //TODO: print some kind of error here 
+      }
       case CID_DAT_RECEIVE: {
         messages::DataReceive response;     //struct that contains response fields
         response = data;                    //operator overload fills in response struct with correct data
 
-        auto msg = frost_interfaces::msg::ModemRec();
-        msg.msgId = CID_DAT_RECEIVE;
-        msg.packetLen = response.packetLen;
-        std::memcpy(msg.packetData, response.packetData, response.packetLen);
+        auto msg = frost_interfaces::msg::ModemRec(); //TODO: does this work? As far as I understand this puts it on the stack...
+        msg.msg_id = CID_DAT_RECEIVE;
+        msg.packet_len = response.packetLen;
+        std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
         cpyFixtoRosmsg(msg, response.acoFix);
 
         //TODO: add rclcpp info log here? not sure how to implement
@@ -68,8 +71,8 @@ public:
         response = data;
 
         auto msg = frost_interfaces::msg::ModemRec();
-        msg.msgId = CID_PING_RESP;
-        msg.packetLen = 0;
+        msg.msg_id = CID_PING_RESP;
+        msg.packet_len = 0;
         cpyFixtoRosmsg(msg, response.acoFix);
 
         publisher_->publish(msg);
@@ -99,26 +102,26 @@ private:
   // to the modem
   void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     //TODO: add type casts as necessary
-    CID_E msgId = rosmsg.msgId;
-    switch(rosmsg.msgId) {
+    CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
+    switch(msgId) {
       default: break; //TODO: print bad id error.
       case CID_DAT_SEND: {
         messages::DataSend message; //struct contains message to send to modem
 
-        message.destId    = rosmsg.destId;
-        message.msgType   = rosmsg.msgType;
-        message.packetLen = std::min(rosmsg.packetLen, 31);
+        message.destId    = static_cast<BID_E>(rosmsg->dest_id);
+        message.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
+        message.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
         //TODO: add log report of modem message sent
 
-        std::memcpy(message.packetData, rosmsg.packetData, message.packetLen);
+        std::memcpy(message.packetData, &(rosmsg->packet_data), message.packetLen);
         this->send(sizeof(message), (const uint8_t*)&message);
 
       } break;
 
       case CID_PING_SEND: {
         messages::PingSend::Request req;
-        req.target    = rosmsg.destId;
-        req.pingType  = rosmsg.msgType;
+        req.target    = static_cast<BID_E>(rosmsg->dest_id);
+        req.pingType  = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         this->send(sizeof(req), (const uint8_t*)&req);
       } break;
       //add case for calibration
@@ -126,34 +129,34 @@ private:
   }
 
   //copies the fields from the acofix struct into the ModemRec ros message
-  inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acofix) {
-    msg.attitudeYaw = acoFix.attitudeYaw;
-    msg.attitudePitch = acoFix.attitudePitch;
-    msg.attitudeRoll = acoFix.attitudeRoll;
-    msg.depthLocal = acoFix.depthLocal;
-    msg.VOS = acoFix.vos;
+  inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acoFix) {
+    msg.attitude_yaw = acoFix.attitudeYaw;
+    msg.attitude_pitch = acoFix.attitudePitch;
+    msg.attitude_roll = acoFix.attitudeRoll;
+    msg.depth_local = acoFix.depthLocal;
+    msg.vos = acoFix.vos;
     msg.rssi = acoFix.rssi;
 
-    msg.rangeValid = (acoFix.flags & 0x1)? true:false;
-    msg.usblValid = (acoFix.flags & 0x2)? true:false;
-    msg.positionValid = (acoFix.flags & 0x4)? true:false;
+    msg.range_valid = (acoFix.flags & 0x1)? true:false;
+    msg.usbl_valid = (acoFix.flags & 0x2)? true:false;
+    msg.position_valid = (acoFix.flags & 0x4)? true:false;
 
-    if(msg.rangeValid) {
-      msg.rangeCount = acoFix.range.count;
-      msg.rangeTime = acoFix.range.time;
-      msg.rangeDist = acoFix.range.dist;
+    if(msg.range_valid) {
+      msg.range_count = acoFix.range.count;
+      msg.range_time = acoFix.range.time;
+      msg.range_dist = acoFix.range.dist;
     }
-    if(msg.usblValid) {
-      msg.usblChannels = acoFix.usbl.channelCount;
-      std::memcpy(msg.usblRSSI, acoFix.usbl.rssi, acoFix.usbl.channelCount);
-      msg.usblAzimuth = acoFix.usbl.azimuth;
-      msg.usblElecation = acoFix.usbl.elevation;
-      msg.usblFitError = acoFix.usbl.fitError;
+    if(msg.usbl_valid) {
+      msg.usbl_channels = acoFix.usbl.channelCount;
+      std::memcpy(&msg.usbl_rssi, acoFix.usbl.rssi, acoFix.usbl.channelCount);
+      msg.usbl_azimuth = acoFix.usbl.azimuth;
+      msg.usbl_elevation = acoFix.usbl.elevation;
+      msg.usbl_fit_error = acoFix.usbl.fitError;
     }
-    if(msg.positionValid) {
-      msg.positionEasting = acoFix.position.easting;
-      msg.positionNorthing = acoFix.position.positionNorthing;
-      msg.positionDepth = acoFix.position.depth;
+    if(msg.position_valid) {
+      msg.position_easting = acoFix.position.easting;
+      msg.position_northing = acoFix.position.northing;
+      msg.position_depth = acoFix.position.depth;
     }
   }
 };
