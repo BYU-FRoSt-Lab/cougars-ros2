@@ -46,7 +46,7 @@ public:
     switch (msgId) {
       default: {
         //TODO: print some kind of error here 
-      }
+      } break;
       case CID_DAT_RECEIVE: {
         messages::DataReceive response;     //struct that contains response fields
         response = data;                    //operator overload fills in response struct with correct data
@@ -57,6 +57,7 @@ public:
         std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
         cpyFixtoRosmsg(msg, response.acoFix);
 
+        RCLCPP_INFO(this->get_logger(), "Publishing: CID_DAT_RECEIVE");
         //TODO: add rclcpp info log here? not sure how to implement
         publisher_->publish(msg);
       } break;
