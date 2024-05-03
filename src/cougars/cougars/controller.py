@@ -5,7 +5,6 @@ from frost_interfaces.msg import PID, Echo, GPS
 from frost_interfaces.srv import EmergencyStop
 
 PID_PUB_TIMER_PERIOD = 1 # seconds
-# QOS_PROFILE = 10
 
 
 class States(Enum):
