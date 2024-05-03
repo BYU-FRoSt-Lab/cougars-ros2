@@ -41,6 +41,7 @@ class Controller(Node):
             #callback_group=self.main_callback_group
         )
         # TODO: remove after publishing once to test modem sending capability
+        self.get_logger().info("Sent Hello world to modem")
         self.modem_publisher.publish(hello_world_modem_send())
         
         # Create the timers

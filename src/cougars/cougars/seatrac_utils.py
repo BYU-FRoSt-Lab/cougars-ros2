@@ -150,6 +150,6 @@ def hello_world_modem_send():
     modemSend.dest_id     = BID_E.BEACON_ALL
     modemSend.msg_type    = AMSGTYPE_E.MSG_OWAY #use MSG_OWAYU to include usbl with message
     modemSend.packet_len  = len(message)
-    modemSend.packet_data = [*message]
+    modemSend.packet_data = [ord(c) for c in message]
     return modemSend
 
