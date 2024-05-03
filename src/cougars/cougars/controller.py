@@ -48,8 +48,7 @@ class Controller(Node):
         self.timer = self.create_timer(
             PID_PUB_TIMER_PERIOD,
             self.timer_callback,
-            10,
-            callback_group=self.main_callback_group,
+            callback_group=self.main_callback_group
         )
 
         # Create the services
