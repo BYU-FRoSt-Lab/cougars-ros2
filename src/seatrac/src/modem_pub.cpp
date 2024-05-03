@@ -17,22 +17,17 @@ using std::placeholders::_1;
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
-/*
-Questions to ask Nelson: 
-1. how to run in ros
-2. how to integrate in project
-3. how to log errors
-*/
-
-
 //TODO: change name to represent that it is both a publisher and subscriber
 // figured it'd probably be easier to have one serial connection to the modem
+
+//TODO: maybe add commandline arg for serial port
 
 // The class needs to inherit from both the ROS node and driver classes
 class ModemDataPublisher : public rclcpp::Node, public SeatracDriver {
 public:
   ModemDataPublisher()
       : Node("modem_data_publisher"), SeatracDriver("/dev/ttyUSB0"), count_(0) {
+    RCLCPP_INFO(this->get_logger(), "Starting seatrac modem_pub Node");
     publisher_ =
         this->create_publisher<frost_interfaces::msg::ModemRec>("modem_rec", 10);
     subscriber_ = 
@@ -45,7 +40,7 @@ public:
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
     switch (msgId) {
       default: {
-        //TODO: print some kind of error here 
+        RCLCPP_INFO(this->get_logger(), "Received unknown message from seatrac modem" << msgId << "."); 
       } break;
       case CID_DAT_RECEIVE: {
         messages::DataReceive response;     //struct that contains response fields
@@ -58,13 +53,12 @@ public:
         cpyFixtoRosmsg(msg, response.acoFix);
 
         RCLCPP_INFO(this->get_logger(), "Publishing: CID_DAT_RECEIVE");
-        //TODO: add rclcpp info log here? not sure how to implement
         publisher_->publish(msg);
       } break;
       case CID_DAT_ERROR: {
         messages::DataError response;
         response = data;
-        //TODO: find out how/if to send error msgs over ros
+        RCLCPP_ERROR(this->get_logger(), "Error with modem data message.\n Info: " << response);
       } break;
 
       case CID_PING_RESP: {
@@ -76,13 +70,13 @@ public:
         msg.packet_len = 0;
         cpyFixtoRosmsg(msg, response.acoFix);
 
+        RCLCPP_INFO(this->get_logger(), "Publishing: CID_PING_RESP");
         publisher_->publish(msg);
       } break;
       case CID_PING_ERROR: {
         messages::PingError response;
         response = data;
-        //TODO: find out how/if to send error msgs over ros
-        //Maybe just error log it?
+        RCLCPP_ERROR(this->get_logger(), "Error with modem ping message.\n Info: " << response);
       } break;
 
       case CID_STATUS:
@@ -102,19 +96,20 @@ private:
   //recieves command to modem from the ModemRec topic and sends the command
   // to the modem
   void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr rosmsg) {
-    //TODO: add type casts as necessary
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
     switch(msgId) {
-      default: break; //TODO: print bad id error.
+      default: {
+        RCLCPP_ERROR(this->get_logger(), "Unsupported seatrac message id for broadcasting messages: ", msgId);
+      } break;
       case CID_DAT_SEND: {
         messages::DataSend message; //struct contains message to send to modem
 
         message.destId    = static_cast<BID_E>(rosmsg->dest_id);
         message.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         message.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
-        //TODO: add log report of modem message sent
-
+        
         std::memcpy(message.packetData, &(rosmsg->packet_data), message.packetLen);
+        RCLCPP_INFO(this->get_logger(), "Modem broadcasting CID_DAT_SEND message");
         this->send(sizeof(message), (const uint8_t*)&message);
 
       } break;
@@ -123,6 +118,7 @@ private:
         messages::PingSend::Request req;
         req.target    = static_cast<BID_E>(rosmsg->dest_id);
         req.pingType  = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
+        RCLCPP_INFO(this->get_logger(), "Modem broadcasting CID_DAT_SEND message");
         this->send(sizeof(req), (const uint8_t*)&req);
       } break;
       //add case for calibration
@@ -168,3 +164,8 @@ int main(int argc, char *argv[]) {
   rclcpp::shutdown();
   return 0;
 }
+
+
+
+
+
