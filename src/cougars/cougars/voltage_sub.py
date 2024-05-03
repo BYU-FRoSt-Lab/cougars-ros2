@@ -4,7 +4,6 @@ from frost_interfaces.srv import EmergencyStop
 from frost_interfaces.msg import Volt
 from rclpy.qos import qos_profile_sensor_data
 
-SERVICE_TIMEOUT = 1  # seconds
 CRITICAL_VOLTAGE = 14.0
 
 
@@ -16,7 +15,7 @@ class VoltageSubscriber(Node):
         )
         self.subscription  # prevent unused variable warning
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
-        while not self.cli.wait_for_service(timeout_sec=SERVICE_TIMEOUT):
+        while not self.cli.wait_for_service(timeout_sec=1):
             self.get_logger().info("EmergencyStop service not available, waiting...")
         self.req = EmergencyStop.Request()
 

@@ -4,9 +4,8 @@ from enum import Enum
 from frost_interfaces.msg import PID, Echo, GPS
 from frost_interfaces.srv import EmergencyStop
 
-PID_PUB_TIMER_PERIOD = 1  # seconds
-SERVICE_TIMEOUT = 1  # seconds
-QOS_PROFILE = 10
+PID_PUB_TIMER_PERIOD = 1 # seconds
+# QOS_PROFILE = 10
 
 
 class States(Enum):
@@ -29,8 +28,12 @@ class Controller(Node):
 
         # Create the publishers
         self.nav_publisher = self.create_publisher(
-            PID, "pid_request", QOS_PROFILE, callback_group=self.main_callback_group
+            PID,
+            "pid_request",
+            callback_group=self.main_callback_group
         )
+        
+        # Create the timers
         self.timer = self.create_timer(
             PID_PUB_TIMER_PERIOD,
             self.timer_callback,
@@ -68,12 +71,13 @@ class Controller(Node):
         pid_msg = PID()
 
         if self.state == States.RUN:
-            ###############################################
+
+            ##########################################################
             # HIGH-LEVEL CONTROLLER CODE STARTS HERE
-            ###############################################
+            # - For a faster update time, adjust PID_PUB_TIMER_PERIOD
+            ##########################################################
 
             # TODO: Adjust this simple state machine
-            # For a faster update time, adjust PID_PUB_TIMER_PERIOD
             if self.counter < 30:
                 pid_msg.velocity = 0.0 # 10.0
                 pid_msg.yaw = 90.0
@@ -88,9 +92,9 @@ class Controller(Node):
 
             self.get_logger().info("PUBLISHING TO PID_REQUEST")
 
-            ###############################################
+            ##########################################################
             # HIGH-LEVEL CONTROLLER CODE ENDS HERE
-            ###############################################
+            ##########################################################
 
         elif self.state == States.STOP:
             pid_msg.stop = True
