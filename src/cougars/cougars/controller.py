@@ -3,7 +3,7 @@ from rclpy.node import Node
 from enum import Enum
 from frost_interfaces.msg import PID, Echo, GPS, ModemSend
 from frost_interfaces.srv import EmergencyStop
-from seatrac_utils import hello_world_modem_send
+from .seatrac_utils import hello_world_modem_send
 
 PID_PUB_TIMER_PERIOD = 1 # seconds
 
