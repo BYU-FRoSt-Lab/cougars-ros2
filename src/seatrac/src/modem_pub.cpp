@@ -40,7 +40,7 @@ public:
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
     switch (msgId) {
       default: {
-        RCLCPP_INFO(this->get_logger(), "Received unknown message from seatrac modem" << msgId << "."); 
+        RCLCPP_INFO(this->get_logger(), "Received unknown message from seatrac modem. msgId: ", msgId); 
       } break;
       case CID_DAT_RECEIVE: {
         messages::DataReceive response;     //struct that contains response fields
@@ -58,7 +58,7 @@ public:
       case CID_DAT_ERROR: {
         messages::DataError response;
         response = data;
-        RCLCPP_ERROR(this->get_logger(), "Error with modem data message.\n Info: " << response);
+        RCLCPP_ERROR(this->get_logger(), "Error with modem data message."); //TODO: add response diagnostic data to message
       } break;
 
       case CID_PING_RESP: {
@@ -76,7 +76,7 @@ public:
       case CID_PING_ERROR: {
         messages::PingError response;
         response = data;
-        RCLCPP_ERROR(this->get_logger(), "Error with modem ping message.\n Info: " << response);
+        RCLCPP_ERROR(this->get_logger(), "Error with modem ping message."); //TODO: add response diagnostic data to message
       } break;
 
       case CID_STATUS:
