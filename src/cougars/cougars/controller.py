@@ -30,12 +30,14 @@ class Controller(Node):
         self.nav_publisher = self.create_publisher(
             PID,
             "pid_request",
+            10,
             callback_group=self.main_callback_group
         )
 
         self.modem_publisher = self.create_publisher(
             ModemSend,
-            "modem_send"
+            "modem_send",
+            10
             #callback_group=self.main_callback_group
         )
         # TODO: remove after publishing once to test modem sending capability
@@ -45,6 +47,7 @@ class Controller(Node):
         self.timer = self.create_timer(
             PID_PUB_TIMER_PERIOD,
             self.timer_callback,
+            10,
             callback_group=self.main_callback_group,
         )
 
