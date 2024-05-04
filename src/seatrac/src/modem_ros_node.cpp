@@ -109,7 +109,7 @@ private:
         message.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
         
         std::memcpy(message.packetData, &(rosmsg->packet_data), message.packetLen);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. first char is '%c'", (rosmsg->packet_data)[0]);
+        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", message.packetData);
         this->send(sizeof(message), (const uint8_t*)&message);
 
       } break;
