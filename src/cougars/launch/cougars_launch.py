@@ -17,5 +17,5 @@ def generate_launch_description():
             executable='voltage_sub'),
         launch_ros.actions.Node(
             package='seatrac',
-            executable='modem_pub'),
+            executable='modem'),
   ])
