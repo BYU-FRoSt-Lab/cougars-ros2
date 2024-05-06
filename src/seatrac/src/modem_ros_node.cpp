@@ -23,16 +23,16 @@ using namespace narval::seatrac;
 //TODO: maybe add commandline arg for serial port
 
 // The class needs to inherit from both the ROS node and driver classes
-class ModemDataPublisher : public rclcpp::Node, public SeatracDriver {
+class ModemRosNode : public rclcpp::Node, public SeatracDriver {
 public:
-  ModemDataPublisher()
-      : Node("modem_data_publisher"), SeatracDriver("/dev/ttyUSB0"), count_(0) {
-    RCLCPP_INFO(this->get_logger(), "Starting seatrac modem_pub Node");
+  ModemRosNode()
+      : Node("modem_ros_node"), SeatracDriver("/dev/ttyUSB0"), count_(0) {
+    RCLCPP_INFO(this->get_logger(), "Starting seatrac modem Node");
     publisher_ =
         this->create_publisher<frost_interfaces::msg::ModemRec>("modem_rec", 10);
     subscriber_ = 
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
-                      std::bind(&ModemDataPublisher::modem_send_callback, this, _1));
+                      std::bind(&ModemRosNode::modem_send_callback, this, _1));
   }
 
   // this method is called on any message returned by the beacon.
@@ -108,8 +108,8 @@ private:
         message.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         message.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
         
-        std::memcpy(message.packetData, &(rosmsg->packet_data), message.packetLen);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message");
+        std::memcpy(message.packetData, rosmsg->packet_data.data(), message.packetLen);
+        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", message.packetData);
         this->send(sizeof(message), (const uint8_t*)&message);
 
       } break;
@@ -160,7 +160,7 @@ private:
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ModemDataPublisher>());
+  rclcpp::spin(std::make_shared<ModemRosNode>());
   rclcpp::shutdown();
   return 0;
 }

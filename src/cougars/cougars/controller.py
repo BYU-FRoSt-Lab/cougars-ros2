@@ -1,8 +1,9 @@
 import rclpy
 from rclpy.node import Node
 from enum import Enum
-from frost_interfaces.msg import PID, Echo, GPS
+from frost_interfaces.msg import PID, Echo, GPS, ModemSend
 from frost_interfaces.srv import EmergencyStop
+from .seatrac_utils import hello_world_modem_send
 
 PID_PUB_TIMER_PERIOD = 1 # seconds
 
@@ -29,14 +30,25 @@ class Controller(Node):
         self.nav_publisher = self.create_publisher(
             PID,
             "pid_request",
+            10,
             callback_group=self.main_callback_group
         )
+
+        self.modem_publisher = self.create_publisher(
+            ModemSend,
+            "modem_send",
+            10
+            #callback_group=self.main_callback_group
+        )
+        # TODO: remove after publishing once to test modem sending capability
+        self.get_logger().info("Sent Hello world to modem")
+        self.modem_publisher.publish(hello_world_modem_send())
         
         # Create the timers
         self.timer = self.create_timer(
             PID_PUB_TIMER_PERIOD,
             self.timer_callback,
-            callback_group=self.main_callback_group,
+            callback_group=self.main_callback_group
         )
 
         # Create the services
