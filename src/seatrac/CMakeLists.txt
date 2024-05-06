@@ -23,14 +23,14 @@ if(NOT TARGET seatrac_driver)
     endif()
 endif()
 
-add_executable(modem_pub src/modem_pub.cpp)
-ament_target_dependencies(modem_pub rclcpp std_msgs frost_interfaces)
-target_link_libraries(modem_pub
+add_executable(modem src/modem_ros_node.cpp)
+ament_target_dependencies(modem rclcpp std_msgs frost_interfaces)
+target_link_libraries(modem
     seatrac_driver
 )
 
 install(TARGETS
-  modem_pub
+  modem
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
