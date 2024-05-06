@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# Run 'agent.sh' in a different terminal before running this
+##########################################################
+# TESTS EACH OF THE EXPECTED ROS TOPICS
+# - Before running this script, run agent.sh in a 
+#   different terminal
+##########################################################
 
 cd ~/ros2_ws
 source install/setup.bash
