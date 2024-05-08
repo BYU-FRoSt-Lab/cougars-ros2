@@ -7,7 +7,7 @@
 #include <seatrac_driver/SeatracDriver.h>
 #include <seatrac_driver/commands.h>
 #include <seatrac_driver/messages/Messages.h>
-#include <seatrac_driver/calibration.h>
+#include <seatrac_driver/Calibration.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"

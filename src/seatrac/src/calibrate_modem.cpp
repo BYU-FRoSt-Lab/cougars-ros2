@@ -9,7 +9,7 @@ using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
 // The class needs to inherit from both the ROS node and driver classes
-class ModemCalibration : public SeatracDriver
+class MyDriver : public SeatracDriver
 {
     public:
 
