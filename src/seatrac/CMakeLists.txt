@@ -26,11 +26,18 @@ endif()
 add_executable(modem src/modem_ros_node.cpp)
 ament_target_dependencies(modem rclcpp std_msgs frost_interfaces)
 target_link_libraries(modem
-    seatrac_driver
+seatrac_driver
+)
+
+add_executable(calibrate_modem src/calibrate_modem.cpp)
+# ament_target_dependencies(calibrate_modem rclcpp std_msgs frost_interfaces)
+target_link_libraries(calibrate_modem
+seatrac_driver
 )
 
 install(TARGETS
   modem
+  calibrate_modem
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

@@ -7,6 +7,7 @@
 #include <seatrac_driver/SeatracDriver.h>
 #include <seatrac_driver/commands.h>
 #include <seatrac_driver/messages/Messages.h>
+#include <seatrac_driver/calibration.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"
@@ -16,9 +17,6 @@ using std::placeholders::_1;
 
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
-
-//TODO: change name to represent that it is both a publisher and subscriber
-// figured it'd probably be easier to have one serial connection to the modem
 
 //TODO: maybe add commandline arg for serial port
 
@@ -33,6 +31,9 @@ public:
     subscriber_ = 
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
+    // subscriber_ = 
+    //     this->create_subscription<std_msgs::msg::Bool>("modem_calibrate", 10,
+    //                   std::bind(&ModemRosNode::modem_calibrate, this, _1))
   }
 
   // this method is called on any message returned by the beacon.
@@ -46,7 +47,7 @@ public:
         messages::DataReceive response;     //struct that contains response fields
         response = data;                    //operator overload fills in response struct with correct data
 
-        auto msg = frost_interfaces::msg::ModemRec(); //TODO: does this work? As far as I understand this puts it on the stack...
+        auto msg = frost_interfaces::msg::ModemRec();
         msg.msg_id = CID_DAT_RECEIVE;
         msg.packet_len = response.packetLen;
         std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
@@ -80,8 +81,7 @@ public:
       } break;
 
       case CID_STATUS:
-        //TODO: determine if we want to send status msgs over ros
-              //they could potentially include some calibration info
+        //Too many status messages so bypasing display
         break;
     }
   }
@@ -121,9 +121,11 @@ private:
         RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message");
         this->send(sizeof(req), (const uint8_t*)&req);
       } break;
-      //add case for calibration
+      //TODO: add case for calibration
     }
   }
+
+  void modem_calibrate(const std_msgs::msg::Bool calibrate)
 
   //copies the fields from the acofix struct into the ModemRec ros message
   inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acoFix) {
