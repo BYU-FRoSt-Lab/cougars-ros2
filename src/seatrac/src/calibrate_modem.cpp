@@ -35,21 +35,39 @@ class MyDriver : public SeatracDriver
 
 int main(int argc, char *argv[])
 {
-    //set serial to command line input if given
-    // std::string serial_port;
-    // if (argc == 1) { serial_port = "/dev/ttyUSB0"; }
-    // else { serial_port = argv[1]; }
-
-
     std::string serial_port = "/dev/ttyUSB0";
     MyDriver seatrac(serial_port);
+    calibration::turnOffCalFeedback(seatrac);
 
-    calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, false);
-    calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, false);
-    //NOTE: This example calls calibrate with saveToEEPROM=false.
-    //      That means the calibration settings will be lost once the 
-    //      the seatrac beacon is powered off. Change saveToEEPROM to
-    //      true to save the calibration settings perminantly.
+    int action;
+    std::cout << "Running Seatrac Modem Calibration:" << std::endl
+              << "Which calibration procedure would you like to execute?" << std::endl
+              << "\t1) Magnetometer Calibration" << std::endl
+              << "\t2) Accelerometer Calibration" << std::endl
+              << "\t3) Both Magnetometer and Acceleromter Calibration" << std::endl
+              << "\t4) Dry run - cal settings only saved to RAM, not EEPROM" << std::endl
+              << "\tany other) Exit" << std::endl
+              << "Enter a number: ";
+    scanf("%d", action);
+    switch(action) {
+        case 1: {
+            calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, true);
+        } break;
+        case 2: {
+            calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, true);
+        } break;
+        case 3: {
+            calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, true);
+            calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, true);
+        } break;
+        case 4: {
+            calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, false);
+            calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, false);
+        } break;
+        default: {
+            std::cout << "Exiting Seatrac Modem Calibration";
+        } break;
+    }
 
     return 0;
 }
