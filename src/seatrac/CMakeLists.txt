@@ -12,7 +12,7 @@ find_package(frost_interfaces REQUIRED)
 
 #find_package(seatrac_driver REQUIRED)
 if(NOT TARGET seatrac_driver)
-    find_package(seatrac_driver QUIET)
+    #find_package(seatrac_driver QUIET)
     if(NOT TARGET seatrac_driver)
         include(FetchContent)
         FetchContent_Declare(seatrac_driver
