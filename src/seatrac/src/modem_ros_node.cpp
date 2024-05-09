@@ -7,7 +7,6 @@
 #include <seatrac_driver/SeatracDriver.h>
 #include <seatrac_driver/commands.h>
 #include <seatrac_driver/messages/Messages.h>
-#include <seatrac_driver/Calibration.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"
@@ -31,9 +30,6 @@ public:
     subscriber_ = 
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
-    // subscriber_ = 
-    //     this->create_subscription<std_msgs::msg::Bool>("modem_calibrate", 10,
-    //                   std::bind(&ModemRosNode::modem_calibrate, this, _1))
   }
 
   // this method is called on any message returned by the beacon.
@@ -124,8 +120,6 @@ private:
       //TODO: add case for calibration
     }
   }
-
-  void modem_calibrate(const std_msgs::msg::Bool calibrate)
 
   //copies the fields from the acofix struct into the ModemRec ros message
   inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acoFix) {
