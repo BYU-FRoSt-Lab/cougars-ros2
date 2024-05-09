@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
               << "\t4) Dry run - cal settings only saved to RAM, not EEPROM" << std::endl
               << "\tany other) Exit" << std::endl
               << "Enter a number: ";
-    scanf("%d", action);
+    scanf("%d", &action);
     switch(action) {
         case 1: {
             calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, true);
