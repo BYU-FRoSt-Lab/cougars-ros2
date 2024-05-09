@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, false);
         } break;
         default: {
-            std::cout << "Exiting Seatrac Modem Calibration";
+            std::cout << "Exiting Seatrac Modem Calibration" << std::endl;
         } break;
     }
 
