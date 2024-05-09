@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     // else { serial_port = argv[1]; }
 
 
-    std::string serial_port = "/dev/ttyUSB0"
+    std::string serial_port = "/dev/ttyUSB0";
     MyDriver seatrac(serial_port);
 
     calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, false);
