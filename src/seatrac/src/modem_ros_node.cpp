@@ -17,9 +17,6 @@ using std::placeholders::_1;
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
-//TODO: change name to represent that it is both a publisher and subscriber
-// figured it'd probably be easier to have one serial connection to the modem
-
 //TODO: maybe add commandline arg for serial port
 
 // The class needs to inherit from both the ROS node and driver classes
@@ -46,7 +43,7 @@ public:
         messages::DataReceive response;     //struct that contains response fields
         response = data;                    //operator overload fills in response struct with correct data
 
-        auto msg = frost_interfaces::msg::ModemRec(); //TODO: does this work? As far as I understand this puts it on the stack...
+        auto msg = frost_interfaces::msg::ModemRec();
         msg.msg_id = CID_DAT_RECEIVE;
         msg.packet_len = response.packetLen;
         std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
@@ -80,8 +77,7 @@ public:
       } break;
 
       case CID_STATUS:
-        //TODO: determine if we want to send status msgs over ros
-              //they could potentially include some calibration info
+        //Too many status messages so bypasing display
         break;
     }
   }
@@ -121,7 +117,7 @@ private:
         RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message");
         this->send(sizeof(req), (const uint8_t*)&req);
       } break;
-      //add case for calibration
+      //TODO: add case for calibration
     }
   }
 

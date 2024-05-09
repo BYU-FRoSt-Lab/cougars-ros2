@@ -50,8 +50,8 @@ class BID_E :
  # Response messages after the synchronisation character with the purpose of
  # identifying the message function and its payload.
  #
- # only a subset of CID codes included here. Full list can be found in the 
- # seatrac manual linked above 
+ # only a subset of CID codes are included here. Full list can be found in 
+ # the seatrac manual linked above 
  #
 class CID_E :
      # PING Protocol Messages
