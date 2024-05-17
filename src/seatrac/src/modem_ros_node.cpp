@@ -98,15 +98,15 @@ private:
         RCLCPP_ERROR(this->get_logger(), "Unsupported seatrac message id for broadcasting messages: %d", msgId);
       } break;
       case CID_DAT_SEND: {
-        messages::DataSend message; //struct contains message to send to modem
+        messages::DataSend::Request req; //struct contains message to send to modem
 
-        message.destId    = static_cast<BID_E>(rosmsg->dest_id);
-        message.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
-        message.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
+        req.destId    = static_cast<BID_E>(rosmsg->dest_id);
+        req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
+        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
         
-        std::memcpy(message.packetData, rosmsg->packet_data.data(), message.packetLen);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", message.packetData);
-        this->send(sizeof(message), (const uint8_t*)&message);
+        std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", req.packetData);
+        this->send(sizeof(req), (const uint8_t*)&req);
 
       } break;
 
