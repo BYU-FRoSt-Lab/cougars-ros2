@@ -11,6 +11,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"
 #include "frost_interfaces/msg/modem_send.hpp"
+#include "frost_interfaces/srv/emergency_stop.hpp"
+
+#include "modem_commands.h"
 
 using std::placeholders::_1;
 
@@ -30,6 +33,8 @@ public:
     subscriber_ = 
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
+
+    
   }
 
   // this method is called on any message returned by the beacon.
@@ -48,6 +53,11 @@ public:
         msg.packet_len = response.packetLen;
         std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
         cpyFixtoRosmsg(msg, response.acoFix);
+
+        //check for emergency stop
+        if(response.packetLen == 1 && response.packetData[0] == 'E') {
+          auto EStopComplete = 
+        }
 
         RCLCPP_INFO(this->get_logger(), "Publishing: CID_DAT_RECEIVE");
         publisher_->publish(msg);
@@ -86,6 +96,7 @@ private:
 
   rclcpp::Publisher<frost_interfaces::msg::ModemRec>::SharedPtr publisher_;
   rclcpp::Subscription<frost_interfaces::msg::ModemSend>::SharedPtr subscriber_;
+  rclcpp::Client<frost_interfaces::srv::EmergencyStop>::SharedPtr emergency_stop_client;
 
   size_t count_;
 
