@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
               << "\t2) Accelerometer Calibration" << std::endl
               << "\t3) Both Magnetometer and Acceleromter Calibration" << std::endl
               << "\t4) Dry run - cal settings only saved to RAM, not EEPROM" << std::endl
-              << "\tany other) Exit" << std::endl
+              << "\t5 or more) Exit" << std::endl
               << "Enter a number: ";
     scanf("%d", &action);
     switch(action) {
