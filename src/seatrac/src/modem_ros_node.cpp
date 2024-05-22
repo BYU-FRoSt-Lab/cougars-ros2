@@ -190,7 +190,7 @@ private:
           confirmation_text
       );
     } else {
-      RCLCPP_ERROR(rclcpp::get_logger(), "Failed to call Emergency Stop service");
+      RCLCPP_ERROR(this->get_logger(), "Failed to call Emergency Stop service");
     }
   }
 };
