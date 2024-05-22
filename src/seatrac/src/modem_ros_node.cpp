@@ -72,7 +72,7 @@ public:
         response = data;
         std::ostringstream err;
         err << "Error with seatrac modem data message." << std::endl << response;
-        RCLCPP_ERROR(this->get_logger(), err.str());
+        RCLCPP_ERROR(this->get_logger(), err.str().c_str());
       } break;
 
       case CID_PING_RESP: {
@@ -92,7 +92,7 @@ public:
         response = data;
         std::ostringstream err;
         err << "Error with seatrac modem ping message." << std::endl << response;
-        RCLCPP_ERROR(this->get_logger(), err.str()); //TODO: add response diagnostic data to message
+        RCLCPP_ERROR(this->get_logger(), err.str().c_str()); //TODO: add response diagnostic data to message
       } break;
 
       case CID_STATUS:
@@ -177,8 +177,8 @@ private:
     auto stop_request = std::make_shared<frost_interfaces::srv::EmergencyStop::Request>();
     std::ostringstream err;
     err << "Recieved STOP signal from beacon. Message Details: " << std::endl << response;
-    stop_request.error = err.str();
-    auto result = client->async_send_request(request);
+    stop_request.error = err.str().c_str();
+    auto result = emergency_stop_client_->async_send_request(stop_request);
     if(rclcpp::spin_until_future_complete(this, result) == 
         rclcpp::FutureReturnCode::SUCCESS)
     {
