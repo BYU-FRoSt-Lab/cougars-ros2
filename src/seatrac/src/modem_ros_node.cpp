@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <sstream>
 
 #include <seatrac_driver/SeatracDriver.h>
 #include <seatrac_driver/commands.h>
@@ -48,14 +49,15 @@ public:
         msg.packet_len = response.packetLen;
         std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
         cpyFixtoRosmsg(msg, response.acoFix);
-
-        RCLCPP_INFO(this->get_logger(), "Publishing: CID_DAT_RECEIVE");
+        RCLCPP_INFO(this->get_logger(), "Publishing ModemRec CID_DAT_RECEIVE");
         publisher_->publish(msg);
       } break;
       case CID_DAT_ERROR: {
         messages::DataError response;
         response = data;
-        RCLCPP_ERROR(this->get_logger(), "Error with seatrac modem data message."); //TODO: add response diagnostic data to message
+        std::ostringstream err;
+        err << "Error with seatrac modem data message." << std::endl << response;
+        RCLCPP_ERROR(this->get_logger(), err.str());
       } break;
 
       case CID_PING_RESP: {
@@ -67,13 +69,15 @@ public:
         msg.packet_len = 0;
         cpyFixtoRosmsg(msg, response.acoFix);
 
-        RCLCPP_INFO(this->get_logger(), "Publishing: CID_PING_RESP");
+        RCLCPP_INFO(this->get_logger(), "Publishing ModemRec CID_PING_RESP");
         publisher_->publish(msg);
       } break;
       case CID_PING_ERROR: {
         messages::PingError response;
         response = data;
-        RCLCPP_ERROR(this->get_logger(), "Error with seatrac modem ping message."); //TODO: add response diagnostic data to message
+        std::ostringstream err;
+        err << "Error with seatrac modem ping message." << std::endl << response;
+        RCLCPP_ERROR(this->get_logger(), err.str()); //TODO: add response diagnostic data to message
       } break;
 
       case CID_STATUS:
@@ -89,7 +93,7 @@ private:
 
   size_t count_;
 
-  //recieves command to modem from the ModemRec topic and sends the command
+  // recieves command to modem from the ModemRec topic and sends the command
   // to the modem
   void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
