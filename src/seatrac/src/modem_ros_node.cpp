@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <sstream>
 
 #include <seatrac_driver/SeatracDriver.h>
 #include <seatrac_driver/commands.h>
@@ -58,14 +59,15 @@ public:
         if(response.packetLen == 1 && response.packetData[0] == 'E') {
           auto EStopComplete = 
         }
-
-        RCLCPP_INFO(this->get_logger(), "Publishing: CID_DAT_RECEIVE");
+        RCLCPP_INFO(this->get_logger(), "Publishing ModemRec CID_DAT_RECEIVE");
         publisher_->publish(msg);
       } break;
       case CID_DAT_ERROR: {
         messages::DataError response;
         response = data;
-        RCLCPP_ERROR(this->get_logger(), "Error with seatrac modem data message."); //TODO: add response diagnostic data to message
+        std::ostringstream err;
+        err << "Error with seatrac modem data message." << std::endl << response;
+        RCLCPP_ERROR(this->get_logger(), err.str());
       } break;
 
       case CID_PING_RESP: {
@@ -77,13 +79,15 @@ public:
         msg.packet_len = 0;
         cpyFixtoRosmsg(msg, response.acoFix);
 
-        RCLCPP_INFO(this->get_logger(), "Publishing: CID_PING_RESP");
+        RCLCPP_INFO(this->get_logger(), "Publishing ModemRec CID_PING_RESP");
         publisher_->publish(msg);
       } break;
       case CID_PING_ERROR: {
         messages::PingError response;
         response = data;
-        RCLCPP_ERROR(this->get_logger(), "Error with seatrac modem ping message."); //TODO: add response diagnostic data to message
+        std::ostringstream err;
+        err << "Error with seatrac modem ping message." << std::endl << response;
+        RCLCPP_ERROR(this->get_logger(), err.str()); //TODO: add response diagnostic data to message
       } break;
 
       case CID_STATUS:
@@ -100,7 +104,7 @@ private:
 
   size_t count_;
 
-  //recieves command to modem from the ModemRec topic and sends the command
+  // recieves command to modem from the ModemRec topic and sends the command
   // to the modem
   void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
@@ -109,15 +113,15 @@ private:
         RCLCPP_ERROR(this->get_logger(), "Unsupported seatrac message id for broadcasting messages: %d", msgId);
       } break;
       case CID_DAT_SEND: {
-        messages::DataSend message; //struct contains message to send to modem
+        messages::DataSend::Request req; //struct contains message to send to modem
 
-        message.destId    = static_cast<BID_E>(rosmsg->dest_id);
-        message.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
-        message.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
+        req.destId    = static_cast<BID_E>(rosmsg->dest_id);
+        req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
+        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
         
-        std::memcpy(message.packetData, rosmsg->packet_data.data(), message.packetLen);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", message.packetData);
-        this->send(sizeof(message), (const uint8_t*)&message);
+        std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", req.packetData);
+        this->send(sizeof(req), (const uint8_t*)&req);
 
       } break;
 
