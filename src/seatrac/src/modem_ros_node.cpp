@@ -12,7 +12,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"
 #include "frost_interfaces/msg/modem_send.hpp"
-#include "frost_interfaces/srv/emergency_stop.hpp"
 
 using std::placeholders::_1;
 
@@ -32,9 +31,6 @@ public:
     subscriber_ = 
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
-    emergency_stop_client_ = 
-        this->create_client<frost_interfaces::srv::EmergencyStop>("emergency_stop");
-    
   }
 
   // this method is called on any message returned by the beacon.
@@ -53,16 +49,6 @@ public:
         msg.packet_len = response.packetLen;
         std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
         cpyFixtoRosmsg(msg, response.acoFix);
-
-        //check for emergency stop
-        if (response.packetLen >= 4
-            && response.packetData[0] == 'S'
-            && response.packetData[1] == 'T'
-            && response.packetData[2] == 'O'
-            && response.packetData[3] == 'P'
-        ) {
-          execute_emergency_stop(response);
-        }
 
         RCLCPP_INFO(this->get_logger(), "Publishing ModemRec CID_DAT_RECEIVE");
         publisher_->publish(msg);
@@ -105,7 +91,6 @@ private:
 
   rclcpp::Publisher<frost_interfaces::msg::ModemRec>::SharedPtr publisher_;
   rclcpp::Subscription<frost_interfaces::msg::ModemSend>::SharedPtr subscriber_;
-  rclcpp::Client<frost_interfaces::srv::EmergencyStop>::SharedPtr emergency_stop_client_;
 
   size_t count_;
 
@@ -173,26 +158,6 @@ private:
     }
   }
 
-  inline void execute_emergency_stop(messages::DataReceive& response) {
-    auto stop_request = std::make_shared<frost_interfaces::srv::EmergencyStop::Request>();
-    std::ostringstream err;
-    err << "Recieved STOP signal from beacon. Message Details: " << std::endl << response;
-    stop_request.error = err.str().c_str();
-    auto result = emergency_stop_client_->async_send_request(stop_request);
-    if(rclcpp::spin_until_future_complete(this, result) == 
-        rclcpp::FutureReturnCode::SUCCESS)
-    {
-      char confirmation_text[] = "STOPPED";
-      command::data_send(
-          this,
-          MSG_OWAY,
-          sizeof(confirmation_text),
-          confirmation_text
-      );
-    } else {
-      RCLCPP_ERROR(this->get_logger(), "Failed to call Emergency Stop service");
-    }
-  }
 };
 
 int main(int argc, char *argv[]) {
