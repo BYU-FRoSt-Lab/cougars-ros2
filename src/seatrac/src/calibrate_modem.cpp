@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 {
     std::string serial_port = "/dev/ttyUSB0";
     MyDriver seatrac(serial_port);
-    calibration::turnOffCalFeedback(seatrac);
+    command::status_config_set(seatrac, (STATUS_BITS_E)0x0);
 
     int action;
     std::cout << "Running Seatrac Modem Calibration:" << std::endl
