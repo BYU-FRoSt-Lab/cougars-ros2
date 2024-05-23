@@ -33,7 +33,7 @@ public:
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
     emergency_stop_client_ = 
-        this->create_client<frost_interfaces::srv::EmergencyStop>("emergency_stop", 10);
+        this->create_client<frost_interfaces::srv::EmergencyStop>("emergency_stop");
     
   }
 
@@ -173,7 +173,7 @@ private:
     }
   }
 
-  inline void execute_emergency_stop(messages::DataRecieve& response) {
+  inline void execute_emergency_stop(messages::DataReceive& response) {
     auto stop_request = std::make_shared<frost_interfaces::srv::EmergencyStop::Request>();
     std::ostringstream err;
     err << "Recieved STOP signal from beacon. Message Details: " << std::endl << response;
@@ -183,7 +183,7 @@ private:
         rclcpp::FutureReturnCode::SUCCESS)
     {
       char confirmation_text[] = "STOPPED";
-      commands::data_send(
+      command::data_send(
           this,
           MSG_OWAY,
           sizeof(confirmation_text),
