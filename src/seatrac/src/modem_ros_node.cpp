@@ -13,6 +13,8 @@
 #include "frost_interfaces/msg/modem_rec.hpp"
 #include "frost_interfaces/msg/modem_send.hpp"
 
+#define SEATRAC_SERIAL_PORT "/dev/ttyUSB0"
+
 using std::placeholders::_1;
 
 using namespace std::chrono_literals;
@@ -24,7 +26,7 @@ using namespace narval::seatrac;
 class ModemRosNode : public rclcpp::Node, public SeatracDriver {
 public:
   ModemRosNode()
-      : Node("modem_ros_node"), SeatracDriver("/dev/ttyUSB0"), count_(0) {
+      : Node("modem_ros_node"), SeatracDriver(SEATRAC_SERIAL_PORT), count_(0) {
     RCLCPP_INFO(this->get_logger(), "Starting seatrac modem Node");
     publisher_ =
         this->create_publisher<frost_interfaces::msg::ModemRec>("modem_rec", 10);
