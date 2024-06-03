@@ -25,7 +25,7 @@ setup(
         'console_scripts': [
             'controller = cougars.controller:main',
             'leak_sub = cougars.leak_sub:main',
-            'voltage_sub = cougars.voltage_sub:main',
+            'volt_sub = cougars.volt_sub:main',
         ],
     },
 )
