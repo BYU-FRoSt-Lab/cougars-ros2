@@ -9,7 +9,7 @@ class LeakDetectedSubscriber(Node):
     def __init__(self):
         super().__init__("leak_detected_subscriber")
         self.subscription = self.create_subscription(
-            Leak, "leak_detected", self.listener_callback, qos_profile_sensor_data
+            Leak, "leak_data", self.listener_callback, qos_profile_sensor_data
         )
         self.subscription  # prevent unused variable warning
         self.cli = self.create_client(EmergencyStop, "emergency_stop")

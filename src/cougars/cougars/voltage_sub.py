@@ -11,7 +11,7 @@ class VoltageSubscriber(Node):
     def __init__(self):
         super().__init__("voltage_subscriber")
         self.subscription = self.create_subscription(
-            Volt, "voltage", self.listener_callback, qos_profile_sensor_data
+            Volt, "volt_data", self.listener_callback, qos_profile_sensor_data
         )
         self.subscription  # prevent unused variable warning
         self.cli = self.create_client(EmergencyStop, "emergency_stop")

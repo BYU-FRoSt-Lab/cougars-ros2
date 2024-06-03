@@ -22,24 +22,28 @@ echo "LISTENING TO TOPIC 'IMU_DATA'..."
 ros2 topic echo --once /imu_data
 
 echo ""
+echo "LISTENING TO TOPIC 'DVL_DATA'..."
+ros2 topic echo --once /dvl_data
+
+echo ""
 echo "LISTENING TO TOPIC 'DEPTH_DATA'..."
 ros2 topic echo --once /depth_data
 
 echo ""
-echo "LISTENING TO TOPIC 'LEAK_DETECTED'..."
-ros2 topic echo --once /leak_detected
+echo "LISTENING TO TOPIC 'LEAK_DATA'..."
+ros2 topic echo --once /leak_data
 
 echo ""
-echo "LISTENING TO TOPIC 'VOLTAGE'..."
-ros2 topic echo --once /voltage
-
-echo ""
-echo "LISTENING TO TOPIC 'ECHO_DATA'..."
-ros2 topic echo --once /echo_data
+echo "LISTENING TO TOPIC 'VOLT_DATA'..."
+ros2 topic echo --once /volt_data
 
 echo ""
 echo "LISTENING TO TOPIC 'GPS_DATA'..."
 ros2 topic echo --once /gps_data
+
+echo ""
+echo "LISTENING TO TOPIC 'ECHO_DATA'..."
+ros2 topic echo --once /echo_data
 
 echo ""
 echo "TEST COMPLETE"
