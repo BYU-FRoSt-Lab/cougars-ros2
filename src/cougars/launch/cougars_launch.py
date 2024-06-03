@@ -14,7 +14,7 @@ def generate_launch_description():
             executable='leak_sub'),
         launch_ros.actions.Node(
             package='cougars',
-            executable='voltage_sub'),
+            executable='volt_sub'),
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem'),
