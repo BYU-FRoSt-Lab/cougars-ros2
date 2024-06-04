@@ -1,4 +1,6 @@
 import rclpy
+import gpiod
+import time
 from rclpy.node import Node
 from enum import Enum
 from frost_interfaces.msg import PID, Echo, GPS, ModemSend
@@ -6,6 +8,7 @@ from frost_interfaces.srv import EmergencyStop
 from .seatrac_utils import hello_world_modem_send
 
 PID_PUB_TIMER_PERIOD = 1 # seconds
+LED_PIN = 15
 
 
 class States(Enum):
@@ -59,6 +62,11 @@ class Controller(Node):
             callback_group=self.main_callback_group,
         )
 
+        # Create the GPIO chip and line
+        self.chip = gpiod.Chip('gpiochip4')
+        self.led_line = self.chip.get_line(LED_PIN)
+        self.led_line.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+
         # Set initial variables
         self.state = States.RUN
         self.prev_velocity = 0.0
@@ -80,6 +88,12 @@ class Controller(Node):
     # Runs the state machine and high-level controller, publishes to pid_request
     def timer_callback(self):
         pid_msg = PID()
+
+        # Blink the LED
+        if time.time() % 2 < 1:
+            self.led_line.set_value(0)
+        else:
+            self.led_line.set_value(1)
 
         if self.state == States.RUN:
 
