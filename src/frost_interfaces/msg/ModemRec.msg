@@ -3,6 +3,7 @@ std_msgs/Header header
 uint8 msg_id         # CID_E command identification code (type of message sent)
 uint8 packet_len     # packet length for data send messages
 uint8[31] packet_data    # packet data for data send messages
+bool local_flag      # True if the message was addressed to this beacon. False if it was "sniffed" by the beacon.
 
 ### the following values relate to the current beacon when the message was computed ###
 int16 attitude_yaw
