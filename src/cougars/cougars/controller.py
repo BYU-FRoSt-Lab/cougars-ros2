@@ -24,9 +24,7 @@ class Controller(Node):
         # Create the callback groups
         # main_callback_group - functions outside of the timer callback loop
         # aux_callback_group - functions inside of the timer callback loop
-        self.main_callback_group = (
-            rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
-        )
+        self.main_callback_group = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
         self.aux_callback_group = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
 
         # Create the publishers
@@ -40,8 +38,8 @@ class Controller(Node):
         self.modem_publisher = self.create_publisher(
             ModemSend,
             "modem_send",
-            10
-            #callback_group=self.main_callback_group
+            10,
+            callback_group=self.aux_callback_group
         )
         # TODO: remove after publishing once to test modem sending capability
         self.get_logger().info("Sent Hello world to modem")
