@@ -1,4 +1,4 @@
 std_msgs/Header header
-string wrz
-string wrp
-string wru
+std_msgs/String wrz
+std_msgs/String wrp
+std_msgs/String wru
