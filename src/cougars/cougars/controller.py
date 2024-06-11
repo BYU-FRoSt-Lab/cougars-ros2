@@ -69,12 +69,6 @@ class Controller(Node):
 
         # Set initial variables
         self.state = States.RUN
-        self.prev_velocity = 0.0
-        self.prev_yaw = 0.0
-        self.prev_pitch = 0.0
-        self.prev_roll = 0.0
-        self.prev_depth = 0.0
-        self.stop = False
         self.counter = 0
 
     # Sets the state machine to STOP when EmergencyStop is requested
@@ -124,34 +118,16 @@ class Controller(Node):
         elif self.state == States.STOP:
             pid_msg.stop = True
 
-        # Only publish the new pid_request values if they change
-        if (
-            self.prev_velocity != pid_msg.velocity
-            or self.prev_yaw != pid_msg.yaw
-            or self.prev_pitch != pid_msg.pitch
-            or self.prev_roll != pid_msg.roll
-            or self.prev_depth != pid_msg.depth
-            or self.stop != pid_msg.stop
-        ):
-            pid_msg.header.stamp = Node.get_clock(self).now().to_msg()
-            self.get_logger().info(
-                "Velocity (%d), Heading (%d, %d, %d), Depth (%d)"
-                % (
-                    pid_msg.velocity,
-                    pid_msg.yaw,
-                    pid_msg.pitch,
-                    pid_msg.roll,
-                    pid_msg.depth,
-                )
-            )
-            self.nav_publisher.publish(pid_msg)
-
-        self.prev_velocity = pid_msg.velocity
-        self.prev_yaw = pid_msg.yaw
-        self.prev_pitch = pid_msg.pitch
-        self.prev_roll = pid_msg.roll
-        self.prev_depth = pid_msg.depth
-        self.stop = pid_msg.stop
+        # Publish the PID message
+        pid_msg.header.stamp = Node.get_clock(self).now().to_msg()
+        self.get_logger().info("Velocity (%d), Heading (%d, %d, %d), Depth (%d)" % (
+            pid_msg.velocity,
+            pid_msg.yaw,
+            pid_msg.pitch,
+            pid_msg.roll,
+            pid_msg.depth,
+        ))
+        self.nav_publisher.publish(pid_msg)
 
 
 def main(args=None):
