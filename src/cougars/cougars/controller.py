@@ -97,9 +97,9 @@ class Controller(Node):
             # TODO: Adjust this simple state machine
             if self.counter < 30:
                 pid_msg.velocity = 0.0
-                pid_msg.yaw = 90.0 # TODO: Does this need to be converted?
-                pid_msg.pitch = 0.0
-                pid_msg.roll = 0.0
+                pid_msg.yaw = 90.0 # in degrees
+                pid_msg.pitch = 0.0 # maybe not needed?
+                pid_msg.roll = 0.0 # maybe not needed?
                 pid_msg.depth = 0.0
                 pid_msg.stop = False
             else:
