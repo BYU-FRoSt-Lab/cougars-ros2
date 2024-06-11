@@ -112,7 +112,7 @@ private:
 
         req.destId    = static_cast<BID_E>(rosmsg->dest_id);
         req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
-        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)31);
+        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)DAT_PAYLOAD_MAX_SIZE);
         
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
         RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", req.packetData);
