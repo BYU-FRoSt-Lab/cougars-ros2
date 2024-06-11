@@ -144,6 +144,9 @@ private:
     msg.usbl_valid = (acoFix.flags & 0x2)? true:false;
     msg.position_valid = (acoFix.flags & 0x4)? true:false;
 
+    msg.position_enhanced = (acoFix.flags & 0x8)? true:false;
+    msg.position_flt_error = (acoFix.flags & 0x10)? true:false;
+
     if(msg.range_valid) {
       msg.range_count = acoFix.range.count;
       msg.range_time = acoFix.range.time;
