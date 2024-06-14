@@ -31,6 +31,7 @@ echo ""
 
 cd ~/ros2_ws
 source install/setup.bash
+cd ~/ros2_ws/bag
 ros2 launch cougars cougars_launch.py
 
 killall micro_ros_agent
