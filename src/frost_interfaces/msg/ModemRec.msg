@@ -1,15 +1,18 @@
 std_msgs/Header header
 
-uint8 msg_id         # CID_E command identification code (type of message sent)
-uint8 packet_len     # packet length for data send messages
-uint8[31] packet_data    # packet data for data send messages
-bool local_flag      # True if the message was addressed to this beacon. False if it was "sniffed" by the beacon.
+uint8 msg_id            # CID_E command identification code (type of message sent)
+uint8 packet_len        # packet length for data send messages
+uint8[31] packet_data   # packet data for data send messages
 
-### the following values relate to the current beacon when the message was computed ###
+bool local_flag         # True if the message was addressed to this beacon. False if it was "sniffed" by the beacon.
+bool position_enhanced  # True if depth was sent and used to compute values. False if depth info was not sent.
+bool position_flt_error # True if the position filter detected a discrepancy between this position and the last position
+
+### the following values relate to the current receiving beacon when the message was computed ###
 int16 attitude_yaw
 int16 attitude_pitch 
 int16 attitude_roll
-int16 depth_local    # local (receiving beacon) depth
+int16 depth_local   # local (receiving beacon) depth
 uint16 vos          # velocity of sound
 uint16 rssi         # recieved signal strength indicator
 
