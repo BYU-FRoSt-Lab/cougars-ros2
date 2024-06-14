@@ -6,5 +6,5 @@
 #   PlatformIO using "msg_update.sh"
 ##########################################################
 
-rsync -avc --delete ~/ros2_ws/src/frost_interfaces ~/teensy_ws/sensors/extra_packages
-rsync -avc --delete ~/ros2_ws/src/frost_interfaces ~/teensy_ws/control/extra_packages
+rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/sensors/extra_packages
+rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/control/extra_packages
