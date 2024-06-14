@@ -15,7 +15,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars',
             executable='volt_sub'),
-        launch_ros.actions.Node(
-            package='seatrac',
-            executable='modem'),
+        # launch_ros.actions.Node(
+        #     package='seatrac',
+        #     executable='modem'),
   ])
