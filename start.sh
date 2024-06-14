@@ -16,6 +16,9 @@ echo ""
 echo -e "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
 echo ""
 
+cd ~/teeny_ws
+bash strobe_on.sh
+
 cd ~/teensy_ws
 bash restart.sh
 
