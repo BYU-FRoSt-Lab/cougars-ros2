@@ -112,9 +112,9 @@ private:
 
         req.destId    = static_cast<BID_E>(rosmsg->dest_id);
         req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
-        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)DAT_PAYLOAD_MAX_SIZE);
-        
+        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        
         RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", req.packetData);
         this->send(sizeof(req), (const uint8_t*)&req);
 
@@ -143,6 +143,9 @@ private:
     msg.range_valid = (acoFix.flags & 0x1)? true:false;
     msg.usbl_valid = (acoFix.flags & 0x2)? true:false;
     msg.position_valid = (acoFix.flags & 0x4)? true:false;
+
+    msg.position_enhanced = (acoFix.flags & 0x8)? true:false;
+    msg.position_flt_error = (acoFix.flags & 0x10)? true:false;
 
     if(msg.range_valid) {
       msg.range_count = acoFix.range.count;
