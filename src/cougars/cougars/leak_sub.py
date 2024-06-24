@@ -24,8 +24,9 @@ class LeakDetectedSubscriber(Node):
         return self.future.result()
 
     def listener_callback(self, msg):
-        error = "ERROR: Leak Detected"
-        self.send_request(error)
+        if msg.leak_detected:
+            error = "ERROR: Leak Detected"
+            self.send_request(error)
 
 
 def main(args=None):
