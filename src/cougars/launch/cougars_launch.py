@@ -5,17 +5,22 @@ def generate_launch_description():
     return launch.LaunchDescription([
         launch.actions.ExecuteProcess(
             cmd=['ros2', 'bag', 'record', '-a'],
-            output='screen'),
+            output='screen'
+        ),
         launch_ros.actions.Node(
             package='cougars',
-            executable='controller'),
+            executable='controller'
+        ),
         launch_ros.actions.Node(
             package='cougars',
-            executable='leak_sub'),
+            executable='leak_sub'
+        ),
         launch_ros.actions.Node(
             package='cougars',
-            executable='volt_sub'),
+            executable='volt_sub'
+        ),
         # launch_ros.actions.Node(
         #     package='seatrac',
-        #     executable='modem'),
-  ])
+        #     executable='modem'
+        # ),
+    ])
