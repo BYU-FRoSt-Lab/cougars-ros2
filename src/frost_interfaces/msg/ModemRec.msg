@@ -1,5 +1,8 @@
 std_msgs/Header header
 
+uint8 dest_id
+uint8 src_id
+
 uint8 msg_id            # CID_E command identification code (type of message sent)
 uint8 packet_len        # packet length for data send messages
 uint8[31] packet_data   # packet data for data send messages

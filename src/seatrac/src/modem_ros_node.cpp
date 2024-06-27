@@ -133,6 +133,10 @@ private:
 
   //copies the fields from the acofix struct into the ModemRec ros message
   inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acoFix) {
+    
+    msg.dest_id = acoFix.destId;
+    msg.src_id  = acoFix.srcId;
+    
     msg.attitude_yaw = acoFix.attitudeYaw;
     msg.attitude_pitch = acoFix.attitudePitch;
     msg.attitude_roll = acoFix.attitudeRoll;
