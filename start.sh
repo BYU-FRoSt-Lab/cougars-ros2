@@ -28,11 +28,11 @@ sleep 5
 
 echo ""
 
+cd ~/config
+bash set_config.sh
+
 cd ~/ros2_ws
 source install/setup.bash
-
-# ADD CALIBRATION SCRIPT w ROS TOPIC PUB, ROS PARAMS
-
 cd ~/ros2_ws/bag
 ros2 launch cougars cougars_launch.py
 
