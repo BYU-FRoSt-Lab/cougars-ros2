@@ -18,7 +18,6 @@ echo ""
 
 cd ~/teensy_ws
 bash strobe_on.sh
-bash restart.sh
 
 echo ""
 
@@ -29,10 +28,11 @@ sleep 5
 
 echo ""
 
-# ADD CALIBRATION SCRIPT w ROS TOPIC PUB, ROS PARAMS
-
 cd ~/ros2_ws
 source install/setup.bash
+
+# ADD CALIBRATION SCRIPT w ROS TOPIC PUB, ROS PARAMS
+
 cd ~/ros2_ws/bag
 ros2 launch cougars cougars_launch.py
 
