@@ -29,6 +29,8 @@ sleep 5
 
 echo ""
 
+# ADD CALIBRATION SCRIPT w ROS TOPIC PUB, ROS PARAMS
+
 cd ~/ros2_ws
 source install/setup.bash
 cd ~/ros2_ws/bag
