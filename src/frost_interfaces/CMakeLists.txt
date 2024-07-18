@@ -25,6 +25,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Volt.msg"
   "msg/Leak.msg"
   "msg/PID.msg"
+  "msg/Calibration.msg"
   "srv/EmergencyStop.srv"
   DEPENDENCIES std_msgs
 )
