@@ -1,3 +1,5 @@
+import time
+import gpiod
 import rclpy
 from rclpy.node import Node
 from enum import Enum
@@ -7,6 +9,8 @@ from .seatrac_utils import hello_world_modem_send
 
 PID_PUB_TIMER_PERIOD = 1 # seconds
 
+STROBE_PIN = 15
+ENABLE_STROBE = True
 
 class States(Enum):
     RUN = 1
@@ -57,6 +61,12 @@ class Controller(Node):
             callback_group=self.main_callback_group,
         )
 
+        # Set up the strobe light
+        if ENABLE_STROBE:
+            self.chip = gpiod.Chip('gpiochip4')
+            self.control_line = self.chip.get_line(STROBE_PIN)
+            self.control_line.request(consumer="STROBE", type=gpiod.LINE_REQ_DIR_OUT)
+
         # Set initial variables
         self.state = States.RUN
         self.counter = 0
@@ -72,6 +82,13 @@ class Controller(Node):
     # Runs the state machine and high-level controller, publishes to pid_request
     def timer_callback(self):
         pid_msg = PID()
+
+        # blink the strobe every second
+        if ENABLE_STROBE:
+            if time.time() % 2 < 1:
+                self.control_line.set_value(1)
+            else:
+                self.control_line.set_value(0)
 
         if self.state == States.RUN:
 
