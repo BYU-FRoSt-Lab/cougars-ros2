@@ -22,6 +22,9 @@ class Controller(Node):
     def __init__(self):
         super().__init__("controller")
 
+        # Declare parameters
+        self.declare_parameter('vehicle_id', 0)
+
         # Create the callback groups
         # main_callback_group - functions outside of the timer callback loop
         # aux_callback_group - functions inside of the timer callback loop
