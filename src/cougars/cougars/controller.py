@@ -23,6 +23,7 @@ class Controller(Node):
         super().__init__("controller")
 
         # Declare parameters
+        # These are set using the local set_config.py file when start.sh is run
         self.declare_parameter('vehicle_id', 0)
 
         # Create the callback groups
