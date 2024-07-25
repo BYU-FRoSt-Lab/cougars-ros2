@@ -21,7 +21,7 @@ using std::placeholders::_1;
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
-//TODO: maybe add commandline arg for serial port
+//TODO: add ros parameters to setup beacon and driver node. At least serial port
 
 // The class needs to inherit from both the ROS node and driver classes
 class ModemRosNode : public rclcpp::Node, public SeatracDriver {
@@ -39,57 +39,172 @@ public:
   // this method is called on any message returned by the beacon.
   // it copies the modem data to a ros message of type ModemRec
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
+    auto msg = frost_interfaces::msg::ModemRec();
+    msg.msg_id = msgId;
     switch (msgId) {
       default: {
-        RCLCPP_INFO(this->get_logger(), "Received unknown message from seatrac modem. msgId: %d", msgId); 
+        //RCLCPP_INFO(this->get_logger(), "Received unknown message from seatrac modem. msgId: %d", msgId); 
       } break;
       case CID_DAT_RECEIVE: {
-        messages::DataReceive response;     //struct that contains response fields
-        response = data;                    //operator overload fills in response struct with correct data
-
-        auto msg = frost_interfaces::msg::ModemRec();
-        msg.msg_id = CID_DAT_RECEIVE;
-        msg.packet_len = response.packetLen;
-        msg.local_flag = response.localFlag;
-        std::memcpy(&msg.packet_data, response.packetData, response.packetLen);
-        cpyFixtoRosmsg(msg, response.acoFix);
-
-        RCLCPP_INFO(this->get_logger(), "Publishing ModemRec CID_DAT_RECEIVE");
-        publisher_->publish(msg);
+        messages::DataReceive report;     //struct that contains report fields
+        report = data;                    //operator overload fills in report struct with correct data
+        msg.packet_len = report.packetLen;
+        msg.local_flag = report.localFlag;
+        std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
+        cpyFixtoRosmsg(msg, report.acoFix);
       } break;
       case CID_DAT_ERROR: {
-        messages::DataError response;
-        response = data;
-        std::ostringstream err;
-        err << "Error with seatrac modem data message." << std::endl << response;
-        RCLCPP_ERROR(this->get_logger(), err.str().c_str());
+        messages::DataError report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.status;
+        msg.target_id = report.beaconId;
+      } break;
+      case CID_DAT_SEND: {
+        messages::DataSend report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.status;
+        msg.target_id = report.beaconId;
+      } break;
+
+      case CID_ECHO_RESP: {
+        messages::EchoResp report;     //struct that contains report fields
+        report = data;                    //operator overload fills in report struct with correct data
+        msg.local_flag = true;
+        msg.packet_len = report.packetLen;
+        std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
+        cpyFixtoRosmsg(msg, report.acoFix);
+      } break;
+      case CID_ECHO_REQ: {
+        messages::EchoReq report;
+        report = data;
+        msg.packet_len = report.packetLen;
+        std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
+        cpyFixtoRosmsg(msg, report.acoFix);
+      } break;
+      case CID_ECHO_ERROR: {
+        messages::EchoError report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.status;
+        msg.target_id = report.beaconId;
+      } break;
+      case CID_ECHO_SEND: {
+        messages::EchoSend report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.status;
+        msg.target_id = report.beaconId;
       } break;
 
       case CID_PING_RESP: {
-        messages::PingResp response;
-        response = data;
-
-        auto msg = frost_interfaces::msg::ModemRec();
-        msg.msg_id = CID_PING_RESP;
+        messages::PingResp report;
+        report = data;
         msg.packet_len = 0;
         msg.local_flag = true; //Ping messages are not sniffed.
-        cpyFixtoRosmsg(msg, response.acoFix);
-
-        RCLCPP_INFO(this->get_logger(), "Publishing ModemRec CID_PING_RESP");
-        publisher_->publish(msg);
+        cpyFixtoRosmsg(msg, report.acoFix);
+      } break;
+      case CID_PING_REQ: {
+        messages::PingReq report;
+        report = data;
+        msg.packet_len = 0;
+        msg.local_flag = true;
+        cpyFixtoRosmsg(msg, report.acoFix);
       } break;
       case CID_PING_ERROR: {
-        messages::PingError response;
-        response = data;
-        std::ostringstream err;
-        err << "Error with seatrac modem ping message." << std::endl << response;
-        RCLCPP_ERROR(this->get_logger(), err.str().c_str()); //TODO: add response diagnostic data to message
+        messages::PingError report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.statusCode;
+        msg.target_id = report.beaconId;
+      } break;
+      case CID_PING_SEND: {
+        messages::PingSend report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.statusCode;
+        msg.target_id = report.target;
       } break;
 
-      case CID_STATUS:
-        //Too many status messages so bypasing display
-        break;
+      case CID_NAV_QUERY_RESP: {
+        messages::NavQueryResp report;
+        report = data;
+        msg.local_flag = report.localFlag;
+        cpyFixtoRosmsg(msg, report.acoFix);
+        msg.includes_remote_depth    = (report.queryFlags & QRY_DEPTH)?    true:false;
+        msg.includes_remote_supply   = (report.queryFlags & QRY_SUPPLY)?   true:false;
+        msg.includes_remote_temp     = (report.queryFlags & QRY_TEMP)?     true:false;
+        msg.includes_remote_attitude = (report.queryFlags & QRY_ATTITUDE)? true:false;
+        if(msg.includes_remote_depth)  msg.remote_depth  = report.remoteDepth;
+        if(msg.includes_remote_supply) msg.remote_supply = report.remoteSupply;
+        if(msg.includes_remote_temp)   msg.remote_temp   = report.remoteTemp;
+        if(msg.includes_remote_attitude) {
+          msg.remote_yaw   = report.remoteYaw;
+          msg.remote_pitch = report.remotePitch;
+          msg.remote_roll  = report.remoteRoll;
+        }
+        if(report.queryFlags & QRY_DATA) {
+          msg.packet_len = report.packetLen;
+          std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
+        } else msg.packet_len = 0;
+      } break;
+      case CID_NAV_QUERY_REQ: {
+        messages::NavQueryReq report;
+        report = data;
+        msg.local_flag = report.localFlag;
+        msg.packet_len = report.packetLen;
+        std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
+        cpyFixtoRosmsg(msg, report.acoFix);
+        //Note that the field report.queryFlags is not saved to the ros msg.
+      } break;
+      case CID_NAV_ERROR: {
+        messages::NavError report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.statusCode;
+        msg.target_id = report.beaconId;
+      } break;
+      case CID_NAV_QUERY_SEND: {
+        messages::NavQuerySend report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.status;
+        msg.target_id = report.beaconId;
+      } break;
+
+      case CID_XCVR_RX_ERR: {
+        messages::XcvrReceptionError report;
+        report = data;
+        msg.includes_command_status_code = true;
+        msg.command_status_code = report.statusCode;
+        cpyFixtoRosmsg(msg, report.acousticFix);
+      } break;
+
+      case CID_STATUS: {
+        messages::Status report;
+        report = data;
+        msg.includes_status_timestamp = true;
+        msg.timestamp = report.timestamp;
+        if(report.contentType & ENVIRONMENT) {
+          msg.includes_status_env_fields = true;
+          msg.supply_voltage = report.environment.envSupply;
+          msg.env_temp = report.environment.envTemp;
+          msg.env_pressure = report.environment.envPressure;
+          msg.includes_local_depth_and_vos = true;
+          msg.depth_local = report.environment.envDepth;
+          msg.vos = report.environment.envVos;
+        }
+        if(report.contentType & ATTITUDE) {
+          msg.includes_local_attitude = true;
+          msg.attitude_yaw   = report.attitude.attYaw;
+          msg.attitude_pitch = report.attitude.attPitch;
+          msg.attitude_roll  = report.attitude.attRoll;
+        }
+      } break;
     }
+
+    publisher_->publish(msg);
   }
 
 private:
@@ -107,15 +222,29 @@ private:
       default: {
         RCLCPP_ERROR(this->get_logger(), "Unsupported seatrac message id for broadcasting messages: %d", msgId);
       } break;
+      
       case CID_DAT_SEND: {
         messages::DataSend::Request req; //struct contains message to send to modem
 
         req.destId    = static_cast<BID_E>(rosmsg->dest_id);
         req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
+
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
-        
         RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", req.packetData);
+        this->send(sizeof(req), (const uint8_t*)&req);
+
+      } break;
+
+      case CID_ECHO_SEND: {
+        messages::EchoSend::Request req; //struct contains message to send to modem
+
+        req.destId    = static_cast<BID_E>(rosmsg->dest_id);
+        req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
+        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
+
+        std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_ECHO_SEND message. String is '%s'", req.packetData);
         this->send(sizeof(req), (const uint8_t*)&req);
 
       } break;
@@ -124,57 +253,72 @@ private:
         messages::PingSend::Request req;
         req.target    = static_cast<BID_E>(rosmsg->dest_id);
         req.pingType  = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message");
+        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_PING_SEND message");
         this->send(sizeof(req), (const uint8_t*)&req);
       } break;
-      //TODO: add case for calibration
+
+      case CID_NAV_QUERY_SEND: {
+        messages::NavQuerySend::Request req;
+        req.destId     = static_cast<BID_E>(rosmsg->dest_id);
+        req.queryFlags = static_cast<NAV_QUERY_E>(rosmsg->nav_query_flags);
+        req.packetLen  = rosmsg->packet_len;
+        std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_NAV_QUERY_SEND message");
+        this->send(sizeof(req), (const uint8_t*)&req);
+      }
+      
     }
   }
 
   //copies the fields from the acofix struct into the ModemRec ros message
   inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acoFix) {
-    
+
     msg.dest_id = acoFix.destId;
     msg.src_id  = acoFix.srcId;
-    
+
+    msg.includes_local_attitude = true;
     msg.attitude_yaw = acoFix.attitudeYaw;
     msg.attitude_pitch = acoFix.attitudePitch;
     msg.attitude_roll = acoFix.attitudeRoll;
+    
+    
+    msg.includes_local_depth_and_vos = true;
     msg.depth_local = acoFix.depthLocal;
     msg.vos = acoFix.vos;
     msg.rssi = acoFix.rssi;
 
-    msg.range_valid = (acoFix.flags & 0x1)? true:false;
-    msg.usbl_valid = (acoFix.flags & 0x2)? true:false;
-    msg.position_valid = (acoFix.flags & 0x4)? true:false;
 
-    msg.position_enhanced = (acoFix.flags & 0x8)? true:false;
-    msg.position_flt_error = (acoFix.flags & 0x10)? true:false;
+    msg.includes_range = (acoFix.flags & RANGE_VALID)? true:false;
+    msg.includes_usbl = (acoFix.flags & USBL_VALID)? true:false;
+    msg.includes_position = (acoFix.flags & POSITION_VALID)? true:false;
 
-    if(msg.range_valid) {
+    msg.position_enhanced = (acoFix.flags & POSITION_ENHANCED)? true:false;
+    msg.position_flt_error = (acoFix.flags & POSITION_FLT_ERROR)? true:false;
+
+    if(msg.includes_range) {
       msg.range_count = acoFix.range.count;
       msg.range_time = acoFix.range.time;
       msg.range_dist = acoFix.range.dist;
     }
-    if(msg.usbl_valid) {
+    if(msg.includes_usbl) {
       msg.usbl_channels = acoFix.usbl.channelCount;
       std::memcpy(&msg.usbl_rssi, acoFix.usbl.rssi, acoFix.usbl.channelCount);
       msg.usbl_azimuth = acoFix.usbl.azimuth;
       msg.usbl_elevation = acoFix.usbl.elevation;
       msg.usbl_fit_error = acoFix.usbl.fitError;
     }
-    if(msg.position_valid) {
+    if(msg.includes_position) {
       msg.position_easting = acoFix.position.easting;
       msg.position_northing = acoFix.position.northing;
       msg.position_depth = acoFix.position.depth;
     }
   }
-
 };
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ModemRosNode>());
+  auto modem_ros_node = std::make_shared<ModemRosNode>();
+  rclcpp::spin(modem_ros_node);
   rclcpp::shutdown();
   return 0;
 }
