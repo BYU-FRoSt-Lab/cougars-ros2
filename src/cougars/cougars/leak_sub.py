@@ -1,15 +1,15 @@
 import rclpy
 from rclpy.node import Node
 from frost_interfaces.srv import EmergencyStop
-from frost_interfaces.msg import Leak
+from frost_interfaces.msg import LeakStatus
 from rclpy.qos import qos_profile_sensor_data
 
 
-class LeakDetectedSubscriber(Node):
+class LeakSubscriber(Node):
     def __init__(self):
-        super().__init__("leak_detected_subscriber")
+        super().__init__("leak_subscriber")
         self.subscription = self.create_subscription(
-            Leak, "leak_data", self.listener_callback, qos_profile_sensor_data
+            LeakStatus, "leak_data", self.listener_callback, qos_profile_sensor_data
         )
         self.subscription  # prevent unused variable warning
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
@@ -24,7 +24,7 @@ class LeakDetectedSubscriber(Node):
         return self.future.result()
 
     def listener_callback(self, msg):
-        if msg.leak_detected:
+        if msg.leak:
             error = "ERROR: Leak Detected"
             self.send_request(error)
 
@@ -32,11 +32,11 @@ class LeakDetectedSubscriber(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    leak_detected_subscriber = LeakDetectedSubscriber()
+    leak_subscriber = LeakSubscriber()
 
-    rclpy.spin(leak_detected_subscriber)
+    rclpy.spin(leak_subscriber)
 
-    leak_detected_subscriber.destroy_node()
+    leak_subscriber.destroy_node()
     rclpy.shutdown()
 
 

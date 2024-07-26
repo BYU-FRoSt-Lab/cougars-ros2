@@ -1,17 +1,17 @@
 import rclpy
 from rclpy.node import Node
 from frost_interfaces.srv import EmergencyStop
-from frost_interfaces.msg import Volt
+from frost_interfaces.msg import BatteryStatus
 from rclpy.qos import qos_profile_sensor_data
 
 CRITICAL_VOLTAGE = 14.0
 
 
-class VoltageSubscriber(Node):
+class BatterySubscriber(Node):
     def __init__(self):
-        super().__init__("voltage_subscriber")
+        super().__init__("battery_subscriber")
         self.subscription = self.create_subscription(
-            Volt, "volt_data", self.listener_callback, qos_profile_sensor_data
+            BatteryStatus, "battery_data", self.listener_callback, qos_profile_sensor_data
         )
         self.subscription  # prevent unused variable warning
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
@@ -34,11 +34,11 @@ class VoltageSubscriber(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    voltage_subscriber = VoltageSubscriber()
+    battery_subscriber = BatterySubscriber()
 
-    rclpy.spin(voltage_subscriber)
+    rclpy.spin(battery_subscriber)
 
-    voltage_subscriber.destroy_node()
+    battery_subscriber.destroy_node()
     rclpy.shutdown()
 
 
