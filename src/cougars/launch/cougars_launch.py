@@ -9,7 +9,7 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars',
-            executable='controller'
+            executable='moos_bridge'
         ),
         launch_ros.actions.Node(
             package='cougars',
@@ -17,7 +17,7 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars',
-            executable='volt_sub'
+            executable='battery_sub'
         ),
         # launch_ros.actions.Node(
         #     package='seatrac',

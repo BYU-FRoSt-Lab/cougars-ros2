@@ -14,12 +14,16 @@ echo "LISTING FOUND TOPICS..."
 ros2 topic list
 
 echo ""
-echo "PUBLISHING TO TOPIC 'PID_REQUEST'..."
-ros2 topic pub -1 /pid_request frost_interfaces/msg/PID '{velocity: 0.0, yaw: 90.0, pitch: 0.0, roll: 0.0, depth: 0.0}'
+echo "PUBLISHING TO TOPIC 'DESIRED_DEPTH'..."
+ros2 topic pub -1 /pid_request frost_interfaces/msg/DesiredDepth '{desired_depth: 0}'
 
 echo ""
-echo "LISTENING TO TOPIC 'IMU_DATA'..."
-ros2 topic echo --once /imu_data
+echo "PUBLISHING TO TOPIC 'DESIRED_HEADING'..."
+ros2 topic pub -1 /pid_request frost_interfaces/msg/DesiredHeading '{desired_heading: 0}'
+
+echo ""
+echo "PUBLISHING TO TOPIC 'DESIRED_SPEED'..."
+ros2 topic pub -1 /pid_request frost_interfaces/msg/DesiredSpeed '{desired_speed: 0}'
 
 echo ""
 echo "LISTENING TO TOPIC 'DVL_DATA'..."
@@ -34,8 +38,8 @@ echo "LISTENING TO TOPIC 'LEAK_DATA'..."
 ros2 topic echo --once /leak_data
 
 echo ""
-echo "LISTENING TO TOPIC 'VOLT_DATA'..."
-ros2 topic echo --once /volt_data
+echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
+ros2 topic echo --once /battery_data
 
 echo ""
 echo "LISTENING TO TOPIC 'GPS_DATA'..."

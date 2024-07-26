@@ -23,9 +23,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'controller = cougars.controller:main',
+            'moos_bridge = cougars.moos_bridge:main',
             'leak_sub = cougars.leak_sub:main',
-            'volt_sub = cougars.volt_sub:main',
+            'battery_sub = cougars.battery_sub:main',
         ],
     },
 )
