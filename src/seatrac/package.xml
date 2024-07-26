@@ -7,7 +7,7 @@
     A ROS2 node that publishes Ping and Data messages recieved from the beacon
     and sends Ping and Data messages to the beacon
   </description>
-  <maintainer email="snelsondurrant@gmail.com">Nelson Durrant</maintainer>
+  <maintainer email="cas314@byu.edu">Clayton Smith</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
