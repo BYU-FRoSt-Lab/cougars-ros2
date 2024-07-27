@@ -2,7 +2,7 @@
 
 ##########################################################
 # STARTS THE MICRO-ROS AGENT AND RUNS THE LAUNCH FILE
-# - Log files are saved in ~/bag on the host machine
+# - Log files are saved in "~/bag" on the host machine
 #   running the docker container
 ##########################################################
 

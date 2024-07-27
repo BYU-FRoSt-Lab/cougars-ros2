@@ -2,7 +2,7 @@
 
 ##########################################################
 # TESTS EACH OF THE EXPECTED ROS TOPICS
-# - Before running this script, run agent.sh in a 
+# - Before running this script, run "agent.sh" in a 
 #   different terminal
 ##########################################################
 
