@@ -19,7 +19,7 @@ class MOOSBridge(Node):
         super().__init__("moos_bridge")
 
         # Declare parameters
-        # These are set using the local "set_config.py" file when "start.sh" is run
+        # These are set using the local "set_config.sh" file when "start.sh" is run
         self.declare_parameter('vehicle_id', 0)
 
         # Create the publishers
