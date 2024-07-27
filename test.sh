@@ -45,9 +45,9 @@ echo ""
 echo "LISTENING TO TOPIC 'GPS_DATA'..."
 ros2 topic echo --once /gps_data
 
-echo ""
-echo "LISTENING TO TOPIC 'ECHO_DATA'..."
-ros2 topic echo --once /echo_data
+# echo ""
+# echo "LISTENING TO TOPIC 'ECHO_DATA'..."
+# ros2 topic echo --once /echo_data
 
 echo ""
 echo "TEST COMPLETE"
