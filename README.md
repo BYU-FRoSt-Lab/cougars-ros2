@@ -7,5 +7,5 @@ A quick high-level overview of the repo:
 Of note are "src/cougars/" (runs high-level controller logic, kind of a master package) and "src/frost_interfaces/" (contains custom ROS message and service declarations).
 The ROS launch file is included in "src/cougars/launch/".
 - **scripts (agent.sh, msg_sync.sh, etc)** - automates helpful software tasks on the AUV.
-For example, running "bash start.sh" will restart the microcontrollers, start the microROS agent, run the ROS launch file, and start logging data.
+For example, running "bash start.sh" will load in the local config values, start the microROS agent, run the ROS launch file, and start logging data.
 A description of what each script does is included as a header comment in the file.
