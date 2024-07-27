@@ -15,17 +15,15 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Echo.msg"
+  "msg/BatteryStatus.msg"
+  "msg/ControlConfig.msg"
+  "msg/DesiredDepth.msg"
+  "msg/DesiredHeading.msg"
+  "msg/DesiredSpeed.msg"
+  "msg/DVLStrings.msg"
+  "msg/LeakStatus.msg"
   "msg/ModemRec.msg"
   "msg/ModemSend.msg"
-  "msg/GPS.msg"
-  "msg/IMU.msg"
-  "msg/DVL.msg"
-  "msg/Depth.msg"
-  "msg/Volt.msg"
-  "msg/Leak.msg"
-  "msg/PID.msg"
-  "msg/Calibration.msg"
   "srv/EmergencyStop.srv"
   DEPENDENCIES std_msgs
 )
