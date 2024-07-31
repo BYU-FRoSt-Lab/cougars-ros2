@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'moos_bridge = cougars.moos_bridge:main',
+            'manual_control = cougars.manual_control:main',
             'leak_sub = cougars.leak_sub:main',
             'battery_sub = cougars.battery_sub:main',
         ],

@@ -3,7 +3,7 @@ import gpiod
 
 import rclpy
 from rclpy.node import Node
-from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed, ModemSend
+from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
 from frost_interfaces.srv import EmergencyStop
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
 
@@ -23,33 +23,23 @@ class MOOSBridge(Node):
         self.declare_parameter('vehicle_id', 0)
 
         # Create the publishers
-        self.nav_publisher = self.create_publisher(
+        self.depth_publisher = self.create_publisher(
             DesiredDepth,
             "desired_depth",
             qos_profile_system_default
         )
 
-        self.nav_publisher = self.create_publisher(
+        self.heading_publisher = self.create_publisher(
             DesiredHeading,
             "desired_heading",
             qos_profile_system_default
         )
 
-        self.nav_publisher = self.create_publisher(
+        self.speed_publisher = self.create_publisher(
             DesiredSpeed,
             "desired_speed",
             qos_profile_system_default
         )
-
-        self.modem_publisher = self.create_publisher(
-            ModemSend,
-            "modem_send",
-            qos_profile_sensor_data
-        )
-
-        # TODO: remove after publishing once to test modem sending capability
-        self.get_logger().info("Sent Hello world to modem")
-        self.modem_publisher.publish(hello_world_modem_send())
 
         # Create the services
         self.srv = self.create_service(
