@@ -2,5 +2,7 @@
 **/install
 **/log
 **/bag
+**/resource
+**/test
 
 /.vscode
