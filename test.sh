@@ -15,15 +15,15 @@ ros2 topic list
 
 echo ""
 echo "PUBLISHING TO TOPIC 'DESIRED_DEPTH'..."
-ros2 topic pub -1 /pid_request frost_interfaces/msg/DesiredDepth '{desired_depth: 0}'
+ros2 topic pub -1 /desired_depth frost_interfaces/msg/DesiredDepth '{desired_depth: 0}'
 
 echo ""
 echo "PUBLISHING TO TOPIC 'DESIRED_HEADING'..."
-ros2 topic pub -1 /pid_request frost_interfaces/msg/DesiredHeading '{desired_heading: 0}'
+ros2 topic pub -1 /desired_heading frost_interfaces/msg/DesiredHeading '{desired_heading: 0}'
 
 echo ""
 echo "PUBLISHING TO TOPIC 'DESIRED_SPEED'..."
-ros2 topic pub -1 /pid_request frost_interfaces/msg/DesiredSpeed '{desired_speed: 0}'
+ros2 topic pub -1 /desired_speed frost_interfaces/msg/DesiredSpeed '{desired_speed: 0}'
 
 echo ""
 echo "LISTENING TO TOPIC 'DVL_DATA'..."
