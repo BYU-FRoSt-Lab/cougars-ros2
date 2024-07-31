@@ -13,6 +13,10 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars',
+            executable='dvl_parser'
+        ),
+        launch_ros.actions.Node(
+            package='cougars',
             executable='leak_sub'
         ),
         launch_ros.actions.Node(
