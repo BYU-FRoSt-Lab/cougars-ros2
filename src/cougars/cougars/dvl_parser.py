@@ -1,12 +1,10 @@
 import rclpy
+import crcmod
 import numpy as np
 from rclpy.node import Node
-from std_msgs.msg import String
-from frost_interfaces.msg import DVL
-from geometry_msgs.msg import TwistWithCovarianceStamped
-from geometry_msgs.msg import PoseWithCovarianceStamped
-import crcmod
 from std_msgs.msg import Float64
+from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
+from frost_interfaces.msg import DVLStrings
 
 test_wru = "wru,0,0.070,1.10,-40,-95*9c"
 
@@ -15,7 +13,7 @@ class DVLParser(Node):
 
     def __init__(self):
         super().__init__('dvl_parser')
-        self.subscription_dvl_data = self.create_subscription(DVL,'dvl_data',self.dvl_listener,10)
+        self.subscription_dvl_data = self.create_subscription(DVLStrings,'dvl_data',self.dvl_listener,10)
         # self.timer = self.create_timer(1, self.timer_callback)
         self.parsed_dvl_data = {}
 
