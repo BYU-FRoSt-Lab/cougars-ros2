@@ -8,15 +8,19 @@ def generate_launch_description():
             output='screen'
         ),
         launch_ros.actions.Node(
-            package='cougars',
-            executable='moos_bridge'
+            package='cougars_py',
+            executable='manual_control'
         ),
         launch_ros.actions.Node(
-            package='cougars',
+            package='cougars_py',
+            executable='dvl_parser'
+        ),
+        launch_ros.actions.Node(
+            package='cougars_py',
             executable='leak_sub'
         ),
         launch_ros.actions.Node(
-            package='cougars',
+            package='cougars_py',
             executable='battery_sub'
         ),
         # launch_ros.actions.Node(

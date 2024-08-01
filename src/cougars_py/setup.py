@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import setup
 
-package_name = 'cougars'
+package_name = 'cougars_py'
 
 setup(
     name=package_name,
@@ -23,11 +23,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'moos_bridge = cougars.moos_bridge:main',
-            'dvl_parser = cougars.dvl_parser:main',
-            'manual_control = cougars.manual_control:main',
-            'leak_sub = cougars.leak_sub:main',
-            'battery_sub = cougars.battery_sub:main',
+            'moos_bridge = cougars_py.moos_bridge:main',
+            'dvl_parser = cougars_py.dvl_parser:main',
+            'manual_control = cougars_py.manual_control:main',
+            'leak_sub = cougars_py.leak_sub:main',
+            'battery_sub = cougars_py.battery_sub:main',
         ],
     },
 )
