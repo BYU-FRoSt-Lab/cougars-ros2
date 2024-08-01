@@ -5,9 +5,7 @@ import rclpy
 from rclpy.node import Node
 from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
 from frost_interfaces.srv import EmergencyStop
-from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
-
-from .seatrac_utils import hello_world_modem_send
+from rclpy.qos import qos_profile_system_default
 
 STROBE_PIN = 15
 ENABLE_STROBE = True
@@ -47,19 +45,6 @@ class MOOSBridge(Node):
             "emergency_stop",
             self.emergency_stop_callback
         )
-
-        # Set up the strobe light
-        if ENABLE_STROBE:
-            self.chip = gpiod.Chip('gpiochip4')
-            self.control_line = self.chip.get_line(STROBE_PIN)
-            self.control_line.request(consumer="STROBE", type=gpiod.LINE_REQ_DIR_OUT)
-
-        # TODO: Integrate into MOOS Bridge somehow
-        if ENABLE_STROBE:
-            if time.time() % 2 < 1:
-                self.control_line.set_value(1)
-            else:
-                self.control_line.set_value(0)
 
     # Logs when EmergencyStop is requested
     # TODO: Integrate into MOOS Bridge somehow
