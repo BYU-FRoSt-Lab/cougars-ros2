@@ -1,28 +1,29 @@
-import rclpy
 import crcmod
 import numpy as np
+
+import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
 from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from frost_interfaces.msg import DVLStrings
 
-test_wru = "wru,0,0.070,1.10,-40,-95*9c"
+TEST_WRU = "wru,0,0.070,1.10,-40,-95*9c"
 
 
 class DVLParser(Node):
-
+    # Creates all of the publishers, subscriptions, services, and clients
     def __init__(self):
         super().__init__('dvl_parser')
+
         self.subscription_dvl_data = self.create_subscription(DVLStrings,'dvl_data',self.dvl_listener,10)
-        # self.timer = self.create_timer(1, self.timer_callback)
         self.parsed_dvl_data = {}
 
         self.publisher_dvl_velocity = self.create_publisher(TwistWithCovarianceStamped, 'dvl_velocity', 10)
         self.publisher_dvl_pose = self.create_publisher(PoseWithCovarianceStamped, 'dvl_pose', 10)
         self.publisher_dvl_depth = self.create_publisher(Float64, 'dvl_depth', 10)
      
-   
     def do_checksum(self, dvl_string):
+
         crc = crcmod.predefined.mkPredefinedCrcFun("crc-8")
         sentence = bytes(dvl_string,'utf-8')
         data, checksum = sentence.split(b"*")
@@ -30,25 +31,13 @@ class DVLParser(Node):
             return True
         else:
             return False
-
-    # def timer_callback(self):
-    #     wrz = String()
-    #     wrz.data = "wrz,0.120,-0.400,2.000,y,1.30,1.855,1e-07;0;1.4;0;1.2;0;0.2;0;1e+09,7,14,123.00,1*50"
-    #     wru = String()
-    #     wru.data = "wru,0,0.070,1.10,-40,-95*9c"
-    #     wrp = String()
-    #     wrp.data = "wrp,49056.809,0.41,0.15,1.23,0.4,53.9,13.0,19.3,0*de"
-
-
-    #     self.publisher_dvl_sample.publish(wrz)
-    #     self.publisher_dvl_sample.publish(wru)
-    #     self.publisher_dvl_sample.publish(wrp)
     
-
     def parse_wrz(self,wrz):
+
         if self.do_checksum(wrz):
             data = wrz.split("*")[0].split(",")
             parsed_wrz = {}
+
             # Report label
             report_label = data[0]
             # Velocity in x direction (m/s)
@@ -74,14 +63,15 @@ class DVLParser(Node):
             # 8 bit status mask. Bit 0 is set to 1 for high temperature and DVL will soon enter thermal shutdown. Remaining bits are reserved for future use.
             parsed_wrz["status"] = data[11]
 
+            # add to the parsed_dvl_data
             self.parsed_dvl_data[report_label] = parsed_wrz
 
-
-
     def parse_wrp(self,wrp):
+
         if self.do_checksum(wrp):
             data = wrp.split("*")[0].split(",")
             parsed_wrp = {}
+
             # Report label
             report_label = data[0]
             # Time stamp of report (Unix timestamp in seconds)
@@ -106,11 +96,12 @@ class DVLParser(Node):
             # add to the parsed_dvl_data
             self.parsed_dvl_data[report_label] = parsed_wrp
 
-
     def parse_wru(self,wru):
+
         if self.do_checksum(wru):
             data = wru.split("*")[0].split(",")
             parsed_wru = {}
+
             # Report label
             report_label = data[0]
             # Transducer number
@@ -123,40 +114,22 @@ class DVLParser(Node):
             parsed_wru["rssi"] = data[4]
             # Noise spectral density: strength of the background noise received by this transducer (dBm)
             parsed_wru["nsd"] = data[5]
+
             # add to the parsed_dvl_data
             self.parsed_dvl_data[report_label] = parsed_wru
 
-
     def dvl_listener(self, msg):
-
-        # label = msg.data.split(",")[0]
-        # # velocity report
-        # if label == "wrz":
-        #     self.parse_wrz(msg.data)
-        # # dead reckoning report
-        # if label == "wrp":
-        #     self.parse_wrp(msg.data)
-        # # Transducer report
-        # if label == "wru":
-        #     self.parse_wru(msg.data)
-
-
-        # comment out the three function calls below if you uncomment the block above
 
         # velocity report
         self.parse_wrz(msg.wrz)
         # dead reckoning report
         self.parse_wrp(msg.wrp)
-        # Transducer report
+        # transducer report
         self.parse_wru(msg.wru)
-        # print the parsed data
-        
-        print(self.parsed_dvl_data)
 
-
-        self.velocity_publish() #TwistWithCovarianceStamped
-        self.depth_publish() #std_msg Float64
-        self.state_publish() #PoseWithCovarianceStamped
+        self.velocity_publish() # TwistWithCovarianceStamped
+        self.depth_publish() # Float64
+        self.state_publish() # PoseWithCovarianceStamped
 
     def depth_publish(self):
         msg = Float64()
@@ -180,7 +153,6 @@ class DVLParser(Node):
         self.publisher_dvl_pose.publish(msg)
 
     def velocity_publish(self):
-
         msg = TwistWithCovarianceStamped()
 
         msg.twist.twist.linear.x = self.parsed_dvl_data['wrz']['vx']
@@ -190,15 +162,13 @@ class DVLParser(Node):
         self.publisher_dvl_velocity.publish(msg)
 
 
-        # TODO: after calling the three parse functions above, we need to package the information contained in the 
-        # dict. parsed_dvl_data in the correct message types and then publish them to the necessary topics
-        # I think that it is written on the board. 
-
-
 def main(args=None):
     rclpy.init(args=args)
+
     parser = DVLParser()
+
     rclpy.spin(parser)
+
     parser.destroy_node()
     rclpy.shutdown()
 
