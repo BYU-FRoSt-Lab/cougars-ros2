@@ -10,3 +10,4 @@
 
 rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/sensors/extra_packages
 rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/control/extra_packages
+rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/demo/extra_packages
