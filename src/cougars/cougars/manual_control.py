@@ -73,6 +73,7 @@ class ManualControl(Node):
             self.control_line.request(consumer="STROBE", type=gpiod.LINE_REQ_DIR_OUT)
 
         self.counter = 0
+        self.stopped = False
 
     # Runs the state machine and high-level controller, publishes to pid_request
     def timer_callback(self):
@@ -94,7 +95,7 @@ class ManualControl(Node):
         speed_msg = DesiredSpeed()
 
         # TODO: Adjust this simple state machine
-        if self.counter < 30:
+        if not self.stopped and self.counter < 30:
             depth_msg.desired_depth = 1.0
             heading_msg.desired_heading = 0.0
             speed_msg.desired_speed = 0.0
@@ -124,6 +125,7 @@ class ManualControl(Node):
     def emergency_stop_callback(self, request, response):
         self.get_logger().info("EMERGENCY STOP EXECUTED")
         self.get_logger().info(request.error)
+        self.stopped = True
         response.stopped = True
         return response
 
