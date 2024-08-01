@@ -24,6 +24,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LeakStatus.msg"
   "msg/ModemRec.msg"
   "msg/ModemSend.msg"
+  "msg/UCommand.msg"
   "srv/EmergencyStop.srv"
   DEPENDENCIES std_msgs
 )
