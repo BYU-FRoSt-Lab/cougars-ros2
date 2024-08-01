@@ -30,7 +30,7 @@ seatrac_driver
 )
 
 add_executable(calibrate_modem src/calibrate_modem.cpp)
-# ament_target_dependencies(calibrate_modem rclcpp std_msgs frost_interfaces)
+ament_target_dependencies(calibrate_modem rclcpp std_msgs frost_interfaces)
 target_link_libraries(calibrate_modem
 seatrac_driver
 )
