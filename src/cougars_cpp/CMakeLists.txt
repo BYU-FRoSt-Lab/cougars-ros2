@@ -20,16 +20,16 @@ find_package(frost_interfaces REQUIRED)
 add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces)
 
-add_executable(low_control src/low_control.cpp)
-ament_target_dependencies(low_control rclcpp std_msgs frost_interfaces)
+add_executable(demo_control src/demo_control.cpp)
+ament_target_dependencies(demo_control rclcpp std_msgs frost_interfaces)
 
 # Link libraries
 target_link_libraries(moos_bridge)
-target_link_libraries(low_control)
+target_link_libraries(demo_control)
 
 install(TARGETS
   moos_bridge
-  low_control
+  demo_control
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
