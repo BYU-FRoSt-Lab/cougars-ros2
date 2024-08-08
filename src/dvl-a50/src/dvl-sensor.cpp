@@ -8,7 +8,6 @@
 #include "dvl_a50/dvl-sensor.hpp"
 
 
-
 // BYU edit
 #include <vector>
 using json = nlohmann::json;
