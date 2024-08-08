@@ -13,15 +13,15 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_py',
-            executable='dvl_parser'
-        ),
-        launch_ros.actions.Node(
-            package='cougars_py',
             executable='leak_sub'
         ),
         launch_ros.actions.Node(
             package='cougars_py',
             executable='battery_sub'
+        ),
+        launch_ros.actions.Node(
+            package='cougars_cpp',
+            executable='demo_control'
         ),
         # launch_ros.actions.Node(
         #     package='seatrac',

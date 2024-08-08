@@ -100,7 +100,7 @@ class DemoControl : public rclcpp::Node
         //   desired_heading_msg, and desired_speed_msg objects
         //////////////////////////////////////////////////////////
 
-        // TODO: reset the dead reckoning on the dvl as soon as we start moving
+        // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
 
         depth_pos = myDepthPID.compute(desired_depth_msg->desired_depth, depth);
         heading_pos =
