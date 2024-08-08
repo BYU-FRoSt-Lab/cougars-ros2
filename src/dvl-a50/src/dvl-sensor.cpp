@@ -7,6 +7,13 @@
 
 #include "dvl_a50/dvl-sensor.hpp"
 
+
+
+// BYU edit
+#include <vector>
+using json = nlohmann::json;
+// end edit
+
 namespace dvl_sensor {
 
 
@@ -46,7 +53,7 @@ old_altitude(0.0)
     if(tcpSocket->Create() < 0)
         RCLCPP_ERROR(get_logger(), "Error creating the socket");
    
-    tcpSocket->SetRcvTimeout(400);
+    tcpSocket->SetRcvTimeout(500);
     std::string error;
     
     int error_code = 0;
@@ -168,7 +175,24 @@ void DVL_A50::publish_vel_trans_report()
         old_altitude = dvl.altitude = current_altitude;
     else
         dvl.altitude = old_altitude;
+    
+    // BYU edit
 
+    json covariance_matrix(json::value_t::object);
+    covariance_matrix = json_data["covariance"];
+    std::vector<std::vector<double>> m;
+    std::vector<double> twistCovariance;
+    m = covariance_matrix.get<std::vector<std::vector<double>>>();
+    for(auto i : m) {
+        for(auto j : i) {
+            // std::cout << j << std::endl;
+            twistCovariance.push_back(double(j));
+        }
+    }
+
+    dvl.covariance = twistCovariance;
+
+    // end edit
 
     dvl.status = json_data["status"];
     dvl.form = json_data["format"];
@@ -226,6 +250,7 @@ void DVL_A50::publish_dead_reckoning_report()
     DVLDeadReckoning.status = json_data["status"];
     DVLDeadReckoning.format = json_data["format"];
     dvl_pub_pos->publish(DVLDeadReckoning);
+
 }
 
 /*

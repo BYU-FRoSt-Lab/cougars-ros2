@@ -10,6 +10,9 @@ geometry_msgs/Vector3 velocity
 #Figure of Merit
 float64 fom
 
+#Covariance matrix, 3x3 matrix
+float64[] covariance
+
 #Altitude of the sensor
 float64 altitude
 
@@ -24,3 +27,6 @@ int64 status
 
 #Formatting of json
 string form
+
+
+
