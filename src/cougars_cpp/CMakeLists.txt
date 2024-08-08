@@ -13,6 +13,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(frost_interfaces REQUIRED)
+find_package(dvl_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -26,7 +27,7 @@ add_executable(demo_control src/demo_control.cpp)
 ament_target_dependencies(demo_control rclcpp std_msgs frost_interfaces)
 
 add_executable(dvl_sender src/dvl_sender.cpp)
-ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces geometry_msgs)
+ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
 
 # Link libraries
 target_link_libraries(moos_bridge)
