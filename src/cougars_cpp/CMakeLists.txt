@@ -17,19 +17,25 @@ find_package(frost_interfaces REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+
+
 add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces)
 
 add_executable(demo_control src/demo_control.cpp)
 ament_target_dependencies(demo_control rclcpp std_msgs frost_interfaces)
 
+add_executable(dvl_sender src/dvl_sender.cpp)
+ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces geometry_msgs)
+
 # Link libraries
 target_link_libraries(moos_bridge)
 target_link_libraries(demo_control)
-
+target_link_libraries(dvl_sender)
 install(TARGETS
   moos_bridge
   demo_control
+  dvl_sender
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
