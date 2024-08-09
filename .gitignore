@@ -3,5 +3,6 @@
 **/log
 **/bag
 **/test
+!**/robot_localization
 
 /.vscode
