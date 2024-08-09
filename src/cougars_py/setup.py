@@ -28,6 +28,7 @@ setup(
             'manual_control = cougars_py.manual_control:main',
             'leak_sub = cougars_py.leak_sub:main',
             'battery_sub = cougars_py.battery_sub:main',
+            'modem_pinger = cougars_py.modem_pinger:main',
         ],
     },
 )
