@@ -1,7 +1,7 @@
 
 import rclpy
 from rclpy.node import Node
-from seatrac_interfaces.msg import ModemSend, ModemRec
+from frost_interfaces.msg import ModemSend, ModemRec
 from .seatrac_enums import CID_E, AMSGTYPE_E
 
 CONFIG_FILE_PATH = "./seatrac_logger_config.toml"
