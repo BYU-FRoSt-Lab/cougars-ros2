@@ -11,7 +11,7 @@ TIMER_PERIOD_SECONDS = 0.01
 class SeatracPinger(Node):
 
     def __init__(self):
-        super().__init__('pinger')
+        super().__init__('modem_pinger')
 
         self.declare_parameters(
             namespace='',
