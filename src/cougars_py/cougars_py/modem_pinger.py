@@ -3,6 +3,9 @@ import rclpy
 from rclpy.node import Node
 from frost_interfaces.msg import ModemSend, ModemRec
 from .seatrac_enums import CID_E, AMSGTYPE_E
+import time
+from datetime import datetime, timedelta
+import threading
 
 CONFIG_FILE_PATH = "./seatrac_logger_config.toml"
 TIMER_PERIOD_SECONDS = 0.01
@@ -28,6 +31,29 @@ class SeatracPinger(Node):
         self.vehicle_order = self.get_parameter("vehicle_order")
         self.target_id = self.get_parameter("target_id")
         self.request_response = self.get_parameter("request_response")
+
+        thread = threading.Thread(target=self.repeat_call_ping())
+        thread.start()
+
+
+
+
+    def repeat_call_ping(self):
+        # each hour is epoch
+        total_seconds_per_round = self.ping_delay * self.n_vehicles
+        my_ping_second = self.ping_delay * (self.vehicle_order -1)
+
+        while True:
+            now = datetime.now()
+            seconds_since_midnight = now.hour*24*60 + now.minute*60 + now.second
+            seconds_in_round = seconds_since_midnight % total_seconds_per_round
+            sleep_time = (my_ping_second - seconds_in_round)%total_seconds_per_round
+            time.sleep(sleep_time)
+
+            self.send_ping()
+            time.sleep(2)
+
+
 
 
     def send_ping(self):
