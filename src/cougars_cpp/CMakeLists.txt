@@ -14,12 +14,13 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(frost_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
+find_package(MOOS 10 REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
 add_executable(moos_bridge src/moos_bridge.cpp)
-ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces)
+ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS)
 
 add_executable(fin_control src/fin_control.cpp)
 ament_target_dependencies(fin_control rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
