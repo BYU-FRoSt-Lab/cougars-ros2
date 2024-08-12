@@ -8,9 +8,9 @@
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
-#include "geometry_msgs/msg/TwistWithCovarianceStamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
-// TODO: include depth messages
 #include "pid_control.h"
 
 using namespace std::chrono_literals;
@@ -89,9 +89,8 @@ public:
             "desired_speed", 10,
             std::bind(&FinControl::speed_callback, this, _1));
 
-    // TODO: update this after convertor is built from pressure
-    depth_subscription_ = this->create_subscription<frost_interfaces::msg::Depth>(
-        "depth", 10, std::bind(&FinControl::depth_callback, this, _1));
+    depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+        "calculated_depth", 10, std::bind(&FinControl::depth_callback, this, _1));
 
     velocity_subscription_ = this->create_subscription<
         geometry_msgs::msg::TwistWithCovarianceStamped>(
@@ -121,9 +120,9 @@ private:
     desired_speed_msg = speed_msg;
   }
 
-  // TODO: update message types for depth
-  void depth_callback(const frost_interfaces::msg::Depth &depth_msg) {
-    depth = depth_msg.depth;
+  void depth_callback(
+      const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
+    depth = depth_msg.pose.position.z;
   }
 
   void velocity_callback(
@@ -173,8 +172,7 @@ private:
       desired_heading_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::DesiredSpeed>::SharedPtr
       desired_speed_subscription_;
-  // TODO: update message types for depth
-  rclcpp::Subscription<frost_interfaces::msg::Depth>::SharedPtr depth_subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr
       velocity_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr yaw_subscription_;
