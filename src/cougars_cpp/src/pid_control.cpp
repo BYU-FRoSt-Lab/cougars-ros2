@@ -1,9 +1,9 @@
 #include "pid_control.h"
 
-PID_Control::PID_Control() { }
+PID_Control::PID_Control() {}
 
 void PID_Control::calibrate(float p, float i, float d, int min, int max,
-                         float timer_interval, int adjust) {
+                            float timer_interval, int adjust) {
 
   kp = p;
   ki = i;

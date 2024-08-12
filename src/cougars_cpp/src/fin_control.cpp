@@ -8,10 +8,10 @@
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
-#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "pid_control.h"
+#include "rclcpp/rclcpp.hpp"
 
 // TODO: might need to include pid_control.h in CMake file?
 
@@ -46,29 +46,29 @@ public:
     this->declare_parameter("speed_bias", 0);
 
     // calibrate PID controllers
-    myDepthPID.calibrate(
-        this->get_parameter("depth_kp").as_double(),
-        this->get_parameter("depth_ki").as_double(),
-        this->get_parameter("depth_kd").as_double(),
-        this->get_parameter("depth_min_output").as_int(),
-        this->get_parameter("depth_max_output").as_int(), PID_TIMER_PERIOD,
-        this->get_parameter("depth_bias").as_int());
+    myDepthPID.calibrate(this->get_parameter("depth_kp").as_double(),
+                         this->get_parameter("depth_ki").as_double(),
+                         this->get_parameter("depth_kd").as_double(),
+                         this->get_parameter("depth_min_output").as_int(),
+                         this->get_parameter("depth_max_output").as_int(),
+                         PID_TIMER_PERIOD,
+                         this->get_parameter("depth_bias").as_int());
 
-    myHeadingPID.calibrate(
-        this->get_parameter("heading_kp").as_double(),
-        this->get_parameter("heading_ki").as_double(),
-        this->get_parameter("heading_kd").as_double(),
-        this->get_parameter("heading_min_output").as_int(),
-        this->get_parameter("heading_max_output").as_int(), PID_TIMER_PERIOD,
-        this->get_parameter("heading_bias").as_int());
+    myHeadingPID.calibrate(this->get_parameter("heading_kp").as_double(),
+                           this->get_parameter("heading_ki").as_double(),
+                           this->get_parameter("heading_kd").as_double(),
+                           this->get_parameter("heading_min_output").as_int(),
+                           this->get_parameter("heading_max_output").as_int(),
+                           PID_TIMER_PERIOD,
+                           this->get_parameter("heading_bias").as_int());
 
-    myVelocityPID.calibrate(
-        this->get_parameter("speed_kp").as_double(),
-        this->get_parameter("speed_ki").as_double(),
-        this->get_parameter("speed_kd").as_double(),
-        this->get_parameter("speed_min_output").as_int(),
-        this->get_parameter("speed_max_output").as_int(), PID_TIMER_PERIOD,
-        this->get_parameter("speed_bias").as_int());
+    myVelocityPID.calibrate(this->get_parameter("speed_kp").as_double(),
+                            this->get_parameter("speed_ki").as_double(),
+                            this->get_parameter("speed_kd").as_double(),
+                            this->get_parameter("speed_min_output").as_int(),
+                            this->get_parameter("speed_max_output").as_int(),
+                            PID_TIMER_PERIOD,
+                            this->get_parameter("speed_bias").as_int());
 
     // declare ros publishers
     u_command_publisher_ =
@@ -91,12 +91,14 @@ public:
             "desired_speed", 10,
             std::bind(&FinControl::speed_callback, this, _1));
 
-    depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+    depth_subscription_ = this->create_subscription<
+        geometry_msgs::msg::PoseWithCovarianceStamped>(
         "depth_data", 10, std::bind(&FinControl::depth_callback, this, _1));
 
     velocity_subscription_ = this->create_subscription<
         geometry_msgs::msg::TwistWithCovarianceStamped>(
-        "dvl_velocity", 10, std::bind(&FinControl::velocity_callback, this, _1));
+        "dvl_velocity", 10,
+        std::bind(&FinControl::velocity_callback, this, _1));
 
     yaw_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
         "dvl/position", 10, std::bind(&FinControl::yaw_callback, this, _1));
@@ -154,8 +156,7 @@ private:
     message.fin[0] = depth_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
     message.fin[2] = heading_pos;
-    message.thruster =
-        velocity_level;
+    message.thruster = velocity_level;
 
     u_command_publisher_->publish(message);
 
@@ -175,8 +176,8 @@ private:
   rclcpp::Subscription<frost_interfaces::msg::DesiredSpeed>::SharedPtr
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
-  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr
-      velocity_subscription_;
+      rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::
+          SharedPtr velocity_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr yaw_subscription_;
 
   // micro-ROS messages
