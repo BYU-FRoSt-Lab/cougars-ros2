@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include "geometry_msgs/msg/PoseWithCovarianceStamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/fluid_pressure.hpp"
 
