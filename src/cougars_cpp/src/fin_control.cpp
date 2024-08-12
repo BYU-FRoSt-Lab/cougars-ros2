@@ -3,11 +3,13 @@
 #include <memory>
 #include <string>
 
+#include "dvl_msgs/msg/dvldr.hpp"
+#include "frost_interfaces/msg/desired_depth.hpp"
+#include "frost_interfaces/msg/desired_heading.hpp"
+#include "frost_interfaces/msg/desired_speed.hpp"
+#include "frost_interfaces/msg/u_command.hpp"
+#include "geometry_msgs/msg/TwistWithCovarianceStamped.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include <frost_interfaces/msg/desired_depth.hpp>
-#include <frost_interfaces/msg/desired_heading.hpp>
-#include <frost_interfaces/msg/desired_speed.hpp>
-#include <frost_interfaces/msg/u_command.hpp>
 // TODO: include depth and DVL messages
 #include "pid_control.h"
 
@@ -43,13 +45,16 @@ public:
             "desired_speed", 10,
             std::bind(&FinControl::speed_callback, this, _1));
 
-    // TODO: fix message types for depth and DVL
-    depth_subscription_ =
-        this->create_subscription<frost_interfaces::msg::Depth>(
-            "depth", 10, std::bind(&FinControl::depth_callback, this, _1));
+    // TODO: update this after convertor is built from pressure
+    depth_subscription_ = this->create_subscription<frost_interfaces::msg::Depth>(
+        "depth", 10, std::bind(&FinControl::depth_callback, this, _1));
 
-    dvl_subscription_ = this->create_subscription<frost_interfaces::msg::DVL>(
-        "dvl", 10, std::bind(&FinControl::dvl_callback, this, _1));
+    velocity_subscription_ = this->create_subscription<
+        geometry_msgs::msg::TwistWithCovarianceStamped>(
+        "dvl_velocity", 10, std::bind(&FinControl::velocity_callback, this, _1));
+
+    yaw_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
+        "dvl/position", 10, std::bind(&FinControl::yaw_callback, this, _1));
 
     pid_timer_ = this->create_wall_timer(
         TIMER_PID_PERIOD, std::bind(&FinControl::timer_callback, this));
@@ -71,15 +76,17 @@ private:
     desired_speed_msg = speed_msg;
   }
 
-  // TODO: update message types for depth and DVL
-  void depth_callback(const frost_interfaces::msg::Depth &depth_msg) const {
+  // TODO: update message types for depth
+  void depth_callback(const frost_interfaces::msg::Depth &depth_msg) {
     depth = depth_msg.depth;
   }
 
-  void dvl_callback(const frost_interfaces::msg::DVL &dvl_msg) const {
-    yaw = dvl_msg.yaw;
-    x_velocity = dvl_msg.x_velocity;
+  void velocity_callback(
+      const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
+    x_velocity = velocity_msg.twist.linear.x;
   }
+
+  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) { yaw = yaw_msg.yaw; }
 
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
@@ -102,7 +109,7 @@ private:
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
     message.fin[2] = heading_pos;
     message.thruster =
-        velocity_level; // TODO: some conversion here on Teensy side
+        velocity_level;
 
     u_command_publisher_->publish(message);
 
@@ -121,10 +128,11 @@ private:
       desired_heading_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::DesiredSpeed>::SharedPtr
       desired_speed_subscription_;
-  // TODO: update message types for depth and DVL
-  rclcpp::Subscription<frost_interfaces::msg::Depth>::SharedPtr
-      depth_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::DVL>::SharedPtr dvl_subscription_;
+  // TODO: update message types for depth
+  rclcpp::Subscription<frost_interfaces::msg::Depth>::SharedPtr depth_subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr
+      velocity_subscription_;
+  rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr yaw_subscription_;
 
   // micro-ROS messages
   frost_interfaces::msg::DesiredDepth desired_depth_msg;

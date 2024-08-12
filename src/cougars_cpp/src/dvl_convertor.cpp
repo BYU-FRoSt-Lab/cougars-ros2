@@ -16,7 +16,7 @@ using std::placeholders::_1;
 
 
 
-class DVLSender : public rclcpp::Node
+class DVLCOnvertor : public rclcpp::Node
 {
   public:
     DVLConvertor():Node("dvl_convertor"){
