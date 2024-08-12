@@ -23,19 +23,19 @@ find_package(dvl_msgs REQUIRED)
 add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces)
 
-add_executable(demo_control src/demo_control.cpp)
-ament_target_dependencies(demo_control rclcpp std_msgs frost_interfaces)
+add_executable(fin_control src/fin_control.cpp)
+ament_target_dependencies(fin_control rclcpp std_msgs frost_interfaces)
 
 add_executable(dvl_sender src/dvl_sender.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
 
 # Link libraries
 target_link_libraries(moos_bridge)
-target_link_libraries(demo_control)
+target_link_libraries(fin_control)
 target_link_libraries(dvl_sender)
 install(TARGETS
   moos_bridge
-  demo_control
+  fin_control
   dvl_sender
   DESTINATION lib/${PROJECT_NAME})
 

@@ -4,6 +4,7 @@ import launch.substitutions
 import launch_ros.actions
 
 def generate_launch_description():
+    config_file = "~/config/vehicle_config.yaml"
     return launch.LaunchDescription([
         launch.actions.ExecuteProcess(
             cmd=['ros2', 'bag', 'record', '-s', 'mcap', '-a'],
@@ -11,7 +12,8 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='moos_bridge'
+            executable='moos_bridge',
+            parameters=[config_file]
         ),
         launch_ros.actions.Node(
             package='cougars_py',
@@ -23,12 +25,14 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='demo_control'
+            executable='fin_control',
+            parameters=[config_file]
         ),
-        # launch_ros.actions.Node(
-        #     package='seatrac',
-        #     executable='modem'
-        # ),
+        launch_ros.actions.Node(
+            package='seatrac',
+            executable='modem',
+            parameters=[config_file]
+        ),
         launch.actions.DeclareLaunchArgument('ip_address', default_value='192.168.194.95'),
         launch_ros.actions.Node(
             package='dvl_a50', 

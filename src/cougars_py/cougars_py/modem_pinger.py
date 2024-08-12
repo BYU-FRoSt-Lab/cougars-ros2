@@ -1,4 +1,3 @@
-
 import rclpy
 from rclpy.node import Node
 from frost_interfaces.msg import ModemSend, ModemRec
