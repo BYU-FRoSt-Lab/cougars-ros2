@@ -6,15 +6,6 @@
 ServerHost   = localhost
 ServerPort   = 9000
 Community    = alpha
-MOOSTimeWarp = 1
-
-// Forest Lake
-// LatOrigin  = 43.825300 
-// LongOrigin = -70.330400 
-
-// MIT Sailing Pavilion (use this one)
-// LatOrigin  = 42.358456 
-// LongOrigin = -71.087589
 
 //------------------------------------------
 // Antler configuration  block
@@ -39,6 +30,7 @@ ProcessConfig = pHelmIvP
   behaviors  = coug.bhv
   domain     = course:0:359:360
   domain     = speed:0:4:41
+  domain     = detph:0:50:
 }
 
 //------------------------------------------

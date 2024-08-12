@@ -10,6 +10,7 @@
 
 
 // MOOS stuff
+// https://gobysoft.org/doc/moos/class_c_m_o_o_s_msg.html
 #include "MOOS/libMOOS/Comms/MOOSAsyncCommClient.h"
 #include "MOOS/libMOOS/Comms/MOOSCommClient.h"
 #include "MOOS/libMOOS/Comms/MOOSMsg.h"
@@ -184,7 +185,7 @@ bool OnMail(void *pParam) {
       desired_depth_publisher_->publish(message);
     }
 
-    q->Trace();
+    // q->Trace();
     std::cout << "\n";
 
 
