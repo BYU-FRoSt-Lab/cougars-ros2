@@ -38,7 +38,8 @@ public:
     double defaultValue = 0;
     for (int i = 0; i < 36;) {
       if (i % 6 < 3 && i < 15) {
-        twistCovariance.push_back(msg.covariance[index]) index++;
+        twistCovariance.push_back(msg.covariance[index]);
+        index++;
       } else {
         twistCovariance.push_back(defaultValue);
       }
@@ -58,7 +59,7 @@ private:
 
   // subscribers - listening to dvl driver
   rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
-  rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr subscriber_dvl_position
+  rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr subscriber_dvl_position;
 };
 
 int main(int argc, char *argv[]) {
