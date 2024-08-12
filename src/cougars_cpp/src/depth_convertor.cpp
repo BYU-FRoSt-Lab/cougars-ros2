@@ -17,12 +17,12 @@ public:
     // declare ros publishers
     depth_publisher_ =
         this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
-            "calculated_depth", 10);
+            "depth_data", 10);
 
     // declare ros subscribers
     pressure_subscription_ =
         this->create_subscription<sensor_msgs::msg::FluidPressure>(
-            "depth_data", 10,
+            "pressure_data", 10,
             std::bind(&DepthConvertor::pressure_callback, this, _1));
   }
 

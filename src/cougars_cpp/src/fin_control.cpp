@@ -92,7 +92,7 @@ public:
             std::bind(&FinControl::speed_callback, this, _1));
 
     depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-        "calculated_depth", 10, std::bind(&FinControl::depth_callback, this, _1));
+        "depth_data", 10, std::bind(&FinControl::depth_callback, this, _1));
 
     velocity_subscription_ = this->create_subscription<
         geometry_msgs::msg::TwistWithCovarianceStamped>(
