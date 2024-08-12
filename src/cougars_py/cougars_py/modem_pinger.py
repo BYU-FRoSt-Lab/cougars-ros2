@@ -7,9 +7,6 @@ import time
 from datetime import datetime, timedelta
 import threading
 
-CONFIG_FILE_PATH = "./seatrac_logger_config.toml"
-TIMER_PERIOD_SECONDS = 0.01
-
 
 class SeatracPinger(Node):
 
@@ -26,11 +23,13 @@ class SeatracPinger(Node):
                 ("request_response", rclpy.Parameter.Type.BOOL)
             ]
         )
-        self.ping_delay = self.get_parameter("ping_delay_seconds")
-        self.n_vehicles = self.get_parameter("number_of_vehicles")
-        self.vehicle_order = self.get_parameter("vehicle_order")
-        self.target_id = self.get_parameter("target_id")
-        self.request_response = self.get_parameter("request_response")
+        self.ping_delay = self.get_parameter("ping_delay_seconds").get_parameter_value().integer_value
+        self.n_vehicles = self.get_parameter("number_of_vehicles").get_parameter_value().integer_value
+        self.vehicle_order = self.get_parameter("vehicle_order").get_parameter_value().integer_value
+        self.target_id = self.get_parameter("target_id").get_parameter_value().integer_value
+        self.request_response = self.get_parameter("request_response").get_parameter_value().bool_value
+
+        self.modem_publisher_  = self.create_publisher(ModemSend, 'modem_send', 10)
 
         thread = threading.Thread(target=self.repeat_call_ping())
         thread.start()
