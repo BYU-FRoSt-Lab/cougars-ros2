@@ -16,11 +16,9 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BatteryStatus.msg"
-  "msg/ControlConfig.msg"
   "msg/DesiredDepth.msg"
   "msg/DesiredHeading.msg"
   "msg/DesiredSpeed.msg"
-  "msg/DVLStrings.msg"
   "msg/LeakStatus.msg"
   "msg/ModemRec.msg"
   "msg/ModemSend.msg"
