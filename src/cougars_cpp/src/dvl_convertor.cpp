@@ -38,14 +38,14 @@ public:
     double defaultValue = 0;
     for (int i = 0; i < 36;) {
       if (i % 6 < 3 && i < 15) {
-        twistCovariance.push_back(msg.covariance[index]);
+        // twistCovariance.push_back(msg.covariance[index]);
         index++;
       } else {
-        twistCovariance.push_back(defaultValue);
+        // twistCovariance.push_back(defaultValue);
       }
     }
 
-    stamped_msg.twist.covariance = twistCovariance;
+    // stamped_msg.twist.covariance = twistCovariance;
     stamped_msg.twist.linear = msg.velocity;
     subscriber_dvl_data->publish(stamped_msg);
   }
