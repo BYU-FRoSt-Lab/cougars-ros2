@@ -19,11 +19,11 @@ using std::placeholders::_1;
 class DVLSender : public rclcpp::Node
 {
   public:
-    DVLSender():Node("dvl_data_sender"){
+    DVLConvertor():Node("dvl_convertor"){
         publisher_dvl_depth = this->create_publisher<std_msgs::msg::Float64>("dvl_dfb", 10);
         publisher_dvl_velocity = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("dvl_velocity", 10);
-        subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>("/dvl/data", 10, std::bind(&DVLSender::dvl_data_callback, this, _1));
-        subscriber_dvl_position = this->create_subscription<dvl_msgs::msg::DVLDR>("/dvl/position", 10, std::bind(&DVLSender::dvl_pos_callback, this, _1));
+        subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>("/dvl/data", 10, std::bind(&DVLConvertor::dvl_data_callback, this, _1));
+        subscriber_dvl_position = this->create_subscription<dvl_msgs::msg::DVLDR>("/dvl/position", 10, std::bind(&DVLConvertor::dvl_pos_callback, this, _1));
 
     }
 
@@ -73,7 +73,7 @@ class DVLSender : public rclcpp::Node
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<DVLSender>());
+  rclcpp::spin(std::make_shared<DVLConvertor>());
   rclcpp::shutdown();
   return 0;
 }
