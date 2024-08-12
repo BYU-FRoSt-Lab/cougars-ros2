@@ -34,6 +34,31 @@ public:
     subscriber_ = 
         this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
+
+    this->declare_parameter("vehicle_ID", 1);
+    this->declare_parameter("water_salinity_ppt", 0);
+    BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
+    uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_int()*10);
+
+    wait_for_alive(beaconId, salinity);
+  }
+
+  void wait_for_alive(BID_E beaconId, uint16_t salinity) {
+    bool got_resp = false;
+    while(!got_resp) {
+      messages::SysAlive resp;
+      CID_E msgId = CID_SYS_ALIVE;
+      got_resp = this->send_request(1, (const uint8_t*)&msgId, &resp);
+    }
+    RCLCPP_INFO(this->get_logger(), "Seatrac Beacon Connected and Responding");
+
+    //Set beacon ID once connected
+    SETTINGS_T settings = command::settings_get(*this).settings;
+    settings.xcvrBeaconId = beaconId;
+    settings.envSalinity = salinity;
+    command::settings_set(*this, settings);
+    command::settings_save(*this);    
+    beacon_connected = true;
   }
 
   // this method is called on any message returned by the beacon.
@@ -214,9 +239,12 @@ private:
 
   size_t count_;
 
+  bool beacon_connected = false;
+
   // recieves command to modem from the ModemRec topic and sends the command
   // to the modem
   void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr rosmsg) {
+    if(!beacon_connected) return;
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
     switch(msgId) {
       default: {
