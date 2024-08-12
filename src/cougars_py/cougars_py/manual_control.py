@@ -3,9 +3,9 @@ import gpiod
 
 import rclpy
 from rclpy.node import Node
-from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed, ModemSend
+from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
 from frost_interfaces.srv import EmergencyStop
-from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
+from rclpy.qos import qos_profile_system_default
 
 STROBE_PIN = 15
 ENABLE_STROBE = True
@@ -39,12 +39,6 @@ class ManualControl(Node):
             DesiredSpeed,
             "desired_speed",
             qos_profile_system_default
-        )
-
-        self.modem_publisher = self.create_publisher(
-            ModemSend,
-            "modem_send",
-            qos_profile_sensor_data
         )
 
         # Create the timers
