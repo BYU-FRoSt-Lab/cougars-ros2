@@ -13,6 +13,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "pid_control.h"
 
+// TODO: might need to include pid_control.h in CMake file?
+
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
