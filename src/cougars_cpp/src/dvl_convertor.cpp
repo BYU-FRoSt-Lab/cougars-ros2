@@ -12,7 +12,7 @@
 
 using std::placeholders::_1;
 
-class DVLCOnvertor : public rclcpp::Node {
+class DVLConvertor : public rclcpp::Node {
 public:
   DVLConvertor() : Node("dvl_convertor") {
     publisher_dvl_depth =
