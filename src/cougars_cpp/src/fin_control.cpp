@@ -10,7 +10,7 @@
 #include "frost_interfaces/msg/u_command.hpp"
 #include "geometry_msgs/msg/TwistWithCovarianceStamped.hpp"
 #include "rclcpp/rclcpp.hpp"
-// TODO: include depth and DVL messages
+// TODO: include depth messages
 #include "pid_control.h"
 
 using namespace std::chrono_literals;
@@ -19,17 +19,61 @@ using std::placeholders::_1;
 // ros config values
 #define TIMER_PID_PERIOD '10ms' // 100 Hz
 
-// default actuator positions
-#define DEFAULT_SERVO 0
-#define THRUSTER_OFF 0
-
 class FinControl : public rclcpp::Node {
 public:
   FinControl() : Node("fin_control") {
+
+    // declare ros params
+    this->declare_parameter("depth_kp", 0.0);
+    this->declare_parameter("depth_ki", 0.0);
+    this->declare_parameter("depth_kd", 0.0);
+    this->declare_parameter("depth_min_output", 0);
+    this->declare_parameter("depth_max_output", 0);
+    this->declare_parameter("depth_bias", 0);
+    this->declare_parameter("heading_kp", 0.0);
+    this->declare_parameter("heading_ki", 0.0);
+    this->declare_parameter("heading_kd", 0.0);
+    this->declare_parameter("heading_min_output", 0);
+    this->declare_parameter("heading_max_output", 0);
+    this->declare_parameter("heading_bias", 0);
+    this->declare_parameter("speed_kp", 0.0);
+    this->declare_parameter("speed_ki", 0.0);
+    this->declare_parameter("speed_kd", 0.0);
+    this->declare_parameter("speed_min_output", 0);
+    this->declare_parameter("speed_max_output", 0);
+    this->declare_parameter("speed_bias", 0);
+
+    // calibrate PID controllers
+    myDepthPID.calibrate(
+        this->get_parameter("depth_kp").as_double(),
+        this->get_parameter("depth_ki").as_double(),
+        this->get_parameter("depth_kd").as_double(),
+        this->get_parameter("depth_min_output").as_int(),
+        this->get_parameter("depth_max_output").as_int(), PID_TIMER_PERIOD,
+        this->get_parameter("depth_bias").as_int());
+
+    myHeadingPID.calibrate(
+        this->get_parameter("heading_kp").as_double(),
+        this->get_parameter("heading_ki").as_double(),
+        this->get_parameter("heading_kd").as_double(),
+        this->get_parameter("heading_min_output").as_int(),
+        this->get_parameter("heading_max_output").as_int(), PID_TIMER_PERIOD,
+        this->get_parameter("heading_bias").as_int());
+
+    myVelocityPID.calibrate(
+        this->get_parameter("speed_kp").as_double(),
+        this->get_parameter("speed_ki").as_double(),
+        this->get_parameter("speed_kd").as_double(),
+        this->get_parameter("speed_min_output").as_int(),
+        this->get_parameter("speed_max_output").as_int(), PID_TIMER_PERIOD,
+        this->get_parameter("speed_bias").as_int());
+
+    // declare ros publishers
     u_command_publisher_ =
         this->create_publisher<frost_interfaces::msg::UCommand>(
             "control_command", 10);
 
+    // declare ros subscribers
     desired_depth_subscription_ =
         this->create_subscription<frost_interfaces::msg::DesiredDepth>(
             "desired_depth", 10,
@@ -56,6 +100,7 @@ public:
     yaw_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
         "dvl/position", 10, std::bind(&FinControl::yaw_callback, this, _1));
 
+    // declare ros timers
     pid_timer_ = this->create_wall_timer(
         TIMER_PID_PERIOD, std::bind(&FinControl::timer_callback, this));
   }
