@@ -4,7 +4,7 @@
 #include <string>
 
 #include "dvl_msgs/msg/dvl.hpp"
-#include "geometry_msgs/msg/TwistWithCovarianceStamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64.hpp"
 #include "std_msgs/msg/string.hpp"
