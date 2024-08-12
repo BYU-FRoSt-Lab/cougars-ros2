@@ -10,7 +10,8 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_py',
-            executable='manual_control'
+            executable='manual_control',
+            parameters=[config_file]
         ),
         launch_ros.actions.Node(
             package='cougars_py',
@@ -22,7 +23,8 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='demo_control'
+            executable='fin_control',
+            parameters=[config_file]
         ),
         launch_ros.actions.Node(
             package='cougars_py',
