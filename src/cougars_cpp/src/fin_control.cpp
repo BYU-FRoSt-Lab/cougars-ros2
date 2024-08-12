@@ -8,13 +8,14 @@
 #include <frost_interfaces/msg/desired_depth.hpp>
 #include <frost_interfaces/msg/desired_heading.hpp>
 #include <frost_interfaces/msg/desired_speed.hpp>
+// TODO: include depth and DVL messages
 #include "pid_control.h"
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 // ros config values
-#define TIMER_PID_PERIOD 10ms // 100 Hz
+#define TIMER_PID_PERIOD '10ms' // 100 Hz
 
 // default actuator positions
 #define DEFAULT_SERVO 90
