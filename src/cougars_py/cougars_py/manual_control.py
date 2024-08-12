@@ -19,8 +19,8 @@ class ManualControl(Node):
         super().__init__("manual_control")
 
         # Declare parameters
-        # These are set using the local "set_config.py" file when "start.sh" is run
-        self.declare_parameter('vehicle_id', 0)
+        # TODO: Check if this still works with the config file
+        self.declare_parameter('vehicle_id', 1)
 
         # Create the publishers
         self.depth_publisher = self.create_publisher(
