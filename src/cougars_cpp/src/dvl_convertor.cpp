@@ -45,8 +45,8 @@ public:
       }
     }
 
-    // stamped_msg.twist.covariance = twistCovariance;
-    // stamped_msg.twist.linear = msg.velocity;
+    // stamped_msg.twist.twist.covariance = twistCovariance;
+    // stamped_msg.twist.twist.linear = msg.velocity;
     publisher_dvl_velocity->publish(stamped_msg);
   }
   void dvl_pos_callback(const dvl_msgs::msg::DVLDR::SharedPtr msg) {}
