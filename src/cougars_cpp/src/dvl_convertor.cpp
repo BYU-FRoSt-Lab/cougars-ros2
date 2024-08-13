@@ -37,10 +37,10 @@ public:
     double defaultValue = 0;
     for (int i = 0; i < 36;) {
       if (i % 6 < 3 && i < 15) {
-        stamped_msg.twist.twist.covariance.push_back(msg->covariance[index]);
+        stamped_msg.twist.covariance.push_back(msg->covariance[index]);
         index++;
       } else {
-        stamped_msg.twist.twist.covariance.push_back(defaultValue);
+        stamped_msg.twist.covariance.push_back(defaultValue);
       }
     }
 
