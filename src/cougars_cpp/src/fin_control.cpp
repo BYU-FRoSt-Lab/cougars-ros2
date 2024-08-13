@@ -112,27 +112,27 @@ public:
 private:
   void
   desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) const {
-    this->desired_depth_msg = depth_msg;
+    this.desired_depth_msg = depth_msg;
   }
 
   void desired_heading_callback(
       const frost_interfaces::msg::DesiredHeading &heading_msg) const {
-    this->desired_heading_msg = heading_msg;
+    this.desired_heading_msg = heading_msg;
   }
 
   void
   desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) const {
-    this->desired_speed_msg = speed_msg;
+    this.desired_speed_msg = speed_msg;
   }
 
   void depth_callback(
       const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
-    this->depth = depth_msg.pose.position.z;
+    this.depth = depth_msg.pose.position.z;
   }
 
   void velocity_callback(
       const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
-    this->x_velocity = velocity_msg.twist.linear.x;
+    this.x_velocity = velocity_msg.twist.linear.x;
   }
 
   void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) { yaw = yaw_msg.yaw; }
@@ -148,18 +148,18 @@ private:
 
     // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
 
-    this->depth_pos = myDepthPID.compute(this->desired_depth_msg->desired_depth, depth);
-    this->heading_pos =
-        myHeadingPID.compute(this->desired_heading_msg->desired_heading, yaw);
-    this->velocity_level =
-        myVelocityPID.compute(this->desired_speed_msg->desired_speed, x_velocity);
+    this.depth_pos = myDepthPID.compute(this.desired_depth_msg.desired_depth, depth);
+    this.heading_pos =
+        myHeadingPID.compute(this.desired_heading_msg.desired_heading, yaw);
+    this.velocity_level =
+        myVelocityPID.compute(this.desired_speed_msg.desired_speed, x_velocity);
 
-    message.fin[0] = this->depth_pos;
-    message.fin[1] = this->depth_pos; // TODO: counter-rotation offset?
-    message.fin[2] = this->heading_pos;
-    message.thruster = this->velocity_level;
+    message.fin[0] = this.depth_pos;
+    message.fin[1] = this.depth_pos; // TODO: counter-rotation offset?
+    message.fin[2] = this.heading_pos;
+    message.thruster = this.velocity_level;
 
-    u_command_publisher_->publish(message);
+    u_command_publisher_.publish(message);
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
