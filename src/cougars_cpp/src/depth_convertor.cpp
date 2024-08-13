@@ -32,7 +32,7 @@ private:
 
     geometry_msgs::msg::PoseWithCovarianceStamped depth_msg;
     depth_msg.pose.position.z =
-        pressure_msg->fluid_pressure; // TODO: convert to depth
+        pressure_msg->fluid_pressure * ; // TODO: convert to depth
     depth_publisher_->publish(depth_msg);
   }
 

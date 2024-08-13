@@ -10,7 +10,7 @@
 #include "frost_interfaces/msg/u_command.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
-#include "pid_control.h"
+#include "cougars_cpp/pid_control.h"
 #include "rclcpp/rclcpp.hpp"
 
 // TODO: might need to include pid_control.h in CMake file?
