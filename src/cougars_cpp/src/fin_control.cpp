@@ -132,10 +132,10 @@ private:
 
   void velocity_callback(
       const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
-    this->x_velocity = velocity_msg.twist.twist.linear.x;
+    
   }
 
-  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) { yaw = yaw_msg.yaw; }
+  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) {  }
 
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
@@ -148,18 +148,18 @@ private:
 
     // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
 
-    this->depth_pos = myDepthPID.compute(this->desired_depth_msg->desired_depth, depth);
-    this->heading_pos =
+    int depth_pos = myDepthPID.compute(this->desired_depth_msg->desired_depth, depth);
+    int heading_pos =
         myHeadingPID.compute(this->desired_heading_msg->desired_heading, yaw);
-    this->velocity_level =
+    int velocity_level =
         myVelocityPID.compute(this->desired_speed_msg->desired_speed, x_velocity);
 
-    message.fin[0] = this->depth_pos;
-    message.fin[1] = this->depth_pos; // TODO: counter-rotation offset?
-    message.fin[2] = this->heading_pos;
-    message.thruster = this->velocity_level;
+    message.fin[0] = depth_pos;
+    message.fin[1] = depth_pos; // TODO: counter-rotation offset?
+    message.fin[2] = heading_pos;
+    message.thruster = velocity_level;
 
-    u_command_publisher_.publish(message);
+    u_command_publisher_->publish(message);
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
