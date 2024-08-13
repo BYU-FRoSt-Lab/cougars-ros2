@@ -163,6 +163,8 @@ private:
     message.thruster = velocity_level;
 
     u_command_publisher_->publish(message);
+    RCLCPP_INFO(this->get_logger(), "Depth: %f, Heading: %f, Speed: %f",
+                depth, yaw, x_velocity);
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
