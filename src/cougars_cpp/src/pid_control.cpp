@@ -1,4 +1,4 @@
-#include "cougars_cpp/pid_control.h"
+#include "pid_control.h"
 
 PID_Control::PID_Control() {}
 
