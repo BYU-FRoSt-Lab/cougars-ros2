@@ -8,6 +8,8 @@
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+
 
 // MOOS stuff
 // https://gobysoft.org/doc/moos/class_c_m_o_o_s_msg.html
