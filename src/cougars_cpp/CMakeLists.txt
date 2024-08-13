@@ -23,13 +23,13 @@ add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS)
 
 add_executable(fin_control src/fin_control.cpp)
-ament_target_dependencies(fin_control rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
+ament_target_dependencies(fin_control rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs sensor_msgs)
 
 add_executable(dvl_convertor src/dvl_convertor.cpp)
 ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
 
 add_executable(depth_convertor src/depth_convertor.cpp)
-ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geometry_msgs)
+ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs)
 
 # Link libraries
 target_link_libraries(moos_bridge)
