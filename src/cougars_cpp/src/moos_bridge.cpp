@@ -22,30 +22,30 @@ MOOS::MOOSAsyncCommClient Comms;
 typedef std::vector<CMOOSMsg> MsgVector;
 typedef std::vector<MOOS::ClientCommsStatus> CommsStatusVector;
 
+// global for moos and ros to be able to use
+
+rclcpp::Publisher<frost_interfaces::msg::DesiredDepth>::SharedPtr desired_depth_publisher_;
+rclcpp::Publisher<frost_interfaces::msg::DesiredHeading>::SharedPtr desired_heading_publisher_;
+rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr desired_speed_publisher_;
+
 // MOOS functions
 
 class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-    CMOOSCommClient::Register("NAV_X", 0.0);
-    CMOOSCommClient::Register("NAV_Y", 0.0);
-    CMOOSCommClient::Register("NAV_Depth", 0.0);
-    CMOOSCommClient::Register("NAV_HEADING", 0.0);
-    CMOOSCommClient::Register("NAV_SPEED", 0.0);
-
 
     // ros listeners
 
     // TODO: change these to the correct topics and message types
     subscription_latlon = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&Bridge::ros_latlon_listener, this, _1));
+        "topic", 10, std::bind(&MOOSBridge::ros_latlon_listener, this, _1));
     subscription_depth = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&Bridge::ros_depth_listener, this, _1));
+        "topic", 10, std::bind(&MOOSBridge::ros_depth_listener, this, _1));
     subscription_heading = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&Bridge::ros_heading_listener, this, _1));
+        "topic", 10, std::bind(&MOOSBridge::ros_heading_listener, this, _1));
     subscription_speed = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&Bridge::ros_speed_listener, this, _1));
+        "topic", 10, std::bind(&MOOSBridge::ros_speed_listener, this, _1));
 
 
     // publishers
@@ -142,9 +142,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_heading;
 
   // TODO fix these publisher message types
-  rclcpp::Publisher<frost_interfaces::msg::DesiredDepth>::SharedPtr desired_depth_publisher_;
-  rclcpp::Publisher<frost_interfaces::msg::DesiredHeading>::SharedPtr desired_heading_publisher_;
-  rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr desired_speed_publisher_;
+  
   
 };
 
