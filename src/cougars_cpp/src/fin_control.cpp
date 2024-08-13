@@ -111,17 +111,17 @@ public:
 
 private:
   void
-  desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) const {
+  desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
     this->desired_depth = depth_msg.desired_depth;
   }
 
   void desired_heading_callback(
-      const frost_interfaces::msg::DesiredHeading &heading_msg) const {
+      const frost_interfaces::msg::DesiredHeading &heading_msg) {
     this->desired_heading = heading_msg.desired_heading;
   }
 
   void
-  desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) const {
+  desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) {
     this->desired_speed = speed_msg.desired_speed;
   }
 
