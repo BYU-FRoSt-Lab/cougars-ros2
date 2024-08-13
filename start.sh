@@ -29,5 +29,8 @@ cd ~/ros2_ws/bag
 # ros2 launch cougars moos_launch.py
 ros2 launch cougars manual_launch.py
 
+# enable acoustics on dvl
+ros2 topic pub dvl/config/command dvl_msgs/msg/ConfigCommand "{command: 'Hello, World!', parameter_name : 'acoustic_enabled', parameter_value: true}" --once
+
 killall micro_ros_agent
 wait
