@@ -171,7 +171,7 @@ bool OnMail(void *pParam) {
       auto message = frost_interfaces::msg::DesiredSpeed();
       std::cout << "=====PRINTING DESIRED_SPEED=====" << std::endl;
       message.desired_speed = value;
-      desired_speed_publisher->publish(message);
+      desired_speed_publisher_->publish(message);
     } else if (key == "DESIRED_HEADING") {
       auto message = frost_interfaces::msg::DesiredHeading();
       std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
