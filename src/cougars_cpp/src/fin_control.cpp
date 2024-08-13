@@ -13,8 +13,6 @@
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-// TODO: might need to include pid_control.h in CMake file?
-
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
