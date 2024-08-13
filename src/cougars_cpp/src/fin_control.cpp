@@ -132,10 +132,10 @@ private:
 
   void velocity_callback(
       const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
-    
+    this->x_velocity = velocity_msg.twist.twist.linear.x;
   }
 
-  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) {  }
+  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) { this->yaw = yaw_msg.yaw; }
 
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
