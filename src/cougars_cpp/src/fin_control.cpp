@@ -22,6 +22,11 @@ using std::placeholders::_1;
 #define PID_TIMER_PERIOD_MS std::chrono::milliseconds(10)
 #define PID_TIMER_PERIOD 10
 
+rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+auto qos = rclcpp::QoS(
+    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+    qos_profile);
+
 class FinControl : public rclcpp::Node {
 public:
   FinControl() : Node("fin_control") {
@@ -102,7 +107,7 @@ public:
         std::bind(&FinControl::velocity_callback, this, _1));
 
     yaw_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
-        "dvl/position", 10, std::bind(&FinControl::yaw_callback, this, _1));
+        "dvl/position", qos, std::bind(&FinControl::yaw_callback, this, _1));
 
     // declare ros timers
     pid_timer_ = this->create_wall_timer(
