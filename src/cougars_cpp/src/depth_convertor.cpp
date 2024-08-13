@@ -4,8 +4,8 @@
 #include <string>
 
 #define GRAVITY 9.81
-#define FLUID_DENSITY 1025
-#define FLUID_PRESSURE_ATM 101325
+#define FLUID_DENSITY 997
+#define FLUID_PRESSURE_ATM 87250
 
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -41,7 +41,7 @@ private:
 
     geometry_msgs::msg::PoseWithCovarianceStamped depth_msg;
     depth_msg.pose.pose.position.z =
-        (pressure_msg->fluid_pressure - FLUID_PRESSURE_ATM) /
+        (pressure_msg->fluid_pressure * 100 - FLUID_PRESSURE_ATM) /
         (FLUID_DENSITY * GRAVITY);
     RCLCPP_INFO(this->get_logger(), "Pressure: %f", pressure_msg->fluid_pressure);
     RCLCPP_INFO(this->get_logger(), "Depth: %f", depth_msg.pose.pose.position.z);
