@@ -164,8 +164,7 @@ bool OnMail(void *pParam) {
   for (q = M.begin(); q != M.end(); q++) {
     CMOOSMsg &msg = *q;
     std::string key = msg.GetKey();
-    double value = msg.GetData();
-    double time = msg.GetTime();
+    double value = msg.GetDouble();
     std::cout << "\n";
 
     if (key == "DESIRED_SPEED") {
