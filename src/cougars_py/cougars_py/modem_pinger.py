@@ -22,10 +22,10 @@ class SeatracPinger(Node):
                 ("request_response", rclpy.Parameter.Type.BOOL)
             ]
         )
-        self.ping_delay = self.get_parameter("ping_delay_seconds").get_parameter_value().integer_value
-        self.n_vehicles = self.get_parameter("number_of_vehicles").get_parameter_value().integer_value
-        self.vehicle_order = self.get_parameter("vehicle_order").get_parameter_value().integer_value
-        self.target_id = self.get_parameter("target_id").get_parameter_value().integer_value
+        self.ping_delay = self.get_parameter("ping_delay_seconds").get_parameter_value().integer_value # The time between pings sent from any beacon
+        self.n_vehicles = self.get_parameter("number_of_vehicles").get_parameter_value().integer_value # The number of vehicles sending pings
+        self.vehicle_order = self.get_parameter("vehicle_order").get_parameter_value().integer_value   # what place this beacon is in the order of all the beacons
+        self.target_id = self.get_parameter("target_id").get_parameter_value().integer_value           # the id of the target beacon. If 0, it targets all beacons.
         self.request_response = self.get_parameter("request_response").get_parameter_value().bool_value
 
         self.modem_publisher_  = self.create_publisher(ModemSend, 'modem_send', 10)
@@ -53,12 +53,15 @@ class SeatracPinger(Node):
 
 
 
-
+    # This is where you tell the modem what to send
     def send_ping(self):
         request = ModemSend()
-        request.msg_id      = CID_E.CID_PING_SEND
-        request.dest_id     = self.target_id
-        request.msg_type    = AMSGTYPE_E.MSG_REQX
+        request.msg_id      = CID_E.CID_DAT_SEND    # DATA protocol supports one way and request/response messages, so using without packet data.
+        request.dest_id     = self.target_id        # The vehicle (and beacon) id to send the message too (0 for all beacons)
+        if(self.request_response):
+            request.msg_type = AMSGTYPE_E.MSG_REQU  # requests a response with usbl information
+        else:
+            request.msg_type = AMSGTYPE_E.MSG_OWAYU # sends a one way message with usbl information
         self.modem_publisher_.publish(request)
 
 
