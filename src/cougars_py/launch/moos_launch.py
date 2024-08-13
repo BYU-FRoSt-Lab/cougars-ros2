@@ -29,6 +29,14 @@ def generate_launch_description():
             parameters=[config_file]
         ),
         launch_ros.actions.Node(
+            package='cougars_cpp',
+            executable='depth_convertor'
+        ),
+        launch_ros.actions.Node(
+            package='cougars_cpp',
+            executable='dvl_convertor'
+        ),
+        launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
             parameters=[config_file]
