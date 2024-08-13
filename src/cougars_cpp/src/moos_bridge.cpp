@@ -59,7 +59,7 @@ public:
 private:
 
   // needs to listen to current latitude and longitude (x,y), depth, speed, heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
-  void ros_laton_listener(const std_msgs::msg::String &msg) {
+  void ros_latlon_listener(const std_msgs::msg::String &msg) {
     // publish
 
     // TODO: extract message and get the gps lat lon and then convert to x, y
