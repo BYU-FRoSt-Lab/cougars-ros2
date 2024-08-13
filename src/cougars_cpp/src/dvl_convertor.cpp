@@ -35,12 +35,12 @@ public:
     // filling in the upper left corner of the 6X6 covariance matrix
     int index = 0;
     double defaultValue = 0;
-    for (int i = 0; i < 36;) {
+    for (int i = 0; i < 36; i++) {
       if (i % 6 < 3 && i < 15) {
-        stamped_msg.twist.covariance.push_back(msg->covariance[index]);
+        stamped_msg.twist.covariance[i] = msg->covariance[index];
         index++;
       } else {
-        stamped_msg.twist.covariance.push_back(defaultValue);
+        stamped_msg.twist.covariance[i] = defaultValue;
       }
     }
 
