@@ -19,7 +19,7 @@ find_package(MOOS 10 REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-target_include_directories(include)
+include_directories(include)
 
 add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS)
