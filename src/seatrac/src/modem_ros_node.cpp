@@ -84,6 +84,10 @@ public:
         msg.includes_command_status_code = true;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+
+        std::ostringstream ss;
+        ss << "Acoustic DATA Error. Status Code = " << report.status << ", Target ID = " << report.beaconId;
+        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
       case CID_DAT_SEND: {
         messages::DataSend report;
@@ -114,6 +118,10 @@ public:
         msg.includes_command_status_code = true;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+
+        std::ostringstream ss;
+        ss << "Acoustic ECHO Error. Status Code = " << report.status << ", Target ID = " << report.beaconId;
+        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
       case CID_ECHO_SEND: {
         messages::EchoSend report;
@@ -143,6 +151,10 @@ public:
         msg.includes_command_status_code = true;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.beaconId;
+
+        std::ostringstream ss;
+        ss << "Acoustic PING Error. Status Code = " << report.statusCode << ", Target ID = " << report.beaconId;
+        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
       case CID_PING_SEND: {
         messages::PingSend report;
@@ -189,6 +201,10 @@ public:
         msg.includes_command_status_code = true;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.beaconId;
+
+        std::ostringstream ss;
+        ss << "Acoustic NAV Error. Status Code = " << report.statusCode << ", Target ID = " << report.beaconId;
+        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
       case CID_NAV_QUERY_SEND: {
         messages::NavQuerySend report;
@@ -248,7 +264,9 @@ private:
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
     switch(msgId) {
       default: {
-        RCLCPP_ERROR(this->get_logger(), "Unsupported seatrac message id for broadcasting messages: %d", msgId);
+        std::ostringstream ss;
+        ss << "Unsupported seatrac message id for broadcasting messages: " << msgId;
+        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
       
       case CID_DAT_SEND: {
@@ -259,7 +277,10 @@ private:
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
 
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_DAT_SEND message. String is '%s'", req.packetData);
+
+        std::ostringstream ss;
+        ss << "Transmitting Acoustic DATA Message. Target ID = " << req.destId;
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
 
       } break;
@@ -271,8 +292,9 @@ private:
         req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
 
-        std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_ECHO_SEND message. String is '%s'", req.packetData);
+        std::ostringstream ss;
+        ss << "Transmitting Acoustic ECHO Message. Target ID = " << req.destId;
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
 
       } break;
@@ -281,7 +303,10 @@ private:
         messages::PingSend::Request req;
         req.target    = static_cast<BID_E>(rosmsg->dest_id);
         req.pingType  = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_PING_SEND message");
+
+        std::ostringstream ss;
+        ss << "Transmitting Acoustic PING Message. Target ID = " << req.target;
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
       } break;
 
@@ -291,7 +316,10 @@ private:
         req.queryFlags = static_cast<NAV_QUERY_E>(rosmsg->nav_query_flags);
         req.packetLen  = rosmsg->packet_len;
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
-        RCLCPP_INFO(this->get_logger(), "Seatrac modem broadcasting CID_NAV_QUERY_SEND message");
+
+        std::ostringstream ss;
+        ss << "Transmitting Acoustic NAV Message. Target ID = " << req.destId;
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
       }
       
@@ -340,6 +368,11 @@ private:
       msg.position_northing = acoFix.position.northing;
       msg.position_depth = acoFix.position.depth;
     }
+
+    std::ostringstream ss;
+    ss << "Received acoustic transmission from " << acoFix.srcId;
+    RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+
   }
 };
 
