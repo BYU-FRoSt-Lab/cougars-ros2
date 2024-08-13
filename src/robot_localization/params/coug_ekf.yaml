@@ -22,20 +22,31 @@ ekf_filter_node:
         # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
         # default values, and must be specified.
 
-        # Inputs: gps(pose), dvl(twist or odom), depth(pose), imu(imu)
+        # Inputs: gps(pose), dvl(twist or odom), depth(pose), imu(imu). maybe modem ahrs too if necessary
 
         pose0: whatever_gps_msg_makes_pose
-        pose0_config: [true,  true,  false,
+        pose0_config: [true,  true,  false, #<-- could make 3rd true if we assume zero depth anytime we get gps
                        false, false, false,
                        false, false, false,
                        false, false, false,
                        false, false, false]
         pose0_differential: true
         pose0_relative: false
-        pose0_queue_size: 5
+        pose0_queue_size: 1
         pose0_rejection_threshold: 2.0  # Note the difference in parameter name
 
-        twist0: 
+        pose1: whatever_depth_msg_is_but_exposed_as_pose
+        pose1_config: [false, false, true,
+                       false, false, false,
+                       false, false, false,
+                       false, false, false,
+                       false, false, false]
+        pose1_differential: true
+        pose1_relative: false
+        pose1_queue_size: 1
+        pose1_rejection_threshold: 2.0  # Note the difference in parameter name
+
+        twist0: dvl_velocity
         twist0_config: [false, false, false,
                         false, false, false,
                         true,  true,  true,
@@ -44,67 +55,7 @@ ekf_filter_node:
         twist0_queue_size: 3
         twist0_rejection_threshold: 2.0
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        odom0: whatever_the_
-        odom0_config: [true,  true,  false,
-                       false, false, false,
-                       false, false, false,
-                       false, false, false,
-                       false, false, false]
-        odom0_queue_size: 2
-        odom0_differential: false
-        odom0_relative: false
-        odom0_pose_use_child_frame: false
-        odom0_pose_rejection_threshold: 5.0
-        odom0_twist_rejection_threshold: 1.0
-
-
-        odom1: whatever_the_depth_sensor_output_msg_is
-        odom1_config: [false, false, true,
-                       false, false, false,
-                       false, false, false,
-                       false, false, false,
-                       false, false, false]
-        odom1_differential: false
-        odom1_relative: true
-        odom1_queue_size: 2
-        odom1_pose_rejection_threshold: 2.0
-        odom1_twist_rejection_threshold: 0.2
-
-        pose0: example/pose
-        pose0_config: [true,  true,  false,
-                       false, false, false,
-                       false, false, false,
-                       false, false, false,
-                       false, false, false]
-        pose0_differential: true
-        pose0_relative: false
-        pose0_queue_size: 5
-        pose0_rejection_threshold: 2.0  # Note the difference in parameter name
-
-        twist0: example/twist
-        twist0_config: [false, false, false,
-                        false, false, false,
-                        true,  true,  true,
-                        false, false, false,
-                        false, false, false]
-        twist0_queue_size: 3
-        twist0_rejection_threshold: 2.0
-
-        imu0: example/imu
+        imu0: whatever_our_imu_msg_will_be
         imu0_config: [false, false, false,
                       true,  true,  true,
                       false, false, false,
@@ -117,33 +68,13 @@ ekf_filter_node:
         imu0_twist_rejection_threshold: 0.8                #
         imu0_linear_acceleration_rejection_threshold: 0.8  #
 
-        # [ADVANCED] Some IMUs automatically remove acceleration due to gravity, and others don't. If yours doesn't, please set
-        # this to true, and *make sure* your data conforms to REP-103, specifically, that the data is in ENU frame.
-        imu0_remove_gravitational_acceleration: true
 
-        # [ADVANCED]  The EKF and UKF models follow a standard predict/correct cycle. During prediction, if there is no
-        # acceleration reference, the velocity at time t+1 is simply predicted to be the same as the velocity at time t. During
-        # correction, this predicted value is fused with the measured value to produce the new velocity estimate. This can be
-        # problematic, as the final velocity will effectively be a weighted average of the old velocity and the new one. When
-        # this velocity is the integrated into a new pose, the result can be sluggish covergence. This effect is especially
-        # noticeable with LIDAR data during rotations. To get around it, users can try inflating the process_noise_covariance
-        # for the velocity variable in question, or decrease the  variance of the variable in question in the measurement
-        # itself. In addition, users can also take advantage of the control command being issued to the robot at the time we
-        # make the prediction. If control is used, it will get converted into an acceleration term, which will be used during
-        # predicition. Note that if an acceleration measurement for the variable in question is available from one of the
-        # inputs, the control term will be ignored.
-        # Whether or not we use the control input during predicition. Defaults to false.
         use_control: true
-
-        # Whether the input (assumed to be cmd_vel) is a geometry_msgs/Twist or geometry_msgs/TwistStamped message. Defaults to
-        # false.
         stamped_control: false
-
-        # The last issued control command will be used in prediction for this period. Defaults to 0.2.
         control_timeout: 0.2
 
         # Which velocities are being controlled. Order is vx, vy, vz, vroll, vpitch, vyaw.
-        control_config: [true, false, false, false, false, true]
+        control_config: [true, false, false, false, true, true]
 
         # Places limits on how large the acceleration term will be. Should match your robot's kinematics.
         acceleration_limits: [1.3, 0.0, 0.0, 0.0, 0.0, 3.4]

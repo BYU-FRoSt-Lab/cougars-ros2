@@ -8,7 +8,7 @@ from frost_interfaces.srv import EmergencyStop
 from rclpy.qos import qos_profile_system_default
 
 STROBE_PIN = 15
-ENABLE_STROBE = True
+ENABLE_STROBE = False # NEED TO EDIT PERMISSIONS ON THE PI TO USE GPIO
 
 COMMAND_TIMER_PERIOD = 0.5 # seconds
 

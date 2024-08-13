@@ -13,6 +13,11 @@
 
 using std::placeholders::_1;
 
+rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+auto qos = rclcpp::QoS(
+    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+    qos_profile);
+
 class DVLConvertor : public rclcpp::Node {
 public:
   DVLConvertor() : Node("dvl_convertor") {
@@ -22,9 +27,9 @@ public:
         this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
             "dvl_velocity", 10);
     subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
-        "/dvl/data", 10, std::bind(&DVLConvertor::dvl_data_callback, this, _1));
+        "/dvl/data", qos, std::bind(&DVLConvertor::dvl_data_callback, this, _1));
     subscriber_dvl_position = this->create_subscription<dvl_msgs::msg::DVLDR>(
-        "/dvl/position", 10,
+        "/dvl/position", qos,
         std::bind(&DVLConvertor::dvl_pos_callback, this, _1));
   }
 

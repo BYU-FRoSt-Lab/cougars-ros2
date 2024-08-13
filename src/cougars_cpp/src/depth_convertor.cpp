@@ -4,8 +4,8 @@
 #include <string>
 
 #define GRAVITY 9.81
-#define FLUID_DENSITY 1025
-#define FLUID_PRESSURE_ATM 101325
+#define FLUID_DENSITY 997
+#define FLUID_PRESSURE_ATM 87250
 
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -13,6 +13,11 @@
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
+
+rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+auto qos = rclcpp::QoS(
+    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+    qos_profile);
 
 class DepthConvertor : public rclcpp::Node {
 public:
@@ -26,7 +31,7 @@ public:
     // declare ros subscribers
     pressure_subscription_ =
         this->create_subscription<sensor_msgs::msg::FluidPressure>(
-            "pressure_data", 10,
+            "pressure_data", qos,
             std::bind(&DepthConvertor::pressure_callback, this, _1));
   }
 
@@ -36,8 +41,10 @@ private:
 
     geometry_msgs::msg::PoseWithCovarianceStamped depth_msg;
     depth_msg.pose.pose.position.z =
-        (pressure_msg->fluid_pressure - FLUID_PRESSURE_ATM) /
+        (pressure_msg->fluid_pressure * 100 - FLUID_PRESSURE_ATM) /
         (FLUID_DENSITY * GRAVITY);
+    RCLCPP_INFO(this->get_logger(), "Pressure: %f", pressure_msg->fluid_pressure);
+    RCLCPP_INFO(this->get_logger(), "Depth: %f", depth_msg.pose.pose.position.z);
     depth_publisher_->publish(depth_msg);
   }
 

@@ -13,14 +13,17 @@
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-// TODO: might need to include pid_control.h in CMake file?
-
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 // ros config values
 #define PID_TIMER_PERIOD_MS std::chrono::milliseconds(10)
 #define PID_TIMER_PERIOD 10
+
+rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+auto qos = rclcpp::QoS(
+    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+    qos_profile);
 
 class FinControl : public rclcpp::Node {
 public:
@@ -102,7 +105,7 @@ public:
         std::bind(&FinControl::velocity_callback, this, _1));
 
     yaw_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
-        "dvl/position", 10, std::bind(&FinControl::yaw_callback, this, _1));
+        "dvl/position", qos, std::bind(&FinControl::yaw_callback, this, _1));
 
     // declare ros timers
     pid_timer_ = this->create_wall_timer(
@@ -154,12 +157,16 @@ private:
     int velocity_level =
         myVelocityPID.compute(this->desired_speed, x_velocity);
 
-    message.fin[0] = depth_pos;
+    message.fin[0] = heading_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
-    message.fin[2] = heading_pos;
+    message.fin[2] = depth_pos;
     message.thruster = velocity_level;
 
     u_command_publisher_->publish(message);
+    RCLCPP_INFO(this->get_logger(), "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f",
+                depth, yaw, x_velocity);
+    RCLCPP_INFO(this->get_logger(), "Bottom Servos: %d, Top Servo: %d, Thruster: %d",
+                depth_pos, heading_pos, velocity_level);
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
