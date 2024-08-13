@@ -37,14 +37,14 @@ public:
     double defaultValue = 0;
     for (int i = 0; i < 36;) {
       if (i % 6 < 3 && i < 15) {
-        stamped_msg.twist.twist.covariance.push_back(msg.covariance[index]);
+        stamped_msg.twist.twist.covariance.push_back(msg->covariance[index]);
         index++;
       } else {
         stamped_msg.twist.twist.covariance.push_back(defaultValue);
       }
     }
 
-    stamped_msg.twist.twist.linear = msg.velocity;
+    stamped_msg.twist.twist.linear = msg->velocity;
     publisher_dvl_velocity->publish(stamped_msg);
   }
   void dvl_pos_callback(const dvl_msgs::msg::DVLDR::SharedPtr msg) {}
