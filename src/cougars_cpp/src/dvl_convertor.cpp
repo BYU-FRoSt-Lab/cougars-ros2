@@ -33,20 +33,18 @@ public:
     geometry_msgs::msg::TwistWithCovarianceStamped stamped_msg;
 
     // filling in the upper left corner of the 6X6 covariance matrix
-    std::vector<double> twistCovariance;
     int index = 0;
     double defaultValue = 0;
     for (int i = 0; i < 36;) {
       if (i % 6 < 3 && i < 15) {
-        // twistCovariance.push_back(msg.covariance[index]);
+        stamped_msg.twist.twist.covariance.push_back(msg.covariance[index]);
         index++;
       } else {
-        // twistCovariance.push_back(defaultValue);
+        stamped_msg.twist.twist.covariance.push_back(defaultValue);
       }
     }
 
-    // stamped_msg.twist.twist.covariance = twistCovariance;
-    // stamped_msg.twist.twist.linear = msg.velocity;
+    stamped_msg.twist.twist.linear = msg.velocity;
     publisher_dvl_velocity->publish(stamped_msg);
   }
   void dvl_pos_callback(const dvl_msgs::msg::DVLDR::SharedPtr msg) {}
