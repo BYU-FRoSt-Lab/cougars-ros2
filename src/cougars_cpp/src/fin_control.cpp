@@ -182,7 +182,7 @@ private:
       SharedPtr velocity_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr yaw_subscription_;
 
-  // desired values
+  // class desired value variables
   float desired_depth = 0.0;
   float desired_heading = 0.0;
   float desired_speed = 0.0;
