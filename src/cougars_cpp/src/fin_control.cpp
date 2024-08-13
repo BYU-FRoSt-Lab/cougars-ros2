@@ -112,17 +112,17 @@ public:
 private:
   void
   desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) const {
-    this->desired_depth_msg = depth_msg;
+    this->desired_depth = depth_msg.desired_depth;
   }
 
   void desired_heading_callback(
       const frost_interfaces::msg::DesiredHeading &heading_msg) const {
-    this->desired_heading_msg = heading_msg;
+    this->desired_heading = heading_msg.desired_heading;
   }
 
   void
   desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) const {
-    this->desired_speed_msg = speed_msg;
+    this->desired_speed = speed_msg.desired_speed;
   }
 
   void depth_callback(
@@ -148,11 +148,11 @@ private:
 
     // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
 
-    int depth_pos = myDepthPID.compute(this->desired_depth_msg->desired_depth, depth);
+    int depth_pos = myDepthPID.compute(this->desired_depth, depth);
     int heading_pos =
-        myHeadingPID.compute(this->desired_heading_msg->desired_heading, yaw);
+        myHeadingPID.compute(this->desired_heading, yaw);
     int velocity_level =
-        myVelocityPID.compute(this->desired_speed_msg->desired_speed, x_velocity);
+        myVelocityPID.compute(this->desired_speed, x_velocity);
 
     message.fin[0] = depth_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
@@ -182,10 +182,10 @@ private:
       SharedPtr velocity_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr yaw_subscription_;
 
-  // micro-ROS messages
-  frost_interfaces::msg::DesiredDepth desired_depth_msg;
-  frost_interfaces::msg::DesiredHeading desired_heading_msg;
-  frost_interfaces::msg::DesiredSpeed desired_speed_msg;
+  // desired values
+  float desired_depth = 0.0;
+  float desired_heading = 0.0;
+  float desired_speed = 0.0;
 
   // control objects
   PID_Control myHeadingPID;
