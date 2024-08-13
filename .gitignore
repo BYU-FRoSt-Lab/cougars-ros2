@@ -6,3 +6,4 @@
 !**/robot_localization/test
 **/__pycache__
 **/.vscode
+core
