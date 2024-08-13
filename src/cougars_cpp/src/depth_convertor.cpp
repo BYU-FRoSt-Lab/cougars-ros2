@@ -14,6 +14,11 @@
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
+rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+auto qos = rclcpp::QoS(
+    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+    qos_profile);
+
 class DepthConvertor : public rclcpp::Node {
 public:
   DepthConvertor() : Node("depth_convertor") {
@@ -26,7 +31,7 @@ public:
     // declare ros subscribers
     pressure_subscription_ =
         this->create_subscription<sensor_msgs::msg::FluidPressure>(
-            "pressure_data", 10,
+            "pressure_data", qos,
             std::bind(&DepthConvertor::pressure_callback, this, _1));
   }
 
