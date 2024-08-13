@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 
+#include "cougars_cpp/pid_control.h"
 #include "dvl_msgs/msg/dvldr.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
@@ -10,7 +11,6 @@
 #include "frost_interfaces/msg/u_command.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
-#include "cougars_cpp/pid_control.h"
 #include "rclcpp/rclcpp.hpp"
 
 // TODO: might need to include pid_control.h in CMake file?
@@ -19,7 +19,8 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 // ros config values
-#define TIMER_PID_PERIOD '10ms' // 100 Hz
+#define PID_TIMER_PERIOD_STR '10ms' // 100 Hz
+#define PID_TIMER_PERIOD 10
 
 class FinControl : public rclcpp::Node {
 public:
@@ -176,8 +177,9 @@ private:
   rclcpp::Subscription<frost_interfaces::msg::DesiredSpeed>::SharedPtr
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
-      rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::
-          SharedPtr velocity_subscription_;
+      depth_subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::
+      SharedPtr velocity_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr yaw_subscription_;
 
   // micro-ROS messages

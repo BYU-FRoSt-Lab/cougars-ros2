@@ -3,6 +3,10 @@
 #include <memory>
 #include <string>
 
+#define GRAVITY 9.81
+#define FLUID_DENSITY 1025
+#define FLUID_PRESSURE_ATM 101325
+
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/fluid_pressure.hpp"
@@ -31,8 +35,9 @@ private:
       const sensor_msgs::msg::FluidPressure::SharedPtr pressure_msg) {
 
     geometry_msgs::msg::PoseWithCovarianceStamped depth_msg;
-    depth_msg.pose.position.z =
-        pressure_msg->fluid_pressure * ; // TODO: convert to depth
+    depth_msg.pose.pose.position.z =
+        (pressure_msg->fluid_pressure - FLUID_PRESSURE_ATM) /
+        (FLUID_DENSITY * GRAVITY);
     depth_publisher_->publish(depth_msg);
   }
 
