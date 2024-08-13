@@ -26,8 +26,14 @@ using namespace narval::seatrac;
 // The class needs to inherit from both the ROS node and driver classes
 class ModemRosNode : public rclcpp::Node, public SeatracDriver {
 public:
+
+  std::string get_serial_port() {
+    this->declare_parameter("seatrac_serial_port", "/dev/ttyUSB0");
+    return this->get_parameter("seatrac_serial_port").as_string();
+  }
+
   ModemRosNode()
-      : Node("modem_ros_node"), SeatracDriver(SEATRAC_SERIAL_PORT), count_(0) {
+      : Node("modem_ros_node"), SeatracDriver(this->get_serial_port()), count_(0) {
     RCLCPP_INFO(this->get_logger(), "Starting seatrac modem Node");
     publisher_ =
         this->create_publisher<frost_interfaces::msg::ModemRec>("modem_rec", 10);
