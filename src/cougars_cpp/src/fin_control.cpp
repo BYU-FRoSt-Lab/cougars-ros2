@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 // ros config values
-#define PID_TIMER_PERIOD_STR '10ms' // 100 Hz
+#define PID_TIMER_PERIOD_MS std::chrono::milliseconds(10)
 #define PID_TIMER_PERIOD 10
 
 class FinControl : public rclcpp::Node {
@@ -106,33 +106,33 @@ public:
 
     // declare ros timers
     pid_timer_ = this->create_wall_timer(
-        PID_TIMER_PERIOD_STR, std::bind(&FinControl::timer_callback, this));
+        PID_TIMER_PERIOD_MS, std::bind(&FinControl::timer_callback, this));
   }
 
 private:
   void
   desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) const {
-    self->desired_depth_msg = depth_msg;
+    this->desired_depth_msg = depth_msg;
   }
 
   void desired_heading_callback(
       const frost_interfaces::msg::DesiredHeading &heading_msg) const {
-    self->desired_heading_msg = heading_msg;
+    this->desired_heading_msg = heading_msg;
   }
 
   void
   desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) const {
-    self->desired_speed_msg = speed_msg;
+    this->desired_speed_msg = speed_msg;
   }
 
   void depth_callback(
       const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
-    self->depth = depth_msg.pose.position.z;
+    this->depth = depth_msg.pose.position.z;
   }
 
   void velocity_callback(
       const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
-    self->x_velocity = velocity_msg.twist.linear.x;
+    this->x_velocity = velocity_msg.twist.linear.x;
   }
 
   void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) { yaw = yaw_msg.yaw; }
@@ -148,16 +148,16 @@ private:
 
     // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
 
-    self->depth_pos = myDepthPID.compute(self->desired_depth_msg->desired_depth, depth);
-    self->heading_pos =
-        myHeadingPID.compute(self->desired_heading_msg->desired_heading, yaw);
-    self->velocity_level =
-        myVelocityPID.compute(self->desired_speed_msg->desired_speed, x_velocity);
+    this->depth_pos = myDepthPID.compute(this->desired_depth_msg->desired_depth, depth);
+    this->heading_pos =
+        myHeadingPID.compute(this->desired_heading_msg->desired_heading, yaw);
+    this->velocity_level =
+        myVelocityPID.compute(this->desired_speed_msg->desired_speed, x_velocity);
 
-    message.fin[0] = depth_pos;
-    message.fin[1] = depth_pos; // TODO: counter-rotation offset?
-    message.fin[2] = heading_pos;
-    message.thruster = velocity_level;
+    message.fin[0] = this->depth_pos;
+    message.fin[1] = this->depth_pos; // TODO: counter-rotation offset?
+    message.fin[2] = this->heading_pos;
+    message.thruster = this->velocity_level;
 
     u_command_publisher_->publish(message);
 
