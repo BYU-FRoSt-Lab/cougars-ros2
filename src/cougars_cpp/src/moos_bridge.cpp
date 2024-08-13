@@ -4,6 +4,9 @@
 // ros2 stuff
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "frost_interfaces/msg/desired_depth.hpp"
+#include "frost_interfaces/msg/desired_heading.hpp"
+#include "frost_interfaces/msg/desired_speed.hpp"
 
 
 // MOOS stuff
@@ -25,42 +28,128 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-    init_i();
+    CMOOSCommClient::Register("NAV_X", 0.0);
+    CMOOSCommClient::Register("NAV_Y", 0.0);
+    CMOOSCommClient::Register("NAV_Depth", 0.0);
+    CMOOSCommClient::Register("NAV_HEADING", 0.0);
+    CMOOSCommClient::Register("NAV_SPEED", 0.0);
 
-    // CMOOSCommClient::Register("NAV_X", 0.0);
-    subscription_ = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&Bridge::ros_listener, this, _1));
+
+    // ros listeners
+
+    // TODO: change these to the correct topics and message types
+    subscription_latlon = this->create_subscription<std_msgs::msg::String>(
+        "topic", 10, std::bind(&Bridge::ros_latlon_listener, this, _1));
+    subscription_depth = this->create_subscription<std_msgs::msg::String>(
+        "topic", 10, std::bind(&Bridge::ros_depth_listener, this, _1));
+    subscription_heading = this->create_subscription<std_msgs::msg::String>(
+        "topic", 10, std::bind(&Bridge::ros_heading_listener, this, _1));
+    subscription_speed = this->create_subscription<std_msgs::msg::String>(
+        "topic", 10, std::bind(&Bridge::ros_speed_listener, this, _1));
+
+
+    // publishers
+    desired_depth_publisher_ = this->create_publisher<frost_interfaces::msg::DesiredDepth>("desired_depth", 10);
+    desired_heading_publisher_ = this->create_publisher<frost_interfaces::msg::DesiredHeading>("desired_heading", 10);
+    desired_speed_publisher_ = this->create_publisher<frost_interfaces::msg::DesiredSpeed>("desired_speed", 10);
   }
 
-  void init_i() { i = 1; }
-  void increment_i() { i++; }
-  int get_i() { return i; }
+
 
 private:
-  int i;
 
-  void ros_listener(const std_msgs::msg::String &msg) {
-    increment_i();
-    RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg.data.c_str());
+  // needs to listen to current latitude and longitude (x,y), depth, speed, heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
+  void ros_laton_listener(const std_msgs::msg::String &msg) {
+    // publish
 
-    // translate message
+    // TODO: extract message and get the gps lat lon and then convert to x, y
 
-    // notify
+    /////////////////////////////////////////////////////////
 
-    if (get_i() % 10 == 0) {
-      Comms.Notify("NAV_X", 149.9);
-    }
+    // put conversion code in here
+    // get rid of dummy values 149.9 down below
+
+
+
+    /////////////////////////////////////////////////////////
+
+
+
+    Comms.Notify("NAV_X", 149.9);
+    Comms.Notify("NAV_Y", 149.9);
+  }
+  void ros_depth_listener(const std_msgs::msg::String &msg) {
+    // TODO: extract message
+
+    /////////////////////////////////////////////////////////
+
+  
+
+
+
+    /////////////////////////////////////////////////////////
+
+
+
+
+
+    // publish
+    Comms.Notify("NAV_DEPTH", 149.9);
+  }
+  void ros_heading_listener(const std_msgs::msg::String &msg) {
+    // TODO: extract message
+
+    /////////////////////////////////////////////////////////
+
+  
+
+
+
+    /////////////////////////////////////////////////////////
+
+    // publish
+    Comms.Notify("NAV_HEADING", 149.9);
+    // TODO: extract message
+
+    /////////////////////////////////////////////////////////
+
+  
+
+
+
+    /////////////////////////////////////////////////////////
+
+  }
+  void ros_speed_listener(const std_msgs::msg::String &msg) {
+    // TODO: extract message
+
+    /////////////////////////////////////////////////////////
+
+  
+
+
+
+    /////////////////////////////////////////////////////////
+
+    // publish
+    Comms.Notify("NAV_SPEED", 149.9);
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_latlon;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_depth;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_speed;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_heading;
+
+  // TODO fix these publisher message types
+  rclcpp::Publisher<frost_interfaces::msg::DesiredDepth>::SharedPtr desired_depth_publisher_;
+  rclcpp::Publisher<frost_interfaces::msg::DesiredHeading>::SharedPtr desired_heading_publisher_;
+  rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr desired_speed_publisher_;
+  
 };
 
 bool OnConnect(void *pParam) {
   CMOOSCommClient *pC = reinterpret_cast<CMOOSCommClient *>(pParam);
-
-  pC->Register("X", 0.0);
-
   // from MOOS-IVP to ros base
   pC->Register("DESIRED_SPEED", 0.0);
   pC->Register("DESIRED_HEADING", 0.0);
@@ -68,8 +157,8 @@ bool OnConnect(void *pParam) {
   return 0;
 }
 
+// Receives the 
 bool OnMail(void *pParam) {
-
   CMOOSCommClient *pC = reinterpret_cast<CMOOSCommClient *>(pParam);
   MOOSMSG_LIST M;
   pC->Fetch(M);
@@ -77,20 +166,30 @@ bool OnMail(void *pParam) {
   for (q = M.begin(); q != M.end(); q++) {
     CMOOSMsg &msg = *q;
     std::string key = msg.GetKey();
+    double value = msg.GetValue();
     std::cout << "\n";
 
     if (key == "DESIRED_SPEED") {
+      auto message = frost_interfaces::msg::DesiredSpeed();
       std::cout << "=====PRINTING DESIRED_SPEED=====" << std::endl;
-
+      message.desired_speed = value;
+      desired_speed_publisher->publish(message);
     } else if (key == "DESIRED_HEADING") {
+      auto message = frost_interfaces::msg::DesiredHeading();
       std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
-
+      message.desired_heading = value;
+      desired_depth_publisher_->publish(message);
     } else if (key == "DESIRED_DEPTH") {
+      auto message = frost_interfaces::msg::DesiredDepth();
       std::cout << "=====PRINTING DESIRED_DEPTH=====" << std::endl;
+      message.desired_depth = value;
+      desired_depth_publisher_->publish(mesage);
     }
 
     q->Trace();
     std::cout << "\n";
+
+
   }
   return true;
 }
