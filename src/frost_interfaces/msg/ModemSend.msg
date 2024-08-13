@@ -6,6 +6,12 @@ std_msgs/Header header
 # ModemSend is used to transmit an acoustic message to a remote beacon.
 
 uint8 msg_id           # CID_E - Command Identification Code. Indicates the type of command to send to the beacon.
+                       #    This ros message only supports the 4 commands relating to acoustic protocols:
+                       #        CID_PING_SEND: Sends an acoustic signal without packet data and requires a response
+                       #        CID_DAT_SEND: Sends a message with a data packet that can be one way or require a response
+                       #        CID_ECHO_SEND: Requires a response and the response includes the same data packet
+                       #        CID_NAV_SEND: Sends a message requesting a response with specific information from the other beacon
+
 uint8 dest_id          # BID_E. Beacon id of the beacon to send the acoustic transmission to. (1-15 or 0 for all beacons)
 uint8 msg_type         # AMSGTYPE_E. Specifies how the remote beacon should respond to the transmission. 
                        # Used with the PING, DAT, and ECHO protocols but not for the NAV protocol. 
