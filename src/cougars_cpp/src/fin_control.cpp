@@ -157,14 +157,16 @@ private:
     int velocity_level =
         myVelocityPID.compute(this->desired_speed, x_velocity);
 
-    message.fin[0] = depth_pos;
+    message.fin[0] = heading_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
-    message.fin[2] = heading_pos;
+    message.fin[2] = depth_pos;
     message.thruster = velocity_level;
 
     u_command_publisher_->publish(message);
-    RCLCPP_INFO(this->get_logger(), "Depth: %f, Heading: %f, Speed: %f",
+    RCLCPP_INFO(this->get_logger(), "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f",
                 depth, yaw, x_velocity);
+    RCLCPP_INFO(this->get_logger(), "Bottom Servos: %d, Top Servo: %d, Thruster: %d",
+                depth_pos, heading_pos, velocity_level);
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
