@@ -176,12 +176,12 @@ bool OnMail(void *pParam) {
       auto message = frost_interfaces::msg::DesiredHeading();
       std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
       message.desired_heading = value;
-      desired_depth_publisher_->publish(message);
+      desired_heading_publisher_->publish(message);
     } else if (key == "DESIRED_DEPTH") {
       auto message = frost_interfaces::msg::DesiredDepth();
       std::cout << "=====PRINTING DESIRED_DEPTH=====" << std::endl;
       message.desired_depth = value;
-      desired_depth_publisher_->publish(mesage);
+      desired_depth_publisher_->publish(message);
     }
 
     q->Trace();
