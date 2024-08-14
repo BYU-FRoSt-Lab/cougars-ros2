@@ -4,6 +4,7 @@
 // ros2 stuff
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
@@ -39,7 +40,7 @@ public:
     // ros listeners
 
     // TODO: change these to the correct topics and message types
-    subscription_vehicle_status = this->create_subscription<std_msgs::msg::String>(
+    subscription_vehicle_status = this->create_subscription<nav_msgs::msg::Odometry>(
         "vehicle_status", 10, std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
 
 
@@ -55,6 +56,8 @@ private:
 
   // needs to listen to current latitude and longitude (x,y), depth, speed, heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
   void ros_vehicle_status_listener(const std_msgs::msg::String &msg) {
+
+
     // publish
 
     // TODO: extract message and get the gps lat lon and then convert to x, y
@@ -76,7 +79,7 @@ private:
  
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_vehicle_status;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_vehicle_status;
   // TODO fix these publisher message types
   
   
@@ -91,7 +94,7 @@ bool OnConnect(void *pParam) {
   return 0;
 }
 
-// Receives the 
+// Receives the moos stuff
 bool OnMail(void *pParam) {
   CMOOSCommClient *pC = reinterpret_cast<CMOOSCommClient *>(pParam);
   MOOSMSG_LIST M;
@@ -122,8 +125,6 @@ bool OnMail(void *pParam) {
 
     // q->Trace();
     std::cout << "\n";
-
-
   }
   return true;
 }
