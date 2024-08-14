@@ -42,6 +42,16 @@ uint16 supply_voltage  # Beacon's supply voltage. Divide by 1000 for value in Vo
 int16  env_temp        # Temperature of air/water in contact with pressure sensor. Divide by 10 for value in Celsius.
 int32  env_pressure    # External air/water pressure in milli-bars, with tolerance of +\-1 Bar.
 
+bool   includes_com_ahrs
+float  acc_x
+float  acc_y
+float  acc_z
+float  mag_x
+float  mag_y
+float  mag_z
+float  gyro_x
+float  gyro_y
+float  gyro_z
 
 ### Acoustic Fix (ACOFIX_T) Fields ###
         # An Acoustic Fix structure is generated for every successfully received acoustic transmission.
