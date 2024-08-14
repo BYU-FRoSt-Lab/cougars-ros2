@@ -1,5 +1,5 @@
 
-import rcopy
+import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from frost_interfaces.msg import ModemRec
@@ -49,8 +49,6 @@ class SeatracAHRSConverter(Node):
                 0, 0, 0, 0, 0, 1],
                 dtype=np.float64
             )
-
-            #TODO: solve for covariance
-
+            
             self.modem_orientation_pub_.publish(orientation)
             
