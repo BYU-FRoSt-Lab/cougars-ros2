@@ -40,6 +40,16 @@ class SeatracAHRSConverter(Node):
             orientation.pose.pose.orientation.z = q[2]
             orientation.pose.pose.orientation.w = q[3]
 
+            orientation.pose.covariance = np.array(  # TODO: tune covariance
+               [0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1, 0, 0,
+                0, 0, 0, 0, 1, 0,
+                0, 0, 0, 0, 0, 1],
+                dtype=np.float64
+            )
+
             #TODO: solve for covariance
 
             self.modem_orientation_pub_.publish(orientation)
