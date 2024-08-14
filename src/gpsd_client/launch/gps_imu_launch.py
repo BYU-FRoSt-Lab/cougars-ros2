@@ -54,8 +54,7 @@ def generate_launch_description():
     rosbag = ExecuteProcess(
             cmd=[
                 'ros2', 'bag', 'record',
-                '/fix', '/modem_imu',
-                '--output', log_dir
+                '/fix', '/modem_imu'
             ],
             output='screen'
     )
