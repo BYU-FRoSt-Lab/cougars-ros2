@@ -139,7 +139,9 @@ private:
     this->x_velocity = velocity_msg.twist.twist.linear.x;
   }
 
-  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) { this->yaw = yaw_msg.yaw; }
+  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) {
+    this->yaw = yaw_msg.yaw;
+  }
 
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
@@ -153,9 +155,9 @@ private:
     // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
 
     int depth_pos = myDepthPID.compute(this->desired_depth, depth);
-    int heading_pos =
-        myHeadingPID.compute(this->desired_heading, yaw);
-    int velocity_level = x_velocity; // myVelocityPID.compute(this->desired_speed, x_velocity);
+    int heading_pos = myHeadingPID.compute(this->desired_heading, yaw);
+    int velocity_level =
+        x_velocity; // myVelocityPID.compute(this->desired_speed, x_velocity);
 
     message.fin[0] = heading_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
@@ -163,10 +165,12 @@ private:
     message.thruster = velocity_level;
 
     u_command_publisher_->publish(message);
-    RCLCPP_INFO(this->get_logger(), "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f",
-                depth, yaw, x_velocity);
-    RCLCPP_INFO(this->get_logger(), "Bottom Servos: %d, Top Servo: %d, Thruster: %d",
-                depth_pos, heading_pos, velocity_level);
+    RCLCPP_INFO(this->get_logger(),
+                "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f", depth,
+                yaw, x_velocity);
+    RCLCPP_INFO(this->get_logger(),
+                "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
+                heading_pos, velocity_level);
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE

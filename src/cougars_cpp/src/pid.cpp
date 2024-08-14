@@ -3,7 +3,7 @@
 PID::PID() {}
 
 void PID::calibrate(float p, float i, float d, int min, int max,
-                            float timer_interval, int adjust) {
+                    float timer_interval, int adjust) {
 
   kp = p;
   ki = i;
