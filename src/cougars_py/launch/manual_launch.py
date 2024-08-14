@@ -26,14 +26,14 @@ def generate_launch_description():
             package='cougars_cpp',
             executable='dvl_convertor'
         ),
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='leak_sub'
-        ),
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='battery_sub'
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_py',
+        #     executable='leak_sub'
+        # ),
+        # launch_ros.actions.Node(
+        #     package='cougars_py',
+        #     executable='battery_sub'
+        # ),
         launch.actions.DeclareLaunchArgument('ip_address', default_value='192.168.194.95'),
         launch_ros.actions.Node(
             package='dvl_a50', 
