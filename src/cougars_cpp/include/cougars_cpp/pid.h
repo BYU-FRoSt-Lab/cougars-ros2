@@ -1,5 +1,5 @@
-#ifndef PID
-#define PID
+#ifndef PID_CLASS
+#define PID_CLASS
 
 #define INTEGRAL_ARRAY_SIZE 20 // memory size of integral term
 
@@ -30,4 +30,4 @@ private:
   float integralArray[INTEGRAL_ARRAY_SIZE];
 };
 
-#endif // PID
+#endif // PID_ClASS
