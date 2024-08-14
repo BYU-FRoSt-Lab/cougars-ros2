@@ -1,12 +1,12 @@
-#ifndef PID_CONTROL
-#define PID_CONTROL
+#ifndef PID
+#define PID
 
 #define INTEGRAL_ARRAY_SIZE 20 // memory size of integral term
 
-class PID_Control {
+class PID {
 
 public:
-  PID_Control();
+  PID();
   void calibrate(float p, float i, float d, int min, int max, float timer_interval,
               int adjust);
   int compute(float desired, float actual);
@@ -30,4 +30,4 @@ private:
   float integralArray[INTEGRAL_ARRAY_SIZE];
 };
 
-#endif // PID_CONTROL
+#endif // PID
