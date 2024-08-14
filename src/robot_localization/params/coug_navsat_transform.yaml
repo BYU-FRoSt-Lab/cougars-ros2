@@ -23,7 +23,7 @@ navsat_transform_node:
         zero_altitude: true
 
 # If this is true, the transform world_frame->utm transform is broadcast for use by other nodes. Defaults to false.
-        broadcast_utm_transform: true
+        broadcast_cartesian_transform: true
 
 # If this is true, the utm->world_frame transform will be published instead of the world_frame->utm transform. 
 # Note that broadcast_utm_transform still has to be enabled. Defaults to false.
