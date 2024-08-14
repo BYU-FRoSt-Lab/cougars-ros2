@@ -20,6 +20,7 @@
 #include <exception>
 
 #define PI 3.14159265
+#define MOOS_MISSION_DIR "/home/frostlab/ros2_ws/moos_tools/" 
 
 using std::placeholders::_1;
 
@@ -38,16 +39,9 @@ rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr
 
 // MOOS functions
 
-void pokeMOOS(const std::string& variable, const std::string& value, const std::string& moos_file) {
-    std::string command = "uPokeDB " + moos_file + " " + variable + " " + value;
-    int result = system(command.c_str());
 
-    if (result == 0) {
-        std::cout << "Successfully poked " << variable << "=" << value << " in " << moos_file << std::endl;
-    } else {
-        std::cerr << "Error poking MOOSDB" << std::endl;
-    }
-}
+
+
 
 class MOOSBridge : public rclcpp::Node {
 public:
@@ -118,7 +112,8 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_DEPTH", 0.0);
 
 
-  pokeMOOS("DEPLOY", "true", "coug.moos");
+  std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moss" + " " + variable + "=" + value " , MOOS_MANUAL_OVERIDE=false";
+  int result = system(command.c_str());
   return 0;
 }
 
