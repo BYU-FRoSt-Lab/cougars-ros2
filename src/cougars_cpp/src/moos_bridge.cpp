@@ -115,8 +115,8 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_DEPTH", 0.0);
 
 
-  std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " + variable + "=" + value " , MOOS_MANUAL_OVERIDE=false";
-  int result = system(command.c_str());
+  // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " + variable + "=" + value " , MOOS_MANUAL_OVERIDE=false";
+  // int result = system(command.c_str());
   return 0;
 }
 
