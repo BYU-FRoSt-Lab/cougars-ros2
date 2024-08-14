@@ -62,6 +62,8 @@ public:
     SETTINGS_T settings = command::settings_get(*this).settings;
     settings.xcvrBeaconId = beaconId;
     settings.envSalinity = salinity;
+    settings.statusFlags = STATUS_MODE_10HZ;
+    settings.status_output = ATTITUDE;
     command::settings_set(*this, settings);
     command::settings_save(*this);    
     beacon_connected = true;

@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from frost_interfaces.msg import ModemSend, ModemRec
+from frost_interfaces.msg import ModemSend
 from .seatrac_enums import CID_E, AMSGTYPE_E
 import time
 from datetime import datetime, timedelta
