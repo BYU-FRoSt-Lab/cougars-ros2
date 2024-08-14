@@ -19,6 +19,9 @@
 #include "MOOS/libMOOS/Utils/CommandLineParser.h"
 #include <exception>
 
+#include <cstdlib>
+#include <iostream>
+
 #define PI 3.14159265
 #define MOOS_MISSION_DIR "/home/frostlab/ros2_ws/moos_tools/" 
 
