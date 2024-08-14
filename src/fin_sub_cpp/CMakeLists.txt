@@ -15,9 +15,9 @@ find_package(sensor_msgs REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(finsub src/fin_sub_node.cpp)
+# add_executable(finsub src/control_node.cpp)
 add_executable(control_node src/control_node.cpp)
-ament_target_dependencies(finsub rclcpp frost_interfaces)
+ament_target_dependencies(control_node rclcpp frost_interfaces sensor_msgs)
 
 # Link libraries
 target_link_libraries(control_node
