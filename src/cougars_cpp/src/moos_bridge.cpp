@@ -62,13 +62,14 @@ private:
     nav_x = msg.pose.pose.position.x;
     nav_y = msg.pose.pose.position.y;
     nav_depth = -1.0 * msg.pose.pose.position.z;
-
+    nav_speed = msg.twist.twist.linear.x;
 
 
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     Comms.Notify("NAV_DEPTH", nav_depth);
-
+    Comms.Notify("NAV_SPEED", nav_speed);
+    
 
   }
  
