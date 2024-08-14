@@ -41,7 +41,7 @@ def generate_launch_description():
             parameters=[{'dvl_ip_address': launch.substitutions.LaunchConfiguration('ip_address')}],
         ),
         launch.actions.ExecuteProcess(
-            cmd=['ros2', 'topic', 'pub', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '"command: \'set_config\', parameter_name : \'acoustic_enabled\', parameter_value: true"', '--once'],
+            cmd=['ros2', 'topic', 'pub', '-1', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: true\'}', '--once'],
             output='screen'
         ),
     ])

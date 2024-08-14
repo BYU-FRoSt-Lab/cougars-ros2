@@ -165,12 +165,12 @@ private:
     message.thruster = velocity_level;
 
     u_command_publisher_->publish(message);
-    RCLCPP_INFO(this->get_logger(),
-                "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f", depth,
-                yaw, x_velocity);
-    RCLCPP_INFO(this->get_logger(),
-                "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
-                heading_pos, velocity_level);
+    // RCLCPP_INFO(this->get_logger(),
+    //             "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f", depth,
+    //             yaw, x_velocity);
+    // RCLCPP_INFO(this->get_logger(),
+    //             "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
+    //             heading_pos, velocity_level);
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
