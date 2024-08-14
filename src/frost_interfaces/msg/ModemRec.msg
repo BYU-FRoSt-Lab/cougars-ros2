@@ -43,15 +43,15 @@ int16  env_temp        # Temperature of air/water in contact with pressure senso
 int32  env_pressure    # External air/water pressure in milli-bars, with tolerance of +\-1 Bar.
 
 bool   includes_com_ahrs
-float  acc_x
-float  acc_y
-float  acc_z
-float  mag_x
-float  mag_y
-float  mag_z
-float  gyro_x
-float  gyro_y
-float  gyro_z
+float64 acc_x
+float64 acc_y
+float64 acc_z
+float64 mag_x
+float64 mag_y
+float64 mag_z
+float64 gyro_x
+float64 gyro_y
+float64 gyro_z
 
 ### Acoustic Fix (ACOFIX_T) Fields ###
         # An Acoustic Fix structure is generated for every successfully received acoustic transmission.
