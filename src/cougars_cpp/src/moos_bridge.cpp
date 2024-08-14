@@ -1,5 +1,7 @@
 #include <functional>
 #include <memory>
+#include <Eigen/Geometry>
+#include <Eigen/Dense>
 
 // ros2 stuff
 #include "rclcpp/rclcpp.hpp"
@@ -17,6 +19,8 @@
 #include "MOOS/libMOOS/Comms/MOOSMsg.h"
 #include "MOOS/libMOOS/Utils/CommandLineParser.h"
 #include <exception>
+
+#define PI 3.14159265
 
 using std::placeholders::_1;
 
@@ -36,21 +40,18 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-
     // ros listeners
 
     // TODO: change these to the correct topics and message types
     subscription_vehicle_status = this->create_subscription<nav_msgs::msg::Odometry>(
         "vehicle_status", 10, std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
 
-
+    
     // publishers
     desired_depth_publisher_ = this->create_publisher<frost_interfaces::msg::DesiredDepth>("desired_depth", 10);
     desired_heading_publisher_ = this->create_publisher<frost_interfaces::msg::DesiredHeading>("desired_heading", 10);
     desired_speed_publisher_ = this->create_publisher<frost_interfaces::msg::DesiredSpeed>("desired_speed", 10);
   }
-
-
 
 private:
 
@@ -65,11 +66,23 @@ private:
     nav_speed = msg.twist.twist.linear.x;
 
 
+    // from quaternion, get heading
+    Eigen::Quaterniond q;
+    q.x() = msg.pose.pose.orientation.x;
+    q.y() = msg.pose.pose.orientation.y;
+    q.z() = msg.pose.pose.orientation.z;
+    q.w() = msg.pose.pose.orientation.w;
+
+    Vector3d euler = q.toRotationMatrix().eulerAngles(2, 1, 0);
+    double yaw = euler[0];
+    nav_heading = -1.0 * yaw * (180.0 / PI)
+
+
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     Comms.Notify("NAV_DEPTH", nav_depth);
     Comms.Notify("NAV_SPEED", nav_speed);
-    
+    Comms.Notify("NAV_HEADING", nav_heading);
 
   }
  
@@ -110,7 +123,13 @@ bool OnMail(void *pParam) {
     } else if (key == "DESIRED_HEADING") {
       auto message = frost_interfaces::msg::DesiredHeading();
       std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
-      message.desired_heading = value;
+      if(value < 0.0){
+        message.desired_heading = value + 360.0;
+      }
+      else{
+        message.desired_heading = value;
+      }
+      
       desired_heading_publisher_->publish(message);
     } else if (key == "DESIRED_DEPTH") {
       auto message = frost_interfaces::msg::DesiredDepth();
