@@ -15,7 +15,7 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='fin_control',
+            executable='pid_control',
             parameters=[config_file]
         ),
         launch_ros.actions.Node(
@@ -34,16 +34,6 @@ def generate_launch_description():
             package='cougars_py',
             executable='battery_sub'
         ),
-        # launch_ros.actions.Node(
-        #     package='cougars_py',
-        #     executable='modem_pinger',
-        #     parameters=[config_file]
-        # ),
-        # launch_ros.actions.Node(
-        #     package='seatrac',
-        #     executable='modem',
-        #     parameters=[config_file]
-        # ),
         launch.actions.DeclareLaunchArgument('ip_address', default_value='192.168.194.95'),
         launch_ros.actions.Node(
             package='dvl_a50', 
