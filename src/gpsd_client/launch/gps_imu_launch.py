@@ -45,8 +45,8 @@ def generate_launch_description():
     )
     converter = launch_ros.actions.Node(
             package='cougars_py',
-            executable='#TODO HERE',
-            parameters=[config_file]
+            executable='seatrac_ahrs_converter'
+            # parameters=[config_file]
     )
 
     log_dir = '/home/frostlab/bag'
@@ -54,8 +54,7 @@ def generate_launch_description():
     rosbag = ExecuteProcess(
             cmd=[
                 'ros2', 'bag', 'record',
-                '/fix', '/modem_imu',
-                '--output', log_dir
+                '/fix', '/modem_imu'
             ],
             output='screen'
     )
@@ -63,6 +62,7 @@ def generate_launch_description():
     return launch.LaunchDescription([container,
                                      rosbag,
                                      seatrac,
+                                     converter,
             launch.actions.RegisterEventHandler(
                 event_handler=launch.event_handlers.OnProcessExit(
                     target_action=container,
