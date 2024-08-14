@@ -1,26 +1,35 @@
-//-------------------------------------------------
-// NAME: M. Benjamin, MIT CSAIL
-// FILE: coug.moos
-//-------------------------------------------------
+// CougUV moos mission file
+
+// Spanish Fork Resevoir
+// LatOrigin  = 40.071754
+// LongOrigin = -111.599150
+
+
+// EB grass field
+LatOrigin = 40.246175845343224
+LongOrigin = -111.64724349627879
+
 
 ServerHost   = localhost
 ServerPort   = 9000
-Community    = alpha
+Community    = coug
 
 //------------------------------------------
 // Antler configuration  block
 ProcessConfig = ANTLER
 {
+
   MSBetweenLaunches = 200
   Run = MOOSDB        @ NewConsole = false
   Run = pHelmIvP      @ NewConsole = false
+
 }
 
 //------------------------------------------
 
 
 //------------------------------------------
-// pHelmIvP config block
+// pHelmIvP config block, gives desired heading, desired speed, desired depth
 
 ProcessConfig = pHelmIvP
 {
@@ -30,7 +39,7 @@ ProcessConfig = pHelmIvP
   behaviors  = coug.bhv
   domain     = course:0:359:360
   domain     = speed:0:4:41
-  domain     = detph:0:50:
+  // domain     = detph:0:50:200
 }
 
 //------------------------------------------
