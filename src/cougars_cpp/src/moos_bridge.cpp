@@ -55,26 +55,21 @@ public:
 private:
 
   // needs to listen to current latitude and longitude (x,y), depth, speed, heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
-  void ros_vehicle_status_listener(const std_msgs::msg::String &msg) {
+  void ros_vehicle_status_listener(nav_msgs::msg::Odometry &msg) {
 
+    double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
 
-    // publish
-
-    // TODO: extract message and get the gps lat lon and then convert to x, y
-
-    /////////////////////////////////////////////////////////
-
-    // put conversion code in here
-    // get rid of dummy values 149.9 down below
+    nav_x = msg.pose.pose.position.x;
+    nav_y = msg.pose.pose.position.y;
+    nav_depth = -1.0 * msg.pose.pose.position.z;
 
 
 
-    /////////////////////////////////////////////////////////
+    Comms.Notify("NAV_X", nav_x);
+    Comms.Notify("NAV_Y", nav_y);
+    Comms.Notify("NAV_DEPTH", nav_depth);
 
 
-
-    Comms.Notify("NAV_X", 149.9);
-    Comms.Notify("NAV_Y", 149.9);
   }
  
 
