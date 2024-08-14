@@ -99,6 +99,7 @@ public:
         geometry_msgs::msg::PoseWithCovarianceStamped>(
         "depth_data", 10, std::bind(&PIDControl::depth_callback, this, _1));
 
+    // TODO: change this to 'vehicle_status' listener
     velocity_subscription_ = this->create_subscription<
         geometry_msgs::msg::TwistWithCovarianceStamped>(
         "dvl_velocity", 10,
