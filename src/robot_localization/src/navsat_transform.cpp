@@ -779,6 +779,8 @@ void NavSatTransform::odomCallback(
     setTransformOdometry(msg);
   }
 
+  
+
   tf2::fromMsg(msg->pose.pose, latest_world_pose_);
   latest_odom_covariance_.setZero();
   for (size_t row = 0; row < POSE_SIZE; ++row) {
