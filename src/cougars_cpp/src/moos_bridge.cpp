@@ -45,9 +45,7 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-    // ros listeners
-
-    // TODO: change these to the correct topics and message types
+    // vehicle status listener
     subscription_vehicle_status_ =
         this->create_subscription<nav_msgs::msg::Odometry>(
             "vehicle_status", 10,
