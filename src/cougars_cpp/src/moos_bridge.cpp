@@ -49,7 +49,7 @@ public:
     // ros listeners
 
     // TODO: change these to the correct topics and message types
-    subscription_vehicle_status =
+    subscription_vehicle_status_ =
         this->create_subscription<nav_msgs::msg::Odometry>(
             "vehicle_status", 10,
             std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
@@ -98,7 +98,7 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr
-      subscription_vehicle_status;
+      subscription_vehicle_status_;
   // TODO fix these publisher message types
 };
 
