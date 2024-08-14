@@ -41,12 +41,6 @@ public:
     // TODO: change these to the correct topics and message types
     subscription_vehicle_status = this->create_subscription<std_msgs::msg::String>(
         "vehicle_status", 10, std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
-    subscription_depth = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_depth_listener, this, _1));
-    subscription_heading = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_heading_listener, this, _1));
-    subscription_speed = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_speed_listener, this, _1));
 
 
     // publishers
@@ -79,69 +73,10 @@ private:
     Comms.Notify("NAV_X", 149.9);
     Comms.Notify("NAV_Y", 149.9);
   }
-  void ros_depth_listener(const std_msgs::msg::String &msg) {
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
-
-
-
-
-
-    // publish
-    Comms.Notify("NAV_DEPTH", 149.9);
-  }
-  void ros_heading_listener(const std_msgs::msg::String &msg) {
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
-
-    // publish
-    Comms.Notify("NAV_HEADING", 149.9);
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
-
-  }
-  void ros_speed_listener(const std_msgs::msg::String &msg) {
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
-
-    // publish
-    Comms.Notify("NAV_SPEED", 149.9);
-  }
+ 
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_latlon;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_depth;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_speed;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_heading;
-
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_vehicle_status;
   // TODO fix these publisher message types
   
   
