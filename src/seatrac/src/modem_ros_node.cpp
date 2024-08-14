@@ -63,7 +63,7 @@ public:
     settings.xcvrBeaconId = beaconId;
     settings.envSalinity = salinity;
     settings.statusFlags = STATUS_MODE_10HZ;
-    settings.status_output = ATTITUDE;
+    settings.status_output = ATTITUDE | AHRS_COMP_DATA;
     command::settings_set(*this, settings);
     command::settings_save(*this);    
     beacon_connected = true;
@@ -249,6 +249,17 @@ public:
           msg.attitude_yaw   = report.attitude.attYaw;
           msg.attitude_pitch = report.attitude.attPitch;
           msg.attitude_roll  = report.attitude.attRoll;
+        }
+        if(report.contentType & AHRS_COMP_DATA) {
+          msg.acc_x = report.compensatedAHRS.ahrsCompAccX;
+          msg.acc_y = report.compensatedAHRS.ahrsCompAccY;
+          msg.acc_z = report.compensatedAHRS.ahrsCompAccZ;
+          msg.mag_x = report.compensatedAHRS.ahrsCompMagX;
+          msg.mag_y = report.compensatedAHRS.ahrsCompMagY;
+          msg.mag_z = report.compensatedAHRS.ahrsCompMagZ;
+          msg.gyro_x = report.compensatedAHRS.ahrsCompGyroX;
+          msg.gyro_y = report.compensatedAHRS.ahrsCompGyroY;
+          msg.gyro_z = report.compensatedAHRS.ahrsCompGyroZ;
         }
       } break;
     }
