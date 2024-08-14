@@ -4,7 +4,7 @@ import launch.substitutions
 import launch_ros.actions
 
 def generate_launch_description():
-    config_file = "~/config/vehicle_config.yaml"
+    config_file = "home/frostlab/config/vehicle_config.yaml"
     return launch.LaunchDescription([
         launch.actions.ExecuteProcess(
             cmd=['ros2', 'bag', 'record', '-s', 'mcap', '-a'],

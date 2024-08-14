@@ -24,8 +24,8 @@ include_directories(include)
 add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs) 
 
-add_executable(fin_control src/fin_control.cpp src/pid_control.cpp)
-ament_target_dependencies(fin_control rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs sensor_msgs)
+add_executable(pid_control src/pid_control.cpp src/pid.cpp)
+ament_target_dependencies(pid_control rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs sensor_msgs)
 
 add_executable(dvl_convertor src/dvl_convertor.cpp)
 ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
@@ -35,12 +35,12 @@ ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geome
 
 # Link libraries
 target_link_libraries(moos_bridge)
-target_link_libraries(fin_control)
+target_link_libraries(pid_control)
 target_link_libraries(dvl_convertor)
 target_link_libraries(depth_convertor)
 install(TARGETS
   moos_bridge
-  fin_control
+  pid_control
   dvl_convertor
   depth_convertor
   DESTINATION lib/${PROJECT_NAME})
