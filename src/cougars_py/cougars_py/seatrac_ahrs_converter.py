@@ -33,11 +33,11 @@ class SeatracAHRSConverter(Node):
 
             # orientation = PoseWithCovarianceStamped()
 
-            # yaw   = 0.1 * msg.attitude_yaw
-            # pitch = 0.1 * msg.attitude_pitch
-            # roll  = 0.1 * msg.attitude_roll
+            yaw   = 0.1 * msg.attitude_yaw
+            pitch = 0.1 * msg.attitude_pitch
+            roll  = 0.1 * msg.attitude_roll
 
-            rot1 = R.from_euler('xy', angles=(yaw, pitch) ,degrees=True)
+            rot1 = R.from_euler('zyx', angles=(yaw, pitch, roll) ,degrees=True)
             #TODO: get rotation with roll as well. It's complicated, so saving for later
 
             q = rot1.as_quat()
