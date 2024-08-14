@@ -62,6 +62,7 @@ def generate_launch_description():
     return launch.LaunchDescription([container,
                                      rosbag,
                                      seatrac,
+                                     converter,
             launch.actions.RegisterEventHandler(
                 event_handler=launch.event_handlers.OnProcessExit(
                     target_action=container,
