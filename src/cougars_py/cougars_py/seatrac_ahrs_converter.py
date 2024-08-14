@@ -68,4 +68,14 @@ class SeatracAHRSConverter(Node):
             # )
             
             # self.modem_orientation_pub_.publish(orientation)
-            
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    seatrac_logger = SeatracAHRSConverter()
+    rclpy.spin(seatrac_logger)
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
