@@ -39,8 +39,8 @@ public:
     // ros listeners
 
     // TODO: change these to the correct topics and message types
-    subscription_latlon = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_latlon_listener, this, _1));
+    subscription_vehicle_status = this->create_subscription<std_msgs::msg::String>(
+        "vehicle_status", 10, std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
     subscription_depth = this->create_subscription<std_msgs::msg::String>(
         "topic", 10, std::bind(&MOOSBridge::ros_depth_listener, this, _1));
     subscription_heading = this->create_subscription<std_msgs::msg::String>(
@@ -60,7 +60,7 @@ public:
 private:
 
   // needs to listen to current latitude and longitude (x,y), depth, speed, heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
-  void ros_latlon_listener(const std_msgs::msg::String &msg) {
+  void ros_vehicle_status_listener(const std_msgs::msg::String &msg) {
     // publish
 
     // TODO: extract message and get the gps lat lon and then convert to x, y

@@ -26,9 +26,6 @@ ProcessConfig = ANTLER
 }
 
 //------------------------------------------
-
-
-//------------------------------------------
 // pHelmIvP config block, gives desired heading, desired speed, desired depth
 
 ProcessConfig = pHelmIvP
