@@ -22,7 +22,7 @@ find_package(MOOS 10 REQUIRED)
 include_directories(include)
 
 add_executable(moos_bridge src/moos_bridge.cpp)
-ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS)
+ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs) 
 
 add_executable(fin_control src/fin_control.cpp src/pid_control.cpp)
 ament_target_dependencies(fin_control rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs sensor_msgs)
