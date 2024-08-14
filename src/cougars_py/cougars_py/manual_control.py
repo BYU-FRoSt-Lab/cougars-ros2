@@ -55,10 +55,10 @@ class ManualControl(Node):
         )
 
         # Set up the strobe light
-        if ENABLE_STROBE:
-            self.chip = gpiod.Chip('gpiochip4')
-            self.control_line = self.chip.get_line(STROBE_PIN)
-            self.control_line.request(consumer="STROBE", type=gpiod.LINE_REQ_DIR_OUT)
+        # if ENABLE_STROBE:
+            # self.chip = gpiod.Chip('gpiochip4')
+            # self.control_line = self.chip.get_line(STROBE_PIN)
+            # self.control_line.request(consumer="STROBE", type=gpiod.LINE_REQ_DIR_OUT)
 
         self.counter = 0
         self.stopped = False
@@ -67,11 +67,11 @@ class ManualControl(Node):
     def timer_callback(self):
 
         # blink the strobe every second
-        if ENABLE_STROBE:
-            if time.time() % 2 < 1:
-                self.control_line.set_value(1)
-            else:
-                self.control_line.set_value(0)
+        # if ENABLE_STROBE:
+        #     if time.time() % 2 < 1:
+        #         self.control_line.set_value(1)
+        #     else:
+        #         self.control_line.set_value(0)
 
         ##########################################################
         # HIGH-LEVEL CONTROLLER CODE STARTS HERE
