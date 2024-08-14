@@ -6,6 +6,7 @@
 #include "dvl_msgs/msg/dvl.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -26,6 +27,9 @@ public:
     publisher_dvl_velocity =
         this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
             "dvl_velocity", 10);
+    publisher_dvl_dead_reckoning =
+        this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+            "dvl_dead_reckoning", 10);
     subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
         "/dvl/data", qos, std::bind(&DVLConvertor::dvl_data_callback, this, _1));
     subscriber_dvl_position = this->create_subscription<dvl_msgs::msg::DVLDR>(
@@ -49,15 +53,36 @@ public:
       }
     }
 
+    
+
     stamped_msg.twist.twist.linear = msg->velocity;
+    // negate z and y -- will this mess with covariance?
+    stamped_msg.twist.twist.linear.y = -1.0 * msg->velocity.y;
+    stamped_msg.twist.twist.linear.y = -1.0 * msg->velocity.z;
     publisher_dvl_velocity->publish(stamped_msg);
   }
-  void dvl_pos_callback(const dvl_msgs::msg::DVLDR::SharedPtr msg) {}
+  void dvl_pos_callback(const dvl_msgs::msg::DVLDR::SharedPtr msg) {
+
+    geometry_msgs::msg::PoseWithCovarianceStamped stamped_msg;
+
+    stamped_msg.pose.pose.position.x = msg->position.x;
+    stamped_msg.pose.pose.position.y = -1.0 * msg->position.y;
+    stamped_msg.pose.pose.position.z = -1.0 * msg->position.z;
+
+
+
+    publisher_dvl_dead_reckoning->publish(stamped_msg);
+
+  
+
+  }
 
 private:
   // publisher localizatoin pkg types
   rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr
       publisher_dvl_velocity;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
+      publisher_dvl_dead_reckoning;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr publisher_dvl_depth;
 
   // subscribers - listening to dvl driver
