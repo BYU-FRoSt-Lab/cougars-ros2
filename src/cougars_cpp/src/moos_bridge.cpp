@@ -95,7 +95,6 @@ private:
     Comms.Notify("NAV_HEADING", nav_heading);
   }
 
-  rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr
       subscription_vehicle_status_;
   // TODO fix these publisher message types
