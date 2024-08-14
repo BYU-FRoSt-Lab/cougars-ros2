@@ -38,6 +38,17 @@ rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr
 
 // MOOS functions
 
+void pokeMOOS(const std::string& variable, const std::string& value, const std::string& moos_file) {
+    std::string command = "uPokeDB " + moos_file + " " + variable + " " + value;
+    int result = system(command.c_str());
+
+    if (result == 0) {
+        std::cout << "Successfully poked " << variable << "=" << value << " in " << moos_file << std::endl;
+    } else {
+        std::cerr << "Error poking MOOSDB" << std::endl;
+    }
+}
+
 class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
@@ -105,6 +116,9 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_SPEED", 0.0);
   pC->Register("DESIRED_HEADING", 0.0);
   pC->Register("DESIRED_DEPTH", 0.0);
+
+
+  pokeMOOS("DEPLOY", "true", "coug.moos");
   return 0;
 }
 
