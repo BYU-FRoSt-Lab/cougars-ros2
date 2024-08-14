@@ -16,14 +16,6 @@ def generate_launch_description():
             parameters=[config_file]
         ),
         launch_ros.actions.Node(
-            package='cougars_py',
-            executable='leak_sub'
-        ),
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='battery_sub'
-        ),
-        launch_ros.actions.Node(
             package='cougars_cpp',
             executable='fin_control',
             parameters=[config_file]
@@ -37,6 +29,14 @@ def generate_launch_description():
             executable='dvl_convertor'
         ),
         launch_ros.actions.Node(
+            package='cougars_py',
+            executable='leak_sub'
+        ),
+        launch_ros.actions.Node(
+            package='cougars_py',
+            executable='battery_sub'
+        ),
+        launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
             parameters=[config_file]
@@ -46,5 +46,9 @@ def generate_launch_description():
             package='dvl_a50', 
             executable='dvl_a50_sensor', 
             parameters=[{'dvl_ip_address': launch.substitutions.LaunchConfiguration('ip_address')}],
+        ),
+        launch.actions.ExecuteProcess(
+            cmd=['ros2', 'topic', 'pub', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '"command: \'set_config\', parameter_name : \'acoustic_enabled\', parameter_value: true"', '--once'],
+            output='screen'
         ),
     ])
