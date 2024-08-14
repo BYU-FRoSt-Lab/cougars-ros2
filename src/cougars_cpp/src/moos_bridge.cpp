@@ -23,7 +23,7 @@
 #include <iostream>
 
 #define PI 3.14159265
-#define MOOS_MISSION_DIR "/home/frostlab/ros2_ws/moos_tools/" 
+#define MOOS_MISSION_DIR "/home/frostlab/ros2_ws/moos_tools/"
 
 using std::placeholders::_1;
 
@@ -41,10 +41,6 @@ rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr
     desired_speed_publisher_;
 
 // MOOS functions
-
-
-
-
 
 class MOOSBridge : public rclcpp::Node {
 public:
@@ -91,10 +87,9 @@ private:
 
     Vector3d euler = q.toRotationMatrix().eulerAngles(2, 1, 0);
     double yaw = euler[0];
-    nav_heading = -1.0 * yaw *
-                  (180.0 / PI)
+    nav_heading = -1.0 * yaw * (180.0 / PI);
 
-                      Comms.Notify("NAV_X", nav_x);
+    Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     Comms.Notify("NAV_DEPTH", nav_depth);
     Comms.Notify("NAV_SPEED", nav_speed);
@@ -114,9 +109,9 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_HEADING", 0.0);
   pC->Register("DESIRED_DEPTH", 0.0);
 
-
-  // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " + variable + "=" + value " , MOOS_MANUAL_OVERIDE=false";
-  // int result = system(command.c_str());
+  // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
+  // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
+  // system(command.c_str());
   return 0;
 }
 
