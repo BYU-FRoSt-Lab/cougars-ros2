@@ -4,7 +4,9 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from frost_interfaces.msg import ModemRec
 from .seatrac_enums import CID_E
-from scipy.spatial.transform import rotation
+import numpy as np
+
+from scipy.spatial.transform import Rotation as R
 
 
 
@@ -23,6 +25,22 @@ class SeatracAHRSConverter(Node):
     def modem_callback(self, msg):
         if msg.msg_id == CID_E.CID_STATUS:
             orientation = PoseWithCovarianceStamped()
-            #TODO: add code to calculate and extract orientation
+
+            yaw   = 0.1 * msg.attitude_yaw
+            pitch = 0.1 * msg.attitude_pitch
+            roll  = 0.1 * msg.attitude_roll
+
+            rot1 = R.from_euler('xy', angles=(yaw, pitch) ,degrees=True)
+            #TODO: get rotation with roll as well. It's complicated, so saving for later
+
+            q = rot1.as_quat()
+
+            orientation.pose.pose.orientation.x = q[0]
+            orientation.pose.pose.orientation.y = q[1]
+            orientation.pose.pose.orientation.z = q[2]
+            orientation.pose.pose.orientation.w = q[3]
+
+            #TODO: solve for covariance
+
             self.modem_orientation_pub_.publish(orientation)
             
