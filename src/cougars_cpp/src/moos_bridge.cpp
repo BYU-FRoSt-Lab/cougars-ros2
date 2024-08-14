@@ -4,6 +4,7 @@
 // ros2 stuff
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
@@ -39,14 +40,8 @@ public:
     // ros listeners
 
     // TODO: change these to the correct topics and message types
-    subscription_latlon = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_latlon_listener, this, _1));
-    subscription_depth = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_depth_listener, this, _1));
-    subscription_heading = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_heading_listener, this, _1));
-    subscription_speed = this->create_subscription<std_msgs::msg::String>(
-        "topic", 10, std::bind(&MOOSBridge::ros_speed_listener, this, _1));
+    subscription_vehicle_status = this->create_subscription<nav_msgs::msg::Odometry>(
+        "vehicle_status", 10, std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
 
 
     // publishers
@@ -60,88 +55,27 @@ public:
 private:
 
   // needs to listen to current latitude and longitude (x,y), depth, speed, heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
-  void ros_latlon_listener(const std_msgs::msg::String &msg) {
-    // publish
+  void ros_vehicle_status_listener(nav_msgs::msg::Odometry &msg) {
 
-    // TODO: extract message and get the gps lat lon and then convert to x, y
+    double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
 
-    /////////////////////////////////////////////////////////
-
-    // put conversion code in here
-    // get rid of dummy values 149.9 down below
-
+    nav_x = msg.pose.pose.position.x;
+    nav_y = msg.pose.pose.position.y;
+    nav_depth = -1.0 * msg.pose.pose.position.z;
+    nav_speed = msg.twist.twist.linear.x;
 
 
-    /////////////////////////////////////////////////////////
-
-
-
-    Comms.Notify("NAV_X", 149.9);
-    Comms.Notify("NAV_Y", 149.9);
-  }
-  void ros_depth_listener(const std_msgs::msg::String &msg) {
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
-
-
-
-
-
-    // publish
-    Comms.Notify("NAV_DEPTH", 149.9);
-  }
-  void ros_heading_listener(const std_msgs::msg::String &msg) {
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
-
-    // publish
-    Comms.Notify("NAV_HEADING", 149.9);
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
+    Comms.Notify("NAV_X", nav_x);
+    Comms.Notify("NAV_Y", nav_y);
+    Comms.Notify("NAV_DEPTH", nav_depth);
+    Comms.Notify("NAV_SPEED", nav_speed);
+    
 
   }
-  void ros_speed_listener(const std_msgs::msg::String &msg) {
-    // TODO: extract message
-
-    /////////////////////////////////////////////////////////
-
-  
-
-
-
-    /////////////////////////////////////////////////////////
-
-    // publish
-    Comms.Notify("NAV_SPEED", 149.9);
-  }
+ 
 
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_latlon;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_depth;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_speed;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_heading;
-
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_vehicle_status;
   // TODO fix these publisher message types
   
   
@@ -156,7 +90,7 @@ bool OnConnect(void *pParam) {
   return 0;
 }
 
-// Receives the 
+// Receives the moos stuff
 bool OnMail(void *pParam) {
   CMOOSCommClient *pC = reinterpret_cast<CMOOSCommClient *>(pParam);
   MOOSMSG_LIST M;
@@ -187,8 +121,6 @@ bool OnMail(void *pParam) {
 
     // q->Trace();
     std::cout << "\n";
-
-
   }
   return true;
 }
