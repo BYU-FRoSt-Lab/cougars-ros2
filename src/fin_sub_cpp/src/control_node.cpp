@@ -45,7 +45,7 @@ public:
     }
 
 private:
-    void controlCommandCallback(const your_package::msg::UCommand::SharedPtr msg) {
+    void controlCommandCallback(const frost_interfaces::msg::UCommand::SharedPtr msg) {
         std::stringstream ss;
         // (Currently have 3 fins)
         ss << "$CONTR," << msg->fin[0] << "," << msg->fin[1] << "," << msg->fin[2] << "," << msg->thruster << "\n";
