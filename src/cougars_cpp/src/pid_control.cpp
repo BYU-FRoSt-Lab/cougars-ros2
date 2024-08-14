@@ -154,8 +154,7 @@ private:
     int depth_pos = myDepthPID.compute(this->desired_depth, depth);
     int heading_pos =
         myHeadingPID.compute(this->desired_heading, yaw);
-    int velocity_level =
-        myVelocityPID.compute(this->desired_speed, x_velocity);
+    int velocity_level = x_velocity; // myVelocityPID.compute(this->desired_speed, x_velocity);
 
     message.fin[0] = heading_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
