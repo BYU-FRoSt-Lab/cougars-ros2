@@ -43,8 +43,10 @@ private:
     depth_msg.pose.pose.position.z =
         (pressure_msg->fluid_pressure * 100 - FLUID_PRESSURE_ATM) /
         (FLUID_DENSITY * GRAVITY);
-    RCLCPP_INFO(this->get_logger(), "Pressure: %f", pressure_msg->fluid_pressure);
-    RCLCPP_INFO(this->get_logger(), "Depth: %f", depth_msg.pose.pose.position.z);
+    RCLCPP_INFO(this->get_logger(), "Pressure: %f",
+                pressure_msg->fluid_pressure);
+    RCLCPP_INFO(this->get_logger(), "Depth: %f",
+                depth_msg.pose.pose.position.z);
     depth_publisher_->publish(depth_msg);
   }
 

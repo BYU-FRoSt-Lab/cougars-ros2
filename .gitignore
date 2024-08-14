@@ -3,7 +3,6 @@
 **/log
 **/bag
 **/test
-**/__pycache__
 !**/robot_localization/test
-
-/.vscode
+**/__pycache__
+**/.vscode

@@ -1,3 +1,0 @@
-[submodule "src/src/robot_localization"]
-	path = src/src/robot_localization
-	url = https://github.com/cra-ros-pkg/robot_localization.git
