@@ -45,8 +45,8 @@ def generate_launch_description():
     )
     converter = launch_ros.actions.Node(
             package='cougars_py',
-            executable='#TODO HERE',
-            parameters=[config_file]
+            executable='seatrac_ahrs_converter'
+            # parameters=[config_file]
     )
 
     log_dir = '/home/frostlab/bag'
