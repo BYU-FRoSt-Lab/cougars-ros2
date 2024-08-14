@@ -85,7 +85,7 @@ private:
     q.z() = msg.pose.pose.orientation.z;
     q.w() = msg.pose.pose.orientation.w;
 
-    Vector3d euler = q.toRotationMatrix().eulerAngles(2, 1, 0);
+    Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(2, 1, 0);
     double yaw = euler[0];
     nav_heading = -1.0 * yaw * (180.0 / PI);
 
