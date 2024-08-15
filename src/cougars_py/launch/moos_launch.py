@@ -1,18 +1,20 @@
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
-
 import os
 import yaml
 from ament_index_python.packages import get_package_share_directory
 
-gpsd_client_share_dir = get_package_share_directory('gpsd_client')
-gpsd_client_params_file = os.path.join(gpsd_client_share_dir, 'config', 'gpsd_client.yaml')
-with open(gpsd_client_params_file, 'r') as f:
-    gpsd_client_params = yaml.safe_load(f)['gpsd_client']['ros__parameters']
+
+config_file = "/home/frostlab/config/vehicle_config.yaml"
+# Load the parameters from the YAML file
+# COULD FIX THE GPSD NODE IN THE FUTURE TO ACCEPT YAML FILE PATH
+with open(config_file, 'r') as f:
+    vehicle_config_params = yaml.safe_load(f)
+
 
 def generate_launch_description():
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
+    
     return launch.LaunchDescription([
         # Start recording all topics to an mcap file
         launch.actions.ExecuteProcess(
@@ -39,7 +41,7 @@ def generate_launch_description():
             package='robot_localization',
             executable='navsat_transform_node',
             name='navsat_transform_node',
-            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_navsat_transform.yaml')],
+            parameters=[config_file],
             remappings=[
                 ('/gps/fix', '/fix'),
                 ('imu/data','/modem_imu')
@@ -55,7 +57,7 @@ def generate_launch_description():
                     package='gpsd_client',
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
-                    parameters=[gpsd_client_params]),
+                    parameters=[vehicle_config_params['gpsd_client']['ros__parameters']]),
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
