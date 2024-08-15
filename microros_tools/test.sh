@@ -3,7 +3,7 @@
 ##########################################################
 # TESTS EACH OF THE EXPECTED MICROROS TOPICS
 # - Use this after setting up a new PCB to test the agent
-#   and teensy connections
+#   and Teensy board connections
 ##########################################################
 
 cd ~/microros_ws

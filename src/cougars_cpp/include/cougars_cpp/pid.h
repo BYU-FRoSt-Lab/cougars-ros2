@@ -30,4 +30,4 @@ private:
   float integralArray[INTEGRAL_ARRAY_SIZE];
 };
 
-#endif // PID_ClASS
+#endif // PID_CLASS
