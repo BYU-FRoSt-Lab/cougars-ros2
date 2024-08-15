@@ -7,6 +7,7 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
+#include "frost_interfaces/msg/vehicle_status.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -47,7 +48,7 @@ public:
 
     // vehicle status listener
     subscription_vehicle_status_ =
-        this->create_subscription<nav_msgs::msg::Odometry>(
+        this->create_subscription<frost_interfaces::msg::VehicleStatus>(
             "vehicle_status", 10,
             std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
     // publishers
@@ -62,6 +63,7 @@ public:
             "desired_speed", 10);
   }
 
+
 private:
   // needs to listen to current latitude and longitude (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
@@ -69,29 +71,40 @@ private:
 
     double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
 
-    nav_x = msg.pose.pose.position.x;
-    nav_y = msg.pose.pose.position.y;
-    nav_depth = -1.0 * msg.pose.pose.position.z;
-    nav_speed = msg.twist.twist.linear.x;
+    nav_x = msg.coug_odom.pose.pose.position.x;
+    nav_y = msg.coug_odom.position.y;
+    nav_depth = -1.0 * msg.coug_odom.pose.pose.position.z;
+    nav_speed = msg.coug_odom.twist.twist.linear.x;
+    
+    // yaw comes in -180 to 180 (degrees)
+    if(msg.attitude_yaw < 0.0){
 
-    // from quaternion, get heading
-    Eigen::Quaterniond q;
-    q.x() = msg.pose.pose.orientation.x;
-    q.y() = msg.pose.pose.orientation.y;
-    q.z() = msg.pose.pose.orientation.z;
-    q.w() = msg.pose.pose.orientation.w;
-
-
-    Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
-    double yaw_raw = euler[2] * (180.0 / PI);
-
-
-    if(yaw_raw <= 0.0){
-      nav_heading = yaw_raw;
+      nav_heading = 360.0 + msg.attitude_yaw;
     }
     else{
-      nav_heading = yaw_raw - 360.0;
+      nav_heading = msg.attitude_yaw;
     }
+
+
+    
+    // from quaternion, get heading
+    // Eigen::Quaterniond q;
+    // q.x() = msg.pose.pose.orientation.x;
+    // q.y() = msg.pose.pose.orientation.y;
+    // q.z() = msg.pose.pose.orientation.z;
+    // q.w() = msg.pose.pose.orientation.w;
+
+
+    // Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+    // double yaw_raw = euler[2] * (180.0 / PI);
+
+
+    // if(yaw_raw <= 0.0){
+    //   nav_heading = yaw_raw;
+    // }
+    // else{
+    //   nav_heading = yaw_raw - 360.0;
+    // }
     
 
     Comms.Notify("NAV_X", nav_x);
@@ -101,9 +114,8 @@ private:
     Comms.Notify("NAV_HEADING", nav_heading);
   }
 
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr
+  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
       subscription_vehicle_status_;
-  // TODO fix these publisher message types
 };
 
 bool OnConnect(void *pParam) {
