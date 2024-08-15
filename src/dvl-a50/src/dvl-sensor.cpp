@@ -75,6 +75,7 @@ old_altitude(0.0)
     	        break;
     	    }
         }
+
         else if(error_code == 103)
         {
             RCLCPP_WARN(get_logger(), "No route to host, DVL might be booting?: error_code: %d", error_code);
