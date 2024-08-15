@@ -46,16 +46,33 @@ class SeatracAHRSConverter(Node):
             modem_imu.orientation.y = q[1]
             modem_imu.orientation.z = q[2]
             modem_imu.orientation.w = q[3]
+            modem_imu.orientation_covariance = [
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0
+            ]
 
             modem_imu.angular_velocity.x = msg.gyro_x
             modem_imu.angular_velocity.y = msg.gyro_y
             modem_imu.angular_velocity.z = msg.gyro_z
+            modem_imu.angular_velocity_covariance = [
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0
+            ]
 
             modem_imu.linear_acceleration.x = msg.acc_x
             modem_imu.linear_acceleration.y = msg.acc_y
             modem_imu.linear_acceleration.z = msg.acc_z
+            modem_imu.linear_acceleration_covariance = [
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0
+            ]
 
             self.modem_imu_pub_.publish(modem_imu)
+
+
 
             # orientation.pose.covariance = np.array(  # TODO: tune covariance
             #    [0, 0, 0, 0, 0, 0,
