@@ -1,7 +1,9 @@
 #!/bin/bash
 
 ##########################################################
-# STARTS THE MICRO-ROS AGENT AND RUNS THE LAUNCH FILE
+# STARTS THE AGENT AND RUNS A SPECIFIED LAUNCH FILE
+# - Specify a start configuration using 'bash start.sh 
+#   <launch>' (ex. 'bash start.sh moos')
 # - Log files are saved in "~/bag" on the host machine
 #   running the docker container
 ##########################################################
