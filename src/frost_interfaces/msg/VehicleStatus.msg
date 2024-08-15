@@ -1,5 +1,5 @@
-nav_msgs/odometry coug_odom
+nav_msgs/Odometry coug_odom
 
 
-int16    attitude_yaw 
+int16 attitude_yaw 
 
