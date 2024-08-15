@@ -49,6 +49,7 @@ def generate_launch_description():
             package='rclcpp_components',
             executable='component_container',
             name='fix_and_odometry_container',
+            namespace='',
             composable_node_descriptions=[
                 launch_ros.descriptions.ComposableNode(
                     package='gpsd_client',
