@@ -56,7 +56,6 @@ public:
         geometry_msgs::msg::PoseWithCovarianceStamped>(
         "depth_data", 10, std::bind(&VehicleStatus::depth_callback, this, _1));
 
-    // TODO: change this to 'vehicle_status' listener
     velocity_subscription_ = this->create_subscription<
         geometry_msgs::msg::TwistWithCovarianceStamped>(
         "dvl_velocity", 10,
@@ -65,7 +64,6 @@ public:
     orientation_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
         "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback, this, _1));
 
-    // declare ros timers
     update_timer_ = this->create_wall_timer(
         UPDATE_TIMER_MS, std::bind(&VehicleStatus::broadcast_status_callback, this));
   }
@@ -102,7 +100,6 @@ private:
     message.pose.pose.orientation.x = this->q_x;
     message.twist.twist.linear.x = this->x_velocity;
     
-
     // publishes speed, depth, global x,y, 
     // and orientation (quaternion)
     // to be used by MOOS and anything else to 
