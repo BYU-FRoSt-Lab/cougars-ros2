@@ -93,7 +93,7 @@ private:
       nav_heading = yaw_raw - 360.0;
     }
     
-    
+
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     Comms.Notify("NAV_DEPTH", nav_depth);
@@ -112,7 +112,7 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_SPEED", 0.0);
   pC->Register("DESIRED_HEADING", 0.0);
   pC->Register("DESIRED_DEPTH", 0.0);
-
+  
   // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
   // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
   // system(command.c_str());
