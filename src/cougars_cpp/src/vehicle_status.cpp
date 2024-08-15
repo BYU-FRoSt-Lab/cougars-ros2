@@ -70,7 +70,7 @@ public:
     update_timer_ = this->create_wall_timer(
         UPDATE_TIMER_MS, std::bind(&VehicleStatus::broadcast_status_callback, this));
 
-    vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>("vehicle_status", 10);
+    // vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>("vehicle_status", 10);
   }
 
 private:
@@ -113,7 +113,7 @@ private:
     // publishes speed, depth, global x,y, 
     // and orientation (quaternion)
     // to be used by MOOS and anything else to 
-    vehicle_status_publisher_->publish(message);
+    // vehicle_status_publisher_->publish(message);
 
   }
 
@@ -131,8 +131,8 @@ private:
 
   // rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
 
-  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr
-      vehicle_status_publisher_;
+  // rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr
+  //     vehicle_status_publisher_;
 
   // status variables
   float q_x = 0.0;
