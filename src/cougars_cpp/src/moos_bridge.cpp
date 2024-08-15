@@ -86,7 +86,7 @@ private:
     }
 
 
-    
+
     // from quaternion, get heading
     // Eigen::Quaterniond q;
     // q.x() = msg.pose.pose.orientation.x;
@@ -151,11 +151,12 @@ bool OnMail(void *pParam) {
     } else if (key == "DESIRED_HEADING") {
       auto message = frost_interfaces::msg::DesiredHeading();
       std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
-      if (value < 0.0) {
-        message.desired_heading = value + 360.0;
+      if (value > 180.0) {
+        message.desired_heading = -1.0 * (360.0 - value);
       } else {
         message.desired_heading = value;
       }
+
 
       desired_heading_publisher_->publish(message);
     } else if (key == "DESIRED_DEPTH") {
