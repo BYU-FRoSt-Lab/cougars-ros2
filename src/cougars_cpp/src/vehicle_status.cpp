@@ -65,7 +65,7 @@ public:
     orientation_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
         "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback, this, _1));
 
-    modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>("modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
+    // modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>("modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
 
     update_timer_ = this->create_wall_timer(
         UPDATE_TIMER_MS, std::bind(&VehicleStatus::broadcast_status_callback, this));
@@ -93,9 +93,9 @@ private:
     this->q_z = orientation_msg.pose.pose.orientation.z;
   }
 
-  void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
-    this->yaw = yaw_msg.attitude_yaw;
-  }
+  // void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
+  //   this->yaw = yaw_msg.attitude_yaw;
+  // }
 
 
   void broadcast_status_callback() {
@@ -108,7 +108,7 @@ private:
     message.coug_odom.pose.pose.orientation.z = this->q_z;
     message.coug_odom.pose.pose.orientation.x = this->q_x;
     message.coug_odom.twist.twist.linear.x = this->x_velocity;
-    message.attitude_yaw = this->yaw;
+    // message.attitude_yaw = this->yaw;
     
     // publishes speed, depth, global x,y, 
     // and orientation (quaternion)
@@ -129,7 +129,7 @@ private:
   // current x,y
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr x_y_subscription_;
 
-  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
+  // rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr
       vehicle_status_publisher_;
