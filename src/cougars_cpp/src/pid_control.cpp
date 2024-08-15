@@ -168,9 +168,12 @@ private:
     // RCLCPP_INFO(this->get_logger(),
     //             "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f", depth,
     //             yaw, x_velocity);
-    // RCLCPP_INFO(this->get_logger(),
-    //             "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
-    //             heading_pos, velocity_level);
+    RCLCPP_INFO(this->get_logger(),
+                "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
+                heading_pos, velocity_level);
+    // log depth kp
+    RCLCPP_INFO(this->get_logger(), "Depth KP: %f",
+                this->get_parameter("depth_kp").as_double());
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
