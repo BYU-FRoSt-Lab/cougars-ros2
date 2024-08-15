@@ -129,7 +129,7 @@ private:
   // current x,y
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr x_y_subscription_;
 
-  // rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
 
   rclcpp::Publisher<frost_interfaces::msg::VehicleStatus>::SharedPtr
       vehicle_status_publisher_;
