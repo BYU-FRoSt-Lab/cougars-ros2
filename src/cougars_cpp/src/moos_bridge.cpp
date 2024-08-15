@@ -148,6 +148,9 @@ bool OnMail(void *pParam) {
       std::cout << "=====PRINTING DESIRED_SPEED=====" << std::endl;
       message.desired_speed = value;
       desired_speed_publisher_->publish(message);
+
+      RCLCPP_INFO(this->get_logger(), "Desired Speed: %f", value);
+
     } else if (key == "DESIRED_HEADING") {
       auto message = frost_interfaces::msg::DesiredHeading();
       std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
@@ -157,13 +160,18 @@ bool OnMail(void *pParam) {
         message.desired_heading = value;
       }
 
-
       desired_heading_publisher_->publish(message);
+
+      RCLCPP_INFO(this->get_logger(), "Desired Heading: %f", value);
+
     } else if (key == "DESIRED_DEPTH") {
       auto message = frost_interfaces::msg::DesiredDepth();
       std::cout << "=====PRINTING DESIRED_DEPTH=====" << std::endl;
       message.desired_depth = value;
       desired_depth_publisher_->publish(message);
+
+      RCLCPP_INFO(this->get_logger(), "Desired Depth: %f", value);
+
     }
 
     // q->Trace();
