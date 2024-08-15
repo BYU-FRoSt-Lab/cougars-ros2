@@ -36,8 +36,8 @@ case $1 in
         ;;
     *)
         echo ""
-        echo "ALERT: No start configuration specified, defaulting to 'manual'"
-        echo "Specify a start configuration using 'bash start.sh <launch>' (ex. 'bash start.sh moos')"
+        echo -e "\e[38;5;6mALERT: No start configuration specified, defaulting to 'manual'\e[0m"
+        echo -e "\e[38;5;6mSpecify a start configuration using 'bash start.sh <launch>' (ex. 'bash start.sh moos')\e[0m"
         echo ""
 
         ros2 launch cougars_py manual_launch.py
