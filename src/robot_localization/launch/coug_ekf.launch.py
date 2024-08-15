@@ -16,11 +16,25 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='robot_localization',
             executable='ekf_node',
-            name='ekf_filter_node',
+            name='ekf_filter_node_odom',
             output='screen',
             parameters=[os.path.join(pkg_dir, 'params', 'coug_ekf.yaml')],
+        ),
+        launch_ros.actions.Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node_map',
+            output='screen',
+            parameters=[os.path.join(pkg_dir, 'params', 'coug_ekf.yaml')],
+        ),
+        launch_ros.actions.Node(
+            package='robot_localization',
+            executable='navsat_transform_node',
+            name='navsat_transform_node',
+            output='screen',
+            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
             remappings=[
-                ("dvl_dead_reckoning", "/fake/dvl/dead_reckoning")
+                ('/gps/fix', '/fix'),
             ]
         ),
         launch_ros.actions.Node(
