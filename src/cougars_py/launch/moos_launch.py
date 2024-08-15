@@ -33,14 +33,6 @@ def generate_launch_description():
         ),
         # Start the control nodes
         launch_ros.actions.Node(
-            package='cougars_py',
-            executable='leak_sub'
-        ),
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='battery_sub'
-        ),
-        launch_ros.actions.Node(
             package='cougars_cpp',
             executable='pid_control',
             parameters=[config_file]
@@ -49,5 +41,14 @@ def generate_launch_description():
             package='cougars_py',
             executable='moos_bridge',
             parameters=[config_file]
+        ),
+        # Start the EmergencyStop checks
+        launch_ros.actions.Node(
+            package='cougars_py',
+            executable='leak_sub'
+        ),
+        launch_ros.actions.Node(
+            package='cougars_py',
+            executable='battery_sub'
         ),
     ])
