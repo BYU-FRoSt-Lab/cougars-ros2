@@ -67,7 +67,7 @@ public:
 
     // declare ros timers
     update_timer_ = this->create_wall_timer(
-        UPDATE_TIMER_MS, std::bind(&VehicleStatus::timer_callback, this));
+        UPDATE_TIMER_MS, std::bind(&VehicleStatus::broadcast_status_callback, this));
   }
 
 private:
@@ -91,7 +91,7 @@ private:
   }
 
 
-  void update_callback() {
+  void broadcast_status_callback() {
     auto message = nav_msgs::msg::Odometry();
     message.pose.pose.position.x = this->x_pos;
     message.pose.pose.position.y = this->y_pos;
