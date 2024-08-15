@@ -26,8 +26,23 @@ echo ""
 cd ~/ros2_ws
 source install/setup.bash
 cd ~/ros2_ws/bag
-# ros2 launch cougars_py moos_launch.py
-ros2 launch cougars_py manual_launch.py
+
+case $1 in
+    manual)
+        ros2 launch cougars_py manual_launch.py
+        ;;
+    moos)
+        ros2 launch cougars_py moos_launch.py
+        ;;
+    *)
+        echo ""
+        echo "ALERT: No start configuration specified, defaulting to 'manual'"
+        echo "Specify a start configuration using 'bash start.sh <launch>' (ex. 'bash start.sh moos')"
+        echo ""
+
+        ros2 launch cougars_py manual_launch.py
+        ;;
+esac
 
 killall micro_ros_agent
 wait
