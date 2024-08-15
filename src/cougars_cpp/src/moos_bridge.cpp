@@ -79,10 +79,10 @@ private:
     // yaw comes in -180 to 180 (degrees)
     if(msg.attitude_yaw < 0.0){
 
-      nav_heading = 360.0 + msg.attitude_yaw;
+      nav_heading = 360.0 + (0.1 * msg.attitude_yaw);
     }
     else{
-      nav_heading = msg.attitude_yaw;
+      nav_heading = (0.1 * msg.attitude_yaw);
     }
 
 
