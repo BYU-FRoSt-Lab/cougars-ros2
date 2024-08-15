@@ -67,7 +67,7 @@ public:
 private:
   // needs to listen to current latitude and longitude (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
-  void ros_vehicle_status_listener(const nav_msgs::msg::Odometry &msg){
+  void ros_vehicle_status_listener(const frost_interfaces::msg::VehicleStatus &msg){
 
     double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
 
