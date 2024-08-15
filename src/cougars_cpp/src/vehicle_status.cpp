@@ -65,14 +65,12 @@ public:
     orientation_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
         "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback, this, _1));
 
-    modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>(
-        "modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
+    modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>("modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
 
     update_timer_ = this->create_wall_timer(
         UPDATE_TIMER_MS, std::bind(&VehicleStatus::broadcast_status_callback, this));
 
-    vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>(
-            "vehicle_status", 10);
+    vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>("vehicle_status", 10);
   }
 
 private:
