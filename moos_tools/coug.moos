@@ -36,7 +36,7 @@ ProcessConfig = pHelmIvP
   behaviors  = /home/frostlab/ros2_ws/moos_tools/coug.bhv
   domain     = course:0:359:360
   domain     = speed:0:4:41
-  // domain     = detph:0:50:200
+  // domain     = depth:0:50:200
 }
 
 //------------------------------------------
