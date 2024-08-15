@@ -87,7 +87,7 @@ def generate_launch_description():
             parameters=[config_file]
         ),
         launch_ros.actions.Node(
-            package='cougars_py',
+            package='cougars_cpp',
             executable='moos_bridge',
             parameters=[config_file]
         ),
