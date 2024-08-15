@@ -45,9 +45,9 @@ auto qos = rclcpp::QoS(
     qos_profile);
 
 class VehicleStatus : public rclcpp::Node {
+
 public:
   VehicleStatus() : Node("vehicle_status") {
-
     x_y_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
         "odometry/filtered", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));

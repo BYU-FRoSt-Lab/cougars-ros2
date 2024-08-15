@@ -50,7 +50,6 @@ public:
         this->create_subscription<nav_msgs::msg::Odometry>(
             "vehicle_status", 10,
             std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
-
     // publishers
     desired_depth_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredDepth>(
@@ -82,10 +81,19 @@ private:
     q.z() = msg.pose.pose.orientation.z;
     q.w() = msg.pose.pose.orientation.w;
 
-    Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(2, 1, 0);
-    double yaw = euler[0];
-    nav_heading = -1.0 * yaw * (180.0 / PI);
 
+    Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+    double yaw_raw = euler[2] * (180.0 / PI);
+
+
+    if(yaw_raw <= 0.0){
+      nav_heading = yaw_raw;
+    }
+    else{
+      nav_heading = yaw_raw - 360.0;
+    }
+    
+    
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     Comms.Notify("NAV_DEPTH", nav_depth);
