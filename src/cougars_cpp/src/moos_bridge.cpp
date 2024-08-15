@@ -72,7 +72,7 @@ private:
     double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
 
     nav_x = msg.coug_odom.pose.pose.position.x;
-    nav_y = msg.coug_odom.position.y;
+    nav_y = msg.coug_odom.pose.pose.position.y;
     nav_depth = -1.0 * msg.coug_odom.pose.pose.position.z;
     nav_speed = msg.coug_odom.twist.twist.linear.x;
     
