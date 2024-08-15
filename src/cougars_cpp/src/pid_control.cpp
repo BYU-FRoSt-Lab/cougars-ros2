@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 // ros config values
-#define PID_TIMER_PERIOD 20 // the pressure sensor is updated at 50 Hz
+#define PID_TIMER_PERIOD 80 // the pressure sensor is updated at 50 Hz
 #define PID_TIMER_PERIOD_MS std::chrono::milliseconds(PID_TIMER_PERIOD)
 
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
@@ -157,7 +157,7 @@ private:
     int depth_pos = myDepthPID.compute(this->desired_depth, depth);
     int heading_pos = myHeadingPID.compute(this->desired_heading, yaw);
     int velocity_level =
-        x_velocity; // myVelocityPID.compute(this->desired_speed, x_velocity);
+        this->desired_speed; // myVelocityPID.compute(this->desired_speed, x_velocity);
 
     message.fin[0] = heading_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
