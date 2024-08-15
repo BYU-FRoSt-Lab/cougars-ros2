@@ -131,8 +131,8 @@ private:
 
   // rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
 
-  // rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr
-  //     vehicle_status_publisher_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr
+      vehicle_status_publisher_;
 
   // status variables
   float q_x = 0.0;
