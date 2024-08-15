@@ -28,7 +28,7 @@ def generate_launch_description():
             cmd=['ros2', 'topic', 'pub', '-1', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: true}'],
             output='screen'
         ),
-        # Setup the modem
+        # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
