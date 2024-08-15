@@ -25,7 +25,7 @@ def generate_launch_description():
             executable='dvl_a50_sensor', 
         ),
         launch.actions.ExecuteProcess(
-            cmd=['ros2', 'topic', 'pub', '-1', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: true}'],
+            cmd=['ros2', 'topic', 'pub', '-1', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: false}'],
             output='screen'
         ),
         # Setup the USBL modem
@@ -92,12 +92,12 @@ def generate_launch_description():
             parameters=[config_file]
         ),
         # Start the EmergencyStop checks
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='leak_sub'
-        ),
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='battery_sub'
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_py',
+        #     executable='leak_sub'
+        # ),
+        # launch_ros.actions.Node(
+        #     package='cougars_py',
+        #     executable='battery_sub'
+        # ),
     ])
