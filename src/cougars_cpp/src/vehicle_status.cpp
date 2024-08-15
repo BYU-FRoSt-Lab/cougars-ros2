@@ -26,6 +26,9 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
+#include "frost_interfaces/msg/modem_rec.hpp"
+
+
 #include "frost_interfaces/msg/u_command.hpp"
 #include "frost_interfaces/msg/vehicle_status.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
