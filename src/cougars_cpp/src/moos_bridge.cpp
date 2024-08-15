@@ -85,8 +85,6 @@ private:
       nav_heading = (0.1 * msg.attitude_yaw);
     }
 
-
-
     // from quaternion, get heading
     // Eigen::Quaterniond q;
     // q.x() = msg.pose.pose.orientation.x;
@@ -128,6 +126,9 @@ bool OnConnect(void *pParam) {
   // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
   // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
   // system(command.c_str());
+
+
+
   return 0;
 }
 
@@ -157,7 +158,7 @@ bool OnMail(void *pParam) {
       } else {
         message.desired_heading = value;
       }
-
+      
       desired_heading_publisher_->publish(message);
 
     } else if (key == "DESIRED_DEPTH") {
