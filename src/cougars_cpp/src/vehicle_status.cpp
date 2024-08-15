@@ -26,6 +26,9 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
+#include "frost_interfaces/msg/modem_rec.hpp"
+
+
 #include "frost_interfaces/msg/u_command.hpp"
 #include "frost_interfaces/msg/vehicle_status.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
@@ -65,12 +68,12 @@ public:
     orientation_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
         "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback, this, _1));
 
-    // modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>("modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
+    modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>("modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
 
     update_timer_ = this->create_wall_timer(
         UPDATE_TIMER_MS, std::bind(&VehicleStatus::broadcast_status_callback, this));
 
-    // vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>("vehicle_status", 10);
+    vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>("vehicle_status", 10);
   }
 
 private:
@@ -93,9 +96,9 @@ private:
     this->q_z = orientation_msg.pose.pose.orientation.z;
   }
 
-  // void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
-  //   this->yaw = yaw_msg.attitude_yaw;
-  // }
+  void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
+    this->yaw = yaw_msg.attitude_yaw;
+  }
 
 
   void broadcast_status_callback() {
@@ -108,12 +111,12 @@ private:
     message.coug_odom.pose.pose.orientation.z = this->q_z;
     message.coug_odom.pose.pose.orientation.x = this->q_x;
     message.coug_odom.twist.twist.linear.x = this->x_velocity;
-    // message.attitude_yaw = this->yaw;
+    message.attitude_yaw = this->yaw;
     
     // publishes speed, depth, global x,y, 
     // and orientation (quaternion)
     // to be used by MOOS and anything else to 
-    // vehicle_status_publisher_->publish(message);
+    vehicle_status_publisher_->publish(message);
 
   }
 
@@ -129,9 +132,9 @@ private:
   // current x,y
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr x_y_subscription_;
 
-  // rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
 
-  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr
+  rclcpp::Publisher<frost_interfaces::msg::VehicleStatus>::SharedPtr
       vehicle_status_publisher_;
 
   // status variables
