@@ -41,11 +41,13 @@ target_link_libraries(moos_bridge)
 target_link_libraries(pid_control)
 target_link_libraries(dvl_convertor)
 target_link_libraries(depth_convertor)
+target_link_libraries(vehicle_status)
 install(TARGETS
   moos_bridge
   pid_control
   dvl_convertor
   depth_convertor
+  vehicle_status
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
