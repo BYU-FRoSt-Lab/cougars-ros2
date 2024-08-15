@@ -100,7 +100,7 @@ private:
     message.pose.pose.orientation.y = this->q_y;
     message.pose.pose.orientation.z = this->q_z;
     message.pose.pose.orientation.x = this->q_x;
-    message.twist.twist.linear.x = this->x;
+    message.twist.twist.linear.x = this->x_velocity;
     
 
     // publishes speed, depth, global x,y, 
