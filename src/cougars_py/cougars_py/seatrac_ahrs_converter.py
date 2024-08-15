@@ -25,7 +25,7 @@ class SeatracAHRSConverter(Node):
         self.modem_imu_pub_ = self.create_publisher(
             Imu, "modem_imu", 10
         )
-    
+
     def modem_callback(self, msg):
         if msg.msg_id == CID_E.CID_STATUS:
             
@@ -37,10 +37,18 @@ class SeatracAHRSConverter(Node):
             pitch = 0.1 * msg.attitude_pitch
             roll  = 0.1 * msg.attitude_roll
 
-            rot1 = R.from_euler('zyx', angles=(yaw, pitch, roll) ,degrees=True)
-            #TODO: get rotation with roll as well. It's complicated, so saving for later
+            # ned = north east down, enu = east north up
+            R_ned_enu = R.from_matrix([
+                [0,-1,0],
+                [-1,0,0],
+                [0,0,-1]
+            ])
+            R_xyz_ned = R.from_euler('zyx', angles=(yaw, pitch, roll) ,degrees=True)
+            R_xyz_enu = R_xyz_ned * R_ned_enu
 
-            q = rot1.as_quat()
+            q = R_xyz_enu.as_quat()
+
+            self.get_logger().info(str(np.round(q*10)))
 
             modem_imu.orientation.x = q[0]
             modem_imu.orientation.y = q[1]
@@ -52,39 +60,25 @@ class SeatracAHRSConverter(Node):
                 0.0, 0.0, 1.0
             ]
 
-            modem_imu.angular_velocity.x = msg.gyro_x
-            modem_imu.angular_velocity.y = msg.gyro_y
-            modem_imu.angular_velocity.z = msg.gyro_z
-            modem_imu.angular_velocity_covariance = [
-                1.0, 0.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 0.0, 1.0
-            ]
+            # modem_imu.angular_velocity.x = msg.gyro_x
+            # modem_imu.angular_velocity.y = msg.gyro_y
+            # modem_imu.angular_velocity.z = msg.gyro_z
+            # modem_imu.angular_velocity_covariance = [
+            #     1.0, 0.0, 0.0,
+            #     0.0, 1.0, 0.0,
+            #     0.0, 0.0, 1.0
+            # ]
 
-            modem_imu.linear_acceleration.x = msg.acc_x
-            modem_imu.linear_acceleration.y = msg.acc_y
-            modem_imu.linear_acceleration.z = msg.acc_z
-            modem_imu.linear_acceleration_covariance = [
-                1.0, 0.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 0.0, 1.0
-            ]
+            # modem_imu.linear_acceleration.x = msg.acc_x
+            # modem_imu.linear_acceleration.y = msg.acc_y
+            # modem_imu.linear_acceleration.z = msg.acc_z
+            # modem_imu.linear_acceleration_covariance = [
+            #     1.0, 0.0, 0.0,
+            #     0.0, 1.0, 0.0,
+            #     0.0, 0.0, 1.0
+            # ]
 
             self.modem_imu_pub_.publish(modem_imu)
-
-
-
-            # orientation.pose.covariance = np.array(  # TODO: tune covariance
-            #    [0, 0, 0, 0, 0, 0,
-            #     0, 0, 0, 0, 0, 0,
-            #     0, 0, 0, 0, 0, 0,
-            #     0, 0, 0, 1, 0, 0,
-            #     0, 0, 0, 0, 1, 0,
-            #     0, 0, 0, 0, 0, 1],
-            #     dtype=np.float64
-            # )
-            
-            # self.modem_orientation_pub_.publish(orientation)
 
 
 def main(args=None):
