@@ -90,7 +90,8 @@ def generate_launch_description():
             package='cougars_cpp',
             executable='moos_bridge',
             parameters=[config_file],
-            output='screen'
+            output='screen',
+            emulate_tty=True
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
