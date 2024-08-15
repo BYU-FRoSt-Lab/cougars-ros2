@@ -1,7 +1,9 @@
 #!/bin/bash
 
 ##########################################################
-# STARTS THE MICRO-ROS AGENT AND RUNS THE LAUNCH FILE
+# STARTS THE AGENT AND RUNS A SPECIFIED LAUNCH FILE
+# - Specify a start configuration using 'bash start.sh 
+#   <launch>' (ex. 'bash start.sh moos')
 # - Log files are saved in "~/bag" on the host machine
 #   running the docker container
 ##########################################################
@@ -26,8 +28,30 @@ echo ""
 cd ~/ros2_ws
 source install/setup.bash
 cd ~/ros2_ws/bag
-# ros2 launch cougars_py moos_launch.py
-ros2 launch cougars_py manual_launch.py
+
+case $1 in
+    manual)
+        ros2 launch cougars_py manual_launch.py
+        ;;
+    moos)
+        cd ~/ros2_ws/moos_tools
+        bash mission_start_processes.sh
+        bash mission_deploy.sh
+        
+        cd ~/ros2_ws/bag
+        ros2 launch cougars_py moos_launch.py
+
+        bash ~/ros2_ws/moos_tools/mission_kill.sh
+        ;;
+    *)
+        echo ""
+        echo "ALERT: No start configuration specified, defaulting to 'manual'"
+        echo "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
+        echo ""
+
+        ros2 launch cougars_py manual_launch.py
+        ;;
+esac
 
 killall micro_ros_agent
 wait

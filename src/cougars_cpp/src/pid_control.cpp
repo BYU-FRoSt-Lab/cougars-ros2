@@ -17,8 +17,8 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 // ros config values
-#define PID_TIMER_PERIOD_MS std::chrono::milliseconds(10)
-#define PID_TIMER_PERIOD 10
+#define PID_TIMER_PERIOD 20 // the pressure sensor is updated at 50 Hz
+#define PID_TIMER_PERIOD_MS std::chrono::milliseconds(PID_TIMER_PERIOD)
 
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 auto qos = rclcpp::QoS(
