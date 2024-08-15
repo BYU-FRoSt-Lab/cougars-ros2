@@ -1,5 +1,6 @@
 import launch
 import launch_ros.actions
+import launch_ros.descriptions
 
 def generate_launch_description():
     config_file = "/home/frostlab/config/vehicle_config.yaml"
@@ -10,27 +11,38 @@ def generate_launch_description():
             output='screen'
         ),
         # Set up the DVL and enable acoustics
-        launch.actions.DeclareLaunchArgument('ip_address', default_value='192.168.194.95'),
-        launch_ros.actions.Node(
-            package='dvl_a50', 
-            executable='dvl_a50_sensor', 
-            parameters=[{'dvl_ip_address': launch.substitutions.LaunchConfiguration('ip_address')}],
-        ),
-        launch.actions.ExecuteProcess(
-            cmd=['ros2', 'topic', 'pub', '-1', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: true}'],
-            output='screen'
-        ),
-        # TODO: Add the modem and GPS nodes
+        # launch_ros.actions.Node(
+        #     package='dvl_a50', 
+        #     executable='dvl_a50_sensor', 
+        # ),
+        # launch.actions.ExecuteProcess(
+        #     cmd=['ros2', 'topic', 'pub', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: false}', '-t', '10'],
+        #     output='screen'
+        # ),
+        # Setup the USBL modem
+        # launch_ros.actions.Node(
+        #     package='seatrac',
+        #     executable='modem',
+        #     parameters=[config_file]
+        # ),
         # Start the data conversion nodes
-        # TODO: Add more of these
         launch_ros.actions.Node(
             package='cougars_cpp',
             executable='depth_convertor'
         ),
-        launch_ros.actions.Node(
-            package='cougars_cpp',
-            executable='dvl_convertor'
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_cpp',
+        #     executable='dvl_convertor'
+        # ),
+        # launch_ros.actions.Node(
+        #     package='cougars_py',
+        #     executable='seatrac_ahrs_converter'
+        # ),
+        # launch_ros.actions.Node(
+        #     package='cougars_cpp',
+        #     executable='vehicle_status'
+        # ),
+        # TODO: Add the EKF nodes
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
@@ -40,15 +52,15 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_py',
             executable='manual_control',
-            parameters=[config_file]
+            parameters=[config_file],
         ),
         # Start the EmergencyStop checks
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='leak_sub'
-        ),
-        launch_ros.actions.Node(
-            package='cougars_py',
-            executable='battery_sub'
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_py',
+        #     executable='leak_sub'
+        # ),
+        # launch_ros.actions.Node(
+        #     package='cougars_py',
+        #     executable='battery_sub'
+        # ),
     ])
