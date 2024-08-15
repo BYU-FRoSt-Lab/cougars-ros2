@@ -8,5 +8,5 @@ Of note are "src/cougars_cpp/" and "src/cougars_py" (miscellaneous custom nodes 
 The ROS launch files for different start configurations are included in "src/cougars_py/launch/".
 - **moos_tools/** - start scripts, mission files, and behavior files for MOOS-IvP mission planning and execution.
 TODO: Add a more helpful description here in the future.
-- **microros_tools/** - helpful scripts for launching the microROS agent ("agent.sh"), syncing custom message changes ("msg_sync.sh"), and testing Teensy board connections ("test.sh")
+- **microros_tools/** - helpful scripts for launching the microROS agent ("agent.sh"), syncing custom message changes ("msg_sync.sh"), and testing Teensy board connections ("test.sh").
 A description of what each script does is included as a header comment in the file.
