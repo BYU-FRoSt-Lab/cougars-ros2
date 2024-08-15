@@ -3,9 +3,10 @@ If you're doing code development, feel free to clone this repo directly, make a 
 Otherwise (if you're looking to set up a new Coug-UV from scratch), see this repo for instructions on how to get our custom Docker image running instead: https://github.com/snelsondurrant/CougarsSetup
 
 A quick high-level overview of the repo:
-- **src/** - contains the ROS 2 packages we use to run the Coug-UV.
-Of note are "src/cougars/" (runs high-level controller logic, kind of a master package) and "src/frost_interfaces/" (contains custom ROS message and service declarations).
-The ROS launch file is included in "src/cougars/launch/".
-- **scripts (agent.sh, msg_sync.sh, etc)** - automates helpful software tasks on the AUV.
-For example, running "bash start.sh" will load in the local config values, start the microROS agent, run the ROS launch file, and start logging data.
+- **microros_tools/** - helpful scripts for launching the microROS agent ("agent.sh"), syncing custom message changes ("msg_sync.sh"), and testing Teensy board connections ("test.sh").
 A description of what each script does is included as a header comment in the file.
+- **moos_tools/** - start scripts, mission files, and behavior files for MOOS-IvP mission planning and execution.
+TODO: Add a more helpful description here in the future.
+- **src/** - contains the ROS 2 packages we use to run the Coug-UV.
+Of note are "src/cougars_cpp/" and "src/cougars_py" (miscellaneous custom nodes running MOOS-ROS 2 bridges, PID controls, odometry conversions, etc), as well as "src/frost_interfaces/" (contains custom ROS message and service declarations).
+The ROS launch files for different start configurations are included in "src/cougars_py/launch/".
