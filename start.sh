@@ -34,8 +34,11 @@ case $1 in
         ros2 launch cougars_py manual_launch.py
         ;;
     moos)
-        bash ~/ros2_ws/moos_tools/mission_start_processes.sh
-        bash ~/ros2_ws/moos_tools/mission_deploy.sh
+        cd ~/ros2_ws/moos_tools
+        bash mission_start_processes.sh
+        bash mission_deploy.sh
+        
+        cd ~/ros2_ws/bag
         ros2 launch cougars_py moos_launch.py
 
         bash ~/ros2_ws/moos_tools/mission_kill.sh
