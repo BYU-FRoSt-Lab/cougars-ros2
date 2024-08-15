@@ -1,50 +1,50 @@
 
 
-// #include <chrono>
-// #include <functional>
-// #include <memory>
-// #include <string>
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <string>
 
-// #include "dvl_msgs/msg/dvl.hpp"
-// #include "dvl_msgs/msg/dvldr.hpp"
-// #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-// #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
-// #include "rclcpp/rclcpp.hpp"
-// #include "std_msgs/msg/float64.hpp"
-// #include "std_msgs/msg/string.hpp"
+#include "dvl_msgs/msg/dvl.hpp"
+#include "dvl_msgs/msg/dvldr.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/float64.hpp"
+#include "std_msgs/msg/string.hpp"
 
-// #include "nav_msgs/msg/odometry.hpp"
-// #include <vector>
+#include "nav_msgs/msg/odometry.hpp"
+#include <vector>
 
-// #include <chrono>
-// #include <functional>
-// #include <memory>
-// #include <string>
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <string>
 
-// #include "cougars_cpp/pid.h"
-// #include "dvl_msgs/msg/dvldr.hpp"
-// #include "frost_interfaces/msg/desired_depth.hpp"
-// #include "frost_interfaces/msg/desired_heading.hpp"
-// #include "frost_interfaces/msg/desired_speed.hpp"
-// #include "frost_interfaces/msg/u_command.hpp"
-// #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-// #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
-// #include "rclcpp/rclcpp.hpp"
-
-
-// #define UPDATE_TIMER_MS std::chrono::milliseconds(10)
+#include "cougars_cpp/pid.h"
+#include "dvl_msgs/msg/dvldr.hpp"
+#include "frost_interfaces/msg/desired_depth.hpp"
+#include "frost_interfaces/msg/desired_heading.hpp"
+#include "frost_interfaces/msg/desired_speed.hpp"
+#include "frost_interfaces/msg/u_command.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 
-// using namespace std::chrono_literals;
-// using std::placeholders::_1;
+#define UPDATE_TIMER_MS std::chrono::milliseconds(10)
 
 
-// rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-// auto qos = rclcpp::QoS(
-//     rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
-//     qos_profile);
+using namespace std::chrono_literals;
+using std::placeholders::_1;
 
-// class VehicleStatus : public rclcpp::Node {
+
+rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+auto qos = rclcpp::QoS(
+    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+    qos_profile);
+
+class VehicleStatus : public rclcpp::Node {
 // public:
 //   VehicleStatus() : Node("vehicle_status") {
 
@@ -134,11 +134,11 @@
 //   float depth = 0.0;
 //   float x_pos = 0.0;
 //   float y_pos = 0.0;
-// };
+};
 
-// int main(int argc, char *argv[]) {
-//   rclcpp::init(argc, argv);
-//   rclcpp::spin(std::make_shared<VehicleStatus>());
-//   rclcpp::shutdown();
-//   return 0;
-// }
+int main(int argc, char *argv[]) {
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<VehicleStatus>());
+  rclcpp::shutdown();
+  return 0;
+}
