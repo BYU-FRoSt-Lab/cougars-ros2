@@ -65,8 +65,8 @@ public:
         "dvl_velocity", 10,
         std::bind(&VehicleStatus::velocity_callback, this, _1));
 
-    orientation_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-        "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback, this, _1));
+    // orientation_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
+    //     "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback, this, _1));
 
     modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>("modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
 
@@ -89,12 +89,12 @@ private:
       const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
     this->x_velocity = velocity_msg.twist.twist.linear.x;
   }
-  void orientation_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &orientation_msg) {
-    this->q_w = orientation_msg.pose.pose.orientation.w;
-    this->q_x = orientation_msg.pose.pose.orientation.x;
-    this->q_y = orientation_msg.pose.pose.orientation.y;
-    this->q_z = orientation_msg.pose.pose.orientation.z;
-  }
+  // void orientation_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &orientation_msg) {
+  //   this->q_w = orientation_msg.pose.pose.orientation.w;
+  //   this->q_x = orientation_msg.pose.pose.orientation.x;
+  //   this->q_y = orientation_msg.pose.pose.orientation.y;
+  //   this->q_z = orientation_msg.pose.pose.orientation.z;
+  // }
 
   void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
     this->yaw = yaw_msg.attitude_yaw;
@@ -106,10 +106,10 @@ private:
     message.coug_odom.pose.pose.position.x = this->x_pos;
     message.coug_odom.pose.pose.position.y = this->y_pos;
     message.coug_odom.pose.pose.position.z = this->depth;
-    message.coug_odom.pose.pose.orientation.w = this->q_w;
-    message.coug_odom.pose.pose.orientation.y = this->q_y;
-    message.coug_odom.pose.pose.orientation.z = this->q_z;
-    message.coug_odom.pose.pose.orientation.x = this->q_x;
+    // message.coug_odom.pose.pose.orientation.w = this->q_w;
+    // message.coug_odom.pose.pose.orientation.y = this->q_y;
+    // message.coug_odom.pose.pose.orientation.z = this->q_z;
+    // message.coug_odom.pose.pose.orientation.x = this->q_x;
     message.coug_odom.twist.twist.linear.x = this->x_velocity;
     message.attitude_yaw = this->yaw;
     
@@ -127,7 +127,7 @@ private:
       depth_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::
       SharedPtr velocity_subscription_;
-  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr orientation_subscription_;
+  // rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr orientation_subscription_;
 
   // current x,y
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr x_y_subscription_;
