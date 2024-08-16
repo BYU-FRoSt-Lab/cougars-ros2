@@ -85,26 +85,9 @@ private:
       nav_heading = (0.1 * msg.attitude_yaw);
     }
 
-    // from quaternion, get heading
-    // Eigen::Quaterniond q;
-    // q.x() = msg.pose.pose.orientation.x;
-    // q.y() = msg.pose.pose.orientation.y;
-    // q.z() = msg.pose.pose.orientation.z;
-    // q.w() = msg.pose.pose.orientation.w;
 
-
-    // Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
-    // double yaw_raw = euler[2] * (180.0 / PI);
-
-
-    // if(yaw_raw <= 0.0){
-    //   nav_heading = yaw_raw;
-    // }
-    // else{
-    //   nav_heading = yaw_raw - 360.0;
-    // }
     
-
+    // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     Comms.Notify("NAV_DEPTH", nav_depth);
