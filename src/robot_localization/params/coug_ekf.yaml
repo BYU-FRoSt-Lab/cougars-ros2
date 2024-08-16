@@ -14,15 +14,15 @@ ekf_filter_node_odom:
     base_link_frame: base_link
     world_frame: odom
 
-    odom0: dvl_dead_reckoning
-    odom0_config: [true,  true,  false, # Only care about 2d, which can be characterized solely by x, y, and yaw
+    pose0: dvl_dead_reckoning
+    pose0_config: [true,  true,  false, # Only care about 2d, which can be characterized solely by x, y, and yaw
                    false, false, true,
                    false, false, false,
                    false, false, false,
                    false, false, false]
-    odom0_queue_size: 10
-    odom0_differential: false
-    odom0_relative: false
+    pose0_queue_size: 10
+    pose0_differential: false
+    pose0_relative: false
 
     use_control: false
     process_noise_covariance: [1e-3, 1e-3, 1e-3, 0.3, 0.3, 0.01, 0.5, 0.5, 0.1, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
