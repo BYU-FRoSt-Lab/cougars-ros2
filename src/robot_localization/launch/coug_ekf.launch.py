@@ -19,6 +19,7 @@ def generate_launch_description():
             name='ekf_filter_node_odom',
             output='screen',
             parameters=[os.path.join(pkg_dir, 'params', 'coug_ekf.yaml')],
+            remappings=[('odometry/filtered', 'odometry/local')] 
         ),
         launch_ros.actions.Node(
             package='robot_localization',
@@ -26,6 +27,7 @@ def generate_launch_description():
             name='ekf_filter_node_map',
             output='screen',
             parameters=[os.path.join(pkg_dir, 'params', 'coug_ekf.yaml')],
+            remappings=[('odometry/filtered', 'odometry/global')]
         ),
         launch_ros.actions.Node(
             package='robot_localization',
@@ -34,7 +36,7 @@ def generate_launch_description():
             output='screen',
             parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
             remappings=[
-                ('/gps/fix', '/fix'),
+                ('/gps/fix', '/fix'), 
             ]
         ),
         launch_ros.actions.Node(
