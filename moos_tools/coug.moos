@@ -1,47 +1,42 @@
-// CougUV moos mission file
-
-// Spanish Fork Resevoir
-// LatOrigin  = 40.071754
-// LongOrigin = -111.599150
-
-
-// EB grass field
-// LatOrigin = 40.246175845343224
-// LongOrigin = -111.64724349627879
-
+//-------------------------------------------------
+// FILE: coug.moos
+//-------------------------------------------------
 
 ServerHost   = localhost
 ServerPort   = 9000
 Community    = coug
+// MOOSTimeWarp = 1
+
+// Forest Lake
+// LatOrigin  = 43.825300 
+// LongOrigin = -70.330400 
+
+// MIT Sailing Pavilion (use this one)
+// LatOrigin  = 42.358456 
+// LongOrigin = -71.087589
 
 //------------------------------------------
 // Antler configuration  block
 ProcessConfig = ANTLER
 {
-
   MSBetweenLaunches = 200
+
   Run = MOOSDB        @ NewConsole = false
   Run = pHelmIvP      @ NewConsole = false
 
 }
 
-//------------------------------------------
-// pHelmIvP config block, gives desired heading, desired speed, desired depth
+// pHelmIvP config block
 
 ProcessConfig = pHelmIvP
 {
   AppTick    = 4
   CommsTick  = 4
 
-  behaviors  = /home/frostlab/ros2_ws/moos_tools/coug.bhv
+
+  behaviors  = coug.bhv
   domain     = course:0:359:360
   domain     = speed:0:4:41
-  // domain     = depth:0:50:200
-
-
 }
-
-//------------------------------------------
-
 
 
