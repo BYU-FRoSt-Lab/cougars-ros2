@@ -41,9 +41,9 @@ def generate_launch_description():
             package='robot_localization',
             executable='navsat_transform_node',
             name='navsat_transform_node',
-            parameters=[config_file],
-            remappings=[
-                ('/gps/fix', '/fix'),
+            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
+            remappings=[                        # ^^^ If we move theses parameters from coug_ekf.yaml to CougarsSetup/config/vehicle_config.yaml
+                ('/gps/fix', '/fix'),           #      replace this with [config_file]
                 ('imu/data','/modem_imu')
             ]
         ),
@@ -81,7 +81,23 @@ def generate_launch_description():
             package='cougars_cpp',
             executable='vehicle_status'
         ),
-        # TODO: Add the EKF nodes
+        # EKF nodes
+        launch_ros.actions.Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node_odom',
+            output='screen',
+            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
+            remappings=[('/odometry/filtered', '/odometry/local')] 
+        ),
+        launch_ros.actions.Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node_map',
+            output='screen',
+            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
+            remappings=[('/odometry/filtered', '/odometry/global')]
+        ),
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
