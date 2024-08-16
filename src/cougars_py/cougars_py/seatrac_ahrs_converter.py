@@ -9,6 +9,7 @@ import numpy as np
 
 from scipy.spatial.transform import Rotation as R
 
+# TODO convert to c++
 
 
 class SeatracAHRSConverter(Node):
@@ -31,19 +32,18 @@ class SeatracAHRSConverter(Node):
             
             modem_imu = Imu()
 
-            # orientation = PoseWithCovarianceStamped()
-
             yaw   = 0.1 * msg.attitude_yaw
             pitch = 0.1 * msg.attitude_pitch
             roll  = 0.1 * msg.attitude_roll
 
-            # ned = north east down, enu = east north up
+            R_xyz_ned = R.from_euler('zyx', angles=(yaw, pitch, roll) ,degrees=True)
+
+            # convert from North East Down (ned) coordinates to East North Up (enu) coordinates
             R_ned_enu = R.from_matrix([
                 [0,-1,0],
                 [-1,0,0],
                 [0,0,-1]
             ])
-            R_xyz_ned = R.from_euler('zyx', angles=(yaw, pitch, roll) ,degrees=True)
             R_xyz_enu = R_xyz_ned * R_ned_enu
 
             q = R_xyz_enu.as_quat()
