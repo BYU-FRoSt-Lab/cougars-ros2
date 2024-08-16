@@ -16,21 +16,30 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='robot_localization',
             executable='ekf_node',
-            name='ekf_filter_node',
+            name='ekf_filter_node_odom',
+            output='screen',
+            parameters=[os.path.join(pkg_dir, 'params', 'coug_ekf.yaml')],
+            remappings=[
+                #("gps_filtered", "/holoocean/GPSSensor"),
+                #("modem_orientation", "/holoocean/DynamicsSensorOdom"),
+                ("dvl_dead_reckoning", "/holoocean/dead_reckon"),
+                ('odometry/filtered', 'odometry/local'),
+            ]
+        ),
+        launch_ros.actions.Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node_map',
             output='screen',
             parameters=[os.path.join(pkg_dir, 'params', 'coug_ekf.yaml')],
             remappings=[
                 ("gps_filtered", "/holoocean/GPSSensor"),
-                ("modem_orientation", "/holoocean/DynamicsSensorOdom"),
-                ("dvl_dead_reckoning", "/holoocean/dead_reckon")
+                #("modem_orientation", "/holoocean/DynamicsSensorOdom"),
+                #("dvl_dead_reckoning", "/holoocean/dead_reckon"),
+                ('odometry/filtered', 'odometry/global')
             ]
         ),
-        # launch_ros.actions.Node(
-        #     package='cougars_py',
-        #     executable='ekf_plotter',
-        #     name='ekf_plotter',
-        #     output='screen'
-        # ),
+
         launch.actions.ExecuteProcess(
             cmd=['ros2', 'bag', 'play', '/home/claytonsmith/Documents/CougarsRPi/src/robot_localization/rosbag2_2024_08_14-10_58_26'],
             output='screen'
