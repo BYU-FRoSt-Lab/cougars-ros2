@@ -65,7 +65,7 @@ public:
 
 
 private:
-  // needs to listen to current latitude and longitude (x,y), depth, speed,
+  // needs to listen to (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
   void ros_vehicle_status_listener(const frost_interfaces::msg::VehicleStatus &msg){
 
@@ -85,8 +85,6 @@ private:
       nav_heading = (0.1 * msg.attitude_yaw);
     }
 
-
-    
     // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
