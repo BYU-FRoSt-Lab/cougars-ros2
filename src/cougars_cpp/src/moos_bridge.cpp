@@ -65,7 +65,7 @@ public:
 
 
 private:
-  // needs to listen to current latitude and longitude (x,y), depth, speed,
+  // needs to listen to (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
   void ros_vehicle_status_listener(const frost_interfaces::msg::VehicleStatus &msg){
 
@@ -85,26 +85,7 @@ private:
       nav_heading = (0.1 * msg.attitude_yaw);
     }
 
-    // from quaternion, get heading
-    // Eigen::Quaterniond q;
-    // q.x() = msg.pose.pose.orientation.x;
-    // q.y() = msg.pose.pose.orientation.y;
-    // q.z() = msg.pose.pose.orientation.z;
-    // q.w() = msg.pose.pose.orientation.w;
-
-
-    // Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
-    // double yaw_raw = euler[2] * (180.0 / PI);
-
-
-    // if(yaw_raw <= 0.0){
-    //   nav_heading = yaw_raw;
-    // }
-    // else{
-    //   nav_heading = yaw_raw - 360.0;
-    // }
-    
-
+    // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     Comms.Notify("NAV_DEPTH", nav_depth);
@@ -122,14 +103,35 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_SPEED", 0.0);
   pC->Register("DESIRED_HEADING", 0.0);
   pC->Register("DESIRED_DEPTH", 0.0);
+  pC->Register("NAV_SPEED", 0.0);
+  pC->Register("NAV_HEADING", 0.0);
+  pC->Register("NAV_DEPTH", 0.0);
   
   // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
   // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
   // system(command.c_str());
-
-
-
   return 0;
+}
+
+void PublishDesiredValue(double value, std::string key){
+
+  if (key == "DESIRED_SPEED") {
+      auto message = frost_interfaces::msg::DesiredSpeed();
+      message.desired_speed = value;
+      desired_speed_publisher_->publish(message);
+    } else if (key == "DESIRED_HEADING") {
+      if (value > 180.0) {
+        message.desired_heading = -1.0 * (360.0 - value);
+      } else {
+        message.desired_heading = value;
+      }
+      desired_heading_publisher_->publish(message);
+      auto message = frost_interfaces::msg::DesiredHeading();
+    } else if (key == "DESIRED_DEPTH") {
+      auto message = frost_interfaces::msg::DesiredDepth();
+      message.desired_depth = value;
+      desired_depth_publisher_->publish(message);
+    }
 }
 
 // Receives the moos stuff
@@ -142,35 +144,11 @@ bool OnMail(void *pParam) {
     CMOOSMsg &msg = *q;
     std::string key = msg.GetKey();
     double value = msg.GetDouble();
-    std::cout << "\n";
+    PublishDesiredValue(value,key);
+    std::cout << "DESIRED_" << key << ": "<< value << std::endl;
 
-    if (key == "DESIRED_SPEED") {
-      auto message = frost_interfaces::msg::DesiredSpeed();
-      std::cout << "=====PRINTING DESIRED_SPEED=====" << std::endl;
-      message.desired_speed = value;
-      desired_speed_publisher_->publish(message);
-
-    } else if (key == "DESIRED_HEADING") {
-      auto message = frost_interfaces::msg::DesiredHeading();
-      std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
-      if (value > 180.0) {
-        message.desired_heading = -1.0 * (360.0 - value);
-      } else {
-        message.desired_heading = value;
-      }
-      
-      desired_heading_publisher_->publish(message);
-
-    } else if (key == "DESIRED_DEPTH") {
-      auto message = frost_interfaces::msg::DesiredDepth();
-      std::cout << "=====PRINTING DESIRED_DEPTH=====" << std::endl;
-      message.desired_depth = value;
-      desired_depth_publisher_->publish(message);
-
-    }
-
-    q->Trace();
-    std::cout << "\n";
+    // if you want to print all the values registered for, then uncomment this
+    // q->Trace();
   }
   return true;
 }
