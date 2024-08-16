@@ -129,9 +129,6 @@ bool OnConnect(void *pParam) {
   // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
   // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
   // system(command.c_str());
-
-
-
   return 0;
 }
 
@@ -168,6 +165,8 @@ bool OnMail(void *pParam) {
     double value = msg.GetDouble();
     PublishDesiredValue(value,key);
     std::cout << "DESIRED_" << key << ": "<< value << std::endl;
+
+    // if you want to print all the values registered for, then uncomment this
     // q->Trace();
   }
   return true;
