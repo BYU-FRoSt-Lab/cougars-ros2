@@ -122,6 +122,9 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_SPEED", 0.0);
   pC->Register("DESIRED_HEADING", 0.0);
   pC->Register("DESIRED_DEPTH", 0.0);
+  pC->Register("NAV_SPEED", 0.0);
+  pC->Register("NAV_HEADING", 0.0);
+  pC->Register("NAV_DEPTH", 0.0);
   
   // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
   // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
@@ -146,30 +149,31 @@ bool OnMail(void *pParam) {
 
     if (key == "DESIRED_SPEED") {
       auto message = frost_interfaces::msg::DesiredSpeed();
-      std::cout << "=====PRINTING DESIRED_SPEED=====" << std::endl;
       message.desired_speed = value;
       desired_speed_publisher_->publish(message);
+      std::cout << "=====PRINTING DESIRED_SPEED=====" << std::endl;
+      std::cout << "value: " << value << std::endl;
 
     } else if (key == "DESIRED_HEADING") {
-      auto message = frost_interfaces::msg::DesiredHeading();
-      std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
       if (value > 180.0) {
         message.desired_heading = -1.0 * (360.0 - value);
       } else {
         message.desired_heading = value;
       }
-      
       desired_heading_publisher_->publish(message);
-
+      auto message = frost_interfaces::msg::DesiredHeading();
+      std::cout << "=====PRINTING DESIRED_HEADING=====" << std::endl;
+      std::cout << "value: " << value << std::endl;
     } else if (key == "DESIRED_DEPTH") {
       auto message = frost_interfaces::msg::DesiredDepth();
-      std::cout << "=====PRINTING DESIRED_DEPTH=====" << std::endl;
       message.desired_depth = value;
       desired_depth_publisher_->publish(message);
+      std::cout << "=====PRINTING DESIRED_DEPTH=====" << std::endl;
+      std::cout << "value: " << value << std::endl;
 
     }
 
-    q->Trace();
+    // q->Trace();
     std::cout << "\n";
   }
   return true;

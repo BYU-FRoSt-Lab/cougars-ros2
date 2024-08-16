@@ -6,8 +6,8 @@
 
 
 // EB grass field
-LatOrigin = 40.246175845343224
-LongOrigin = -111.64724349627879
+// LatOrigin = 40.246175845343224
+// LongOrigin = -111.64724349627879
 
 
 ServerHost   = localhost
@@ -38,7 +38,7 @@ ProcessConfig = pHelmIvP
   domain     = speed:0:4:41
   // domain     = depth:0:50:200
 
-  
+
 }
 
 //------------------------------------------
