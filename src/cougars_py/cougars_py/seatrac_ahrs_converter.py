@@ -20,9 +20,6 @@ class SeatracAHRSConverter(Node):
         self.modem_subscriber_ = self.create_subscription(
             ModemRec, "modem_rec", self.modem_callback, 10
         )
-        self.modem_orientation_pub_ = self.create_publisher(
-            PoseWithCovarianceStamped, "modem_orientation", 10
-        )
         self.modem_imu_pub_ = self.create_publisher(
             Imu, "modem_imu", 10
         )
