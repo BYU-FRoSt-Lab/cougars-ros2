@@ -54,7 +54,7 @@ public:
   VehicleStatus() : Node("vehicle_status") {
     x_y_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
-        "odometry/filtered", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));
+        "odometry/global", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));
 
     depth_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -97,7 +97,8 @@ private:
   // }
 
   void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
-    this->yaw = yaw_msg.attitude_yaw;
+    if(yaw_msg.msg_id == 0x10) this->yaw = yaw_msg.attitude_yaw;
+    // ^^^ Makes sure the yaw comes from a status message. Other messages will have a zero yaw and mess up the calculation
   }
 
 
