@@ -1,9 +1,7 @@
 """Launch a talker and a listener in a component container."""
 
 import os
-
 import launch
-import yaml
 from launch_ros.actions import ComposableNodeContainer
 import launch_ros.actions
 from launch_ros.descriptions import ComposableNode
@@ -14,11 +12,13 @@ from ament_index_python.packages import get_package_share_directory
 import yaml
 
 
+# Path to your custom YAML configuration file
+config_file = "/home/frostlab/config/vehicle_config.yaml"
 
-gpsd_client_share_dir = get_package_share_directory('gpsd_client')
-gpsd_client_params_file = os.path.join(gpsd_client_share_dir, 'config', 'gpsd_client.yaml')
-with open(gpsd_client_params_file, 'r') as f:
-    gpsd_client_params = yaml.safe_load(f)['gpsd_client']['ros__parameters']
+# Load the parameters from the YAML file
+# COULD FIX THE GPSD NODE IN THE FUTURE TO ACCEPT YAML FILE PATH
+with open(config_file, 'r') as f:
+    vehicle_config_params = yaml.safe_load(f)
 
 def generate_launch_description():
     """Generate launch description with multiple components."""
@@ -32,7 +32,7 @@ def generate_launch_description():
                     package='gpsd_client',
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
-                    parameters=[gpsd_client_params]),
+                    parameters=[vehicle_config_params['gpsd_client']['ros__parameters']]),
                 ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
@@ -40,8 +40,6 @@ def generate_launch_description():
             ],
             output='screen',
     )
-
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
 
     seatrac = launch_ros.actions.Node(
             package='seatrac',
@@ -58,14 +56,12 @@ def generate_launch_description():
             executable='navsat_transform_node',
             name='navsat_transform_node',
             output='screen',
-            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_navsat_transform.yaml')],
+            parameters=[config_file],
             remappings=[
                 ('/gps/fix', '/fix'),
                 ('imu/data','/modem_imu')
             ]
            )
-
-    log_dir = '/home/frostlab/bag'
 
     rosbag = ExecuteProcess(
             cmd=[
@@ -80,11 +76,11 @@ def generate_launch_description():
                                      seatrac,
                                      transform,
                                      converter,
-            launch.actions.RegisterEventHandler(
-                event_handler=launch.event_handlers.OnProcessExit(
-                    target_action=container,
-                    on_exit=[launch.actions.EmitEvent(
-                        event=launch.events.Shutdown())]
-                    ))
+            # launch.actions.RegisterEventHandler(
+            #     event_handler=launch.event_handlers.OnProcessExit(
+            #         target_action=container,
+            #         on_exit=[launch.actions.EmitEvent(
+            #             event=launch.events.Shutdown())]
+            #         ))
                 ])
 
