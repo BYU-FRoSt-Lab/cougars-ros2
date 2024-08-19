@@ -4,13 +4,12 @@
 #include <string>
 
 #include "cougars_cpp/pid.h"
-#include "dvl_msgs/msg/dvldr.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
+#include "frost_interfaces/msg/vehicle_status.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
@@ -100,13 +99,10 @@ public:
         "depth_data", 10, std::bind(&PIDControl::depth_callback, this, _1));
 
     // TODO: change this to 'vehicle_status' listener
-    velocity_subscription_ = this->create_subscription<
-        geometry_msgs::msg::TwistWithCovarianceStamped>(
-        "dvl_velocity", 10,
-        std::bind(&PIDControl::velocity_callback, this, _1));
-
-    yaw_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
-        "dvl/position", qos, std::bind(&PIDControl::yaw_callback, this, _1));
+    velocity_yaw_subscription_ =
+        this->create_subscription<frost_interfaces::msg::VehicleStatus>(
+            "vehicle_status", 10,
+            std::bind(&PIDControl::velocity_yaw_callback, this, _1));
 
     // declare ros timers
     pid_timer_ = this->create_wall_timer(
@@ -134,13 +130,10 @@ private:
     this->depth = depth_msg.pose.pose.position.z;
   }
 
-  void velocity_callback(
-      const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
-    this->x_velocity = velocity_msg.twist.twist.linear.x;
-  }
-
-  void yaw_callback(const dvl_msgs::msg::DVLDR &yaw_msg) {
-    this->yaw = yaw_msg.yaw;
+  void velocity_yaw_callback(
+      const frost_interfaces::msg::VehicleStatus &velocity_yaw_msg) {
+    this->x_velocity = velocity_yaw_msg.coug_odom.twist.twist.linear.x;
+    this->yaw = velocity_yaw_msg.attitude_yaw;
   }
 
   void timer_callback() {
@@ -156,8 +149,8 @@ private:
 
     int depth_pos = myDepthPID.compute(this->desired_depth, depth);
     int heading_pos = myHeadingPID.compute(this->desired_heading, yaw);
-    int velocity_level =
-        this->desired_speed; // myVelocityPID.compute(this->desired_speed, x_velocity);
+    int velocity_level = this->desired_speed; // myVelocityPID.compute(this->desired_speed,
+                                              // x_velocity);
 
     message.fin[0] = heading_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
@@ -165,15 +158,13 @@ private:
     message.thruster = velocity_level;
 
     u_command_publisher_->publish(message);
+
     // RCLCPP_INFO(this->get_logger(),
-    //             "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f", depth,
-    //             yaw, x_velocity);
+    //             "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f",
+    //             depth, yaw, x_velocity);
     RCLCPP_INFO(this->get_logger(),
                 "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
                 heading_pos, velocity_level);
-    // log depth kp
-    RCLCPP_INFO(this->get_logger(), "Depth KP: %f",
-                this->get_parameter("depth_kp").as_double());
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE ENDS HERE
@@ -192,9 +183,8 @@ private:
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       depth_subscription_;
-  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::
-      SharedPtr velocity_subscription_;
-  rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr yaw_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
+      velocity_yaw_subscription_;
 
   // class desired value variables
   float desired_depth = 0.0;
