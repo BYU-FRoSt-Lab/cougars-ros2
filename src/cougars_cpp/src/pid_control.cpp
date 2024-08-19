@@ -98,7 +98,6 @@ public:
         geometry_msgs::msg::PoseWithCovarianceStamped>(
         "depth_data", 10, std::bind(&PIDControl::depth_callback, this, _1));
 
-    // TODO: change this to 'vehicle_status' listener
     velocity_yaw_subscription_ =
         this->create_subscription<frost_interfaces::msg::VehicleStatus>(
             "vehicle_status", 10,
