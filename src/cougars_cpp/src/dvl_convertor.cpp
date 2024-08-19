@@ -13,7 +13,7 @@
 #include <vector>
 
 #include <math.h>
-
+#include <stdint.h>
 using std::placeholders::_1;
 
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
