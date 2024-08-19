@@ -90,7 +90,7 @@ public:
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, yvr,
-    }
+    };
 
     publisher_dvl_dead_reckoning->publish(stamped_msg);
   }
