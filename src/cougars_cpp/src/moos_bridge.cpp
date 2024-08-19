@@ -120,13 +120,13 @@ void PublishDesiredValue(double value, std::string key){
       message.desired_speed = value;
       desired_speed_publisher_->publish(message);
     } else if (key == "DESIRED_HEADING") {
+      auto message = frost_interfaces::msg::DesiredHeading();
       if (value > 180.0) {
         message.desired_heading = -1.0 * (360.0 - value);
       } else {
         message.desired_heading = value;
       }
       desired_heading_publisher_->publish(message);
-      auto message = frost_interfaces::msg::DesiredHeading();
     } else if (key == "DESIRED_DEPTH") {
       auto message = frost_interfaces::msg::DesiredDepth();
       message.desired_depth = value;
