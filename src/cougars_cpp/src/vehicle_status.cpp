@@ -38,6 +38,8 @@
 
 #define UPDATE_TIMER_MS std::chrono::milliseconds(10)
 
+#define PI_NUM 3.141592653589
+
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -97,7 +99,7 @@ private:
   // }
 
   void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
-    if(yaw_msg.msg_id == 0x10) this->yaw = yaw_msg.attitude_yaw;
+    if(yaw_msg.msg_id == 0x10) this->yaw = 0.1 * (PI_NUM / 180.0) * yaw_msg.attitude_yaw;
     // ^^^ Makes sure the yaw comes from a status message. Other messages will have a zero yaw and mess up the calculation
   }
 
