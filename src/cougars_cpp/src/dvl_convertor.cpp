@@ -81,7 +81,7 @@ public:
     stamped_msg.pose.pose.orientation.w = cos(0.5*msg->yaw*M_PI/180.0);
 
     //TODO: Check and tune covariance parameters
-    double pvr = msg->pose_std * msg->pose_std; //variance = std squared
+    double pvr = msg->pos_std * msg->pos_std; //variance = std squared
     double yvr = 1.0; //An estimate for the variance in yaw
     stamped_msg.pose.covariance = { 
       pvr, 0.0, 0.0, 0.0, 0.0, 0.0,
