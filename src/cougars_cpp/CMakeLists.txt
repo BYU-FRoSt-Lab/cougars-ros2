@@ -39,6 +39,9 @@ ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometr
 add_executable(depth_convertor src/depth_convertor.cpp)
 ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs)
 
+add_executable(factor_graph src/factor_graph.cpp)
+ament_target_dependencies(factor_graph rclcpp sensor_msgs nav_msgs)
+
 # Link libraries
 target_link_libraries(moos_bridge)
 target_link_libraries(pid_control)
@@ -46,6 +49,7 @@ target_link_libraries(dvl_convertor)
 target_link_libraries(depth_convertor)
 target_link_libraries(vehicle_status)
 target_link_libraries(dvl_config)
+target_link_libraries(factor_graph)
 install(TARGETS
   moos_bridge
   pid_control
@@ -53,6 +57,7 @@ install(TARGETS
   depth_convertor
   vehicle_status
   dvl_config
+  factor_graph
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
