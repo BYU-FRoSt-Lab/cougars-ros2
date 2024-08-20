@@ -45,7 +45,7 @@ class SeatracAHRSConverter(Node):
 
             q = R_xyz_enu.as_quat()
 
-            self.get_logger().info(str(np.round(q*10)))
+            # self.get_logger().info(str(np.round(q*10)))
 
             modem_imu.orientation.x = q[0]
             modem_imu.orientation.y = q[1]
