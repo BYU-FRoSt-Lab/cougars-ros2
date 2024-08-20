@@ -4,8 +4,7 @@
 #include <string>
 
 #define GRAVITY 9.81
-#define FLUID_DENSITY 997
-#define FLUID_PRESSURE_ATM 87250
+#define FLUID_DENSITY_BASE 997
 
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -22,6 +21,9 @@ auto qos = rclcpp::QoS(
 class DepthConvertor : public rclcpp::Node {
 public:
   DepthConvertor() : Node("depth_convertor") {
+
+    this->declare_parameter("water_salinity_ppt", 0.0); // 35.0 for salt water, 0.0 for fresh water
+    this->declare_parameter("fluid_pressure_atm", 87250.0); // 87250.0 from testing
 
     // declare ros publishers
     depth_publisher_ =
@@ -41,8 +43,8 @@ private:
 
     geometry_msgs::msg::PoseWithCovarianceStamped depth_msg;
     depth_msg.pose.pose.position.z =
-        (pressure_msg->fluid_pressure * 100 - FLUID_PRESSURE_ATM) /
-        (FLUID_DENSITY * GRAVITY);
+        (pressure_msg->fluid_pressure * 100 - this->get_parameter("fluid_pressure_atm").as_double()) /
+        ((FLUID_DENSITY_BASE + this->get_parameter("water_salinity_ppt").as_double()) * GRAVITY);
     // RCLCPP_INFO(this->get_logger(), "Pressure: %f",
     //             pressure_msg->fluid_pressure);
     // RCLCPP_INFO(this->get_logger(), "Depth: %f",
