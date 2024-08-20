@@ -10,13 +10,14 @@ class DvlCommandResponseListener(Node):
         # Create a subscriber to the 'dvl/command/response' topic
         self.subscription = self.create_subscription(
             CommandResponse,
-            'dvl/command/response',
+            'dvl/config/status',
             self.response_callback,
             10  # QoS profile set to queue up to 10 messages
         )
         self.subscription  # Prevent unused variable warning
 
     def response_callback(self, msg):
+        self.get_logger().info("status update")
         # Log the received message contents
         self.get_logger().info(f"Received CommandResponse: success = {msg.success}, message = '{msg.message}'")
 
