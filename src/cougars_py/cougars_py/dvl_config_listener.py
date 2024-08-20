@@ -1,18 +1,18 @@
 import rclpy
 from rclpy.node import Node
 from dvl_msgs.msg import ConfigStatus
-from rclpy.qos import QoSProfile, HistoryPolicy
-
+from rclpy.qos import QoSProfile, HistoryPolicy, ReliabilityPolicy, DurabilityPolicy
 class DvlCommandResponseListener(Node):
 
     def __init__(self):
         super().__init__('dvl_command_response_listener')
 
         qos_profile = QoSProfile(
-            history=HistoryPolicy.KEEP_LAST,
-            depth=10
+            history=HistoryPolicy.KEEP_LAST,  # Matches KEEP_LAST
+            depth=10,                        # Matches depth 10
+            reliability=ReliabilityPolicy.RELIABLE,  # Matches RELIABLE
+            durability=DurabilityPolicy.VOLATILE   # Matches VOLATILE
         )
-        
         # Create a subscriber to the 'dvl/command/response' topic
         self.subscription = self.create_subscription(
             ConfigStatus,
