@@ -29,9 +29,7 @@ private:
     void response_callback(const dvl_msgs::msg::CommandResponse::SharedPtr msg)
     {
         // Log the received message contents
-        RCLCPP_INFO(this->get_logger(), "Received CommandResponse: success = %s, message = %s",
-                    msg->success ? "true" : "false",
-                    msg->message.c_str());
+        RCLCPP_INFO(this->get_logger(), "Received CommandResponse");
     }
 
     // Subscriber object
