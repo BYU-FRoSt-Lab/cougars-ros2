@@ -83,8 +83,8 @@ class ManualControl(Node):
         speed_msg = DesiredSpeed()
 
         # TODO: Adjust this simple state machine
-        if not self.stopped and self.counter < 24:
-            depth_msg.desired_depth = 0.5
+        if not self.stopped and self.counter < 40:
+            depth_msg.desired_depth = 0.0
             heading_msg.desired_heading = 0.0
             speed_msg.desired_speed = 25.0
         else:

@@ -26,10 +26,10 @@ def generate_launch_description():
             package='dvl_a50', 
             executable='dvl_a50_sensor', 
         ),
-        launch.actions.ExecuteProcess(
-            cmd=['ros2', 'topic', 'pub', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: false}', '-t', '10'],
-            output='screen'
-        ),
+#         launch.actions.ExecuteProcess(
+#             cmd=['ros2', 'topic', 'pub', 'dvl/config/command', 'dvl_msgs/msg/ConfigCommand', '{command: \'set_config\', parameter_name: \'acoustic_enabled\', parameter_value: false}', '-t', '10'],
+#             output='screen'
+#         ),
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
@@ -104,13 +104,13 @@ def generate_launch_description():
             executable='pid_control',
             parameters=[config_file]
         ),
-        launch_ros.actions.Node(
-            package='cougars_cpp',
-            executable='moos_bridge',
-            parameters=[config_file],
-            output='screen',
-            emulate_tty=True
-        ),
+#         launch_ros.actions.Node(
+#             package='cougars_cpp',
+#             executable='moos_bridge',
+#             parameters=[config_file],
+#             output='screen',
+#             emulate_tty=True
+#         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_py',
