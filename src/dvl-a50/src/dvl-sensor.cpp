@@ -94,9 +94,18 @@ old_altitude(0.0)
     /*
      * Disable transducer operation to limit sensor heating out of water.
      */
-    this->set_json_parameter("acoustic_enabled", "true");
-    RCLCPP_INFO(get_logger(), "Acoustics disabled");
 
+    bool acoustics_are_enabled = false;
+
+    if(acoustics_are_enabled){
+        this->set_json_parameter("acoustic_enabled", "true");
+        RCLCPP_INFO(get_logger(), "Acoustics enabled");
+    }
+    else{
+         this->set_json_parameter("acoustic_enabled", "false");
+         RCLCPP_INFO(get_logger(), "Acoustics disabled");
+    }
+   
     usleep(2000);
 
 }
@@ -292,6 +301,7 @@ void DVL_A50::publish_config_status()
 
 void DVL_A50::command_subscriber(const dvl_msgs::msg::ConfigCommand::SharedPtr msg)
 {
+    // RCLCPP_INFO(get_logger(), "DVL heard a command");
     if(msg->command == "set_config")
         this->set_json_parameter(msg->parameter_name, msg->parameter_value);
     else if(msg->command == "get_config")
