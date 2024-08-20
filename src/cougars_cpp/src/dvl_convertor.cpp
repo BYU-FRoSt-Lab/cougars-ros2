@@ -13,7 +13,7 @@
 #include <vector>
 
 #include <math.h>
-
+#include <stdint.h>
 using std::placeholders::_1;
 
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
@@ -81,8 +81,8 @@ public:
     stamped_msg.pose.pose.orientation.w = cos(0.5*msg->yaw*M_PI/180.0);
 
     //TODO: Check and tune covariance parameters
-    float64_t pvr = msg->pose_std * msg->pose_std; //variance = std squared
-    float64_t yvr = 1.0; //An estimate for the variance in yaw
+    double pvr = msg->pos_std * msg->pos_std; //variance = std squared
+    double yvr = 1.0; //An estimate for the variance in yaw
     stamped_msg.pose.covariance = { 
       pvr, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, pvr, 0.0, 0.0, 0.0, 0.0,
@@ -90,7 +90,7 @@ public:
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, yvr,
-    }
+    };
 
     publisher_dvl_dead_reckoning->publish(stamped_msg);
   }

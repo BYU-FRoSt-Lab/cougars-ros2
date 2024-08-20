@@ -58,9 +58,10 @@ def generate_launch_description():
             output='screen',
             parameters=[config_file],
             remappings=[
-                ('/gps/fix', '/fix'),
-                ('imu/data','/modem_imu')
-            ]
+                ('/fix', '/gps/fix'),
+                ('/modem_imu','/imu')
+            ],
+            # arguments = ['--ros-args', '--log-level', 'debug']
            )
 
     rosbag = ExecuteProcess(
