@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from dvl_msgs.msg import CommandResponse
+from dvl_msgs.msg import ConfigStatus
 
 class DvlCommandResponseListener(Node):
 
@@ -9,7 +9,7 @@ class DvlCommandResponseListener(Node):
         
         # Create a subscriber to the 'dvl/command/response' topic
         self.subscription = self.create_subscription(
-            CommandResponse,
+            ConfigStatus,
             'dvl/config/status',
             self.response_callback,
             10  # QoS profile set to queue up to 10 messages
