@@ -1,18 +1,24 @@
 import rclpy
 from rclpy.node import Node
 from dvl_msgs.msg import ConfigStatus
+from rclpy.qos import QoSProfile, HistoryPolicy
 
 class DvlCommandResponseListener(Node):
 
     def __init__(self):
         super().__init__('dvl_command_response_listener')
+
+        qos_profile = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10
+        )
         
         # Create a subscriber to the 'dvl/command/response' topic
         self.subscription = self.create_subscription(
             ConfigStatus,
             'dvl/config/status',
             self.response_callback,
-            10  # QoS profile set to queue up to 10 messages
+            qos_profile  # QoS profile set to queue up to 10 messages
         )
         self.subscription  # Prevent unused variable warning
 
