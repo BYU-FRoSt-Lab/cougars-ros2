@@ -15,10 +15,6 @@
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
-// ros config values
-#define PID_TIMER_PERIOD 80 // the pressure sensor is updated at 50 Hz
-#define PID_TIMER_PERIOD_MS std::chrono::milliseconds(PID_TIMER_PERIOD)
-
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 auto qos = rclcpp::QoS(
     rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
@@ -29,6 +25,8 @@ public:
   PIDControl() : Node("pid_control") {
 
     // declare ros params
+    this->declare_parameter("pid_timer_period",
+                            80); // from experimentation with depth sensor
     this->declare_parameter("depth_kp", 0.0);
     this->declare_parameter("depth_ki", 0.0);
     this->declare_parameter("depth_kd", 0.0);
@@ -54,7 +52,7 @@ public:
                          this->get_parameter("depth_kd").as_double(),
                          this->get_parameter("depth_min_output").as_int(),
                          this->get_parameter("depth_max_output").as_int(),
-                         PID_TIMER_PERIOD,
+                         this->get_parameter("pid_timer_period").as_int(),
                          this->get_parameter("depth_bias").as_int());
 
     myHeadingPID.calibrate(this->get_parameter("heading_kp").as_double(),
@@ -62,7 +60,7 @@ public:
                            this->get_parameter("heading_kd").as_double(),
                            this->get_parameter("heading_min_output").as_int(),
                            this->get_parameter("heading_max_output").as_int(),
-                           PID_TIMER_PERIOD,
+                           this->get_parameter("pid_timer_period").as_int(),
                            this->get_parameter("heading_bias").as_int());
 
     myVelocityPID.calibrate(this->get_parameter("speed_kp").as_double(),
@@ -70,7 +68,7 @@ public:
                             this->get_parameter("speed_kd").as_double(),
                             this->get_parameter("speed_min_output").as_int(),
                             this->get_parameter("speed_max_output").as_int(),
-                            PID_TIMER_PERIOD,
+                            this->get_parameter("pid_timer_period").as_int(),
                             this->get_parameter("speed_bias").as_int());
 
     // declare ros publishers
@@ -105,7 +103,9 @@ public:
 
     // declare ros timers
     pid_timer_ = this->create_wall_timer(
-        PID_TIMER_PERIOD_MS, std::bind(&PIDControl::timer_callback, this));
+        std::chrono::milliseconds(
+            this->get_parameter("pid_timer_period").as_int()),
+        std::bind(&PIDControl::timer_callback, this));
   }
 
 private:
@@ -148,8 +148,9 @@ private:
 
     int depth_pos = myDepthPID.compute(this->desired_depth, depth);
     int heading_pos = myHeadingPID.compute(this->desired_heading, yaw);
-    int velocity_level = this->desired_speed; // myVelocityPID.compute(this->desired_speed,
-                                              // x_velocity);
+    int velocity_level =
+        this->desired_speed; // myVelocityPID.compute(this->desired_speed,
+                             // x_velocity);
 
     message.fin[0] = heading_pos;
     message.fin[1] = depth_pos; // TODO: counter-rotation offset?
