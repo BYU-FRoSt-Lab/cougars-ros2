@@ -303,6 +303,7 @@ void DVL_A50::publish_config_status()
 
 void DVL_A50::command_subscriber(const dvl_msgs::msg::ConfigCommand::SharedPtr msg)
 {
+    RCLCPP_INFO(get_logger(), "DVL heard a command");
     if(msg->command == "set_config")
         this->set_json_parameter(msg->parameter_name, msg->parameter_value);
     else if(msg->command == "get_config")
