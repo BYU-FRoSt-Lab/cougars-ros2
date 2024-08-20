@@ -2,6 +2,12 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/nonlinear/ISAM2.h>
+#include <gtsam/slam/BetweenFactor.h>
+
+using namespace gtsam;
+
 class FactorStateNode : public rclcpp::Node
 {
 public:
@@ -26,6 +32,27 @@ public:
     }
 
 private:
+
+    // gtsam stuff
+    NonlinearFactorGraph graph;
+    Values initialEstimate;
+    ISAM2 isam;
+    Values result;
+    Vector6 std_noise;
+    Vector6 sigmas;
+    noiseModel::Diagonal::shared_ptr odometryNoise;
+
+
+
+    void update_est() {
+        isam.update(graph,initialEstimate);
+        result = isam.calculateEstimate();
+        graph.resize(0);
+        initialEstimate.clear();
+    }
+
+
+
     // Callback functions for each topic
     void imuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
     {
