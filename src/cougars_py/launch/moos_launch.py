@@ -37,16 +37,16 @@ def generate_launch_description():
             parameters=[config_file]
         ),
         # Setup the GPS
-        launch_ros.actions.Node(
-            package='robot_localization',
-            executable='navsat_transform_node',
-            name='navsat_transform_node',
-            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
-            remappings=[                        # ^^^ If we move theses parameters from coug_ekf.yaml to CougarsSetup/config/vehicle_config.yaml
-                ('/gps/fix', '/fix'),           #      replace this with [config_file]
-                ('imu/data','/modem_imu')
-            ]
-        ),
+        # launch_ros.actions.Node(
+        #     package='robot_localization',
+        #     executable='navsat_transform_node',
+        #     name='navsat_transform_node',
+        #     parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
+        #     remappings=[                        # ^^^ If we move theses parameters from coug_ekf.yaml to CougarsSetup/config/vehicle_config.yaml
+        #         ('/gps/fix', '/fix'),           #      replace this with [config_file]
+        #         ('imu/data','/modem_imu')
+        #     ]
+        # ),
         launch_ros.actions.ComposableNodeContainer(
             package='rclcpp_components',
             executable='component_container',
