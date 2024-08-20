@@ -7,9 +7,6 @@ from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
 from frost_interfaces.srv import EmergencyStop
 from rclpy.qos import qos_profile_system_default
 
-STROBE_PIN = 15
-ENABLE_STROBE = False
-
 
 class ManualControl(Node):
     # Creates all of the publishers, subscriptions, services, and clients
@@ -64,24 +61,11 @@ class ManualControl(Node):
             self.emergency_stop_callback
         )
 
-        # Set up the strobe light
-        # if ENABLE_STROBE:
-            # self.chip = gpiod.Chip('gpiochip4')
-            # self.control_line = self.chip.get_line(STROBE_PIN)
-            # self.control_line.request(consumer="STROBE", type=gpiod.LINE_REQ_DIR_OUT)
-
         self.counter = 0
         self.stopped = False
 
     # Runs the state machine and high-level controller, publishes to pid_request
     def timer_callback(self):
-
-        # blink the strobe every second
-        # if ENABLE_STROBE:
-        #     if time.time() % 2 < 1:
-        #         self.control_line.set_value(1)
-        #     else:
-        #         self.control_line.set_value(0)
 
         ##########################################################
         # HIGH-LEVEL CONTROLLER CODE STARTS HERE

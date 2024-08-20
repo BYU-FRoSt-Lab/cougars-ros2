@@ -18,6 +18,8 @@ echo ""
 echo -e "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
 echo ""
 
+bash ~/teensy_ws/strobe.sh on
+
 cd ~/microros_ws
 source install/setup.bash
 ros2 run micro_ros_agent micro_ros_agent multiserial --devs "/dev/ttyACM0 /dev/ttyACM1" -b 6000000 &
@@ -52,6 +54,8 @@ case $1 in
         ros2 launch cougars_py manual_launch.py
         ;;
 esac
+
+bash ~/teensy_ws/strobe.sh off
 
 killall micro_ros_agent
 wait
