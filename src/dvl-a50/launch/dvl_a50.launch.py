@@ -16,6 +16,12 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         dvl_a50,
+        launch_ros.actions.Node(
+            package='cougars_cpp',
+            executable='dvl_config',
+            output='screen',
+            emulate_tty=True
+        ),
     ])
 
 
