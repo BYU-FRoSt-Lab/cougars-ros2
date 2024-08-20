@@ -29,7 +29,14 @@ private:
     void response_callback(const dvl_msgs::msg::CommandResponse::SharedPtr msg)
     {
         // Log the received message contents
-        RCLCPP_INFO(this->get_logger(), "Received CommandResponse");
+        RCLCPP_INFO(this->get_logger(), "Received CommandResponse:");
+        RCLCPP_INFO(this->get_logger(), "  response_to: %s", msg->response_to.c_str());
+        RCLCPP_INFO(this->get_logger(), "  success: %s", msg->success ? "true" : "false");
+        RCLCPP_INFO(this->get_logger(), "  error_message: %s", msg->error_message.c_str());
+        RCLCPP_INFO(this->get_logger(), "  result: %d", msg->result);
+        RCLCPP_INFO(this->get_logger(), "  format: %s", msg->format.c_str());
+        RCLCPP_INFO(this->get_logger(), "  type: %s", msg->type.c_str());
+        
     }
 
     // Subscriber object
