@@ -40,7 +40,7 @@ class NavSatFixToOdom(Node):
         # Subscribe to PoseWithCovarianceStamped
         self.subscriber = self.create_subscription(
             NavSatFix,
-            '/gps/fix',
+            '/fix',
             self.gps_callback,
             10
         )
