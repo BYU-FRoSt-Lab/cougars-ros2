@@ -10,8 +10,6 @@ from rclpy.qos import qos_profile_system_default
 STROBE_PIN = 15
 ENABLE_STROBE = False
 
-COMMAND_TIMER_PERIOD = 0.5 # seconds
-
 
 class ManualControl(Node):
     # Creates all of the publishers, subscriptions, services, and clients
@@ -19,8 +17,20 @@ class ManualControl(Node):
         super().__init__("manual_control")
 
         # Declare parameters
-        # TODO: Check if this still works with the config file
-        self.declare_parameter('vehicle_id', 1)
+        self.declare_parameter('vehicle_id', 0)
+        self.declare_parameter('command_timer_period', 0.5) # in seconds
+        self.declare_parameter('state_1_count', 0) # in intervals based on command_timer_period
+        self.declare_parameter('state_1_depth', 0.0)
+        self.declare_parameter('state_1_heading', 0.0)
+        self.declare_parameter('state_1_speed', 0.0)
+        self.declare_parameter('state_2_count', 0) # in intervals based on command_timer_period
+        self.declare_parameter('state_2_depth', 0.0)
+        self.declare_parameter('state_2_heading', 0.0)
+        self.declare_parameter('state_2_speed', 0.0)
+        self.declare_parameter('state_3_count', 0) # in intervals based on command_timer_period
+        self.declare_parameter('state_3_depth', 0.0)
+        self.declare_parameter('state_3_heading', 0.0)
+        self.declare_parameter('state_3_speed', 0.0)
 
         # Create the publishers
         self.depth_publisher = self.create_publisher(
@@ -43,7 +53,7 @@ class ManualControl(Node):
 
         # Create the timers
         self.timer = self.create_timer(
-            COMMAND_TIMER_PERIOD,
+            self.get_parameter("command_timer_period").get_parameter_value().double_value,
             self.timer_callback
         )
 
@@ -83,10 +93,18 @@ class ManualControl(Node):
         speed_msg = DesiredSpeed()
 
         # TODO: Adjust this simple state machine
-        if not self.stopped and self.counter < 40:
-            depth_msg.desired_depth = 0.0
-            heading_msg.desired_heading = 0.0
-            speed_msg.desired_speed = 25.0
+        if not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value:
+            depth_msg.desired_depth = self.get_parameter("state_1_depth").get_parameter_value().double_value
+            heading_msg.desired_heading = self.get_parameter("state_1_heading").get_parameter_value().double_value
+            speed_msg.desired_speed = self.get_parameter("state_1_speed").get_parameter_value().double_value
+        elif not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value:
+            depth_msg.desired_depth = self.get_parameter("state_2_depth").get_parameter_value().double_value
+            heading_msg.desired_heading = self.get_parameter("state_2_heading").get_parameter_value().double_value
+            speed_msg.desired_speed = self.get_parameter("state_2_speed").get_parameter_value().double_value
+        elif not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value + self.get_parameter("state_3_count").get_parameter_value().integer_value:
+            depth_msg.desired_depth = self.get_parameter("state_3_depth").get_parameter_value().double_value
+            heading_msg.desired_heading = self.get_parameter("state_3_heading").get_parameter_value().double_value
+            speed_msg.desired_speed = self.get_parameter("state_3_speed").get_parameter_value().double_value
         else:
             depth_msg.desired_depth = 0.0
             heading_msg.desired_heading = 0.0

@@ -1,19 +1,19 @@
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
+
 import os
 import yaml
 from ament_index_python.packages import get_package_share_directory
 
 
-config_file = "/home/frostlab/config/vehicle_config.yaml"
-# Load the parameters from the YAML file
-# COULD FIX THE GPSD NODE IN THE FUTURE TO ACCEPT YAML FILE PATH
-with open(config_file, 'r') as f:
-    vehicle_config_params = yaml.safe_load(f)
-
-
 def generate_launch_description():
+
+    config_file = "/home/frostlab/config/vehicle_config.yaml"
+
+    # COULD FIX THE GPSD NODE IN THE FUTURE TO ACCEPT YAML FILE PATH
+    with open(config_file, 'r') as f:
+        vehicle_config_params = yaml.safe_load(f)
     
     return launch.LaunchDescription([
         # Start recording all topics to an mcap file
@@ -63,19 +63,19 @@ def generate_launch_description():
         # Start the data conversion nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='depth_convertor'
+            executable='depth_convertor',
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='dvl_convertor'
+            executable='dvl_convertor',
         ),
         launch_ros.actions.Node(
             package='cougars_py',
-            executable='seatrac_ahrs_converter'
+            executable='seatrac_ahrs_converter',
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='vehicle_status'
+            executable='vehicle_status',
         ),
         # EKF nodes
         launch_ros.actions.Node(
@@ -84,7 +84,7 @@ def generate_launch_description():
             name='ekf_filter_node_odom',
             output='screen',
             parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
-            remappings=[('/odometry/filtered', '/odometry/local')] 
+            remappings=[('/odometry/filtered', '/odometry/local')],
         ),
         launch_ros.actions.Node(
             package='robot_localization',
@@ -92,34 +92,33 @@ def generate_launch_description():
             name='ekf_filter_node_map',
             output='screen',
             parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
-            remappings=[('/odometry/filtered', '/odometry/global')]
+            remappings=[('/odometry/filtered', '/odometry/global')],
         ),
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
             executable='pid_control',
-            parameters=[config_file]
+            parameters=[config_file],
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
             executable='moos_bridge',
             parameters=[config_file],
             output='screen',
-            emulate_tty=True
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
             executable='dvl_config',
             output='screen',
-            emulate_tty=True
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_py',
-        #     executable='leak_sub'
+        #     executable='leak_sub',
         # ),
         # launch_ros.actions.Node(
         #     package='cougars_py',
-        #     executable='battery_sub'
+        #     executable='battery_sub',
+        #     parameters=[config_file],
         # ),
     ])
