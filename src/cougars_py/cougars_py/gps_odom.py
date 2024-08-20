@@ -6,7 +6,7 @@ from pyproj import Proj, Transformer
 
 class NavSatFixToOdom(Node):
     def __init__(self):
-        super().__init__('pose_fix')
+        super().__init__('gps_odom')
         
         # Declare parameters for the origin (datum)
         self.declare_parameter('origin.latitude', 34.0219)
