@@ -94,7 +94,7 @@ old_altitude(0.0)
     /*
      * Disable transducer operation to limit sensor heating out of water.
      */
-    this->set_json_parameter("acoustic_enabled", "false");
+    this->set_json_parameter("acoustic_enabled", "true");
     RCLCPP_INFO(get_logger(), "Acoustics disabled");
 
     usleep(2000);

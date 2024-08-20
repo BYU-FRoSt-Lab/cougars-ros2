@@ -107,6 +107,7 @@ NavSatTransform::NavSatTransform(const rclcpp::NodeOptions & options)
   zero_altitude_ = this->declare_parameter("zero_altitude", false);
   publish_gps_ = this->declare_parameter("publish_filtered_gps", true);
   use_odometry_yaw_ = this->declare_parameter("use_odometry_yaw", false);
+  RCLCPP_INFO(this->get_logger(), "use_odometry_yaw: %d", int(use_odometry_yaw_));
   use_manual_datum_ = this->declare_parameter("wait_for_datum", false);
   use_local_cartesian_ = this->declare_parameter("use_local_cartesian", false);
   frequency = this->declare_parameter("frequency", frequency);
