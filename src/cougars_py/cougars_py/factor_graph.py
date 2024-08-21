@@ -241,12 +241,8 @@ class FactorGraphNode(Node):
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
         self.position[2] = msg.pose.pose.position.z
-<<<<<<< HEAD
         self.z_covariance = msg.pose.covariance[14]  # Covariance for Z
         self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [agent.poseKey], partial(self.error_depth, msg.pose.pose.position.z)))
-=======
-        self.position_covariance[2,2] = msg.pose.covariance[14]  # Covariance for Z
->>>>>>> d066bf5818822970126a4f596e95d0cbc255057f
 
         self.update()
                 
@@ -275,8 +271,7 @@ class FactorGraphNode(Node):
 
         if self.deployed:
 
-            # Convert quaternion to rotation matrix
-            
+
 
             # get the pose2 wrt pose1
             H_pose2_wrt_pose1_noisy = self.dvl_position_last.inverse().compose(self.dvl_pose_current)
@@ -286,6 +281,28 @@ class FactorGraphNode(Node):
             agent.poseKey = int(1 + agent.poseKey)
             self.initialEstimate.insert(agent.poseKey, agent.pose_world_noisy)
             self.graph.add(gtsam.BetweenFactorPose3(agent.prevPoseKey, agent.poseKey, H_pose2_wrt_pose1_noisy, self.POSE_NOISE))
+
+
+            # time stamp
+
+
+            # IMU unary factor
+
+
+
+
+
+            # Depth unary factor
+
+
+
+
+            # GPS unary factor
+
+
+
+
+
 
 
         self.dvl_position_last = self.dvl_pose_current
