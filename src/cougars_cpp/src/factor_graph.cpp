@@ -5,9 +5,31 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/ISAM2.h>
 #include <gtsam/slam/BetweenFactor.h>
+#include <gtsam/navigation/GPSFactor.h>
 
 
 using namespace gtsam;
+
+
+// class UnaryFactor: public NoiseModelFactor1<Pose2> {
+//   double mx_, my_; ///< X and Y measurements
+
+// public:
+//   UnaryFactor(Key j, double x, double y, const SharedNoiseModel& model):
+//     NoiseModelFactor1<Pose2>(model, j), mx_(x), my_(y) {}
+
+//   Vector evaluateError(const Pose2& q,
+//                        boost::optional<Matrix&> H = boost::none) const
+//   {
+//     const Rot2& R = q.rotation();
+//     if (H) (*H) = (gtsam::Matrix(2, 3) <<
+//             R.c(), -R.s(), 0.0,
+//             R.s(), R.c(), 0.0).finished();
+//     return (Vector(2) << q.x() - mx_, q.y() - my_).finished();
+//   }
+
+
+// };
 
 // Agents - each agent creates an array of other agents
 // to stay aware of where the other agents are
@@ -174,6 +196,7 @@ public:
         odometryNoise = noiseModel::Diagonal::Sigmas(sigmas);
         priorFactorInit = true;
 
+        unaryNoise = noiseModel::Diagonal::Sigmas(Vector2(0.1, 0.1)); // 10cm std on x,y
 
         // Set up the subscriptions
         imu_subscriber_ = this->create_subscription<sensor_msgs::msg::Imu>(
@@ -208,6 +231,7 @@ private:
     Vector6 sigmas;
     noiseModel::Diagonal::shared_ptr odometryNoise;
     bool priorFactorInit;
+    noiseModel::Diagonal::shared_ptr unaryNoise;
 
 
 
@@ -216,14 +240,6 @@ private:
         result = isam.calculateEstimate();
         graph.resize(0);
         initialEstimate.clear();
-
-
-        /// TODO: publish the latest estimate -- look into not updating the the whole path
-
-
-
-
-
     }
 
     Pose3 CalculateH(const nav_msgs::msg::Odometry & msg){
@@ -288,50 +304,30 @@ private:
     void gpsOdomCallback(const nav_msgs::msg::Odometry::SharedPtr& msg)
     {   
 
+        // Process the GPS odometry data here
+        RCLCPP_INFO(this->get_logger(), "Received GPS odometry data.");
+        // Example: Print the position
+        RCLCPP_INFO(this->get_logger(), "Position x: %f, y: %f",
+                    msg.pose.pose.position.x, msg.pose.pose.position.y);
+
+
         if(priorFactorInit){
             Pose3 H_init = CalculateH(msg);
             agent = new Agent(H_init, msg.agent_number);
             priorFactorInit = false;
             graph.push_back(PriorFactor<Pose3>(agent->getPoseKey(),agents->GetPoseWorldNoisy(), odometryNoise));
             initialEstimate.insert(agents->getPoseKey(), agents->GetPoseWorldNoisy());
+        }
+        else{
 
-            update_est();
-
-
-            return;
+            graph.add(boost::make_shared<UnaryFactor>(agents->getPoseKey(), msg.pose.pose.position.x, msg.pose.pose.position.y, unaryNoise));
 
         }
 
-        /// TODO: add unary factor///
+       
 
 
 
-
-
-
-
-        /////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // Process the GPS odometry data here
-        RCLCPP_INFO(this->get_logger(), "Received GPS odometry data.");
-        // Example: Print the position
-        RCLCPP_INFO(this->get_logger(), "Position x: %f, y: %f",
-                    msg.pose.pose.position.x, msg.pose.pose.position.y);
 
         // Integrate data processing logic here
         publishFactorState();
@@ -340,7 +336,19 @@ private:
     void dvlDeadReckonCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
 
-        
+        // Process the DVL dead reckoning data here
+        RCLCPP_INFO(this->get_logger(), "Received DVL dead reckoning data.");
+        // Example: Print the velocity
+        RCLCPP_INFO(this->get_logger(), "Position x: %f, y: %f",
+                    msg->pose.pose.position.x, msg->pose.pose.position.y);
+
+
+
+        /// TODO: convert dvl x, y to local x,y grid coordinates
+
+
+
+
 
         if(!priorFactorInit){
 
@@ -353,35 +361,33 @@ private:
             initialEstimate.insert(agent->getPoseKey(), agent->GetPoseWorldNoisy());
             graph.add(BetweenFactor<Pose3>(agent->getPrevPoseKey(),agent->getPoseKey(),H_pose2_wrt_pose1_noisy,odometryNoise));
 
-            update_est();
+        }
+        else{
+
+
+
+
+
+
 
         }
 
         
 
 
+        
 
-
-
-
-
-
-
-
-
-
-        // Process the DVL dead reckoning data here
-        RCLCPP_INFO(this->get_logger(), "Received DVL dead reckoning data.");
-        // Example: Print the velocity
-        RCLCPP_INFO(this->get_logger(), "Position x: %f, y: %f",
-                    msg->pose.pose.position.x, msg->pose.pose.position.y);
+        
+        
 
         // Integrate data processing logic here
+        
         publishFactorState();
     }
 
     void publishFactorState()
     {
+        update_est();
         // Create and publish the /factor_state message
         auto factor_state_msg = nav_msgs::msg::Odometry();
         // Populate the factor_state_msg here with the processed data
