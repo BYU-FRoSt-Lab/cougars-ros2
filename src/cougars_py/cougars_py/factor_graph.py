@@ -27,7 +27,7 @@ class Agent():
 
 class FactorGraphNode(Node):
 
-     def __init__(self):
+    def __init__(self):
         super().__init__('factor_graph_node')
 
         self.q_depth = []
@@ -337,7 +337,7 @@ class FactorGraphNode(Node):
 
 
             # IMU unary factor
-            
+
 
 
 
