@@ -344,8 +344,22 @@ class FactorGraphNode(Node):
 
 
             # IMU unary factor
-            while()
-
+            # FIX THIS: shouldn't be self.dvl_time - needs to be the oldest dvl node not updated
+            time_of_earliest_msg = self.q_imu[0].header.stamp.nsecs
+            while(time_of_earliest_msg < self.dvl_time):
+                time_of_next_msg = self.q_imu[1].header.stamp.nsecs
+                left = None
+                while len(q_imu) > 1 and time_of_next_msg < self.dvl_time:
+                    left_ns = self.q_imu[0].header.stamp.nsecs 
+                    self.q_imu = self.q_imu[1:] # pop with our list implementation
+                    right_ns = self.q_imu[0]
+                
+                if left != None:
+                    if (abs(left_ns - self.dvl_time) > abs(right_ns - self.dvl_time)):
+                        
+                        
+                    
+                    
 
 
 
