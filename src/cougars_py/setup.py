@@ -30,7 +30,9 @@ setup(
             'battery_sub = cougars_py.battery_sub:main',
             'modem_pinger = cougars_py.modem_pinger:main',
             'seatrac_ahrs_converter = cougars_py.seatrac_ahrs_converter:main',
-            'gps_odom = cougars_py.gps_odom:main'
+            'gps_odom = cougars_py.gps_odom:main',
+            'factor_graph = cougars_py.factor_graph:main',
+
         ],
     },
 )
