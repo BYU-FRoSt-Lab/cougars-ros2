@@ -6,12 +6,197 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Empty
 from scipy.spatial.transform import Rotation as R
 import numpy as np
+from functools import partial
+
+
+
+class Agent():
+    def __init__(self, H_init):
+        self.pose_world_noisy = gtsam.Pose3(H_init[1])
+        self.prev_pose_world_noisy_comms = self.pose_world_noisy
+        self.poseKey = int((H_init[0] + 1) * 1e6)
+        self.prevPoseKey = self.poseKey
+        self.poseKeyStart = self.poseKey
+        self.agent_num = H_init[0]
+        self.path = generate_path(self.agent_num,PATH_LENGTH)
+        self.step = 0
+        self.x_noisy = {}
+        self.y_noisy = {}
 
 
 class FactorGraphNode(Node):
 
+    def get_unary_bearing(self, pose, measurement):
+
+        rot_pred = pose.rotation()
+
+        # Get full relative pose meas
+        rot_meas = measurement[0]
+
+        # print("rot pred", rot_pred)
+        # print("rot meas", rot_meas)
+
+        error = gtsam.Rot3.Logmap(rot_pred.between(rot_meas))
+        # print("between anchor error", error)
+
+        return error
+
+    def error_unary_bearing(self, measurement: np.ndarray, this: gtsam.CustomFactor,
+                values: gtsam.Values,
+                jacobians: Optional[List[np.ndarray]]) -> float:
+        
+        '''Interagent factor using bearing azimuth and elevation'''
+
+        # azimuth and elevation
+        key_pose = this.keys()[0]
+        pose = values.atPose3(key_pose)
+
+        if jacobians is not None:
+            eps = 1e-6
+
+            # Six rows bc error state, six columns bc the state of this node is Pose3
+            # Perturb relative to robot A pose key
+            H0 = np.zeros((3, 6))
+            for i in range(6):
+                delta_step = np.zeros(6)
+                delta_step[i] = eps
+                delta_step_forward = gtsam.Pose3.Expmap(delta_step)
+                delta_step_backward = gtsam.Pose3.Expmap(-delta_step)
+
+                poseA_f = pose.compose(delta_step_forward)
+                poseA_b = pose.compose(delta_step_backward)
+
+                error_forward = get_unary_bearing(poseA_f, measurement)
+                error_backward = get_unary_bearing(poseA_b, measurement)
+                hdot =  (error_forward - error_backward) / (2*eps)
+                H0[:,i] = hdot
+
+            jacobians[0] = H0
+
+        error = get_unary_bearing(pose, measurement)
+
+        return error
+
+    def error_gps(self, measurement: np.ndarray, this: gtsam.CustomFactor,
+              values: gtsam.Values,
+              jacobians: Optional[List[np.ndarray]]) -> float:
+        """GPS Factor error function
+        :param measurement: GPS measurement, to be filled with `partial`
+        :param this: gtsam.CustomFactor handle
+        :param values: gtsam.Values
+        :param jacobians: Optional list of Jacobians
+        :return: the unwhitened error
+        """
+
+        # Get agent pose
+        estimate = values.atPose3(this.keys()[0])
+
+        # Three rows bc [x, y, z] from gps state, six columns bc the state of this node is Pose3
+        H = np.zeros((3, 6))
+        eps = 1e-6
+
+        # Get Jacobians. Perturb in each direction of the delta vector one at a time.
+        for i in range(6):
+            delta_step = np.zeros(6)
+            delta_step[i] = eps
+            delta_step_forward = gtsam.Pose3.Expmap(delta_step)
+            delta_step_backward = gtsam.Pose3.Expmap(-delta_step)
+
+            q_exp_forward = estimate.compose(delta_step_forward)
+            q_exp_backward = estimate.compose(delta_step_backward)
+            h_forward = q_exp_forward.translation()
+            h_backward = q_exp_backward.translation()
+            error_forward = h_forward - measurement
+            error_backward = h_backward - measurement
+            hdot =  (error_forward - error_backward) / (2*eps)
+            H[:,i] = hdot
+
+        
+        error = estimate.translation() - measurement
+
+        if jacobians is not None:
+            # Error wrt agent A
+            jacobians[0] = H
+    
+
+        return error
+    
+
+    def error_depth(self, measurement: np.ndarray, this: gtsam.CustomFactor,
+             values: gtsam.Values,
+             jacobians: Optional[List[np.ndarray]]) -> float:
+        """Depth Factor error function
+        :param measurement: Landmark measurement, to be filled with `partial`
+        :param this: gtsam.CustomFactor handle
+        :param values: gtsam.Values
+        :param jacobians: Optional list of Jacobians
+        :return: the unwhitened error
+        """
+        pos = values.atPose3(this.keys()[0])
+
+        # Depth error (z position). TODO 1D or 2D array?
+        error = pos.translation()[2] - measurement[0]
+        # print("depth pred", pos.translation()[2])
+        # print("depth meas", pos.translation()[2])
+
+        # print("depth error", error)
+
+        # Jacobians
+        if jacobians is not None:
+            eps = 1e-6
+
+            # Wrt pose key
+            H0 = np.zeros((1, 6))
+
+            # Get Jacobians. Perturb in each direction of the delta vector one at a time.
+            for i in range(6):
+                delta_step = np.zeros(6)
+                delta_step[i] = eps
+                delta_step_forward = gtsam.Pose3.Expmap(delta_step)
+                delta_step_backward = gtsam.Pose3.Expmap(-delta_step)
+
+                # Perturb pose
+                q_exp_forward = pos.compose(delta_step_forward)
+                q_exp_backward = pos.compose(delta_step_backward)
+
+                # Extract depth
+                h_forward = q_exp_forward.translation()[2]
+                h_backward = q_exp_backward.translation()[2]
+
+                # Compute error
+                error_forward = h_forward - measurement[0]
+                error_backward = h_backward - measurement[0]
+                hdot =  (error_forward - error_backward) / (2*eps)
+                H0[:,i] = hdot
+
+            jacobians[0] = H0
+
+        return error
+
+
+    def HfromRT(self, R, t):
+        H = np.eye(4)
+        H[:3, :3] = R
+        H[:3, 3] = t
+        return H
+
     def __init__(self):
         super().__init__('factor_graph_node')
+        
+        # gtsam stuff
+        self.std_pose = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
+        self.std_comms = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
+        self.POSE_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
+        self.COMMS_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_comms)
+
+
+        self.isam = gtsam.ISAM2()
+        self.graph = gtsam.NonlinearFactorGraph()
+        self.initialEstimate = gtsam.Values()
+
+        self.agent
+
+        self.deployed = False
 
         # Initialize class variables
         self.orientation_matrix = np.eye(3)
@@ -31,37 +216,83 @@ class FactorGraphNode(Node):
 
         # Publisher
         self.vehicle_status_pub = self.create_publisher(Odometry, '/vehicle_status', 10)
+    
+    def update(self):
+        self.isam.update(self.graph, self.initialEstimate)
+        self.result = self.isam.calculateEstimate()
+        self.initialEstimate.clear()
+        self.graph.resize(0)
 
     def imu_callback(self, msg: Imu):
         # Convert quaternion to rotation matrix
         quat = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
         r = R.from_quat(quat)
         self.orientation_matrix = r.as_matrix()
-
         # Get the orientation covariance
         self.orientation_covariance = np.array(msg.orientation_covariance).reshape(3, 3)
+
+        dummy_t = [0,0,0]
+        orientation_meas = Pose3(self.HfromRT(self.orientation_matrix, dummy_t)).rotation()
+        # orientation 
+        self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+
+        self.update()
 
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
         self.position[2] = msg.pose.pose.position.z
+<<<<<<< HEAD
+        self.z_covariance = msg.pose.covariance[14]  # Covariance for Z
+        self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [agent.poseKey], partial(self.error_depth, msg.pose.pose.position.z)))
+=======
         self.position_covariance[2,2] = msg.pose.covariance[14]  # Covariance for Z
+>>>>>>> d066bf5818822970126a4f596e95d0cbc255057f
 
+        self.update()
+                
     def gps_callback(self, msg: Odometry):
         # Get the x, y position and position covariance
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y
         self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
 
+        gps_meas = gtsam.Point3(self.position)
+        gps_factor = gtsam.CustomFactor(GPS_NOISE, [agent.poseKey], partial(error_gps, gps_meas))
+        factor_graph.add(gps_factor)
+
+        self.update()
+
     def dvl_callback(self, msg: Odometry):
         # Get the x, y, z position
         self.dvl_position[0] = msg.pose.pose.position.x
         self.dvl_position[1] = msg.pose.pose.position.y
         self.dvl_position[2] = msg.pose.pose.position.z
-
-        # Convert quaternion to rotation matrix
         quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
         r = R.from_quat(quat)
         self.dvl_orientation_matrix = r.as_matrix()
+
+        self.dvl_pose_current = gtsam.Pose3(self.HfromRT(r,self.dvl_position))
+
+        if self.deployed:
+
+            # Convert quaternion to rotation matrix
+            
+
+            # get the pose2 wrt pose1
+            H_pose2_wrt_pose1_noisy = self.dvl_position_last.inverse().compose(self.dvl_pose_current)
+
+            # add the odometry
+            agent.prevPoseKey = int(agent.poseKey)
+            agent.poseKey = int(1 + agent.poseKey)
+            self.initialEstimate.insert(agent.poseKey, agent.pose_world_noisy)
+            self.graph.add(gtsam.BetweenFactorPose3(agent.prevPoseKey, agent.poseKey, H_pose2_wrt_pose1_noisy, self.POSE_NOISE))
+
+
+        self.dvl_position_last = self.dvl_pose_current
+
+        self.update()
+
+
 
     def init_callback(self, msg: Empty):
         # Store current state as the initial state
@@ -70,7 +301,19 @@ class FactorGraphNode(Node):
             'orientation_matrix': self.orientation_matrix,
             'dvl_position': self.dvl_position.copy()
         }
+
+        H = self.HfromRT(init_state['orientation_matrix'],init['position'])
+
+        self.agent = Agent(H)
+
+        priorFactor = gtsam.PriorFactorPose3(agent.poseKey, agent.pose_world_noisy, self.POSE_NOISE)
+        self.graph.push_back(priorFactor)
+        self.initialEstimate.insert(agent.poseKey, agent.pose_world_noisy)
+
         self.get_logger().info("Initial state has been set.")
+
+        self.deployed = True
+
 
     def publish_vehicle_status(self):
         odom_msg = Odometry()
