@@ -36,6 +36,10 @@ class FactorGraphNode(Node):
         self.q_dvl = []
         
         
+        self.gps_last_pose_key = None           #int for handling not adding more than one gps to graph
+        self.depth_last_pose_key = None
+        self.imu_last_pose_key = None   
+
         # gtsam stuff
         self.std_pose = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         self.std_comms = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
@@ -272,7 +276,6 @@ class FactorGraphNode(Node):
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y
         self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
-        self.gps_time_stamp
 
         if self.deployed :
             self.q_gps.append(msg)
@@ -349,6 +352,8 @@ class FactorGraphNode(Node):
 
 
             # GPS unary factor
+
+
 
 
 
