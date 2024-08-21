@@ -318,6 +318,10 @@ class FactorGraphNode(Node):
 
         self.get_logger().info("Initial state has been set.")
 
+
+
+
+
         self.deployed = True
 
     def factor_graph_timer(self):
@@ -340,6 +344,7 @@ class FactorGraphNode(Node):
 
 
             # IMU unary factor
+            while()
 
 
 
