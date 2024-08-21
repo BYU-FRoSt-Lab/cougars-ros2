@@ -43,7 +43,7 @@ class VehicleStatusNode(Node):
 
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
-        self.z_position = msg.pose.pose.position.z
+        self.position[2] = msg.pose.pose.position.z
         self.z_covariance = msg.pose.covariance[14]  # Covariance for Z
 
     def gps_callback(self, msg: Odometry):
@@ -54,24 +54,21 @@ class VehicleStatusNode(Node):
 
     def dvl_callback(self, msg: Odometry):
         # Get the x, y, z position
-        self.position[0] = msg.pose.pose.position.x
-        self.position[1] = msg.pose.pose.position.y
-        self.position[2] = msg.pose.pose.position.z
+        self.dvl_position[0] = msg.pose.pose.position.x
+        self.dvl_position[1] = msg.pose.pose.position.y
+        self.dvl_position[2] = msg.pose.pose.position.z
 
         # Convert quaternion to rotation matrix
         quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
         r = R.from_quat(quat)
-        self.orientation_matrix = r.as_matrix()
+        self.dvl_orientation_matrix = r.as_matrix()
 
     def init_callback(self, msg: Empty):
         # Store current state as the initial state
         self.init_state = {
+            'position': self.position.copy(),
             'orientation_matrix': self.orientation_matrix,
-            'orientation_covariance': self.orientation_covariance,
-            'z_position': self.z_position,
-            'z_covariance': self.z_covariance,
-            'position_covariance': self.position_covariance,
-            'position': self.position.copy()
+            'dvl_position': self.dvl_position.copy()
         }
         self.get_logger().info("Initial state has been set.")
 
@@ -107,14 +104,7 @@ class VehicleStatusNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = VehicleStatusNode()
-
-    # Main loop
-    rate = node.create_rate(10)  # 10 Hz
-    while rclpy.ok():
-        rclpy.spin_once(node)
-        node.publish_vehicle_status()
-        rate.sleep()
-
+    rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
 
