@@ -35,6 +35,9 @@ class FactorGraphNode(Node):
         self.q_gps = []
         self.q_dvl = []
         
+        # index of list is the pose Key
+        self.posekey_to_time = []
+        
         
         # gtsam stuff
         self.std_pose = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
@@ -315,6 +318,10 @@ class FactorGraphNode(Node):
 
         self.get_logger().info("Initial state has been set.")
 
+
+
+
+
         self.deployed = True
 
     def factor_graph_timer(self):
@@ -337,6 +344,7 @@ class FactorGraphNode(Node):
 
 
             # IMU unary factor
+            while()
 
 
 
@@ -349,11 +357,6 @@ class FactorGraphNode(Node):
 
 
             # GPS unary factor
-
-
-
-
-
 
 
 
