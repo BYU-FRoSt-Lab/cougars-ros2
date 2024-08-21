@@ -16,10 +16,10 @@ class FactorGraphNode(Node):
         # Initialize class variables
         self.orientation_matrix = np.eye(3)
         self.orientation_covariance = np.zeros((3, 3))
-        self.z_position = 0.0
-        self.z_covariance = 0.0
-        self.position_covariance = np.zeros((3, 3))
         self.position = np.zeros(3)
+        self.position_covariance = np.zeros((3, 3))
+        self.dvl_position = np.zeros(3)
+        self.dvl_position_covariance = np.zeros((3, 3))
         self.init_state = {}
 
         # Subscribers
@@ -44,7 +44,7 @@ class FactorGraphNode(Node):
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
         self.position[2] = msg.pose.pose.position.z
-        self.z_covariance = msg.pose.covariance[14]  # Covariance for Z
+        self.position_covariance[2,2] = msg.pose.covariance[14]  # Covariance for Z
 
     def gps_callback(self, msg: Odometry):
         # Get the x, y position and position covariance
