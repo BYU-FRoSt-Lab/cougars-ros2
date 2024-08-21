@@ -309,7 +309,7 @@ private:
             R = q.toRotationMatrix();
 
             // Extract the upper-left 2x2 submatrix for 2D rotation
-            R2D = R.block<2, 2>(0, 0);
+            // R2D = R.block<2, 2>(0, 0);
 
             // Mark that the initial rotation has been set
             initial_rotation = true;
@@ -374,14 +374,12 @@ private:
 
             Eigen::Vector2d v(x,y);
             Eigen::Matrix2d mat;
+
+            // review this , possibly use the transpose
             mat << R2D(0,0), R2D(0,1),
                    R2D(1,0), R2D(1,1);
 
-
-
-
-
-
+            Eigen::Vector2d v_g = mat * v;
 
 
             // do transformation right here
@@ -391,6 +389,8 @@ private:
             agent->UpdatePoseKey();
             initialEstimate.insert(agent->getPoseKey(), agent->GetPoseWorldNoisy());
             graph.add(BetweenFactor<Pose3>(agent->getPrevPoseKey(),agent->getPoseKey(),H_pose2_wrt_pose1_noisy,odometryNoise));
+
+
 
         }
 
