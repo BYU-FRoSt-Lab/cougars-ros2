@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 
 
-class VehicleStatusNode(Node):
+class FactorGraphNode(Node):
 
     def __init__(self):
         super().__init__('factor_graph_node')
@@ -103,7 +103,7 @@ class VehicleStatusNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = VehicleStatusNode()
+    node = FactorGraphNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
