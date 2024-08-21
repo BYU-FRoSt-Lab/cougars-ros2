@@ -317,11 +317,11 @@ private:
         
 
 
-        // Process the IMU data here
-        RCLCPP_INFO(this->get_logger(), "Received IMU data.");
-        // Example: Print the IMU orientation
-        RCLCPP_INFO(this->get_logger(), "Orientation x: %f, y: %f, z: %f, w: %f",
-                    msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w);
+        // // Process the IMU data here
+        // RCLCPP_INFO(this->get_logger(), "Received IMU data.");
+        // // Example: Print the IMU orientation
+        // RCLCPP_INFO(this->get_logger(), "Orientation x: %f, y: %f, z: %f, w: %f",
+        //             msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w);
 
         // Integrate data processing logic here
         publishFactorState();
@@ -366,14 +366,23 @@ private:
 
 
 
-        /// TODO: convert dvl x, y to local x,y grid coordinates
-
-
-
-
-
-
         if(!priorFactorInit){
+
+            /// TODO: convert dvl x, y to local x,y grid coordinates
+            double x = msg->pose.pose.position.x;
+            double y = msg->pose.pose.position.y;
+
+            Eigen::Vector2d v(x,y);
+            Eigen::Matrix2d mat;
+            mat << R2D(0,0), R2D(0,1),
+                   R2D(1,0), R2D(1,1);
+
+
+
+
+
+
+
 
             // do transformation right here
             Pose3 H_pose2_wrt_pose1_noisy = CalculateH(msg);
