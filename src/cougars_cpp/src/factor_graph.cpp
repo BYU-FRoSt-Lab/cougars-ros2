@@ -233,7 +233,9 @@ private:
     bool priorFactorInit;
     noiseModel::Diagonal::shared_ptr unaryNoise;
 
-
+    bool initial_rotation = false
+    Eigen::Matrix3d R
+    Eigen::Matrix2d R2D 
 
     void update_est() {
         isam.update(graph,initialEstimate);
@@ -275,20 +277,36 @@ private:
         }
 
 
-
+   
     // Callback functions for each topic
     void imuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
     {
 
 
-        /// TODO: get theta and then call the dvl reset (convert back to heading)
+        // w = msg->orientation.w
+        // x = msg->orientation.x
+        // y = msg->orientation.y 
+        // z = msg->orientation.z
 
-        // theta = msg->orientation.
+        if(!initial_rotation) {
+            // Create a quaternion from the message orientation
+            Eigen::Quaterniond q;
 
+            q.x() = msg->orientation.x;
+            q.y() = msg->orientation.y;
+            q.z() = msg->orientation.z;
+            q.w() = msg->orientation.w;
+            
+            // Convert quaternion to 3x3 rotation matrix
+            R = q.toRotationMatrix();
 
+            // Extract the upper-left 2x2 submatrix for 2D rotation
+            R2D = R.block<2, 2>(0, 0);
 
-
-
+            // Mark that the initial rotation has been set
+            initial_rotation = true;
+        }
+        
 
 
         // Process the IMU data here
