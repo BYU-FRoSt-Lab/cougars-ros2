@@ -11,6 +11,12 @@
 using namespace gtsam;
 
 
+
+struct GpsMeasurement {
+  double time;
+  Vector3 position;  // x,y,z
+
+};
 // class UnaryFactor: public NoiseModelFactor1<Pose2> {
 //   double mx_, my_; ///< X and Y measurements
 
@@ -194,6 +200,7 @@ public:
         isam = ISAM2(parameters);
         sigmas << Vector3::Constant(0.1), Vector3::Constant(0.008);
         odometryNoise = noiseModel::Diagonal::Sigmas(sigmas);
+        noise_model_gps << Vector3::Constant(0), Vector3::Constant(1.0 / 0.07)
         priorFactorInit = true;
 
         unaryNoise = noiseModel::Diagonal::Sigmas(Vector2(0.1, 0.1)); // 10cm std on x,y
@@ -229,9 +236,10 @@ private:
     Values result;
     Vector6 std_noise;
     Vector6 sigmas;
+    Vector6 noise_model_gps;
     noiseModel::Diagonal::shared_ptr odometryNoise;
     bool priorFactorInit;
-    noiseModel::Diagonal::shared_ptr unaryNoise;
+    noiseModel::Diagonal::shared_ptr gpsNoise;
 
     bool initial_rotation = false
     Eigen::Matrix3d R
@@ -322,12 +330,13 @@ private:
     void gpsOdomCallback(const nav_msgs::msg::Odometry::SharedPtr& msg)
     {   
 
+        GpsMeasurement measurement = Vector3(msg.pose.pose.position.x, msg.pose.pose.position.x, 0.0);
+
         // Process the GPS odometry data here
         RCLCPP_INFO(this->get_logger(), "Received GPS odometry data.");
         // Example: Print the position
         RCLCPP_INFO(this->get_logger(), "Position x: %f, y: %f",
                     msg.pose.pose.position.x, msg.pose.pose.position.y);
-
 
         if(priorFactorInit){
             Pose3 H_init = CalculateH(msg);
@@ -337,15 +346,10 @@ private:
             initialEstimate.insert(agents->getPoseKey(), agents->GetPoseWorldNoisy());
         }
         else{
-
-            graph.add(boost::make_shared<UnaryFactor>(agents->getPoseKey(), msg.pose.pose.position.x, msg.pose.pose.position.y, unaryNoise));
-
+            auto gps_pose = Pose3(agent->GetPoseWorldNoisy().rotation(), measurement.position);
+            graph.push_back(PriorFactor<Pose3>(agent->getPoseKey(), gps_pose, noise_model_gps));
+            initialEstimate.insert(agents->getPoseKey(), gps_pose);
         }
-
-       
-
-
-
 
         // Integrate data processing logic here
         publishFactorState();
@@ -368,10 +372,10 @@ private:
 
 
 
+
         if(!priorFactorInit){
 
             // do transformation right here
-
             Pose3 H_pose2_wrt_pose1_noisy = CalculateH(msg);
             Pose3 poseWorldNoisy = CalculateH(msg);
             agent->SetPoseWorldNoisy(poseWorldNoisy);
@@ -380,23 +384,6 @@ private:
             graph.add(BetweenFactor<Pose3>(agent->getPrevPoseKey(),agent->getPoseKey(),H_pose2_wrt_pose1_noisy,odometryNoise));
 
         }
-        else{
-
-
-
-
-
-
-
-        }
-
-        
-
-
-        
-
-        
-        
 
         // Integrate data processing logic here
         
