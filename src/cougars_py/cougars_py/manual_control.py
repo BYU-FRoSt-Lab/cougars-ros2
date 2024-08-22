@@ -1,6 +1,3 @@
-import time
-import gpiod
-
 import rclpy
 from rclpy.node import Node
 from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
