@@ -45,7 +45,7 @@ private:
     // set time from pressure message
     depth_msg.header.stamp = pressure_msg->header.stamp;
     depth_msg.pose.pose.position.z =
-        (pressure_msg->fluid_pressure * 100 - this->get_parameter("fluid_pressure_atm").as_double()) /
+        - (pressure_msg->fluid_pressure * 100 - this->get_parameter("fluid_pressure_atm").as_double()) /
         ((FLUID_DENSITY_BASE + this->get_parameter("water_salinity_ppt").as_double()) * GRAVITY);
     // RCLCPP_INFO(this->get_logger(), "Pressure: %f",
     //             pressure_msg->fluid_pressure);
