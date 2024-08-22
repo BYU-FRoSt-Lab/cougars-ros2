@@ -409,7 +409,8 @@ class FactorGraphNode(Node):
             new_id = self.agent.poseKey    #The posekey id that you will start searching at
             while(len(self.q_gps > 0) ):       #If measurement in queue and the oldest measurment is later than current posekey
                 oldest_measurement_time = self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec
-                if((oldest_measurement_time > curr_time)):
+                next_measurement_time = self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec
+                if(oldest_measurement_time > curr_time):
                     newer_key_time = self.poseKey_to_time[new_id]
                     older_key_time = self.poseKey_to_time[new_id - 1]
                     time_to_current = abs(newer_key_time - oldest_measurement_time)
@@ -418,13 +419,28 @@ class FactorGraphNode(Node):
                     if(time_to_current > time_to_previous):
                         new_id -= 1
                         if(new_id == self.gps_last_pose_key):
-                            self.q_gps.clear
+                            self.q_gps.pop(0)
+                            new_id = self.agent.poseKey
                     else:
-                        gps_msg = self.q_gps.pop(0)
-                                            
-                        #TODO: ADD GPS FACTOR HERE
+                        time_old_to_pose = abs(oldest_measurement_time - newer_key_time)
+                        time_next_to_pose = abs(next_measurement_time - newer_key_time)
+                        if(next_measurement_time < curr_time):
+                        # Take care of where next measurement is not past next node
+                            self.q_gps.pop(0)
 
-                        self.gps_last_pose_key = new_id
+                        elif(time_old_to_pose > time_next_to_pose):
+                        # Take care of case where next measurement is better
+                            self.q_gps.pop(0)
+                            
+
+                        else:
+                            #Actually add the gps factor
+                            gps_msg = self.q_gps.pop(0)
+                                                
+                            #TODO: ADD GPS FACTOR HERE
+
+                            self.gps_last_pose_key = new_id
+                            new_id = self.agent.poseKey
                     
 
 
