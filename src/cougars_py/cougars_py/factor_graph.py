@@ -376,11 +376,12 @@ class FactorGraphNode(Node):
                 time_of_pose = self.poseKey_to_time[self.imu_last_pose_key + 1]
                 if(time_of_earliest_msg < time_of_pose):
                     right_ns = None
-                    while len(self.q_imu) > 1:
+                    while len(self.q_imu) > 1 and right_ns == None:
                         oldest_measurement_msg = self.q_imu.pop() 
                         left_ns = oldest_measurement_msg.header.stamp.nsecs + oldest_measurement_msg.header.stamp.secs * 10e9
                         right_ns = self.q_imu[1].header.stamp.nsecs + self.q_imu[1].header.stamp.secs * 10e9 < time_of_pose
-
+                        if right_ns < time_of_pose:
+                            right_ns = None
                     if right_ns != None:
                         if (abs(left_ns - time_of_pose)) > abs(right_ns - time_of_pose):
                             next_oldest_measurement_msg = self.q_imu.pop()
