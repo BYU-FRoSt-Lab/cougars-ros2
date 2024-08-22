@@ -327,6 +327,89 @@ class FactorGraphNode(Node):
 
         self.deployed = True
 
+    def unary_assignment(self, depth_or_imu):
+
+        msg_queue = []
+        if depth_or_imu == 'depth':
+            msg_queue = self.q_depth # not a copy, the reference
+            last_pose_key = self.imu_last_pose_key
+        elif depth_or_imu == 'imu':
+            msg_queue = self.q_imu # not a copy, the reference
+            last_pose_key = self.depth_last_pose_key
+        
+        time_of_earliest_msg = msg_queue[0].header.stamp.nsecs + msg_queue[0].header.stamp.secs * 10e9
+        keepLookingForClosest = True
+        changed_last = False
+        while(keepLookingForClosest):
+            
+            if self.poseKey_to_time.get(last_pose_key + 1) is not None:
+                time_of_next_pose = self.poseKey_to_time[last_pose_key + 1]
+            else:
+                time_of_next_pose = None
+
+            if time_of_next_pose < time_of_earliest_msg and time_of_next_pose != None:
+                last_pose_key = int(last_pose_key + 1)
+                changed_last = True
+            else:
+                keepLookingForClosest == False
+            
+        if(changed_last):
+            if(self.poaseKey_to_time.get(last_pose_key + 1) and abs(time_of_earliest_msg - self.poseKey_to_time[last_pose_key]) < abs(time_of_earliest_msg - self.poseKey_to_time[last_pose_key + 1])):
+                next_oldest_measurement_msg = msg_queue.pop()
+                quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
+                r = R.from_quat(quat)
+                orientation_matrix = r.as_matrix()
+                # Get the orientation covariance
+                orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+            
+        while(last_pose_key < self.agent.poseKey):
+            time_of_pose = self.poseKey_to_time[last_pose_key + 1]
+            if(time_of_earliest_msg < time_of_pose):
+                right_ns = None
+                while len(msg_queue) > 1 and right_ns == None:
+                    oldest_measurement_msg = msg_queue.pop() 
+                    left_ns = oldest_measurement_msg.header.stamp.nsecs + oldest_measurement_msg.header.stamp.secs * 10e9
+                    right_ns = msg_queue[1].header.stamp.nsecs + msg_queue[1].header.stamp.secs * 10e9 < time_of_pose
+                    if right_ns < time_of_pose:
+                        right_ns = None
+                if right_ns != None:
+                    if (abs(left_ns - time_of_pose)) > abs(right_ns - time_of_pose):
+                        next_oldest_measurement_msg = msg_queue.pop()
+
+                        if depth_or_imu == 'depth':
+                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, next_oldest_measurement_msg.pose.pose.position.z)))
+
+                        elif depth_or_imu == 'imu':
+                            quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
+                            r = R.from_quat(quat)
+                            orientation_matrix = r.as_matrix()
+                            # Get the orientation covariance
+                            orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                            self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                    else:
+                        if depth_or_imu == 'depth':
+                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, oldest_measurement_msg.pose.pose.position.z)))
+
+                        elif depth_or_imu == 'imu':
+                            quat = [oldest_measurement_msg.orientation.x, oldest_measurement_msg.orientation.y, oldest_measurement_msg.orientation.z, oldest_measurement_msg.orientation.w]
+                            r = R.from_quat(quat)
+                            orientation_matrix = r.as_matrix()
+                            # Get the orientation covariance
+                            orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                            self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+
+                    last_pose_key = last_pose_key + 1
+
+        if depth_or_imu == 'depth':
+            self.depth_last_pose_key = last_pose_key
+        elif depth_or_imu == 'imu':
+            self.imu_last_pose_key = last_pose_key
+        
+
+
+
+
     def factor_graph_timer(self):
         # Your timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
@@ -349,61 +432,17 @@ class FactorGraphNode(Node):
             
 
             # IMU unary factor
-
-            time_of_earliest_msg = self.q_imu[0].header.stamp.nsecs + self.q_imu[0].header.stamp.secs * 10e9
-            keepLookingForClosest = True
-            while(keepLookingForClosest):
-                time_of_pose = self.poseKey_to_time[self.imu_last_pose_key]
-                time_of_next_pose = self.poseKey_to_time[self.imu_last_pose_key + 1]
-                if time_of_next_pose < time_of_earliest_msg:
-                    self.imu_last_pose_key = int(self.imu_last_pose_key + 1)
-                    changed_last = True
-                else:
-                    keepLookingForClosest == False
-                
-            
-            if(changed_last):
-                if(abs(time_of_earliest_msg - self.poseKey_to_time[self.imu_last_pose_key]) < abs(time_of_earliest_msg - self.poseKey_to_time[self.imu_last_pose_key])):
-                    next_oldest_measurement_msg = self.q_imu.pop()
-                    quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
-                    r = R.from_quat(quat)
-                    orientation_matrix = r.as_matrix()
-                    # Get the orientation covariance
-                    orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                    self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
-                
-            while(self.imu_last_pose_key < self.agent.poseKey):
-                time_of_pose = self.poseKey_to_time[self.imu_last_pose_key + 1]
-                if(time_of_earliest_msg < time_of_pose):
-                    right_ns = None
-                    while len(self.q_imu) > 1:
-                        oldest_measurement_msg = self.q_imu.pop() 
-                        left_ns = oldest_measurement_msg.header.stamp.nsecs + oldest_measurement_msg.header.stamp.secs * 10e9
-                        right_ns = self.q_imu[1].header.stamp.nsecs + self.q_imu[1].header.stamp.secs * 10e9 < time_of_pose
-
-                    if right_ns != None:
-                        if (abs(left_ns - time_of_pose)) > abs(right_ns - time_of_pose):
-                            next_oldest_measurement_msg = self.q_imu.pop()
-                            quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
-                            r = R.from_quat(quat)
-                            orientation_matrix = r.as_matrix()
-                            # Get the orientation covariance
-                            orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                            self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
-                            self.imu_last_pose_key = self.imu_last_pose_key + 1
-
-                            
-
-
+            self.unary_assignment('imu')
 
 
             # Depth unary factor
-
+            self.unary_assignment('depth')
 
 
 
 
             # GPS unary factor
+
             
             curr_time = self.dvl_time       #Timestamp of the current pose key added
             new_id = self.agent.poseKey    #The posekey id that you will start searching at
