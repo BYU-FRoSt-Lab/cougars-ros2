@@ -316,10 +316,9 @@ class FactorGraphNode(Node):
         self.graph.push_back(priorFactor)
         self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
 
+    
+
         self.get_logger().info("Initial state has been set.")
-
-
-
 
 
         self.deployed = True
@@ -338,14 +337,62 @@ class FactorGraphNode(Node):
             # add the odometry
             self.agent.prevPoseKey = int(self.agent.poseKey)
             self.agent.poseKey = int(1 + self.agent.poseKey)
+
+            # this is the 
             self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
 
             self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.POSE_NOISE))
             
 
             # IMU unary factor
-            while()
+            # FIX THIS: shouldn't be self.dvl_time - needs to be the oldest dvl node not updated
+            time_of_earliest_msg = self.q_imu[0].header.stamp.nsecs
+            while(time_of_earliest_msg < self.dvl_time):
+                time_of_next_msg = self.q_imu[1].header.stamp.nsecs
+                left = None
+                while len(q_imu) > 1 and time_of_next_msg < self.dvl_time:
+                    left_ns = self.q_imu[0].header.stamp.nsecs 
+                    self.q_imu = self.q_imu[1:] # pop with our list implementation
+                    right_ns = self.q_imu[0]
+                
+                if left != None:
+                    if (abs(left_ns - self.dvl_time) > abs(right_ns - self.dvl_time)):
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        
+
+                        
+                    
+                    
 
 
 
