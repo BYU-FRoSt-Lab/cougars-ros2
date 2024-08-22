@@ -137,6 +137,7 @@ private:
 
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
+    message.header.stamp = this->now();
 
     //////////////////////////////////////////////////////////
     // LOW-LEVEL CONTROLLER CODE STARTS HERE

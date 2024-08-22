@@ -43,6 +43,7 @@ public:
   void dvl_data_callback(const dvl_msgs::msg::DVL::SharedPtr msg) {
 
     geometry_msgs::msg::TwistWithCovarianceStamped stamped_msg;
+    stamped_msg.header.stamp = msg->header.stamp;
 
     // filling in the upper left corner of the 6X6 covariance matrix
     int index = 0;
@@ -67,6 +68,7 @@ public:
   void dvl_pos_callback(const dvl_msgs::msg::DVLDR::SharedPtr msg) {
 
     geometry_msgs::msg::PoseWithCovarianceStamped stamped_msg;
+    stamped_msg.header.stamp = msg->header.stamp;
 
     stamped_msg.header.frame_id = 'odom'; //odom is the coordinate frame of the dvl in robot_localization
 

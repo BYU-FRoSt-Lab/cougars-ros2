@@ -93,6 +93,10 @@ class ManualControl(Node):
             depth_msg.desired_depth = 0.0
             heading_msg.desired_heading = 0.0
             speed_msg.desired_speed = 0.0
+        
+        depth_msg.header.stamp = self.get_clock().now().to_msg()
+        heading_msg.header.stamp = self.get_clock().now().to_msg()
+        speed_msg.header.stamp = self.get_clock().now().to_msg()
 
         # Publish the messages
         self.depth_publisher.publish(depth_msg)

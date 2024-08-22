@@ -106,6 +106,7 @@ private:
 
   void broadcast_status_callback() {
     auto message = frost_interfaces::msg::VehicleStatus();
+    message.header.stamp = this->now();
     message.coug_odom.pose.pose.position.x = this->x_pos;
     message.coug_odom.pose.pose.position.y = this->y_pos;
     message.coug_odom.pose.pose.position.z = this->depth;
