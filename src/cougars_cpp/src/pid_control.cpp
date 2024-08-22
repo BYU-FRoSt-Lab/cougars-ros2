@@ -147,7 +147,7 @@ private:
 
     // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
 
-    int depth_pos = myDepthPID.compute(this->desired_depth, depth);
+    int depth_pos = myDepthPID.compute(this->desired_depth, -depth);
     int heading_pos = myHeadingPID.compute(this->desired_heading, yaw);
     int velocity_level =
         this->desired_speed; // myVelocityPID.compute(this->desired_speed,
