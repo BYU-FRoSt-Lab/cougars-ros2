@@ -316,10 +316,9 @@ class FactorGraphNode(Node):
         self.graph.push_back(priorFactor)
         self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
 
+    
+
         self.get_logger().info("Initial state has been set.")
-
-
-
 
 
         self.deployed = True
@@ -356,7 +355,7 @@ class FactorGraphNode(Node):
                 
                 if left != None:
                     if (abs(left_ns - self.dvl_time) > abs(right_ns - self.dvl_time)):
-                        
+
                         
                     
                     
