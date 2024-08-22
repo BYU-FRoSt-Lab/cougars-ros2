@@ -341,7 +341,7 @@ class FactorGraphNode(Node):
             self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
 
             self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.POSE_NOISE))
-
+            
 
             # IMU unary factor
             while()
@@ -357,7 +357,8 @@ class FactorGraphNode(Node):
 
 
             # GPS unary factor
-
+            curr_time = self.dvl_time       #Timestamp of the latest node in graph
+            while(len(self.q_gps > 1) and self.q_gps[-1][1] >)
 
 
 
