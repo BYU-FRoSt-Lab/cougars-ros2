@@ -13,9 +13,6 @@ from gtsam.symbol_shorthand import L
 
 
 
-
-
-
 class Agent():
     def __init__(self, H_init):
         self.pose_world_noisy = gtsam.Pose3(H_init[1])
@@ -370,9 +367,8 @@ class FactorGraphNode(Node):
                             
                             self.gps_last_pose_key = new_id
                             new_id = self.agent.poseKey
-
-        msg_queue = []
-        if sensor == 'depth' or sensor == 'imu':
+        elif sensor == 'depth' or sensor == 'imu':
+            msg_queue = []
             if sensor == 'depth':
                 msg_queue = self.q_depth # not a copy, the reference
                 last_pose_key = self.imu_last_pose_key
@@ -477,7 +473,7 @@ class FactorGraphNode(Node):
             self.unary_assignment('depth')
 
             # GPS unary factor
-            self.unary_assignment9('gps')
+            self.unary_assignment('gps')
 
             self.dvl_position_last = self.dvl_pose_current
 
@@ -490,27 +486,27 @@ class FactorGraphNode(Node):
         odom_msg = Odometry()
 
         # # Set the orientation in the message
-        # r = R.from_matrix(self.orientation_matrix)
-        # quat = r.as_quat()
-        # odom_msg.pose.pose.orientation.x = quat[0]
-        # odom_msg.pose.pose.orientation.y = quat[1]
-        # odom_msg.pose.pose.orientation.z = quat[2]
-        # odom_msg.pose.pose.orientation.w = quat[3]
+        r = R.from_matrix(self.orientation_matrix)
+        quat = r.as_quat()
+        odom_msg.pose.pose.orientation.x = quat[0]
+        odom_msg.pose.pose.orientation.y = quat[1]
+        odom_msg.pose.pose.orientation.z = quat[2]
+        odom_msg.pose.pose.orientation.w = quat[3]
 
         # # Set the position in the message
         odom_msg.pose.pose.position.x = self.xyz[0]
         odom_msg.pose.pose.position.y = self.xyz[1]
-        # odom_msg.pose.pose.position.z = self.z_position
+        odom_msg.pose.pose.position.z = self.z_position
 
-        # # Set the covariance
-        # odom_msg.pose.covariance = [
-        #     self.position_covariance[0, 0], 0.0, 0.0, 0.0, 0.0, 0.0,
-        #     0.0, self.position_covariance[1, 1], 0.0, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, self.z_covariance, 0.0, 0.0, 0.0,
-        #     0.0, 0.0, 0.0, self.orientation_covariance[0, 0], 0.0, 0.0,
-        #     0.0, 0.0, 0.0, 0.0, self.orientation_covariance[1, 1], 0.0,
-        #     0.0, 0.0, 0.0, 0.0, 0.0, self.orientation_covariance[2, 2]
-        # ]
+        # Set the covariance
+        odom_msg.pose.covariance = [
+            self.position_covariance[0, 0], 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, self.position_covariance[1, 1], 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, self.z_covariance, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, self.orientation_covariance[0, 0], 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, self.orientation_covariance[1, 1], 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, self.orientation_covariance[2, 2]
+        ]
 
 
 
