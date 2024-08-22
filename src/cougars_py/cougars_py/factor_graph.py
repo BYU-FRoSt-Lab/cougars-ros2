@@ -80,10 +80,13 @@ class FactorGraphNode(Node):
         self.create_subscription(Empty, '/init', self.init_callback, 10)
 
         # Publisher
-        self.vehicle_status_pub = self.create_publisher(Odometry, '/vehicle_status', 10)
+        self.vehicle_status_pub = self.create_publisher(Odometry, '/filter_output', 10)
         
         # Timer
         self.timer = self.create_timer(1.0, self.factor_graph_timer)
+
+
+        self.pose_odom_msg = Odometry()
     
 
     def get_unary_bearing(self, pose, measurement):
@@ -244,6 +247,10 @@ class FactorGraphNode(Node):
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
+
+        self.xyz = self.result.atPose3(self.agent.poseKey).translation()  
+
+        
         self.initialEstimate.clear()
         self.graph.resize(0)
 
@@ -441,10 +448,6 @@ class FactorGraphNode(Node):
                 self.depth_last_pose_key = last_pose_key
             elif sensor == 'imu':
                 self.imu_last_pose_key = last_pose_key
-        
-
-
-
 
     def factor_graph_timer(self):
         # Your timer callback function
@@ -470,16 +473,12 @@ class FactorGraphNode(Node):
             # IMU unary factor
             self.unary_assignment('imu')
 
-
             # Depth unary factor
             self.unary_assignment('depth')
-
 
             # GPS unary factor
             self.unary_assignment9('gps')
 
-            
-        
             self.dvl_position_last = self.dvl_pose_current
 
             self.update()
@@ -490,30 +489,32 @@ class FactorGraphNode(Node):
     def publish_vehicle_status(self):
         odom_msg = Odometry()
 
-        # Set the orientation in the message
-        r = R.from_matrix(self.orientation_matrix)
-        quat = r.as_quat()
-        odom_msg.pose.pose.orientation.x = quat[0]
-        odom_msg.pose.pose.orientation.y = quat[1]
-        odom_msg.pose.pose.orientation.z = quat[2]
-        odom_msg.pose.pose.orientation.w = quat[3]
+        # # Set the orientation in the message
+        # r = R.from_matrix(self.orientation_matrix)
+        # quat = r.as_quat()
+        # odom_msg.pose.pose.orientation.x = quat[0]
+        # odom_msg.pose.pose.orientation.y = quat[1]
+        # odom_msg.pose.pose.orientation.z = quat[2]
+        # odom_msg.pose.pose.orientation.w = quat[3]
 
-        # Set the position in the message
-        odom_msg.pose.pose.position.x = self.position[0]
-        odom_msg.pose.pose.position.y = self.position[1]
-        odom_msg.pose.pose.position.z = self.z_position
+        # # Set the position in the message
+        odom_msg.pose.pose.position.x = self.xyz[0]
+        odom_msg.pose.pose.position.y = self.xyz[1]
+        # odom_msg.pose.pose.position.z = self.z_position
 
-        # Set the covariance
-        odom_msg.pose.covariance = [
-            self.position_covariance[0, 0], 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, self.position_covariance[1, 1], 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, self.z_covariance, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, self.orientation_covariance[0, 0], 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, self.orientation_covariance[1, 1], 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, self.orientation_covariance[2, 2]
-        ]
+        # # Set the covariance
+        # odom_msg.pose.covariance = [
+        #     self.position_covariance[0, 0], 0.0, 0.0, 0.0, 0.0, 0.0,
+        #     0.0, self.position_covariance[1, 1], 0.0, 0.0, 0.0, 0.0,
+        #     0.0, 0.0, self.z_covariance, 0.0, 0.0, 0.0,
+        #     0.0, 0.0, 0.0, self.orientation_covariance[0, 0], 0.0, 0.0,
+        #     0.0, 0.0, 0.0, 0.0, self.orientation_covariance[1, 1], 0.0,
+        #     0.0, 0.0, 0.0, 0.0, 0.0, self.orientation_covariance[2, 2]
+        # ]
 
-        # Publish the vehicle status
+
+
+        # # Publish the vehicle status
         self.vehicle_status_pub.publish(odom_msg)
 
 def main(args=None):
