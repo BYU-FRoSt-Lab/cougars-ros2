@@ -42,6 +42,8 @@ private:
       const sensor_msgs::msg::FluidPressure::SharedPtr pressure_msg) {
 
     geometry_msgs::msg::PoseWithCovarianceStamped depth_msg;
+    // set time from pressure message
+    depth_msg.header.stamp = pressure_msg->header.stamp;
     depth_msg.pose.pose.position.z =
         (pressure_msg->fluid_pressure * 100 - this->get_parameter("fluid_pressure_atm").as_double()) /
         ((FLUID_DENSITY_BASE + this->get_parameter("water_salinity_ppt").as_double()) * GRAVITY);
