@@ -17,6 +17,9 @@ class SeatracAHRSConverter(Node):
     def __init__(self):
         super().__init__('seatrac_ahrs_converter')
 
+        # https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml?
+        self.declare_parameter('magnetic_declination', 10.7) # 10.70° E for Utah Lake
+
         self.modem_subscriber_ = self.create_subscription(
             ModemRec, "modem_rec", self.modem_callback, 10
         )
@@ -29,7 +32,8 @@ class SeatracAHRSConverter(Node):
             
             modem_imu = Imu()
 
-            yaw   = 0.1 * msg.attitude_yaw
+            yaw   = 0.1 * msg.attitude_yaw - self.get_parameter('magnetic_declination').get_parameter_value().double_value
+            # since the declination is East, we subtract it from the yaw
             pitch = 0.1 * msg.attitude_pitch
             roll  = 0.1 * msg.attitude_roll
 
