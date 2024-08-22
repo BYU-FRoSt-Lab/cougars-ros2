@@ -352,18 +352,22 @@ class FactorGraphNode(Node):
 
             time_of_earliest_msg = self.q_imu[0].header.stamp.nsecs + self.q_imu[0].header.stamp.secs * 10e9
             keepLookingForClosest = True
+            changed_last = False
             while(keepLookingForClosest):
-                time_of_pose = self.poseKey_to_time[self.imu_last_pose_key]
-                time_of_next_pose = self.poseKey_to_time[self.imu_last_pose_key + 1]
-                if time_of_next_pose < time_of_earliest_msg:
+                
+                if self.poseKey_to_time.get(self.imu_last_pose_key + 1) is not None:
+                    time_of_next_pose = self.poseKey_to_time[self.imu_last_pose_key + 1]
+                else:
+                    time_of_next_pose = None
+
+                if time_of_next_pose < time_of_earliest_msg and time_of_next_pose != None:
                     self.imu_last_pose_key = int(self.imu_last_pose_key + 1)
                     changed_last = True
                 else:
                     keepLookingForClosest == False
                 
-            
             if(changed_last):
-                if(abs(time_of_earliest_msg - self.poseKey_to_time[self.imu_last_pose_key]) < abs(time_of_earliest_msg - self.poseKey_to_time[self.imu_last_pose_key])):
+                if(self.poaseKey_to_time.get(self.imu_last_pose_key + 1) and abs(time_of_earliest_msg - self.poseKey_to_time[self.imu_last_pose_key]) < abs(time_of_earliest_msg - self.poseKey_to_time[self.imu_last_pose_key + 1])):
                     next_oldest_measurement_msg = self.q_imu.pop()
                     quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
                     r = R.from_quat(quat)
@@ -395,11 +399,7 @@ class FactorGraphNode(Node):
 
                             
 
-
-
-
             # Depth unary factor
-
 
 
 
