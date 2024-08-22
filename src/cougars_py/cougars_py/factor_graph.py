@@ -387,8 +387,19 @@ class FactorGraphNode(Node):
                             # Get the orientation covariance
                             orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
                             self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                    else:
+                        if depth_or_imu == 'depth':
+                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, oldest_measurement_msg.pose.pose.position.z)))
 
-                        last_pose_key = last_pose_key + 1
+                        elif depth_or_imu == 'imu':
+                            quat = [oldest_measurement_msg.orientation.x, oldest_measurement_msg.orientation.y, oldest_measurement_msg.orientation.z, oldest_measurement_msg.orientation.w]
+                            r = R.from_quat(quat)
+                            orientation_matrix = r.as_matrix()
+                            # Get the orientation covariance
+                            orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                            self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+
+                    last_pose_key = last_pose_key + 1
 
         if depth_or_imu == 'depth':
             self.depth_last_pose_key = last_pose_key
