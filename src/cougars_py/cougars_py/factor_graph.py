@@ -337,6 +337,8 @@ class FactorGraphNode(Node):
             # add the odometry
             self.agent.prevPoseKey = int(self.agent.poseKey)
             self.agent.poseKey = int(1 + self.agent.poseKey)
+
+            # this is the 
             self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
 
             self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.POSE_NOISE))
@@ -355,6 +357,38 @@ class FactorGraphNode(Node):
                 
                 if left != None:
                     if (abs(left_ns - self.dvl_time) > abs(right_ns - self.dvl_time)):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        
 
                         
                     
