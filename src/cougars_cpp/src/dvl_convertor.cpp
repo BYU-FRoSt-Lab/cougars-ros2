@@ -14,6 +14,9 @@
 
 #include <math.h>
 #include <stdint.h>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+
 using std::placeholders::_1;
 
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
@@ -57,11 +60,28 @@ public:
       }
     }
 
-    stamped_msg.twist.twist.linear = msg->velocity;
+    stamped_msg.twist.twist.linear.x = msg->velocity.x;
     // negate z and y -- will this mess with covariance?
     stamped_msg.twist.twist.linear.y = -1.0 * msg->velocity.y;
-    stamped_msg.twist.twist.linear.y = -1.0 * msg->velocity.z;
+    stamped_msg.twist.twist.linear.z = -1.0 * msg->velocity.z;
     publisher_dvl_velocity->publish(stamped_msg);
+  }
+
+  float degreesToRadians(float degrees) {
+    return degrees * static_cast<float>(M_PI) / 180.0f;
+  }
+
+  Eigen::Quaternionf eulerNEDToQuaternionENU(float yaw, float pitch, float roll) {
+    float yaw_ENU = yaw;
+    float pitch_ENU = -pitch;
+    float roll_ENU = -roll;
+
+    Eigen::Matrix3f R;
+    R = Eigen::AngleAxisf(yaw_ENU, Eigen::Vector3f::UnitZ()) *
+        Eigen::AngleAxisf(pitch_ENU, Eigen::Vector3f::UnitY()) *
+        Eigen::AngleAxisf(roll_ENU, Eigen::Vector3f::UnitX());
+
+    return Eigen::Quaternionf(R);
   }
 
 
@@ -76,11 +96,25 @@ public:
     stamped_msg.pose.pose.position.y = -1.0 * msg->position.y;
     stamped_msg.pose.pose.position.z = -1.0 * msg->position.z;
 
-    //TODO: make full quaternion (not just yaw)
-    stamped_msg.pose.pose.orientation.x = 0.0;
-    stamped_msg.pose.pose.orientation.y = 0.0;
-    stamped_msg.pose.pose.orientation.z = sin(0.5*msg->yaw*M_PI/180.0); // q = cos(theta/2) + sin(theta/2)(xi+yj+zk)
-    stamped_msg.pose.pose.orientation.w = cos(0.5*msg->yaw*M_PI/180.0);
+    float yaw_deg = msg->yaw;
+    float pitch_deg = msg->pitch;
+    float roll_deg = msg->roll;
+
+    // Convert to radians
+    float yaw_rad = degreesToRadians(yaw_deg);
+    float pitch_rad = degreesToRadians(pitch_deg);
+    float roll_rad = degreesToRadians(roll_deg);
+
+    Eigen::Quaterniond quaternion_ENU = eulerNEDToQuaternionENU(yaw_rad, pitch_rad, roll_rad);
+    pose_msg.pose.pose.orientation.x = quaternion_ENU.x();
+    pose_msg.pose.pose.orientation.y = quaternion_ENU.y();
+    pose_msg.pose.pose.orientation.z = quaternion_ENU.z();
+    pose_msg.pose.pose.orientation.w = quaternion_ENU.w();
+
+    // stamped_msg.pose.pose.orientation.x = 0.0;
+    // stamped_msg.pose.pose.orientation.y = 0.0;
+    // stamped_msg.pose.pose.orientation.z = sin(0.5*msg->yaw*M_PI/180.0); // q = cos(theta/2) + sin(theta/2)(xi+yj+zk)
+    // stamped_msg.pose.pose.orientation.w = cos(0.5*msg->yaw*M_PI/180.0);
 
     //TODO: Check and tune covariance parameters
     double pvr = msg->pos_std * msg->pos_std; //variance = std squared
