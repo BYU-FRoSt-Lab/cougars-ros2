@@ -59,7 +59,7 @@ public:
   VehicleStatus() : Node("vehicle_status") {
     x_y_subscription_ = this->create_subscription<
         nav_msgs::msg::Odometry>(
-        "/filter_output", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));
+        "/smoothed_output", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));
 
     depth_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -137,7 +137,7 @@ private:
   // rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr orientation_subscription_;
 
   // current x,y
-  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr x_y_subscription_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr x_y_subscription_;
 
   rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
 
