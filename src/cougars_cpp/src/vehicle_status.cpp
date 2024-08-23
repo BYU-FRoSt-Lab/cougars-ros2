@@ -137,7 +137,7 @@ private:
   // rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr orientation_subscription_;
 
   // current x,y
-  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr x_y_subscription_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr x_y_subscription_;
 
   rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
 
