@@ -55,9 +55,7 @@ class FactorGraphNode(Node):
         # values in factor graph
         self.initialEstimate = gtsam.Values()
 
-       
-
-
+    
         # Initialize class variables
         self.orientation_matrix = np.eye(3)
         self.orientation_covariance = np.zeros((3, 3))
@@ -92,7 +90,7 @@ class FactorGraphNode(Node):
         self.timer = self.create_timer(self.dvl_time_interval, self.factor_graph_timer)
     
 
-    # error functions for 
+    # error functions for unary factors
 
 
     def get_unary_heading(self, pose, measurement):
