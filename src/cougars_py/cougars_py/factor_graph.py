@@ -297,6 +297,9 @@ class FactorGraphNode(Node):
         self.dvl_position[0] = msg.pose.pose.position.x
         self.dvl_position[1] = msg.pose.pose.position.y
         self.dvl_position[2] = msg.pose.pose.position.z
+        self.dvl_std = msg.pose.covariance[0]
+        self.std_pose = np.array([self.dvl_std, self.dvl_std, self.dvl_std, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
+        self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.dvl_quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
         self.dvl_time = msg.header.stamp.nsecs + msg.header.stamp.secs * 10e9
 
