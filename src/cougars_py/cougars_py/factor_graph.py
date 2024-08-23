@@ -11,25 +11,20 @@ import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
 
-AGENT_NUM=1
-DVL_TIMING=0.25
+
 
 class Agent():
     def __init__(self, H_init):
         self.pose_world_noisy = gtsam.Pose3(H_init)
-        self.poseKey = int(AGENT_NUM * 1e6)
+        self.poseKey = int(1)
         self.prevPoseKey = self.poseKey
-        self.poseKeyStart = self.poseKey
-        self.agent_num = AGENT_NUM
-        self.step = 0
-        self.x_noisy = {}
-        self.y_noisy = {}
-
 
 class FactorGraphNode(Node):
 
     def __init__(self):
         super().__init__('factor_graph_node')
+
+        self.dvl_time_interval = 0.25
 
         self.q_depth = []
         self.q_imu = []
@@ -78,7 +73,7 @@ class FactorGraphNode(Node):
         self.odom_msg = Odometry()
         
         # Timer
-        self.timer = self.create_timer(0.25, self.factor_graph_timer)
+        self.timer = self.create_timer(self.dvl_time_interval, self.factor_graph_timer)
     
 
     def get_unary_bearing(self, pose, measurement):
@@ -464,7 +459,6 @@ class FactorGraphNode(Node):
 
     def publish_vehicle_status(self):
         
-
         # # Set the orientation in the message
         r = R.from_matrix(self.orientation_matrix)
         quat = r.as_quat()
