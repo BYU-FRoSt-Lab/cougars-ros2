@@ -11,16 +11,15 @@ import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
 
-
+AGENT_NUM=1
 
 class Agent():
     def __init__(self, H_init):
-        self.pose_world_noisy = gtsam.Pose3(H_init[1])
-        self.prev_pose_world_noisy_comms = self.pose_world_noisy
-        self.poseKey = int((H_init[0] + 1) * 1e6)
+        self.pose_world_noisy = gtsam.Pose3(H_init)
+        self.poseKey = int(AGENT_NUM * 1e6)
         self.prevPoseKey = self.poseKey
         self.poseKeyStart = self.poseKey
-        self.agent_num = H_init[0]
+        self.agent_num = AGENT_NUM
         self.step = 0
         self.x_noisy = {}
         self.y_noisy = {}
@@ -39,17 +38,15 @@ class FactorGraphNode(Node):
         self.poseKey_to_time = {}
         
         
-        self.gps_last_pose_key = None           #int for handling not adding more than one gps to graph Last updated posekey
+        self.gps_last_pose_key = None       
         self.depth_last_pose_key = None
         self.imu_last_pose_key = None   
 
         # gtsam stuff
         self.std_pose = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
-        self.std_comms = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
-        self.POSE_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
-        self.COMMS_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_comms)
-        gps_noise = 0.5
-        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, gps_noise) 
+        self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
+        std_gps = 0.5
+        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, std_gps) 
 
 
         self.isam = gtsam.ISAM2()
@@ -60,6 +57,7 @@ class FactorGraphNode(Node):
 
         self.deployed = False
 
+
         # Initialize class variables
         self.orientation_matrix = np.eye(3)
         self.orientation_covariance = np.zeros((3, 3))
@@ -68,6 +66,8 @@ class FactorGraphNode(Node):
         self.dvl_position = np.zeros(3)
         self.dvl_position_covariance = np.zeros((3, 3))
         self.init_state = {}
+
+
 
         # Subscribers
         self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10)
@@ -244,42 +244,30 @@ class FactorGraphNode(Node):
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
-
         self.xyz = self.result.atPose3(self.agent.poseKey).translation()  
-
-        
         self.initialEstimate.clear()
         self.graph.resize(0)
 
     def imu_callback(self, msg: Imu):
 
-        if self.deployed:
-            self.q_imu.append(msg)
         self.orientation_covariance = np.array(msg.orientation_covariance).reshape(3, 3)
-
         # Convert quaternion to rotation matrix
         quat = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
         r = R.from_quat(quat)
         self.orientation_matrix = r.as_matrix()
-        # Get the orientation covariance
-        self.orientation_meas = gtsam.Pose3(self.HfromRT(self.orientation_matrix, [0,0,0])).rotation()
-        self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [self.orientation_meas])))
 
-        # self.update()
+        if self.deployed:
+            self.q_imu.append(msg)
+        
 
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
 
         self.position[2] = msg.pose.pose.position.z
     
-
         if self.deployed:
             self.q_depth.append(msg)
-        # self.z_covariance = msg.pose.covariance[14]  # Covariance for Z
-        # self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [agent.poseKey], partial(self.error_depth, msg.pose.pose.position.z)))
-
-        # self.update()
-                
+    
     def gps_callback(self, msg: Odometry):
         # Get the x, y position and position covariance
         self.position[0] = msg.pose.pose.position.x
@@ -288,11 +276,7 @@ class FactorGraphNode(Node):
 
         if self.deployed :
             self.q_gps.append(msg)
-        # gps_meas = gtsam.Point3(self.position)
-        # gps_factor = gtsam.CustomFactor(GPS_NOISE, [agent.poseKey], partial(error_gps, gps_meas))
-        # factor_graph.add(gps_factor)
-
-        # self.update()
+   
 
     def dvl_callback(self, msg: Odometry):
         # Get the x, y, z position
@@ -305,7 +289,6 @@ class FactorGraphNode(Node):
         # TODO: need covariance matrix, look into covariance, figure of merit
 
     
-
 
     def init_callback(self, msg: Empty):
         # Store current state as the initial state
@@ -321,7 +304,7 @@ class FactorGraphNode(Node):
 
         self.dvl_position_last = self.agent.agent_pose_world_noisy
 
-        priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.agent.pose_world_noisy, self.POSE_NOISE)
+        priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.agent.pose_world_noisy, self.DVL_NOISE)
         self.graph.push_back(priorFactor)
         self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
         self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
@@ -445,6 +428,8 @@ class FactorGraphNode(Node):
             elif sensor == 'imu':
                 self.imu_last_pose_key = last_pose_key
 
+
+
     def factor_graph_timer(self):
         # Your timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
@@ -462,7 +447,7 @@ class FactorGraphNode(Node):
 
             # this is the 
             self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
-            self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.POSE_NOISE))
+            self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.DVL_NOISE))
             self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
             
 
@@ -509,8 +494,7 @@ class FactorGraphNode(Node):
         ]
 
 
-
-        # # Publish the vehicle status
+        # Publish the vehicle status
         self.vehicle_status_pub.publish(odom_msg)
 
 def main(args=None):
