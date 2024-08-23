@@ -146,8 +146,8 @@ class FactorGraphNode(Node):
         # Get agent pose
         estimate = values.atPose3(this.keys()[0])
 
-        # Three rows bc [x, y, z] from gps state, six columns bc the state of this node is Pose3
-        H = np.zeros((3, 6))
+        # Three rows bc [x, y] from gps state, six columns bc the state of this node is Pose3
+        H = np.zeros((2, 6))
         eps = 1e-6
 
         # Get Jacobians. Perturb in each direction of the delta vector one at a time.
