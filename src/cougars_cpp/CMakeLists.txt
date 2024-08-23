@@ -39,8 +39,6 @@ ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometr
 add_executable(depth_convertor src/depth_convertor.cpp)
 ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs)
 
-add_executable(factor_graph src/factor_graph.cpp)
-ament_target_dependencies(factor_graph rclcpp sensor_msgs nav_msgs)
 
 # Link libraries
 target_link_libraries(moos_bridge)
