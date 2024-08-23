@@ -13,9 +13,6 @@ from gtsam.symbol_shorthand import L
 
 
 
-
-
-
 class Agent():
     def __init__(self, H_init):
         self.pose_world_noisy = gtsam.Pose3(H_init[1])
@@ -51,6 +48,8 @@ class FactorGraphNode(Node):
         self.std_comms = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         self.POSE_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.COMMS_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_comms)
+        gps_noise = 0.5
+        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, gps_noise) 
 
 
         self.isam = gtsam.ISAM2()
@@ -78,10 +77,13 @@ class FactorGraphNode(Node):
         self.create_subscription(Empty, '/init', self.init_callback, 10)
 
         # Publisher
-        self.vehicle_status_pub = self.create_publisher(Odometry, '/vehicle_status', 10)
+        self.vehicle_status_pub = self.create_publisher(Odometry, '/filter_output', 10)
         
         # Timer
         self.timer = self.create_timer(1.0, self.factor_graph_timer)
+
+
+        self.pose_odom_msg = Odometry()
     
 
     def get_unary_bearing(self, pose, measurement):
@@ -242,6 +244,10 @@ class FactorGraphNode(Node):
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
+
+        self.xyz = self.result.atPose3(self.agent.poseKey).translation()  
+
+        
         self.initialEstimate.clear()
         self.graph.resize(0)
 
@@ -327,88 +333,117 @@ class FactorGraphNode(Node):
 
         self.deployed = True
 
-    def unary_assignment(self, depth_or_imu):
+    def unary_assignment(self, sensor):
 
-        msg_queue = []
-        if depth_or_imu == 'depth':
-            msg_queue = self.q_depth # not a copy, the reference
-            last_pose_key = self.imu_last_pose_key
-        elif depth_or_imu == 'imu':
-            msg_queue = self.q_imu # not a copy, the reference
-            last_pose_key = self.depth_last_pose_key
-        
-        time_of_earliest_msg = msg_queue[0].header.stamp.nsecs + msg_queue[0].header.stamp.secs * 10e9
-        keepLookingForClosest = True
-        changed_last = False
-        while(keepLookingForClosest):
-            
-            if self.poseKey_to_time.get(last_pose_key + 1) is not None:
-                time_of_next_pose = self.poseKey_to_time[last_pose_key + 1]
-            else:
-                time_of_next_pose = None
+        if sensor == 'gps':
+            curr_time = self.dvl_time       #Timestamp of the current pose key added
+            new_id = self.agent.poseKey    #The posekey id that you will start searching at
+            while(len(self.q_gps > 1)):       #If measurement in queue and the oldest measurment is later than current posekey
+                oldest_measurement_time = self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec
+                next_measurement_time = self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec
+                if(oldest_measurement_time < curr_time):
 
-            if time_of_next_pose < time_of_earliest_msg and time_of_next_pose != None:
-                last_pose_key = int(last_pose_key + 1)
-                changed_last = True
-            else:
-                keepLookingForClosest == False
-            
-        if(changed_last):
-            if(self.poaseKey_to_time.get(last_pose_key + 1) and abs(time_of_earliest_msg - self.poseKey_to_time[last_pose_key]) < abs(time_of_earliest_msg - self.poseKey_to_time[last_pose_key + 1])):
-                next_oldest_measurement_msg = msg_queue.pop()
-                quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
-                r = R.from_quat(quat)
-                orientation_matrix = r.as_matrix()
-                # Get the orientation covariance
-                orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
-            
-        while(last_pose_key < self.agent.poseKey):
-            time_of_pose = self.poseKey_to_time[last_pose_key + 1]
-            if(time_of_earliest_msg < time_of_pose):
-                right_ns = None
-                while len(msg_queue) > 1 and right_ns == None:
-                    oldest_measurement_msg = msg_queue.pop() 
-                    left_ns = oldest_measurement_msg.header.stamp.nsecs + oldest_measurement_msg.header.stamp.secs * 10e9
-                    right_ns = msg_queue[1].header.stamp.nsecs + msg_queue[1].header.stamp.secs * 10e9 < time_of_pose
-                    if right_ns < time_of_pose:
-                        right_ns = None
-                if right_ns != None:
-                    if (abs(left_ns - time_of_pose)) > abs(right_ns - time_of_pose):
-                        next_oldest_measurement_msg = msg_queue.pop()
+                    newer_key_time = self.poseKey_to_time[new_id]
+                    older_key_time = self.poseKey_to_time[new_id - 1]
+                    time_to_current = abs(newer_key_time - oldest_measurement_time)
+                    time_to_previous = abs(oldest_measurement_time - older_key_time)
 
-                        if depth_or_imu == 'depth':
-                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, next_oldest_measurement_msg.pose.pose.position.z)))
-
-                        elif depth_or_imu == 'imu':
-                            quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
-                            r = R.from_quat(quat)
-                            orientation_matrix = r.as_matrix()
-                            # Get the orientation covariance
-                            orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                            self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                    if(time_to_current > time_to_previous):
+                        new_id -= 1
+                        if(new_id == self.gps_last_pose_key):
+                            self.q_gps.pop(0)
+                            new_id = self.agent.poseKey
                     else:
-                        if depth_or_imu == 'depth':
-                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, oldest_measurement_msg.pose.pose.position.z)))
+                        if(next_measurement_time < curr_time):
+                        # Take care of where next measurement is not past next node
+                            self.q_gps.pop(0)
 
-                        elif depth_or_imu == 'imu':
-                            quat = [oldest_measurement_msg.orientation.x, oldest_measurement_msg.orientation.y, oldest_measurement_msg.orientation.z, oldest_measurement_msg.orientation.w]
-                            r = R.from_quat(quat)
-                            orientation_matrix = r.as_matrix()
-                            # Get the orientation covariance
-                            orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                            self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                        else:
+                            #Actually add the gps factor
+                            gps_msg = self.q_gps.pop(0)
 
-                    last_pose_key = last_pose_key + 1
+                            gps_meas = gtsam.Point2([gps_msg.pose.pose.position.x, gps_msg.pose.pose.position.y])
+                            self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
+                            
+                            self.gps_last_pose_key = new_id
+                            new_id = self.agent.poseKey
+        elif sensor == 'depth' or sensor == 'imu':
+            msg_queue = []
+            if sensor == 'depth':
+                msg_queue = self.q_depth # not a copy, the reference
+                last_pose_key = self.imu_last_pose_key
+            elif sensor == 'imu':
+                msg_queue = self.q_imu # not a copy, the reference
+                last_pose_key = self.depth_last_pose_key
+            
+            time_of_earliest_msg = msg_queue[0].header.stamp.nsecs + msg_queue[0].header.stamp.secs * 10e9
+            keepLookingForClosest = True
+            changed_last = False
+            while(keepLookingForClosest):
+                
+                if self.poseKey_to_time.get(last_pose_key + 1) is not None:
+                    time_of_next_pose = self.poseKey_to_time[last_pose_key + 1]
+                else:
+                    time_of_next_pose = None
 
-        if depth_or_imu == 'depth':
-            self.depth_last_pose_key = last_pose_key
-        elif depth_or_imu == 'imu':
-            self.imu_last_pose_key = last_pose_key
-        
+                if time_of_next_pose < time_of_earliest_msg and time_of_next_pose != None:
+                    last_pose_key = int(last_pose_key + 1)
+                    changed_last = True
+                else:
+                    keepLookingForClosest == False
+                
+            if(changed_last):
+                if(self.poaseKey_to_time.get(last_pose_key + 1) and abs(time_of_earliest_msg - self.poseKey_to_time[last_pose_key]) < abs(time_of_earliest_msg - self.poseKey_to_time[last_pose_key + 1])):
+                    next_oldest_measurement_msg = msg_queue.pop()
+                    quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
+                    r = R.from_quat(quat)
+                    orientation_matrix = r.as_matrix()
+                    # Get the orientation covariance
+                    orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                    self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                
+            while(last_pose_key < self.agent.poseKey):
+                time_of_pose = self.poseKey_to_time[last_pose_key + 1]
+                if(time_of_earliest_msg < time_of_pose):
+                    right_ns = None
+                    while len(msg_queue) > 1 and right_ns == None:
+                        oldest_measurement_msg = msg_queue.pop() 
+                        left_ns = oldest_measurement_msg.header.stamp.nsecs + oldest_measurement_msg.header.stamp.secs * 10e9
+                        right_ns = msg_queue[1].header.stamp.nsecs + msg_queue[1].header.stamp.secs * 10e9 < time_of_pose
+                        if right_ns < time_of_pose:
+                            right_ns = None
+                    if right_ns != None:
+                        if (abs(left_ns - time_of_pose)) > abs(right_ns - time_of_pose):
+                            next_oldest_measurement_msg = msg_queue.pop()
 
+                            if sensor == 'depth':
+                                self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, next_oldest_measurement_msg.pose.pose.position.z)))
 
+                            elif sensor == 'imu':
+                                quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
+                                r = R.from_quat(quat)
+                                orientation_matrix = r.as_matrix()
+                                # Get the orientation covariance
+                                orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                        else:
+                            if sensor == 'depth':
+                                self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, oldest_measurement_msg.pose.pose.position.z)))
 
+                            elif sensor == 'imu':
+                                quat = [oldest_measurement_msg.orientation.x, oldest_measurement_msg.orientation.y, oldest_measurement_msg.orientation.z, oldest_measurement_msg.orientation.w]
+                                r = R.from_quat(quat)
+                                orientation_matrix = r.as_matrix()
+                                # Get the orientation covariance
+                                orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+
+                        last_pose_key = last_pose_key + 1
+
+            if sensor == 'depth':
+                self.depth_last_pose_key = last_pose_key
+            elif sensor == 'imu':
+                self.imu_last_pose_key = last_pose_key
 
     def factor_graph_timer(self):
         # Your timer callback function
@@ -434,66 +469,23 @@ class FactorGraphNode(Node):
             # IMU unary factor
             self.unary_assignment('imu')
 
-
             # Depth unary factor
             self.unary_assignment('depth')
 
-
-
-
             # GPS unary factor
-
-            
-            curr_time = self.dvl_time       #Timestamp of the current pose key added
-            new_id = self.agent.poseKey    #The posekey id that you will start searching at
-            while(len(self.q_gps > 0) ):       #If measurement in queue and the oldest measurment is later than current posekey
-                oldest_measurement_time = self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec
-                next_measurement_time = self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec
-                if(oldest_measurement_time > curr_time):
-                    newer_key_time = self.poseKey_to_time[new_id]
-                    older_key_time = self.poseKey_to_time[new_id - 1]
-                    time_to_current = abs(newer_key_time - oldest_measurement_time)
-                    time_to_previous = abs(oldest_measurement_time - older_key_time)
-
-                    if(time_to_current > time_to_previous):
-                        new_id -= 1
-                        if(new_id == self.gps_last_pose_key):
-                            self.q_gps.pop(0)
-                            new_id = self.agent.poseKey
-                    else:
-                        time_old_to_pose = abs(oldest_measurement_time - newer_key_time)
-                        time_next_to_pose = abs(next_measurement_time - newer_key_time)
-                        if(next_measurement_time < curr_time):
-                        # Take care of where next measurement is not past next node
-                            self.q_gps.pop(0)
-
-                        elif(time_old_to_pose > time_next_to_pose):
-                        # Take care of case where next measurement is better
-                            self.q_gps.pop(0)
-                            
-
-                        else:
-                            #Actually add the gps factor
-                            gps_msg = self.q_gps.pop(0)
-                                                
-                            #TODO: ADD GPS FACTOR HERE
-
-                            self.gps_last_pose_key = new_id
-                            new_id = self.agent.poseKey
-                    
-
-
-
-
+            self.unary_assignment('gps')
 
             self.dvl_position_last = self.dvl_pose_current
+
+            self.update()
+            self.publish_vehicle_status()
 
 
 
     def publish_vehicle_status(self):
         odom_msg = Odometry()
 
-        # Set the orientation in the message
+        # # Set the orientation in the message
         r = R.from_matrix(self.orientation_matrix)
         quat = r.as_quat()
         odom_msg.pose.pose.orientation.x = quat[0]
@@ -501,9 +493,9 @@ class FactorGraphNode(Node):
         odom_msg.pose.pose.orientation.z = quat[2]
         odom_msg.pose.pose.orientation.w = quat[3]
 
-        # Set the position in the message
-        odom_msg.pose.pose.position.x = self.position[0]
-        odom_msg.pose.pose.position.y = self.position[1]
+        # # Set the position in the message
+        odom_msg.pose.pose.position.x = self.xyz[0]
+        odom_msg.pose.pose.position.y = self.xyz[1]
         odom_msg.pose.pose.position.z = self.z_position
 
         # Set the covariance
@@ -516,7 +508,9 @@ class FactorGraphNode(Node):
             0.0, 0.0, 0.0, 0.0, 0.0, self.orientation_covariance[2, 2]
         ]
 
-        # Publish the vehicle status
+
+
+        # # Publish the vehicle status
         self.vehicle_status_pub.publish(odom_msg)
 
 def main(args=None):
