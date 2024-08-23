@@ -12,6 +12,7 @@ from typing import List, Optional
 from gtsam.symbol_shorthand import L
 
 AGENT_NUM=1
+DVL_TIMING=0.25
 
 class Agent():
     def __init__(self, H_init):
@@ -53,8 +54,6 @@ class FactorGraphNode(Node):
         self.graph = gtsam.NonlinearFactorGraph()
         self.initialEstimate = gtsam.Values()
 
-        self.agent
-
         self.deployed = False
 
 
@@ -67,8 +66,6 @@ class FactorGraphNode(Node):
         self.dvl_position_covariance = np.zeros((3, 3))
         self.init_state = {}
 
-
-
         # Subscribers
         self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10)
         self.create_subscription(PoseWithCovarianceStamped, '/depth_data', self.depth_callback, 10)
@@ -78,12 +75,10 @@ class FactorGraphNode(Node):
 
         # Publisher
         self.vehicle_status_pub = self.create_publisher(Odometry, '/filter_output', 10)
+        self.odom_msg = Odometry()
         
         # Timer
-        self.timer = self.create_timer(1.0, self.factor_graph_timer)
-
-
-        self.pose_odom_msg = Odometry()
+        self.timer = self.create_timer(0.25, self.factor_graph_timer)
     
 
     def get_unary_bearing(self, pose, measurement):
@@ -468,23 +463,23 @@ class FactorGraphNode(Node):
 
 
     def publish_vehicle_status(self):
-        odom_msg = Odometry()
+        
 
         # # Set the orientation in the message
         r = R.from_matrix(self.orientation_matrix)
         quat = r.as_quat()
-        odom_msg.pose.pose.orientation.x = quat[0]
-        odom_msg.pose.pose.orientation.y = quat[1]
-        odom_msg.pose.pose.orientation.z = quat[2]
-        odom_msg.pose.pose.orientation.w = quat[3]
+        self.odom_msg.pose.pose.orientation.x = quat[0]
+        self.odom_msg.pose.pose.orientation.y = quat[1]
+        self.odom_msg.pose.pose.orientation.z = quat[2]
+        self.odom_msg.pose.pose.orientation.w = quat[3]
 
         # # Set the position in the message
-        odom_msg.pose.pose.position.x = self.xyz[0]
-        odom_msg.pose.pose.position.y = self.xyz[1]
-        odom_msg.pose.pose.position.z = self.z_position
+        self.odom_msg.pose.pose.position.x = self.xyz[0]
+        self.odom_msg.pose.pose.position.y = self.xyz[1]
+        self.odom_msg.pose.pose.position.z = self.z_position
 
         # Set the covariance
-        odom_msg.pose.covariance = [
+        self.odom_msg.pose.covariance = [
             self.position_covariance[0, 0], 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, self.position_covariance[1, 1], 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, self.z_covariance, 0.0, 0.0, 0.0,
