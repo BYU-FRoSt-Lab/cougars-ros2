@@ -149,6 +149,7 @@ bool OnMail(void *pParam) {
 
     // if you want to print all the values registered for, then uncomment this
     // q->Trace();
+
   }
   return true;
 }
@@ -160,7 +161,7 @@ int main(int argc, char *argv[]) {
   Comms.SetOnConnectCallBack(OnConnect, &Comms);
   Comms.Run("localhost", 9000, "my_connection");
 
-  // ROS 2 stuff
+  // ROS2 stuff
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<MOOSBridge>());
   rclcpp::shutdown();
