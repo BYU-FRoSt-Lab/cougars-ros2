@@ -13,12 +13,6 @@ from gtsam.symbol_shorthand import L
 
 
 
-class Agent():
-    def __init__(self, H_init):
-        self.pose_world_noisy = gtsam.Pose3(H_init)
-        self.poseKey = int(1)
-        self.prevPoseKey = self.poseKey
-
 class FactorGraphNode(Node):
 
     def __init__(self):
@@ -326,17 +320,22 @@ class FactorGraphNode(Node):
 
         H = self.HfromRT(self.init_state['orientation_matrix'],self.init['position'])
 
-        self.agent = Agent(H)
+        self.dvl_pose_current = gtsam.Pose3(H)
+        self.poseKey = int(1)
+        self.prevPoseKey = self.poseKey
 
-        self.dvl_position_last = self.agent.agent_pose_world_noisy
+        
 
-        priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.agent.pose_world_noisy, self.DVL_NOISE)
+        priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.dvl_pose_current, self.DVL_NOISE)
         self.graph.push_back(priorFactor)
-        self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
+        self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
         self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
         self.gps_last_pose_key = self.agent.poseKey
         self.depth_last_pose_key = self.agent.poseKey
         self.imu_last_pose_key = self.agent.poseKey
+
+
+        self.dvl_position_last = self.dvl_pose_current
     
         self.get_logger().info("Initial state has been set.")
 
@@ -483,7 +482,7 @@ class FactorGraphNode(Node):
             self.agent.poseKey = int(1 + self.agent.poseKey)
 
             # this is the 
-            self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
+            self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
             self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.DVL_NOISE))
             self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
             
