@@ -11,7 +11,11 @@ import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
 
-
+class Agent():
+    def __init__(self, H_init):
+        self.pose_world_noisy = gtsam.Pose3(H_init)
+        self.poseKey = int(1)
+        self.prevPoseKey = self.poseKey
 
 class FactorGraphNode(Node):
 
@@ -321,6 +325,9 @@ class FactorGraphNode(Node):
 
         H = self.HfromRT(self.init_state['orientation_matrix'],self.init['position'])
 
+
+        self.agent = Agent(H)
+
         self.dvl_pose_current = gtsam.Pose3(H)
         self.poseKey = int(1)
         self.prevPoseKey = self.poseKey
@@ -368,9 +375,18 @@ class FactorGraphNode(Node):
                             self.q_gps.pop(0)
                             new_id = self.agent.poseKey
                     else:
-                        if(next_measurement_time < curr_time):
+
+                        time_old_to_pose = abs(oldest_measurement_time - newer_key_time)
+                        time_next_to_pose = abs(next_measurement_time - newer_key_time)
+
+                        if(next_measurement_time < newer_key_time):
                         # Take care of where next measurement is not past next node
                             self.q_gps.pop(0)
+                        
+                        elif(time_old_to_pose > time_next_to_pose):
+                        # Take care of case where next measurement is better
+                            self.q_gps.pop(0)
+                            new_id = self.agent.poseKey
 
                         else:
                             #Actually add the gps factor
@@ -458,8 +474,6 @@ class FactorGraphNode(Node):
                 self.depth_last_pose_key = last_pose_key
             elif sensor == 'imu':
                 self.imu_last_pose_key = last_pose_key
-
-
 
 
 
