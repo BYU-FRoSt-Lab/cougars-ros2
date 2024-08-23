@@ -261,6 +261,14 @@ class FactorGraphNode(Node):
         self.initialEstimate.clear()
         self.graph.resize(0)
 
+
+    
+    ##################################################################
+    ######################## SENSOR CALLBACKS ########################
+    ##################################################################
+
+
+    # orientation from modem
     def imu_callback(self, msg: Imu):
 
         self.orientation_covariance = np.array(msg.orientation_covariance).reshape(3, 3)
@@ -272,7 +280,7 @@ class FactorGraphNode(Node):
         if self.deployed:
             self.q_imu.append(msg)
         
-
+    # depth sensor
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
 
@@ -281,16 +289,17 @@ class FactorGraphNode(Node):
         if self.deployed:
             self.q_depth.append(msg)
     
+    # gps (already in x,y from gps_odom.py)
     def gps_callback(self, msg: Odometry):
         # Get the x, y position and position covariance
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y
         self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
-
         if self.deployed :
             self.q_gps.append(msg)
    
 
+    # dvl for new odometry
     def dvl_callback(self, msg: Odometry):
         # Get the x, y, z position
         self.dvl_position[0] = msg.pose.pose.position.x
@@ -302,6 +311,10 @@ class FactorGraphNode(Node):
         # TODO: need covariance matrix, look into covariance, figure of merit
 
     
+
+    ##################################################################
+    ######################## SIGNAL TO BEGIN #########################
+    ##################################################################
 
     def init_callback(self, msg: Empty):
         # Store current state as the initial state
@@ -328,6 +341,11 @@ class FactorGraphNode(Node):
         self.get_logger().info("Initial state has been set.")
 
         self.deployed = True
+
+    
+    ##################################################################
+    ########### algorithms for time syncing measurements #############
+    ##################################################################
 
     def unary_assignment(self, sensor):
 
@@ -443,6 +461,12 @@ class FactorGraphNode(Node):
 
 
 
+
+
+    ##################################################################
+    ####################### factor graph stuff #######################
+    ##################################################################
+    
     def factor_graph_timer(self):
         # Your timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
@@ -480,6 +504,8 @@ class FactorGraphNode(Node):
 
 
 
+    # PUBLISH THE DATA
+
     def publish_vehicle_status(self):
         
         # # Set the orientation in the message
@@ -507,7 +533,7 @@ class FactorGraphNode(Node):
 
 
         # Publish the vehicle status
-        self.vehicle_status_pub.publish(odom_msg)
+        self.vehicle_status_pub.publish(self.odom_msg)
 
 def main(args=None):
     rclpy.init(args=args)
