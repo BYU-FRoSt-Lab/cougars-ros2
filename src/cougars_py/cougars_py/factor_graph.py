@@ -24,32 +24,42 @@ class FactorGraphNode(Node):
     def __init__(self):
         super().__init__('factor_graph_node')
 
+        # number of seconds we take a dvl dead reck. pose
         self.dvl_time_interval = 0.25
 
+        # measurement queues for sensors
         self.q_depth = []
         self.q_imu = []
         self.q_gps = []
         self.q_dvl = []
 
+        # map of poseKeys to time stamps
         self.poseKey_to_time = {}
         
-        
+        # 'pointer' to mark the oldest pose that we shouldn't worry about adding a unary factor to
+        # for example, if we add a gps unary factor to the second pose, than the gps_last_pose_key 
+        # will point to the second pose. Or if gps goes out for a bit, this should point to the oldest
+        # pose that we will not consider adding a unary factor to
         self.gps_last_pose_key = None       
         self.depth_last_pose_key = None
         self.imu_last_pose_key = None   
 
         # gtsam stuff
+
+        # nois models
         self.std_pose = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         std_gps = 0.5
         self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, std_gps) 
 
-
+        # incremental smoothing and mapping (isam) optimizer
         self.isam = gtsam.ISAM2()
+        # factor graph
         self.graph = gtsam.NonlinearFactorGraph()
+        # values in factor graph
         self.initialEstimate = gtsam.Values()
 
-        self.deployed = False
+       
 
 
         # Initialize class variables
@@ -61,15 +71,25 @@ class FactorGraphNode(Node):
         self.dvl_position_covariance = np.zeros((3, 3))
         self.init_state = {}
 
+        # flag to indicate that we have added a prior factor to pose 1
+        # we now will begin the timer to add between factors and unary factors
+        self.deployed = False
+
         # Subscribers
-        self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10)
-        self.create_subscription(PoseWithCovarianceStamped, '/depth_data', self.depth_callback, 10)
-        self.create_subscription(Odometry, '/gps_odom', self.gps_callback, 10)
-        self.create_subscription(Odometry, '/dvl_dead_reckoning', self.dvl_callback, 10)
+
+        # sensor subscriptions
+        self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10) # for unary factor
+        self.create_subscription(PoseWithCovarianceStamped, '/depth_data', self.depth_callback, 10) # for unary factor
+        self.create_subscription(Odometry, '/gps_odom', self.gps_callback, 10) # for unary factor
+        self.create_subscription(Odometry, '/dvl_dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
+
+        # signal to add prior (should be sent after DVL-lock and ref. gps/ heading is stored and DVL is restarted)
         self.create_subscription(Empty, '/init', self.init_callback, 10)
 
         # Publisher
-        self.vehicle_status_pub = self.create_publisher(Odometry, '/filter_output', 10)
+
+        # publishes the output of the smoothing and mapping (most importantly gps x,y)
+        self.vehicle_status_pub = self.create_publisher(Odometry, '/smoothed_output', 10)
         self.odom_msg = Odometry()
         
         # Timer
