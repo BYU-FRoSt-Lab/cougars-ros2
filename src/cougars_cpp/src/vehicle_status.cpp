@@ -52,11 +52,14 @@ auto qos = rclcpp::QoS(
 
 class VehicleStatus : public rclcpp::Node {
 
+
+  /// TODO: have this listen to the x,y from the filter
+
 public:
   VehicleStatus() : Node("vehicle_status") {
     x_y_subscription_ = this->create_subscription<
-        geometry_msgs::msg::PoseWithCovarianceStamped>(
-        "odometry/global", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));
+        nav_msgs::msg::Odometry>(
+        "/filter_output", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));
 
     depth_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -79,7 +82,7 @@ public:
   }
 
 private:
-  void x_y_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &x_y_message ){
+  void x_y_callback(const nav_msgs::msg::Odometry &x_y_message ){
     this->y_pos = x_y_message.pose.pose.position.y;
     this->x_pos = x_y_message.pose.pose.position.x;
   }
