@@ -46,11 +46,13 @@ class FactorGraphNode(Node):
 
         # gtsam stuff
 
-        # nois models
+        # noise models
         self.std_pose = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
-        std_gps = 0.5
-        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, std_gps) 
+        self.std_gps = 0.5
+        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, self.std_gps) 
+        self.std_orientation = np.deg2rad(3)
+        self.UNARY_HEADING_NOISE = gtsam.noiseModel.Isotropic.Sigma(3, self.std_orientation)
 
         # incremental smoothing and mapping (isam) optimizer
         self.isam = gtsam.ISAM2()
@@ -88,15 +90,18 @@ class FactorGraphNode(Node):
 
         # Publisher
 
-        # publishes the output of the smoothing and mapping (most importantly gps x,y)
+        # publishes the LATEST output of the smoothing and mapping (most importantly gps x,y), although remember the whole path is being smoothed
         self.vehicle_status_pub = self.create_publisher(Odometry, '/smoothed_output', 10)
         self.odom_msg = Odometry()
         
-        # Timer
+        # Timer for adding state estimate/factors
         self.timer = self.create_timer(self.dvl_time_interval, self.factor_graph_timer)
     
 
-    def get_unary_bearing(self, pose, measurement):
+    # error functions for 
+
+
+    def get_unary_heading(self, pose, measurement):
 
         rot_pred = pose.rotation()
 
@@ -111,13 +116,10 @@ class FactorGraphNode(Node):
 
         return error
 
-    def error_unary_bearing(self, measurement: np.ndarray, this: gtsam.CustomFactor,
+    def error_unary_heading(self, measurement: np.ndarray, this: gtsam.CustomFactor,
                 values: gtsam.Values,
                 jacobians: Optional[List[np.ndarray]]) -> float:
         
-        '''Interagent factor using bearing azimuth and elevation'''
-
-        # azimuth and elevation
         key_pose = this.keys()[0]
         pose = values.atPose3(key_pose)
 
@@ -136,14 +138,14 @@ class FactorGraphNode(Node):
                 poseA_f = pose.compose(delta_step_forward)
                 poseA_b = pose.compose(delta_step_backward)
 
-                error_forward = self.get_unary_bearing(poseA_f, measurement)
-                error_backward = self.get_unary_bearing(poseA_b, measurement)
+                error_forward = self.get_unary_heading(poseA_f, measurement)
+                error_backward = self.get_unary_heading(poseA_b, measurement)
                 hdot =  (error_forward - error_backward) / (2*eps)
                 H0[:,i] = hdot
 
             jacobians[0] = H0
 
-        error = self.get_unary_bearing(pose, measurement)
+        error = self.get_unary_heading(pose, measurement)
 
         return error
 
@@ -244,13 +246,14 @@ class FactorGraphNode(Node):
         return error
 
 
+    # helper funciton to get H. matrix from rotation and translation
     def HfromRT(self, R, t):
         H = np.eye(4)
         H[:3, :3] = R
         H[:3, 3] = t
         return H
 
-   
+    # update at every tick of the timer (after between factor and checking for unary factors)
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
@@ -393,7 +396,7 @@ class FactorGraphNode(Node):
                     orientation_matrix = r.as_matrix()
                     # Get the orientation covariance
                     orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                    self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                    self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [self.agent.poseKey], partial(self.error_unary_heading, [orientation_meas])))
                 
             while(last_pose_key < self.agent.poseKey):
                 time_of_pose = self.poseKey_to_time[last_pose_key + 1]
@@ -418,7 +421,7 @@ class FactorGraphNode(Node):
                                 orientation_matrix = r.as_matrix()
                                 # Get the orientation covariance
                                 orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                                self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [self.agent.poseKey], partial(self.error_unary_heading, [orientation_meas])))
                         else:
                             if sensor == 'depth':
                                 self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, oldest_measurement_msg.pose.pose.position.z)))
@@ -429,7 +432,7 @@ class FactorGraphNode(Node):
                                 orientation_matrix = r.as_matrix()
                                 # Get the orientation covariance
                                 orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                                self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [self.agent.poseKey], partial(self.error_unary_heading, [orientation_meas])))
 
                         last_pose_key = last_pose_key + 1
 
