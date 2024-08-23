@@ -47,7 +47,6 @@ target_link_libraries(dvl_convertor)
 target_link_libraries(depth_convertor)
 target_link_libraries(vehicle_status)
 target_link_libraries(dvl_config)
-target_link_libraries(factor_graph)
 install(TARGETS
   moos_bridge
   pid_control
@@ -55,7 +54,6 @@ install(TARGETS
   depth_convertor
   vehicle_status
   dvl_config
-  factor_graph
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

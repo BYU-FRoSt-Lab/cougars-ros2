@@ -13,53 +13,49 @@ from gtsam.symbol_shorthand import L
 
 
 
-class Agent():
-    def __init__(self, H_init):
-        self.pose_world_noisy = gtsam.Pose3(H_init[1])
-        self.prev_pose_world_noisy_comms = self.pose_world_noisy
-        self.poseKey = int((H_init[0] + 1) * 1e6)
-        self.prevPoseKey = self.poseKey
-        self.poseKeyStart = self.poseKey
-        self.agent_num = H_init[0]
-        self.step = 0
-        self.x_noisy = {}
-        self.y_noisy = {}
-
-
 class FactorGraphNode(Node):
 
     def __init__(self):
         super().__init__('factor_graph_node')
 
+        # number of seconds we take a dvl dead reck. pose
+        self.dvl_time_interval = 0.25
+
+        # measurement queues for sensors
         self.q_depth = []
         self.q_imu = []
         self.q_gps = []
         self.q_dvl = []
 
+        # map of poseKeys to time stamps
         self.poseKey_to_time = {}
         
-        
-        self.gps_last_pose_key = None           #int for handling not adding more than one gps to graph Last updated posekey
+        # 'pointer' to mark the oldest pose that we shouldn't worry about adding a unary factor to
+        # for example, if we add a gps unary factor to the second pose, than the gps_last_pose_key 
+        # will point to the second pose. Or if gps goes out for a bit, this should point to the oldest
+        # pose that we will not consider adding a unary factor to
+        self.gps_last_pose_key = None       
         self.depth_last_pose_key = None
         self.imu_last_pose_key = None   
 
         # gtsam stuff
+
+        # noise models
         self.std_pose = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
-        self.std_comms = np.array([0.01, 0.01, 0.01, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
-        self.POSE_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
-        self.COMMS_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_comms)
-        gps_noise = 0.5
-        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, gps_noise) 
+        self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
+        self.std_gps = 0.5
+        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, self.std_gps) 
+        self.std_orientation = np.deg2rad(3)
+        self.UNARY_HEADING_NOISE = gtsam.noiseModel.Isotropic.Sigma(3, self.std_orientation)
 
-
+        # incremental smoothing and mapping (isam) optimizer
         self.isam = gtsam.ISAM2()
+        # factor graph
         self.graph = gtsam.NonlinearFactorGraph()
+        # values in factor graph
         self.initialEstimate = gtsam.Values()
 
-        self.agent
-
-        self.deployed = False
-
+    
         # Initialize class variables
         self.orientation_matrix = np.eye(3)
         self.orientation_covariance = np.zeros((3, 3))
@@ -69,24 +65,35 @@ class FactorGraphNode(Node):
         self.dvl_position_covariance = np.zeros((3, 3))
         self.init_state = {}
 
+        # flag to indicate that we have added a prior factor to pose 1
+        # we now will begin the timer to add between factors and unary factors
+        self.deployed = False
+
         # Subscribers
-        self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10)
-        self.create_subscription(PoseWithCovarianceStamped, '/depth_data', self.depth_callback, 10)
-        self.create_subscription(Odometry, '/gps_odom', self.gps_callback, 10)
-        self.create_subscription(Odometry, '/dvl_dead_reckoning', self.dvl_callback, 10)
+
+        # sensor subscriptions
+        self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10) # for unary factor
+        self.create_subscription(PoseWithCovarianceStamped, '/depth_data', self.depth_callback, 10) # for unary factor
+        self.create_subscription(Odometry, '/gps_odom', self.gps_callback, 10) # for unary factor
+        self.create_subscription(Odometry, '/dvl_dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
+
+        # signal to add prior (should be sent after DVL-lock and ref. gps/ heading is stored and DVL is restarted)
         self.create_subscription(Empty, '/init', self.init_callback, 10)
 
         # Publisher
-        self.vehicle_status_pub = self.create_publisher(Odometry, '/filter_output', 10)
+
+        # publishes the LATEST output of the smoothing and mapping (most importantly gps x,y), although remember the whole path is being smoothed
+        self.vehicle_status_pub = self.create_publisher(Odometry, '/smoothed_output', 10)
+        self.odom_msg = Odometry()
         
-        # Timer
-        self.timer = self.create_timer(1.0, self.factor_graph_timer)
-
-
-        self.pose_odom_msg = Odometry()
+        # Timer for adding state estimate/factors
+        self.timer = self.create_timer(self.dvl_time_interval, self.factor_graph_timer)
     
 
-    def get_unary_bearing(self, pose, measurement):
+    # error functions for unary factors
+
+
+    def get_unary_heading(self, pose, measurement):
 
         rot_pred = pose.rotation()
 
@@ -101,13 +108,10 @@ class FactorGraphNode(Node):
 
         return error
 
-    def error_unary_bearing(self, measurement: np.ndarray, this: gtsam.CustomFactor,
+    def error_unary_heading(self, measurement: np.ndarray, this: gtsam.CustomFactor,
                 values: gtsam.Values,
                 jacobians: Optional[List[np.ndarray]]) -> float:
         
-        '''Interagent factor using bearing azimuth and elevation'''
-
-        # azimuth and elevation
         key_pose = this.keys()[0]
         pose = values.atPose3(key_pose)
 
@@ -126,14 +130,14 @@ class FactorGraphNode(Node):
                 poseA_f = pose.compose(delta_step_forward)
                 poseA_b = pose.compose(delta_step_backward)
 
-                error_forward = self.get_unary_bearing(poseA_f, measurement)
-                error_backward = self.get_unary_bearing(poseA_b, measurement)
+                error_forward = self.get_unary_heading(poseA_f, measurement)
+                error_backward = self.get_unary_heading(poseA_b, measurement)
                 hdot =  (error_forward - error_backward) / (2*eps)
                 H0[:,i] = hdot
 
             jacobians[0] = H0
 
-        error = self.get_unary_bearing(pose, measurement)
+        error = self.get_unary_heading(pose, measurement)
 
         return error
 
@@ -151,8 +155,8 @@ class FactorGraphNode(Node):
         # Get agent pose
         estimate = values.atPose3(this.keys()[0])
 
-        # Three rows bc [x, y, z] from gps state, six columns bc the state of this node is Pose3
-        H = np.zeros((3, 6))
+        # Three rows bc [x, y] from gps state, six columns bc the state of this node is Pose3
+        H = np.zeros((2, 6))
         eps = 1e-6
 
         # Get Jacobians. Perturb in each direction of the delta vector one at a time.
@@ -234,71 +238,68 @@ class FactorGraphNode(Node):
         return error
 
 
+    # helper funciton to get H. matrix from rotation and translation
     def HfromRT(self, R, t):
         H = np.eye(4)
         H[:3, :3] = R
         H[:3, 3] = t
         return H
 
-   
+    # update at every tick of the timer (after between factor and checking for unary factors)
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
-
         self.xyz = self.result.atPose3(self.agent.poseKey).translation()  
-
-        
         self.initialEstimate.clear()
         self.graph.resize(0)
 
+
+    
+    ##################################################################
+    ######################## SENSOR CALLBACKS ########################
+    ##################################################################
+
+
+    # orientation from modem
     def imu_callback(self, msg: Imu):
 
-        if self.deployed:
-            self.q_imu.append(msg)
         self.orientation_covariance = np.array(msg.orientation_covariance).reshape(3, 3)
-
         # Convert quaternion to rotation matrix
         quat = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
         r = R.from_quat(quat)
         self.orientation_matrix = r.as_matrix()
-        # Get the orientation covariance
-        self.orientation_meas = gtsam.Pose3(self.HfromRT(self.orientation_matrix, [0,0,0])).rotation()
-        self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [self.orientation_meas])))
 
-        # self.update()
-
+        if self.deployed:
+            self.q_imu.append(msg)
+        
+    # depth sensor
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
 
         self.position[2] = msg.pose.pose.position.z
     
-
         if self.deployed:
             self.q_depth.append(msg)
-        # self.z_covariance = msg.pose.covariance[14]  # Covariance for Z
-        # self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [agent.poseKey], partial(self.error_depth, msg.pose.pose.position.z)))
-
-        # self.update()
-                
+    
+    # gps (already in x,y from gps_odom.py)
     def gps_callback(self, msg: Odometry):
         # Get the x, y position and position covariance
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y
         self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
-
         if self.deployed :
             self.q_gps.append(msg)
-        # gps_meas = gtsam.Point3(self.position)
-        # gps_factor = gtsam.CustomFactor(GPS_NOISE, [agent.poseKey], partial(error_gps, gps_meas))
-        # factor_graph.add(gps_factor)
+   
 
-        # self.update()
-
+    # dvl for new odometry
     def dvl_callback(self, msg: Odometry):
         # Get the x, y, z position
         self.dvl_position[0] = msg.pose.pose.position.x
         self.dvl_position[1] = msg.pose.pose.position.y
         self.dvl_position[2] = msg.pose.pose.position.z
+        self.dvl_std = msg.pose.covariance[0]
+        self.std_pose = np.array([self.dvl_std, self.dvl_std, self.dvl_std, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
+        self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.dvl_quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
         self.dvl_time = msg.header.stamp.nsecs + msg.header.stamp.secs * 10e9
 
@@ -306,6 +307,9 @@ class FactorGraphNode(Node):
 
     
 
+    ##################################################################
+    ######################## SIGNAL TO BEGIN #########################
+    ##################################################################
 
     def init_callback(self, msg: Empty):
         # Store current state as the initial state
@@ -317,21 +321,31 @@ class FactorGraphNode(Node):
 
         H = self.HfromRT(self.init_state['orientation_matrix'],self.init['position'])
 
-        self.agent = Agent(H)
+        self.dvl_pose_current = gtsam.Pose3(H)
+        self.poseKey = int(1)
+        self.prevPoseKey = self.poseKey
 
-        self.dvl_position_last = self.agent.agent_pose_world_noisy
+        
 
-        priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.agent.pose_world_noisy, self.POSE_NOISE)
+        priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.dvl_pose_current, self.DVL_NOISE)
         self.graph.push_back(priorFactor)
-        self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
+        self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
         self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
         self.gps_last_pose_key = self.agent.poseKey
         self.depth_last_pose_key = self.agent.poseKey
         self.imu_last_pose_key = self.agent.poseKey
+
+
+        self.dvl_position_last = self.dvl_pose_current
     
         self.get_logger().info("Initial state has been set.")
 
         self.deployed = True
+
+    
+    ##################################################################
+    ########### algorithms for time syncing measurements #############
+    ##################################################################
 
     def unary_assignment(self, sensor):
 
@@ -400,7 +414,7 @@ class FactorGraphNode(Node):
                     orientation_matrix = r.as_matrix()
                     # Get the orientation covariance
                     orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                    self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                    self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [self.agent.poseKey], partial(self.error_unary_heading, [orientation_meas])))
                 
             while(last_pose_key < self.agent.poseKey):
                 time_of_pose = self.poseKey_to_time[last_pose_key + 1]
@@ -425,7 +439,7 @@ class FactorGraphNode(Node):
                                 orientation_matrix = r.as_matrix()
                                 # Get the orientation covariance
                                 orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                                self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [self.agent.poseKey], partial(self.error_unary_heading, [orientation_meas])))
                         else:
                             if sensor == 'depth':
                                 self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [self.agent.poseKey], partial(self.error_depth, oldest_measurement_msg.pose.pose.position.z)))
@@ -436,7 +450,7 @@ class FactorGraphNode(Node):
                                 orientation_matrix = r.as_matrix()
                                 # Get the orientation covariance
                                 orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                                self.graph.add(gtsam.CustomFactor(self.UNARY_BEARING_NOISE, [self.agent.poseKey], partial(self.error_unary_bearing, [orientation_meas])))
+                                self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [self.agent.poseKey], partial(self.error_unary_heading, [orientation_meas])))
 
                         last_pose_key = last_pose_key + 1
 
@@ -445,6 +459,14 @@ class FactorGraphNode(Node):
             elif sensor == 'imu':
                 self.imu_last_pose_key = last_pose_key
 
+
+
+
+
+    ##################################################################
+    ####################### factor graph stuff #######################
+    ##################################################################
+    
     def factor_graph_timer(self):
         # Your timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
@@ -461,8 +483,8 @@ class FactorGraphNode(Node):
             self.agent.poseKey = int(1 + self.agent.poseKey)
 
             # this is the 
-            self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world_noisy)
-            self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.POSE_NOISE))
+            self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
+            self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.DVL_NOISE))
             self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
             
 
@@ -482,24 +504,25 @@ class FactorGraphNode(Node):
 
 
 
-    def publish_vehicle_status(self):
-        odom_msg = Odometry()
+    # PUBLISH THE DATA
 
+    def publish_vehicle_status(self):
+        
         # # Set the orientation in the message
         r = R.from_matrix(self.orientation_matrix)
         quat = r.as_quat()
-        odom_msg.pose.pose.orientation.x = quat[0]
-        odom_msg.pose.pose.orientation.y = quat[1]
-        odom_msg.pose.pose.orientation.z = quat[2]
-        odom_msg.pose.pose.orientation.w = quat[3]
+        self.odom_msg.pose.pose.orientation.x = quat[0]
+        self.odom_msg.pose.pose.orientation.y = quat[1]
+        self.odom_msg.pose.pose.orientation.z = quat[2]
+        self.odom_msg.pose.pose.orientation.w = quat[3]
 
         # # Set the position in the message
-        odom_msg.pose.pose.position.x = self.xyz[0]
-        odom_msg.pose.pose.position.y = self.xyz[1]
-        odom_msg.pose.pose.position.z = self.z_position
+        self.odom_msg.pose.pose.position.x = self.xyz[0]
+        self.odom_msg.pose.pose.position.y = self.xyz[1]
+        self.odom_msg.pose.pose.position.z = self.z_position
 
         # Set the covariance
-        odom_msg.pose.covariance = [
+        self.odom_msg.pose.covariance = [
             self.position_covariance[0, 0], 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, self.position_covariance[1, 1], 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, self.z_covariance, 0.0, 0.0, 0.0,
@@ -509,9 +532,8 @@ class FactorGraphNode(Node):
         ]
 
 
-
-        # # Publish the vehicle status
-        self.vehicle_status_pub.publish(odom_msg)
+        # Publish the vehicle status
+        self.vehicle_status_pub.publish(self.odom_msg)
 
 def main(args=None):
     rclpy.init(args=args)
