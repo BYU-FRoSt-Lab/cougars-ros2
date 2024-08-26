@@ -51,7 +51,7 @@ class NavSatFixToOdom(Node):
 
         self.timer = self.create_timer(1.0, self.check_gps_timeout)
         # Publisher for Odometry
-        self.publisher = self.create_publisher(Odometry, '/gps/odom', 10)
+        self.publisher = self.create_publisher(Odometry, '/gps_odom', 10)
     
     def check_gps_timeout(self):
         if self.gps_last_time is not None:
