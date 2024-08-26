@@ -323,7 +323,7 @@ class FactorGraphNode(Node):
             'dvl_position': self.dvl_position.copy()
         }
 
-        H = self.HfromRT(self.init_state['orientation_matrix'],self.init['position'])
+        H = self.HfromRT(self.init_state['orientation_matrix'],self.init_state['position'])
 
 
         self.agent = Agent(H)
