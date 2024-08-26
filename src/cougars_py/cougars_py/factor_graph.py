@@ -363,20 +363,19 @@ class FactorGraphNode(Node):
             new_id = int(self.agent.poseKey)    #The posekey id that you will start searching at
             while(len(self.q_gps) > 1):       #If measurement in queue and the oldest measurment is later than current posekey
                 print("new_id:%d"%new_id)
-                oldest_measurement_time = (self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec) % 1e14
+                oldest_measurement_time = (self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec) 
                 print("oldest measurment time: %d\n"%oldest_measurement_time)
-                next_measurement_time = (self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec ) % 1e14
+                next_measurement_time = (self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec ) 
                 print("next measurment time: %d\n"%next_measurement_time)
                 print('gps_q > 1')
                 print(len(self.q_gps))
                 if(oldest_measurement_time < curr_time):
                     print('oldest measurement time < curr time')
                     
-
-                    newer_key_time = self.poseKey_to_time[int(new_id)] % 1e14
+                    newer_key_time = self.poseKey_to_time[int(new_id)] 
                     print("newer key time: %d\n"%newer_key_time)
-                    older_key_time = self.poseKey_to_time[int(new_id - 1)] % 1e14
-                    print("older key time: %d\n"%older_key_time)
+                    older_key_time = self.poseKey_to_time[int(new_id - 1)]
+                    print("older key time: %d\n"% older_key_time)
                     time_to_current = abs(newer_key_time - oldest_measurement_time) 
                     print("time to current: %d\n"%time_to_current)
                     time_to_previous = abs(older_key_time - oldest_measurement_time) 
