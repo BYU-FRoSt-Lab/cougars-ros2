@@ -105,11 +105,11 @@ public:
     float pitch_rad = degreesToRadians(pitch_deg);
     float roll_rad = degreesToRadians(roll_deg);
 
-    Eigen::Quaterniond quaternion_ENU = eulerNEDToQuaternionENU(yaw_rad, pitch_rad, roll_rad);
-    pose_msg.pose.pose.orientation.x = quaternion_ENU.x();
-    pose_msg.pose.pose.orientation.y = quaternion_ENU.y();
-    pose_msg.pose.pose.orientation.z = quaternion_ENU.z();
-    pose_msg.pose.pose.orientation.w = quaternion_ENU.w();
+    Eigen::Quaternionf quaternion_ENU = eulerNEDToQuaternionENU(yaw_rad, pitch_rad, roll_rad);
+    stamped_msg.pose.pose.orientation.x = quaternion_ENU.x();
+    stamped_msg.pose.pose.orientation.y = quaternion_ENU.y();
+    stamped_msg.pose.pose.orientation.z = quaternion_ENU.z();
+    stamped_msg.pose.pose.orientation.w = quaternion_ENU.w();
 
     // stamped_msg.pose.pose.orientation.x = 0.0;
     // stamped_msg.pose.pose.orientation.y = 0.0;
