@@ -363,9 +363,9 @@ class FactorGraphNode(Node):
             new_id = int(self.agent.poseKey)    #The posekey id that you will start searching at
             while(len(self.q_gps) > 1):       #If measurement in queue and the oldest measurment is later than current posekey
                 print("new_id:%d"%new_id)
-                oldest_measurement_time = self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec
+                oldest_measurement_time = (self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec) % 1e14
                 print("oldest measurment time: %d\n"%oldest_measurement_time)
-                next_measurement_time = self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec
+                next_measurement_time = (self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec ) % 1e14
                 print("next measurment time: %d\n"%next_measurement_time)
                 print('gps_q > 1')
                 print(len(self.q_gps))
@@ -373,13 +373,13 @@ class FactorGraphNode(Node):
                     print('oldest measurement time < curr time')
                     
 
-                    newer_key_time = self.poseKey_to_time[int(new_id)]
+                    newer_key_time = self.poseKey_to_time[int(new_id)] % 1e14
                     print("newer key time: %d\n"%newer_key_time)
-                    older_key_time = self.poseKey_to_time[int(new_id - 1)]
+                    older_key_time = self.poseKey_to_time[int(new_id - 1)] % 1e14
                     print("older key time: %d\n"%older_key_time)
-                    time_to_current = abs(newer_key_time - oldest_measurement_time)
+                    time_to_current = abs(newer_key_time - oldest_measurement_time) 
                     print("time to current: %d\n"%time_to_current)
-                    time_to_previous = abs(oldest_measurement_time - older_key_time)
+                    time_to_previous = abs(older_key_time - oldest_measurement_time) 
                     print("time to previous: %d\n"%time_to_previous)
 
                     if(time_to_current > time_to_previous):
@@ -410,7 +410,7 @@ class FactorGraphNode(Node):
                             #Actually add the gps factor
                             gps_msg = self.q_gps.pop(0)
 
-                            gps_meas = gtsam.Point2([gps_msg.pose.pose.position.x, gps_msg.pose.pose.position.y])
+                            gps_meas = gtsam.Point2(gps_msg.pose.pose.position.x, gps_msg.pose.pose.position.y)
                             self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
                             self.get_logger().info("added gps unary")
                             
@@ -512,6 +512,7 @@ class FactorGraphNode(Node):
         # Your timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
         if self.deployed:
+            print('posekey:', self.agent.poseKey)
             r = R.from_quat(self.dvl_quat)
             self.dvl_orientation_matrix = r.as_matrix()
             self.dvl_pose_current = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix ,self.dvl_position))
@@ -531,17 +532,22 @@ class FactorGraphNode(Node):
 
             # IMU unary factor
             self.unary_assignment('imu')
+            print('out of imu')
 
             # Depth unary factor
             self.unary_assignment('depth')
+            print('out of depth')
 
             # GPS unary factor
             self.unary_assignment('gps')
+            print('out of gps')
 
             self.dvl_position_last = self.dvl_pose_current
 
             self.update()
             self.publish_vehicle_status()
+
+
 
 
 
