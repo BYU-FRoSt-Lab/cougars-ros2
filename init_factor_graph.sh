@@ -2,4 +2,4 @@
 
 # should be after checking for DVL-lock and restarting DVL
 
-ros2 topic pub /init std_msgs/msg/Empty.msg
+ros2 topic pub /init std_msgs/msg/Empty -1
