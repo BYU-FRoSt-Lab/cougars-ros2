@@ -48,7 +48,8 @@ class FactorGraphNode(Node):
         self.std_pose = np.array([5, 5, 5, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.std_gps = 0.0001
-        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(2, self.std_gps) 
+        # TODO: make the z on gps really  high covariance, ignore the 
+        self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(3, self.std_gps) 
         self.std_orientation = np.deg2rad(3)
         self.UNARY_HEADING_NOISE = gtsam.noiseModel.Isotropic.Sigma(3, self.std_orientation)
 
@@ -159,8 +160,8 @@ class FactorGraphNode(Node):
         # Get agent pose
         estimate = values.atPose3(this.keys()[0])
 
-        # Three rows bc [x, y] from gps state, six columns bc the state of this node is Pose3
-        H = np.zeros((2, 6))
+        # Three rows bc [x, y, z] from gps state, six columns bc the state of this node is Pose3
+        H = np.zeros((3, 6))
         eps = 1e-6
 
         # Get Jacobians. Perturb in each direction of the delta vector one at a time.
@@ -290,6 +291,7 @@ class FactorGraphNode(Node):
         # Get the x, y position and position covariance
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y
+        self.gps_z = msg.pose.pose.position.z
         # self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
         if self.deployed :
             self.q_gps.append(msg)
@@ -305,7 +307,7 @@ class FactorGraphNode(Node):
         # self.std_pose = np.array([self.dvl_std, self.dvl_std, self.dvl_std, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         # self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.dvl_quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
-        self.dvl_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 10e9
+        self.dvl_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
 
         # TODO: need covariance matrix, look into covariance, figure of merit
 
@@ -409,7 +411,7 @@ class FactorGraphNode(Node):
                             #Actually add the gps factor
                             gps_msg = self.q_gps.pop(0)
 
-                            gps_meas = gtsam.Point2(gps_msg.pose.pose.position.x, gps_msg.pose.pose.position.y)
+                            gps_meas = gtsam.Point3(gps_msg.pose.pose.position.x, gps_msg.pose.pose.position.y, gps_msg.pose.pose.position.z)
                             self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
                             self.get_logger().info("added gps unary")
                             
@@ -428,7 +430,7 @@ class FactorGraphNode(Node):
                 last_pose_key = self.depth_last_pose_key
 
             
-            time_of_earliest_msg = msg_queue[0].header.stamp.nanosec + msg_queue[0].header.stamp.sec * 10e9
+            time_of_earliest_msg = msg_queue[0].header.stamp.nanosec + msg_queue[0].header.stamp.sec * 1e9
             keepLookingForClosest = True
             changed_last = False
             while(keepLookingForClosest):
@@ -460,8 +462,8 @@ class FactorGraphNode(Node):
                     right_ns = None
                     while len(msg_queue) > 1 and right_ns == None:
                         oldest_measurement_msg = msg_queue.pop() 
-                        left_ns = oldest_measurement_msg.header.stamp.nanosec + oldest_measurement_msg.header.stamp.sec * 10e9
-                        right_ns = msg_queue[1].header.stamp.nanosec + msg_queue[1].header.stamp.sec * 10e9 < time_of_pose
+                        left_ns = oldest_measurement_msg.header.stamp.nanosec + oldest_measurement_msg.header.stamp.sec * 1e9
+                        right_ns = msg_queue[1].header.stamp.nanosec + msg_queue[1].header.stamp.sec * 1e9 < time_of_pose
                         if right_ns < time_of_pose:
                             right_ns = None
                     if right_ns != None:
