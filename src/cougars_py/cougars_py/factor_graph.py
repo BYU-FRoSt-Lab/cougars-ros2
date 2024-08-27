@@ -62,6 +62,8 @@ class FactorGraphNode(Node):
         self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(3, self.std_gps) 
         self.std_orientation = np.deg2rad(3)
         self.UNARY_HEADING_NOISE = gtsam.noiseModel.Isotropic.Sigma(3, self.std_orientation)
+        self.std_depth = 0.1
+        self.DEPTH_NOISE = gtsam.noiseModel.Isotropic.Sigma(1,self.std_depth )
 
         # incremental smoothing and mapping (isam) optimizer
         self.isam = gtsam.ISAM2()
