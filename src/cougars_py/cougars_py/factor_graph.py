@@ -55,7 +55,7 @@ class FactorGraphNode(Node):
         # gtsam stuff
 
         # noise models
-        self.std_pose = np.array([5, 5, 5, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
+        self.std_pose = np.array([0.1, 0.1, 0.1, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.std_gps = 0.0001
         # TODO: make the z on gps really  high covariance, ignore the 
@@ -331,9 +331,6 @@ class FactorGraphNode(Node):
         # self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.dvl_quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
         self.dvl_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-
-        # TODO: need covariance matrix, look into covariance, figure of merit
-
     
 
     ##################################################################
