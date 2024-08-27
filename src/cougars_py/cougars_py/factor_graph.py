@@ -23,6 +23,10 @@ class FactorGraphNode(Node):
     def __init__(self):
         super().__init__('factor_graph_node')
 
+        # print('init plot  ')
+        self.plot = Plotter()
+        # print('init plot  ')
+
         # number of seconds we take a dvl dead reck. pose
         self.dvl_time_interval = 0.25
 
@@ -285,9 +289,7 @@ class FactorGraphNode(Node):
         if self.deployed:
             self.q_imu.append(msg)
 
-        print('init plot  ')
-        self.plot = Plotter()
-        print('init plot  ')
+        
         
     # depth sensor
     def depth_callback(self, msg: PoseWithCovarianceStamped):
