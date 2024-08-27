@@ -25,7 +25,6 @@ class FactorGraphNode(Node):
 
         # print('init plot  ')
         self.plot = Plotter()
-        # print('init plot  ')
 
         # number of seconds we take a dvl dead reck. pose
         self.dvl_time_interval = 0.25
@@ -315,7 +314,6 @@ class FactorGraphNode(Node):
         #Plot
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
         self.plot.add_measurement(self.position[0],time)
-        print('gps measure')
         if self.deployed :
             self.q_gps.append(msg)
    
@@ -572,9 +570,7 @@ class FactorGraphNode(Node):
             #plot 
             delta_x = H_pose2_wrt_pose1_noisy.translation()[0] 
             self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
-            print('add measure')
             self.plot.update_plot()
-            print('plot measure')
 
             # IMU unary factor
             self.unary_assignment('imu')
