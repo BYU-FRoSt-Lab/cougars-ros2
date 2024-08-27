@@ -245,8 +245,8 @@ class FactorGraphNode(Node):
                 h_backward = q_exp_backward.translation()[2]
 
                 # Compute error
-                error_forward = h_forward - measurement[0]
-                error_backward = h_backward - measurement[0]
+                error_forward = h_forward - measurement
+                error_backward = h_backward - measurement
                 hdot =  (error_forward - error_backward) / (2*eps)
                 H0[:,i] = hdot
 
