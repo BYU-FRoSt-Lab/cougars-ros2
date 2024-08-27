@@ -299,6 +299,10 @@ class FactorGraphNode(Node):
         self.depth_received = True
 
         self.position[2] = msg.pose.pose.position.z
+
+
+        # time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        # self.plot.add_measurement(self.position[2],time,'depth')
     
         if self.deployed:
             self.q_depth.append(msg)
@@ -315,7 +319,7 @@ class FactorGraphNode(Node):
         # self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
         #Plot
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-        self.plot.add_measurement(self.position[0],time)
+        self.plot.add_measurement(self.position[0],time,'gps')
         if self.deployed :
             self.q_gps.append(msg)
    
@@ -447,7 +451,7 @@ class FactorGraphNode(Node):
                             
                             #plot
                             time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-                            self.plot.add_measurement(msg.pose.pose.position.x,time, new_id )
+                            self.plot.add_measurement(msg.pose.pose.position.x,time, new_id, 'gps' )
                     
                             self.gps_last_pose_key = new_id
                             new_id = self.agent.poseKey
@@ -511,7 +515,7 @@ class FactorGraphNode(Node):
                             next_oldest_measurement_msg = msg_queue.pop()
 
                             if sensor == 'depth':
-                                self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, next_oldest_measurement_msg.pose.pose.position.z)))
+                                self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, np.array([next_oldest_measurement_msg.pose.pose.position.z]))))
                                 self.get_logger().info("added depth unary")
 
                             elif sensor == 'imu':
@@ -524,7 +528,7 @@ class FactorGraphNode(Node):
                                 self.get_logger().info("added imu unary")
                         else:
                             if sensor == 'depth':
-                                self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, oldest_measurement_msg.pose.pose.position.z)))
+                                self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, np.array([oldest_measurement_msg.pose.pose.position.z]))))
                                 self.get_logger().info("added depth unary")
 
                             elif sensor == 'imu':
