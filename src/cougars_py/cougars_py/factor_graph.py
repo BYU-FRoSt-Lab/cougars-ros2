@@ -402,39 +402,39 @@ class FactorGraphNode(Node):
             curr_time = self.dvl_time       #Timestamp of the current pose key added
             new_id = int(self.agent.poseKey)    #The posekey id that you will start searching at
             while(len(self.q_gps) > 1 and in_future == False):       #If measurement in queue and the oldest measurment is later than current posekey
-                print("new_id:%d"%new_id)
+                # print("new_id:%d"%new_id)
                 oldest_measurement_time = (self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec) 
-                print("oldest measurment time: %d\n"%oldest_measurement_time)
+                # print("oldest measurment time: %d\n"%oldest_measurement_time)
                 next_measurement_time = (self.q_gps[1].header.stamp.sec * 1_000_000_000 + self.q_gps[1].header.stamp.nanosec ) 
-                print("next measurment time: %d\n"%next_measurement_time)
-                print('q > 1')
-                print(len(self.q_gps))
+                # print("next measurment time: %d\n"%next_measurement_time)
+                # print('q > 1')
+                # print(len(self.q_gps))
                 if(oldest_measurement_time < curr_time):
-                    print('oldest measurement time < curr time')
+                    # print('oldest measurement time < curr time')
                     
                     newer_key_time = self.poseKey_to_time[int(new_id)] 
-                    print("newer key time: %d\n"%newer_key_time)
+                    # print("newer key time: %d\n"%newer_key_time)
                     older_key_time = self.poseKey_to_time[int(new_id - 1)]
-                    print("older key time: %d\n"% older_key_time)
+                    # print("older key time: %d\n"% older_key_time)
                     time_to_current = abs(newer_key_time - oldest_measurement_time) 
-                    print("time to current: %d\n"%time_to_current)
+                    # print("time to current: %d\n"%time_to_current)
                     time_to_previous = abs(older_key_time - oldest_measurement_time) 
-                    print("time to previous: %d\n"%time_to_previous)
+                    # print("time to previous: %d\n"%time_to_previous)
 
                     if(time_to_current > time_to_previous):
-                        print('time to current is longer than time to prev')
+                        # print('time to current is longer than time to prev')
                         new_id -= 1
                         if(new_id == self.gps_last_pose_key):
-                            print('pop')
+                            # print('pop')
                             self.q_gps.pop(0)
                             new_id = int(self.agent.poseKey)
                     else:
-                        print('time to current is shortest')
+                        # print('time to current is shortest')
 
                         time_old_to_pose = abs(oldest_measurement_time - newer_key_time)
-                        print("time old to pose: %d\n"%time_old_to_pose)
+                        # print("time old to pose: %d\n"%time_old_to_pose)
                         time_next_to_pose = abs(next_measurement_time - newer_key_time)
-                        print("time next to pose: %d\n"%time_old_to_pose)
+                        # print("time next to pose: %d\n"%time_old_to_pose)
 
                         if(next_measurement_time < newer_key_time):
                         # Take care of where next measurement is not past next node
@@ -453,7 +453,7 @@ class FactorGraphNode(Node):
 
                             gps_meas = gtsam.Point3(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z)
                             self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
-                            self.get_logger().info("added gps unary")
+                            # self.get_logger().info("added gps unary")
                             
                             #plot
                             time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
@@ -468,6 +468,8 @@ class FactorGraphNode(Node):
 
 
         elif (sensor == 'depth' and len(self.q_depth) > 1) or (sensor == 'imu' and len(self.q_imu) > 1):
+            
+
             
             msg_queue = []
             if sensor == 'depth':
