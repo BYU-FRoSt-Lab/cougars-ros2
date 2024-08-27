@@ -216,7 +216,7 @@ class FactorGraphNode(Node):
         pos = values.atPose3(this.keys()[0])
 
         # Depth error (z position). TODO 1D or 2D array?
-        error = pos.translation()[2] - measurement
+        error = pos.translation()[2] - measurement[0]
         # print("depth pred", pos.translation()[2])
         # print("depth meas", pos.translation()[2])
 
@@ -245,8 +245,8 @@ class FactorGraphNode(Node):
                 h_backward = q_exp_backward.translation()[2]
 
                 # Compute error
-                error_forward = h_forward - measurement
-                error_backward = h_backward - measurement
+                error_forward = h_forward - measurement[0]
+                error_backward = h_backward - measurement[0]
                 hdot =  (error_forward - error_backward) / (2*eps)
                 H0[:,i] = hdot
 
@@ -465,7 +465,7 @@ class FactorGraphNode(Node):
                             self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [new_id], partial(self.error_unary_heading, [orientation_meas])))
                         
                         elif sensor == 'depth':
-                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [new_id], partial(self.error_depth, msg.pose.pose.position.z)))
+                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [new_id], partial(self.error_depth, np.array([msg.pose.pose.position.z]))))
 
 
                         last_pose_key = new_id
