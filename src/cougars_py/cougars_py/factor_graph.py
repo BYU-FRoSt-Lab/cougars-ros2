@@ -216,7 +216,7 @@ class FactorGraphNode(Node):
         pos = values.atPose3(this.keys()[0])
 
         # Depth error (z position). TODO 1D or 2D array?
-        error = pos.translation()[2] - measurement[0]
+        error = pos.translation()[2] - measurement
         # print("depth pred", pos.translation()[2])
         # print("depth meas", pos.translation()[2])
 
