@@ -6,12 +6,18 @@ class Plotter:
         self.timestamps = []
         self.values = []
         self.pose_keys = []
+
         self.gps_timestamps = []
         self.gps_values = []
         self.gps_keyed_lines = []
+
         self.depth_keyed_lines = []
         self.depth_timestamps = []
         self.depth_values = []
+
+        self.imu_keyed_lines = []
+        self.imu_timestamps = []
+        self.imu_values = []
         
         # Create figure and axis
         self.figure, self.ax = plt.subplots()
@@ -19,13 +25,15 @@ class Plotter:
         # Plot lines with colors and transparency
         self.line, = self.ax.plot([], [], 'r-', alpha=0.7)  # Line object for delta measurements
         self.gps_line, = self.ax.plot([], [], 'b-', alpha=0.7)  # Line object for GPS measurements
-        # self.line, = self.ax.plot([], [], 'r-', alpha=0.7)  # Line object for delta measurements
+        self.imu_line, = self.ax.plot([], [], 'p-', alpha=0.7)  # Line object for delta measurements
         self.depth_line, = self.ax.plot([], [], 'y-', alpha=0.7)  # Line object for GPS measurements
         
         # Plot circles at each point
         self.delta_scatter = self.ax.scatter([], [], color='red', alpha=0.8, s=500)  # Larger red circles
         self.gps_scatter = self.ax.scatter([], [], color='blue', alpha=0.8)
         self.depth_scatter = self.ax.scatter([], [], color='yellow', alpha=0.8)
+        self.imu_scatter = self.ax.scatter([], [], color='purple', alpha=0.8)
+        
         
         self.ax.set_xlabel('Time')
         self.ax.set_ylabel('Value')
@@ -73,17 +81,32 @@ class Plotter:
                     self.depth_keyed_lines.append(line)
                 except ValueError:
                     print(f"Pose key {posekey} not found in delta measurements.")
+        elif sensor == 'imu':
+            self.imu_timestamps.append(timestamp)
+            self.imu_values.append(10.0)
+            
+            if posekey is not None:
+                try:
+                    idx = self.pose_keys.index(posekey)
+                    line = self.ax.plot([self.depth_timestamps[-1], self.timestamps[idx]],
+                                        [self.depth_values[-1], self.values[idx]], 'g--')[0]
+                    self.imu_keyed_lines.append(line)
+                except ValueError:
+                    print(f"Pose key {posekey} not found in delta measurements.")
+
 
     def update_plot(self):
         """Update the plot with new measurements."""
         self.line.set_data(self.timestamps, self.values)
         self.gps_line.set_data(self.gps_timestamps, self.gps_values)
         self.depth_line.set_data(self.depth_timestamps, self.depth_values)
+        self.imu_line.set_data(self.imu_timestamps, self.imu_values)
         
         self.delta_scatter.set_offsets(list(zip(self.timestamps, self.values)))
         self.gps_scatter.set_offsets(list(zip(self.gps_timestamps, self.gps_values)))
         self.depth_scatter.set_offsets(list(zip(self.depth_timestamps, self.depth_values)))
-        
+        self.imu_scatter.set_offsets(list(zip(self.imu_timestamps, self.imu_values)))
+
         for i, (x, y, key) in enumerate(zip(self.timestamps, self.values, self.pose_keys)):
             self.ax.text(x, y, str(key), color='black', ha='center', va='center', fontsize=10, weight='bold')
         

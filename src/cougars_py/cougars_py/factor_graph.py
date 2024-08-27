@@ -18,6 +18,8 @@ class Agent():
         self.poseKey = int(1)
         self.prevPoseKey = self.poseKey
 
+DUMMY_DEPTH_VAL = 5.0
+DUMMY_IMU_VAL = 10.0
 class FactorGraphNode(Node):
 
     def __init__(self):
@@ -287,6 +289,10 @@ class FactorGraphNode(Node):
         r = R.from_quat(quat)
         self.orientation_matrix = r.as_matrix()
 
+        time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        self.plot.add_measurement(DUMMY_IMU_VAL,time,posekey=None,sensor='imu')
+    
+
         if self.deployed:
             self.q_imu.append(msg)
 
@@ -461,7 +467,7 @@ class FactorGraphNode(Node):
 
 
 
-        elif sensor == 'depth' and len(self.q_depth) > 1 or sensor == 'imu' and len(self.q_imu) > 1:
+        elif (sensor == 'depth' and len(self.q_depth) > 1) or (sensor == 'imu' and len(self.q_imu) > 1):
             
             msg_queue = []
             if sensor == 'depth':
@@ -493,13 +499,24 @@ class FactorGraphNode(Node):
             if(changed_last):
                 if(self.poseKey_to_time.get(int(last_pose_key + 1)) and abs(time_of_earliest_msg - self.poseKey_to_time[int(last_pose_key)]) < abs(time_of_earliest_msg - self.poseKey_to_time[int(last_pose_key + 1)])):
                     next_oldest_measurement_msg = msg_queue.pop()
-                    quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
-                    r = R.from_quat(quat)
-                    orientation_matrix = r.as_matrix()
-                    # Get the orientation covariance
-                    orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-                    self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [int(self.agent.poseKey)], partial(self.error_unary_heading, [orientation_meas])))
-                
+
+
+                    if sensor == 'imu':
+                        quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
+                        r = R.from_quat(quat)
+                        orientation_matrix = r.as_matrix()
+                        # Get the orientation covariance
+                        orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                        self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [int(self.agent.poseKey)], partial(self.error_unary_heading, [orientation_meas])))
+                        time = next_oldest_measurement_msg.header.stamp.nanosec + next_oldest_measurement_msg.header.stamp.sec * 1e9
+                        self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=self.agent.poseKey, sensor='imu' )
+                    elif sensor == 'depth':
+                        self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, np.array([next_oldest_measurement_msg.pose.pose.position.z]))))
+                        time = next_oldest_measurement_msg.header.stamp.nanosec + next_oldest_measurement_msg.header.stamp.sec * 1e9
+                        self.plot.add_measurement(DUMMY_DEPTH_VAL,time, posekey=self.agent.poseKey, sensor='depth' )
+
+                        
+                    
             while(int(last_pose_key) < int(self.agent.poseKey)):
                 time_of_pose = self.poseKey_to_time[int(last_pose_key + 1)]
                 if(time_of_earliest_msg < time_of_pose):
@@ -525,10 +542,15 @@ class FactorGraphNode(Node):
                                 # Get the orientation covariance
                                 orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
                                 self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [int(self.agent.poseKey)], partial(self.error_unary_heading, [orientation_meas])))
+                                time = next_oldest_measurement_msg.header.stamp.nanosec + next_oldest_measurement_msg.header.stamp.sec * 1e9
+                                self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=self.agent.poseKey, sensor='imu' )
+                                
                                 self.get_logger().info("added imu unary")
                         else:
                             if sensor == 'depth':
                                 self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, np.array([oldest_measurement_msg.pose.pose.position.z]))))
+                                time = oldest_measurement_msg.header.stamp.nanosec + oldest_measurement_msg.header.stamp.sec * 1e9
+                                self.plot.add_measurement(DUMMY_DEPTH_VAL,time, posekey=self.agent.poseKey, sensor='depth' )
                                 self.get_logger().info("added depth unary")
 
                             elif sensor == 'imu':
@@ -538,6 +560,8 @@ class FactorGraphNode(Node):
                                 # Get the orientation covariance
                                 orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
                                 self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [int(self.agent.poseKey)], partial(self.error_unary_heading, [orientation_meas])))
+                                time = oldest_measurement_msg.header.stamp.nanosec + oldest_measurement_msg.header.stamp.sec * 1e9
+                                self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=self.agent.poseKey, sensor='imu' )
                                 self.get_logger().info("added imu unary")
 
                         last_pose_key = int(last_pose_key + 1)
