@@ -570,7 +570,7 @@ class FactorGraphNode(Node):
             self.poseKey_to_time[int(self.agent.poseKey)] = self.dvl_time
             
             #plot 
-            delta_x = H_pose2_wrt_pose1_noisy.translation().x() 
+            delta_x = H_pose2_wrt_pose1_noisy.translation()[0] 
             self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
             print('add measure')
             self.plot.update_plot()
