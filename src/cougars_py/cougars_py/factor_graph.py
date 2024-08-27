@@ -403,7 +403,7 @@ class FactorGraphNode(Node):
             print("oldest measurment time: %d\n"%oldest_measurement_time)
             next_measurement_time = (msg_queue[1].header.stamp.sec * 1_000_000_000 + msg_queue[1].header.stamp.nanosec ) 
             print("next measurment time: %d\n"%next_measurement_time)
-            print('gps_q > 1')
+            print('q > 1')
             print(len(msg_queue))
             if(oldest_measurement_time < curr_time):
                 print('oldest measurement time < curr time')
@@ -442,18 +442,28 @@ class FactorGraphNode(Node):
                         new_id = self.agent.poseKey
 
                     else:
-                        #Actually add the gps factor
-                        gps_msg = msg_queue.pop(0)
+                        #Actually add the  factor
+                        msg = msg_queue.pop(0)
 
-                        gps_meas = gtsam.Point3(gps_msg.pose.pose.position.x, gps_msg.pose.pose.position.y, gps_msg.pose.pose.position.z)
-                        self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
-                        self.get_logger().info("added gps unary")
+                        if sensor == 'gps':
+
+                            gps_meas = gtsam.Point3(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z)
+                            self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
+                            self.get_logger().info("added gps unary")
+                            
+                            #plot
+                            time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+                            self.plot.add_measurement(msg.pose.pose.position.x,time, new_id )
+                        elif sensor == 'imu':
+                            quat = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
+                            r = R.from_quat(quat)
+                            orientation_matrix = r.as_matrix()
+                            # Get the orientation covariance
+                            orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
+                            self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [new_id], partial(self.error_unary_heading, [orientation_meas])))
                         
-
-                        #plot
-                        time = gps_msg.header.stamp.nanosec + gps_msg.header.stamp.sec * 1e9
-                        self.plot.add_measurement(gps_msg.pose.pose.position.x,time, new_id )
-
+                        elif sensor == 'depth':
+                            self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [new_id], partial(self.error_depth, msg.pose.pose.position.z)))
 
 
                         last_pose_key = new_id
@@ -591,13 +601,13 @@ class FactorGraphNode(Node):
             self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
             self.plot.update_plot()
 
-            # # IMU unary factor
-            # self.unary_assignment('imu')
-            # print('out of imu')
+            # IMU unary factor
+            self.unary_assignment('imu')
+            print('out of imu')
 
-            # # Depth unary factor
-            # self.unary_assignment('depth')
-            # print('out of depth')
+            # Depth unary factor
+            self.unary_assignment('depth')
+            print('out of depth')
 
             # GPS unary factor
             self.unary_assignment('gps')
