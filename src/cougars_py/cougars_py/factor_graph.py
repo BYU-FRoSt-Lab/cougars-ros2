@@ -388,10 +388,10 @@ class FactorGraphNode(Node):
     def unary_assignment(self, sensor):
 
         if sensor == 'gps':
-            
+            in_future = False
             curr_time = self.dvl_time       #Timestamp of the current pose key added
             new_id = int(self.agent.poseKey)    #The posekey id that you will start searching at
-            while(len(self.q_gps) > 1):       #If measurement in queue and the oldest measurment is later than current posekey
+            while(len(self.q_gps) > 1 and in_future == False):       #If measurement in queue and the oldest measurment is later than current posekey
                 print("new_id:%d"%new_id)
                 oldest_measurement_time = (self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec) 
                 print("oldest measurment time: %d\n"%oldest_measurement_time)
@@ -450,6 +450,9 @@ class FactorGraphNode(Node):
 
                             self.gps_last_pose_key = new_id
                             new_id = self.agent.poseKey
+
+                else:
+                    in_future = True
 
 
         elif sensor == 'depth' and len(self.q_depth) > 1 or sensor == 'imu' and len(self.q_imu) > 1:
