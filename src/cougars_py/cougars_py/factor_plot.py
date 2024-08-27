@@ -62,7 +62,7 @@ class Plotter:
         self.gps_scatter.set_offsets(list(zip(self.gps_timestamps, self.gps_values)))
         
         for i, (x, y, key) in enumerate(zip(self.timestamps, self.values, self.pose_keys)):
-            self.ax.text(x, y, str(key), color='black', ha='center', va='center', fontsize=32, weight='bold')
+            self.ax.text(x, y, str(key), color='black', ha='center', va='center', fontsize=10, weight='bold')
         
         if len(self.timestamps) > 1:
             self.ax.set_xlim(min(self.timestamps), max(self.timestamps))
