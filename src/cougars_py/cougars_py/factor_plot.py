@@ -39,7 +39,7 @@ class Plotter:
         self.values.append(new_value)
         self.pose_keys.append(pose_key)
 
-    def add_measurement(self, value, timestamp, posekey=None):
+    def add_measurement(self, value, timestamp, posekey=None, sensor=None):
         """Add a new measurement with a specific timestamp and optionally link to a pose key."""
         self.gps_timestamps.append(timestamp)
         self.gps_values.append(value)
