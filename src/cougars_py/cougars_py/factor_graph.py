@@ -10,6 +10,7 @@ from functools import partial
 import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
+from cougars_py.factor_plot import Plotter
 
 class Agent():
     def __init__(self, H_init):
@@ -276,6 +277,10 @@ class FactorGraphNode(Node):
 
         if self.deployed:
             self.q_imu.append(msg)
+
+        print('init plot  ')
+        self.plot = Plotter()
+        print('init plot  ')
         
     # depth sensor
     def depth_callback(self, msg: PoseWithCovarianceStamped):
@@ -290,9 +295,14 @@ class FactorGraphNode(Node):
     def gps_callback(self, msg: Odometry):
         # Get the x, y position and position covariance
         self.position[0] = msg.pose.pose.position.x
+
         self.position[1] = msg.pose.pose.position.y
         self.gps_z = msg.pose.pose.position.z
         # self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
+        #Plot
+        time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        self.plot.add_measurement(self.position[0],time)
+        print('gps measure')
         if self.deployed :
             self.q_gps.append(msg)
    
@@ -415,8 +425,15 @@ class FactorGraphNode(Node):
                             self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
                             self.get_logger().info("added gps unary")
                             
+
+                            #plot
+                            time = gps_msg.header.stamp.nanosec + gps_msg.header.stamp.sec * 1e9
+                            self.plot.add_measurement(gps_msg.pose.pose.position.x,time, new_id )
+
                             self.gps_last_pose_key = new_id
                             new_id = self.agent.poseKey
+
+
         elif sensor == 'depth' and len(self.q_depth) > 1 or sensor == 'imu' and len(self.q_imu) > 1:
             
             msg_queue = []
@@ -521,15 +538,23 @@ class FactorGraphNode(Node):
             # get the pose2 wrt pose1
             H_pose2_wrt_pose1_noisy = self.dvl_position_last.inverse().compose(self.dvl_pose_current)
 
+
             # add the odometry
             self.agent.prevPoseKey = int(self.agent.poseKey)
             self.agent.poseKey = int(1 + self.agent.poseKey)
+            
 
             # this is the 
             self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
             self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.DVL_NOISE))
             self.poseKey_to_time[int(self.agent.poseKey)] = self.dvl_time
             
+            #plot 
+            delta_x = H_pose2_wrt_pose1_noisy.translation().x() 
+            self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
+            print('add measure')
+            self.plot.update_plot()
+            print('plot measure')
 
             # IMU unary factor
             self.unary_assignment('imu')
