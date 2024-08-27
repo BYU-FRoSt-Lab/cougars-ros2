@@ -376,6 +376,9 @@ class FactorGraphNode(Node):
             self.get_logger().info("Initial state has been set.")
 
             self.deployed = True
+        else:
+            self.get_logger().info("Have not received all necessary sensor inputs to begin")
+
 
     
     ##################################################################
