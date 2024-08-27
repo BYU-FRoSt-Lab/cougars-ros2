@@ -383,7 +383,8 @@ class FactorGraphNode(Node):
     ##################################################################
 
     def unary_assignment(self, sensor):
-
+        
+        sensor = 'gps'
 
         msg_queue = []
         if sensor == 'depth':
