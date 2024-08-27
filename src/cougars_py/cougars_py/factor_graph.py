@@ -664,12 +664,12 @@ class FactorGraphNode(Node):
             self.plot.update_plot()
 
             # IMU unary factor
-            self.unary_assignment('imu')
-            print('out of imu')
+            # self.unary_assignment('imu')
+            # print('out of imu')
 
-            # Depth unary factor
-            self.unary_assignment('depth')
-            print('out of depth')
+            # # Depth unary factor
+            # self.unary_assignment('depth')
+            # print('out of depth')
 
             # GPS unary factor
             self.unary_assignment('gps')
