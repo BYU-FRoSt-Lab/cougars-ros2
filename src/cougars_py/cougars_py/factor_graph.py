@@ -26,6 +26,12 @@ class FactorGraphNode(Node):
         # number of seconds we take a dvl dead reck. pose
         self.dvl_time_interval = 0.25
 
+        # flags to start the whole system
+        self.depth_received = False
+        self.gps_received = False
+        self.imu_received = False
+        self.dvl_received = False
+
         # measurement queues for sensors
         self.q_depth = []
         self.q_imu = []
@@ -268,6 +274,7 @@ class FactorGraphNode(Node):
 
     # orientation from modem
     def imu_callback(self, msg: Imu):
+        self.imu_received = True
 
         self.orientation_covariance = np.array(msg.orientation_covariance).reshape(3, 3)
         # Convert quaternion to rotation matrix
@@ -286,6 +293,8 @@ class FactorGraphNode(Node):
     def depth_callback(self, msg: PoseWithCovarianceStamped):
         # Set the z position and covariance
 
+        self.depth_received = True
+
         self.position[2] = msg.pose.pose.position.z
     
         if self.deployed:
@@ -293,6 +302,8 @@ class FactorGraphNode(Node):
     
     # gps (already in x,y from gps_odom.py)
     def gps_callback(self, msg: Odometry):
+
+        self.gps_received = True
         # Get the x, y position and position covariance
         self.position[0] = msg.pose.pose.position.x
 
@@ -309,6 +320,8 @@ class FactorGraphNode(Node):
 
     # dvl for new odometry
     def dvl_callback(self, msg: Odometry):
+
+        self.dvl_received = True
         # Get the x, y, z position
         self.dvl_position[0] = msg.pose.pose.position.x
         self.dvl_position[1] = msg.pose.pose.position.y
@@ -328,39 +341,41 @@ class FactorGraphNode(Node):
     ##################################################################
 
     def init_callback(self, msg: Empty):
-        # Store current state as the initial state
-        self.init_state = {
-            'position': self.position.copy(),
-            'orientation_matrix': self.orientation_matrix,
-            'dvl_position': self.dvl_position.copy()
-        }
+
+        if self.dvl_received and self.gps_received and self.depth_received and self.imu_received:
+            # Store current state as the initial state
+            self.init_state = {
+                'position': self.position.copy(),
+                'orientation_matrix': self.orientation_matrix,
+                'dvl_position': self.dvl_position.copy()
+            }
 
 
-        H = self.HfromRT(self.init_state['orientation_matrix'],self.init_state['position'])
+            H = self.HfromRT(self.init_state['orientation_matrix'],self.init_state['position'])
 
 
-        self.agent = Agent(H)
+            self.agent = Agent(H)
 
-        self.dvl_pose_current = gtsam.Pose3(H)
-        self.poseKey = int(1)
-        self.prevPoseKey = self.poseKey
+            self.dvl_pose_current = gtsam.Pose3(H)
+            self.poseKey = int(1)
+            self.prevPoseKey = self.poseKey
 
+            
+
+            priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.dvl_pose_current, self.DVL_NOISE)
+            self.graph.push_back(priorFactor)
+            self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
+            self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
+            self.gps_last_pose_key = self.agent.poseKey
+            self.depth_last_pose_key = self.agent.poseKey
+            self.imu_last_pose_key = self.agent.poseKey
+
+
+            self.dvl_position_last = self.dvl_pose_current
         
+            self.get_logger().info("Initial state has been set.")
 
-        priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.dvl_pose_current, self.DVL_NOISE)
-        self.graph.push_back(priorFactor)
-        self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
-        self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
-        self.gps_last_pose_key = self.agent.poseKey
-        self.depth_last_pose_key = self.agent.poseKey
-        self.imu_last_pose_key = self.agent.poseKey
-
-
-        self.dvl_position_last = self.dvl_pose_current
-    
-        self.get_logger().info("Initial state has been set.")
-
-        self.deployed = True
+            self.deployed = True
 
     
     ##################################################################
