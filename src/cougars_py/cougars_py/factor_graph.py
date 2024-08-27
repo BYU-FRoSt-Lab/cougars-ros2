@@ -301,8 +301,8 @@ class FactorGraphNode(Node):
         self.position[2] = msg.pose.pose.position.z
 
 
-        # time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-        # self.plot.add_measurement(self.position[2],time,'depth')
+        time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        self.plot.add_measurement(self.position[2],time,posekey=None,sensor='depth')
     
         if self.deployed:
             self.q_depth.append(msg)
@@ -319,7 +319,7 @@ class FactorGraphNode(Node):
         # self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
         #Plot
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-        self.plot.add_measurement(self.position[0],time,'gps')
+        self.plot.add_measurement(self.position[0],time,sensor='gps')
         if self.deployed :
             self.q_gps.append(msg)
    
@@ -451,7 +451,7 @@ class FactorGraphNode(Node):
                             
                             #plot
                             time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-                            self.plot.add_measurement(msg.pose.pose.position.x,time, new_id, 'gps' )
+                            self.plot.add_measurement(msg.pose.pose.position.x,time, posekey=new_id, sensor='gps' )
                     
                             self.gps_last_pose_key = new_id
                             new_id = self.agent.poseKey
