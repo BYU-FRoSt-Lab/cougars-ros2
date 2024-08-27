@@ -90,7 +90,7 @@ public:
     geometry_msgs::msg::PoseWithCovarianceStamped stamped_msg;
     stamped_msg.header.stamp = msg->header.stamp;
 
-    stamped_msg.header.frame_id = 'odom'; //odom is the coordinate frame of the dvl in robot_localization
+    stamped_msg.header.frame_id = "odom"; //odom is the coordinate frame of the dvl in robot_localization
 
     stamped_msg.pose.pose.position.x = msg->position.x;
     stamped_msg.pose.pose.position.y = -1.0 * msg->position.y;
