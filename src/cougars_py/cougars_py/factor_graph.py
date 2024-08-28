@@ -691,9 +691,10 @@ class FactorGraphNode(Node):
         # Your timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
         if self.deployed:
+            dvl_position = self.dvl_position
             r = R.from_quat(self.dvl_quat)
             self.dvl_orientation_matrix = r.as_matrix()
-            self.dvl_pose_current = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix ,self.dvl_position))
+            self.dvl_pose_current = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix ,dvl_position))
             
             
             # get the pose2 wrt pose1
@@ -717,8 +718,8 @@ class FactorGraphNode(Node):
             self.x_dvl.add_delta_measurement(delta_x,self.dvl_time,self.agent.poseKey)
 
             # self.plot.update_plot()
-            print('COMPARISON:',(self.dvl_position[0]- self.prev_x), delta_x)
-            self.prev_x = self.dvl_position[0]
+            print('COMPARISON:',(dvl_position[0]- self.prev_x), delta_x)
+            self.prev_x = dvl_position[0]
             # self.prev_x = delta_x
 
             # IMU unary factor
