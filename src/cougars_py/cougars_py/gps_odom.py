@@ -49,7 +49,7 @@ class NavSatFixToOdom(Node):
         self.gps_covariance = [1e-3] * 9  # Initial low covariance
         self.timeout_duration = 3.0  
 
-        self.timer = self.create_timer(1.0, self.check_gps_timeout)
+        # self.timer = self.create_timer(1.0, self.check_gps_timeout)
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, '/gps_odom', 10)
     
@@ -75,7 +75,7 @@ class NavSatFixToOdom(Node):
         
         # Fill in the odometry message
         odom = Odometry()
-        odom.header.stamp = self.get_clock().now().to_msg()
+        odom.header.stamp = msg.header.stamp
         odom.header.frame_id = "map"
         odom.child_frame_id = "odom"
         odom.pose.pose.position.x = x

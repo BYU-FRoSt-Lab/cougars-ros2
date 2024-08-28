@@ -48,6 +48,10 @@ public:
     geometry_msgs::msg::TwistWithCovarianceStamped stamped_msg;
     stamped_msg.header.stamp = msg->header.stamp;
 
+    // double msg_time = msg->time TODO: Figure how to use the NTP time from DVL. 
+
+    //stamped_msg.header.stamp
+
     // filling in the upper left corner of the 6X6 covariance matrix
     int index = 0;
     double defaultValue = 0;

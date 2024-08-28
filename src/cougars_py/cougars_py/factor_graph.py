@@ -11,6 +11,8 @@ import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
 from cougars_py.factor_plot import Plotter
+from cougars_py.factor_class_plot import Plotter as Plot
+from cougars_py.factor_class_plot import Series
 
 class Agent():
     def __init__(self, H_init):
@@ -20,13 +22,21 @@ class Agent():
 
 DUMMY_DEPTH_VAL = 5.0
 DUMMY_IMU_VAL = 10.0
+
 class FactorGraphNode(Node):
 
     def __init__(self):
         super().__init__('factor_graph_node')
 
-        # print('init plot  ')
-        self.plot = Plotter()
+        # self.plot = Plotter()
+
+        # Create Plotter objects with different series
+        self.x_output = Series('Output', 'b', size=800)
+        self.x_dvl = Series('DVL', 'r', size=600, alpha=0.5)
+        # delta_series_2 = Series(name='Delta 2', color='green', size=600, alpha=0.5)
+        self.x_gps = Series('GPS', 'g')
+        self.x_plot = Plot([self.x_output, self.x_dvl, self.x_gps])
+        self.prev_x = 0
 
         # number of seconds we take a dvl dead reck. pose
         self.dvl_time_interval = 2
@@ -290,13 +300,11 @@ class FactorGraphNode(Node):
         self.orientation_matrix = r.as_matrix()
 
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-        self.plot.add_measurement(DUMMY_IMU_VAL,time,posekey=None,sensor='imu')
+        # self.plot.add_measurement(DUMMY_IMU_VAL,time,posekey=None,sensor='imu')
     
 
         if self.deployed:
-            self.q_imu.append(msg)
-
-        
+            self.q_imu.append(msg)    
         
     # depth sensor
     def depth_callback(self, msg: PoseWithCovarianceStamped):
@@ -308,7 +316,7 @@ class FactorGraphNode(Node):
 
 
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-        self.plot.add_measurement(self.position[2],time,posekey=None,sensor='depth')
+        # self.plot.add_measurement(self.position[2],time,posekey=None,sensor='depth')
     
         if self.deployed:
             self.q_depth.append(msg)
@@ -325,7 +333,8 @@ class FactorGraphNode(Node):
         # self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
         #Plot
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-        self.plot.add_measurement(self.position[0],time,sensor='gps')
+        # self.plot.add_measurement(self.position[0],time,sensor='gps')
+        self.x_gps.add_measurement(self.position[0], time)
         if self.deployed :
             self.q_gps.append(msg)
    
@@ -462,9 +471,10 @@ class FactorGraphNode(Node):
                                 self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
                                 self.get_logger().info("added gps unary %d"%new_id)
                                 
-                                #plot
+                                #PLOT
                                 time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-                                self.plot.add_measurement(msg.pose.pose.position.x,time, posekey=new_id, sensor='gps' )
+                                # self.plot.add_measurement(msg.pose.pose.position.x,time, posekey=new_id, sensor='gps' )
+                                self.x_gps.add_measurement(msg.pose.pose.position.x,time, pose_key=new_id)
                         
                                 self.gps_last_pose_key = new_id
                                 print('last gps key is now: ', self.gps_last_pose_key)
@@ -547,7 +557,7 @@ class FactorGraphNode(Node):
 
                                 self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [new_id], partial(self.error_depth, [np.array([msg.pose.pose.position.z])])))
                                 time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-                                self.plot.add_measurement(DUMMY_DEPTH_VAL,time, posekey=new_id, sensor='depth' )
+                                # self.plot.add_measurement(DUMMY_DEPTH_VAL,time, posekey=new_id, sensor='depth' )
                                 self.get_logger().info("added depth unary %d"% new_id)
                                 time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
                 
@@ -562,7 +572,7 @@ class FactorGraphNode(Node):
                                 orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
                                 self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [new_id], partial(self.error_unary_heading, [orientation_meas])))
                                 time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
-                                self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=new_id, sensor='imu' )
+                                # self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=new_id, sensor='imu' )
 
 
                                 self.get_logger().info("added imu unary %d" % new_id)
@@ -701,29 +711,36 @@ class FactorGraphNode(Node):
             self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.DVL_NOISE))
             self.poseKey_to_time[int(self.agent.poseKey)] = self.dvl_time
             
-            #plot 
+            #PLOT 
             delta_x = H_pose2_wrt_pose1_noisy.translation()[0] 
-            self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
-            self.plot.update_plot()
+            # self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
+            self.x_dvl.add_delta_measurement(delta_x,self.dvl_time,self.agent.poseKey)
+
+            # self.plot.update_plot()
+            print('COMPARISON:',(self.dvl_position[0]- self.prev_x), delta_x)
+            self.prev_x = self.dvl_position[0]
+            # self.prev_x = delta_x
 
             # IMU unary factor
             self.unary_assignment('imu')
-            print('out of imu')
+            # print('out of imu')
 
             # Depth unary factor
             self.unary_assignment('depth')
-            print('out of depth')
+            # print('out of depth')
 
             # GPS unary factor
             self.unary_assignment('gps')
-            print('out of gps')
+            # print('out of gps')
 
             self.dvl_position_last = self.dvl_pose_current
 
             self.update()
             self.publish_vehicle_status()
 
-
+            #PLOT
+            self.x_output.add_measurement(self.xyz[0], self.dvl_time,self.agent.poseKey)
+            self.x_plot.update_plot()
 
 
 
