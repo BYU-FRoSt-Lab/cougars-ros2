@@ -21,7 +21,7 @@ def generate_launch_description():
             cmd=['ros2', 'bag', 'record', '-s', 'mcap', '-a'],
             output='screen',
         ),
-        # Set up the DVL and enable acoustics
+        # Set up the DVL
         launch_ros.actions.Node(
             package='dvl_a50', 
             executable='dvl_a50_sensor', 
@@ -33,16 +33,6 @@ def generate_launch_description():
             parameters=[config_file],
         ),
         # Setup the GPS
-        # launch_ros.actions.Node(
-        #     package='robot_localization',
-        #     executable='navsat_transform_node',
-        #     name='navsat_transform_node',
-        #     parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
-        #     remappings=[                        # ^^^ If we move theses parameters from coug_ekf.yaml to CougarsSetup/config/vehicle_config.yaml
-        #         ('/gps/fix', '/fix'),           #      replace this with [config_file]
-        #         ('imu/data','/modem_imu')
-        #     ]
-        # ),
         launch_ros.actions.ComposableNodeContainer(
             package='rclcpp_components',
             executable='component_container',
@@ -73,27 +63,10 @@ def generate_launch_description():
             package='cougars_py',
             executable='seatrac_ahrs_converter',
         ),
-        launch_ros.actions.Node(
-            package='cougars_cpp',
-            executable='vehicle_status',
-        ),
-        # EKF nodes
-        launch_ros.actions.Node(
-            package='robot_localization',
-            executable='ekf_node',
-            name='ekf_filter_node_odom',
-            output='screen',
-            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
-            remappings=[('/odometry/filtered', '/odometry/local')],
-        ),
-        launch_ros.actions.Node(
-            package='robot_localization',
-            executable='ekf_node',
-            name='ekf_filter_node_map',
-            output='screen',
-            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'coug_ekf.yaml')],
-            remappings=[('/odometry/filtered', '/odometry/global')],
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_cpp',
+        #     executable='vehicle_status',
+        # ),
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
