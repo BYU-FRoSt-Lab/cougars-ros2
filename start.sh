@@ -9,6 +9,12 @@
 ##########################################################
 
 cleanup() {
+    
+    case $1 in
+        moos)
+            bash ~/ros2_ws/moos_tools/mission_kill.sh
+            ;;
+    esac
 
     bash ~/teensy_ws/strobe.sh off
 
@@ -40,6 +46,9 @@ cd ~/ros2_ws
 source install/setup.bash
 
 case $1 in
+    bag)
+        ros2 launch cougars_py sensors_bag_launch.py
+        ;;
     manual)
         ros2 launch cougars_py manual_launch.py
         ;;
@@ -48,8 +57,6 @@ case $1 in
         bash ~/ros2_ws/moos_tools/mission_deploy.sh
         
         ros2 launch cougars_py moos_launch.py
-
-        bash ~/ros2_ws/moos_tools/mission_kill.sh
         ;;
     *)
         echo ""
