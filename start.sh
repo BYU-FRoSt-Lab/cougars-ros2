@@ -8,32 +8,54 @@
 #   running the docker container
 ##########################################################
 
-# Prompt for sudo password
-sudo echo ""
+cleanup() {
 
-echo -e "\e[38;5;6m  ██████          ██    ██  ██████   █████  ██████  ███████ \e[0m"
-echo -e "\e[38;5;6m ██       ██████  ██    ██ ██       ██   ██ ██   ██ ██      \e[0m" 
-echo -e "\e[38;5;6m ██      ██    ██ ██    ██ ██   ███ ███████ ██████  ███████ \e[0m" 
-echo -e "\e[38;5;6m ██      ██    ██ ██    ██ ██    ██ ██   ██ ██   ██      ██ \e[0m" 
-echo -e "\e[38;5;6m  ██████  ██████   ██████   ██████  ██   ██ ██   ██ ███████ \e[0m" 
-echo ""
-echo -e "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
+    case $1 in
+        moos)
+            bash ~/ros2_ws/moos_tools/mission_kill.sh
+            ;;
+    esac
+
+    bash ~/teensy_ws/strobe.sh off
+
+    killall micro_ros_agent
+    wait
+
+    exit 0
+}
+trap cleanup SIGINT
+
+sudo echo "" # Prompt for sudo password (bug fix for strobe.sh)
+echo "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
 echo ""
 
+# Start the strobe light
 bash ~/teensy_ws/strobe.sh on
 
-cd ~/microros_ws
-source install/setup.bash
-# ros2 run micro_ros_agent micro_ros_agent multiserial --devs "/dev/ttyACM0 /dev/ttyACM1" -b 6000000 &
-ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
-sleep 5
+# Start the micro-ROS agent
+if [ -z "$(tycmd list)" ]; then
+    echo ""
+    echo "ERROR: No Teensy boards avaliable to connect to"
+    echo ""
+
+else 
+    cd ~/microros_ws
+    source install/setup.bash
+    ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
+
+    sleep 5
+fi
 
 echo ""
 
+# Start the ROS 2 launch files
 cd ~/ros2_ws
 source install/setup.bash
 
 case $1 in
+    bag)
+        ros2 launch cougars_py sensors_bag_launch.py
+        ;;
     manual)
         ros2 launch cougars_py manual_launch.py
         ;;
@@ -42,8 +64,6 @@ case $1 in
         bash ~/ros2_ws/moos_tools/mission_deploy.sh
         
         ros2 launch cougars_py moos_launch.py
-
-        bash ~/ros2_ws/moos_tools/mission_kill.sh
         ;;
     *)
         echo ""
@@ -54,8 +74,3 @@ case $1 in
         ros2 launch cougars_py manual_launch.py
         ;;
 esac
-
-bash ~/teensy_ws/strobe.sh off
-
-killall micro_ros_agent
-wait
