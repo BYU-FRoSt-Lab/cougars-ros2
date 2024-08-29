@@ -12,17 +12,15 @@ def generate_launch_description():
     # Get the directory of the launch files
     package_dir = os.path.join(
         get_package_share_directory('cougars_py'), 'launch')
-    
-    # Include additional launch files
-    sensors_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
-    )
 
     config_file = "/home/frostlab/config/vehicle_config.yaml"
     
     return launch.LaunchDescription([
         
-        sensors_launch,
+        # Include additional launch files
+        launch.actions.IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
+        ),
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
