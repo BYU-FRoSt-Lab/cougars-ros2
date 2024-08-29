@@ -17,18 +17,17 @@ def generate_launch_description():
         if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
             folder_exists = False
 
-    rosbag = ExecuteProcess(
-        cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
-        output='screen',
-    )
-
     config_file = "/home/frostlab/config/vehicle_config.yaml"
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
     
     return launch.LaunchDescription([
         
-        rosbag,
+        # Start the data recording
+        launch.actions.ExecuteProcess(
+            cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
+            output='screen',
+        ),
         # Set up the DVL
         launch_ros.actions.Node(
             package='dvl_a50', 
