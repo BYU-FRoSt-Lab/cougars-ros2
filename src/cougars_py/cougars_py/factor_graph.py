@@ -741,6 +741,9 @@ class FactorGraphNode(Node):
 
             #PLOT
             self.x_output.add_measurement(self.xyz[0], self.dvl_time,self.agent.poseKey)
+            for i in range (len(self.x_output.pose_keys)):
+                self.x_output.values[i] = self.result.atPose3(self.x_output.pose_keys[i]).translation()[0]
+
             self.x_plot.update_plot()
 
 
