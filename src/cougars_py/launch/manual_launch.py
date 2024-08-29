@@ -1,16 +1,13 @@
 import launch
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 import launch_ros.actions
 import launch_ros.descriptions
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import IncludeLaunchDescription
+
 from ament_index_python.packages import get_package_share_directory
-
-
 import os
 
-
 def generate_launch_description():   
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
 
     # Get the directory of the launch files
     package_dir = os.path.join(
@@ -21,9 +18,12 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
     )
 
-    return launch.LaunchDescription([
-        sensors_launch,
+    config_file = "/home/frostlab/config/vehicle_config.yaml"
 
+    return launch.LaunchDescription([
+        
+        sensors_launch,
+        # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
             executable='pid_control',
