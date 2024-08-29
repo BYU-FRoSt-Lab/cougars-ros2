@@ -16,7 +16,7 @@ def generate_launch_description():
         vehicle_config_params = yaml.safe_load(f)
 
     # Get folder name from config file
-    folder = vehicle_config_params['/general']['bag_folder_name']
+    folder = vehicle_config_params['general']['bag_folder_name']
     folder = folder + "_moos_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
     # Get the directory of the launch files
