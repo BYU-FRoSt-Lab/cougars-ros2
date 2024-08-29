@@ -8,6 +8,14 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+
+    folder_exists = True
+
+    while folder_exists:
+
+        folder = input("Enter a new folder name: ")
+        if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
+            folder_exists = False
     
     config_file = "/home/frostlab/config/vehicle_config.yaml"
 
@@ -18,7 +26,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         # Start recording all topics to an mcap file
         launch.actions.ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '-s', 'mcap', '-a'],
+            cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-a'],
             output='screen',
         ),
         # Set up the DVL
