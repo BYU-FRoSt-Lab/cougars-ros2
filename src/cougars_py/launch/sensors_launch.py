@@ -3,16 +3,7 @@ from launch.actions import ExecuteProcess
 import launch_ros.actions
 import launch_ros.descriptions
 
-import os
 import yaml
-import datetime
-
-folder_exists = True
-while folder_exists:
-    folder = input("Enter a new descriptive folder name: ")
-    folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-    if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
-        folder_exists = False
 
 def generate_launch_description():
 
@@ -22,11 +13,6 @@ def generate_launch_description():
     
     return launch.LaunchDescription([
         
-        # Start the data recording
-        launch.actions.ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
-            output='screen',
-        ),
         # Set up the DVL
         launch_ros.actions.Node(
             package='dvl_a50', 

@@ -6,8 +6,16 @@ import launch_ros.descriptions
 
 from ament_index_python.packages import get_package_share_directory
 import os
+import datetime
 
-def generate_launch_description():   
+def generate_launch_description():
+
+    folder_exists = True
+    while folder_exists:
+        folder = input("Enter a new descriptive folder name: ")
+        folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+        if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
+            folder_exists = False
 
     # Get the directory of the launch files
     package_dir = os.path.join(
@@ -17,6 +25,11 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         
+        # Start the data recording
+        launch.actions.ExecuteProcess(
+            cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
+            output='screen',
+        ),
         # Include additional launch files
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
