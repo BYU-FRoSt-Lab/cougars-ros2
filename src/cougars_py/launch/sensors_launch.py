@@ -7,6 +7,12 @@ import os
 import yaml
 import datetime
 
+folder_exists = True
+while folder_exists:
+    folder = input("Enter a new descriptive folder name: ")
+    folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
+        folder_exists = False
 
 def generate_launch_description():
 
@@ -15,13 +21,6 @@ def generate_launch_description():
         vehicle_config_params = yaml.safe_load(f)
     
     return launch.LaunchDescription([
-
-        folder_exists = True
-        while folder_exists:
-            folder = input("Enter a new descriptive folder name: ")
-            folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-            if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
-                folder_exists = False
         
         # Start the data recording
         launch.actions.ExecuteProcess(
