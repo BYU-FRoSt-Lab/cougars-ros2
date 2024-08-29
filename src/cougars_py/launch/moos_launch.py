@@ -53,7 +53,7 @@ def generate_launch_description():
                     package='gpsd_client',
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
-                    parameters=[vehicle_config_params['gpsd_client']['ros__parameters']]),
+                    parameters=[vehicle_config_params['/gpsd_client']['ros__parameters']]),
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
