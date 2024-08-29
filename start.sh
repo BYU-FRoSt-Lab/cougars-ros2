@@ -8,20 +8,25 @@
 #   running the docker container
 ##########################################################
 
-# Prompt for sudo password
-sudo echo ""
+cleanup() {
 
-echo -e "\e[38;5;6m  ██████          ██    ██  ██████   █████  ██████  ███████ \e[0m"
-echo -e "\e[38;5;6m ██       ██████  ██    ██ ██       ██   ██ ██   ██ ██      \e[0m" 
-echo -e "\e[38;5;6m ██      ██    ██ ██    ██ ██   ███ ███████ ██████  ███████ \e[0m" 
-echo -e "\e[38;5;6m ██      ██    ██ ██    ██ ██    ██ ██   ██ ██   ██      ██ \e[0m" 
-echo -e "\e[38;5;6m  ██████  ██████   ██████   ██████  ██   ██ ██   ██ ███████ \e[0m" 
-echo ""
-echo -e "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
+    bash ~/teensy_ws/strobe.sh off
+
+    killall ros2 && killall micro_ros_agent
+    wait
+
+    exit 0
+}
+trap cleanup SIGINT
+
+sudo echo "" # Prompt for sudo password (bug fix for strobe.sh)
+echo "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
 echo ""
 
+# Start the strobe light
 bash ~/teensy_ws/strobe.sh on
 
+# Start the micro-ROS agent
 cd ~/microros_ws
 source install/setup.bash
 # ros2 run micro_ros_agent micro_ros_agent multiserial --devs "/dev/ttyACM0 /dev/ttyACM1" -b 6000000 &
@@ -30,6 +35,7 @@ sleep 5
 
 echo ""
 
+# Start the ROS 2 launch files
 cd ~/ros2_ws
 source install/setup.bash
 
@@ -54,8 +60,3 @@ case $1 in
         ros2 launch cougars_py manual_launch.py
         ;;
 esac
-
-bash ~/teensy_ws/strobe.sh off
-
-killall micro_ros_agent
-wait

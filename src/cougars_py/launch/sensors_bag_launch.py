@@ -17,13 +17,12 @@ def generate_launch_description():
 
     # Get folder name from config file
     folder = vehicle_config_params['folder_name']
-    folder = folder + "_moos_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    folder = folder + "_sensors_bag_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
     # Get the directory of the launch files
     package_dir = os.path.join(
         get_package_share_directory('cougars_py'), 'launch')
 
-    
     return launch.LaunchDescription([
         
         # Start the data recording
@@ -35,26 +34,4 @@ def generate_launch_description():
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
         ),
-        # Start the control nodes
-        launch_ros.actions.Node(
-            package='cougars_cpp',
-            executable='pid_control',
-            parameters=[config_file],
-        ),
-        launch_ros.actions.Node(
-            package='cougars_cpp',
-            executable='moos_bridge',
-            parameters=[config_file],
-            output='screen',
-        ),
-        # Start the EmergencyStop checks
-        # launch_ros.actions.Node(
-        #     package='cougars_py',
-        #     executable='leak_sub',
-        # ),
-        # launch_ros.actions.Node(
-        #     package='cougars_py',
-        #     executable='battery_sub',
-        #     parameters=[config_file],
-        # ),
     ])

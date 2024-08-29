@@ -6,9 +6,19 @@
 #   and Teensy board connections
 ##########################################################
 
+cleanup() {
+
+    killall ros2 && killall micro_ros_agent
+    wait
+    
+    exit 0
+}
+trap cleanup SIGINT
+
 cd ~/microros_ws
 source install/setup.bash
-ros2 run micro_ros_agent micro_ros_agent multiserial --devs "/dev/ttyACM0 /dev/ttyACM1" -b 6000000 &
+# ros2 run micro_ros_agent micro_ros_agent multiserial --devs "/dev/ttyACM0 /dev/ttyACM1" -b 6000000 &
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
 sleep 5
 
 cd ~/ros2_ws
@@ -48,6 +58,3 @@ ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 0, 0
 
 echo ""
 echo "TEST COMPLETE"
-
-killall micro_ros_agent
-wait
