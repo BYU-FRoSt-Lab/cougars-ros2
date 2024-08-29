@@ -10,22 +10,17 @@ import datetime
 def generate_launch_description():
 
     folder_exists = True
-
     while folder_exists:
-
         folder = input("Enter a new descriptive folder name: ")
         folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
             folder_exists = False
     
     config_file = "/home/frostlab/config/vehicle_config.yaml"
-
-    # COULD FIX THE GPSD NODE IN THE FUTURE TO ACCEPT YAML FILE PATH
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
 
     return launch.LaunchDescription([
-        # Start recording all topics to an mcap file
         launch.actions.ExecuteProcess(
             cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
             output='screen',
@@ -71,6 +66,12 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_py',
             executable='seatrac_ahrs_converter',
+        ),
+        launch_ros.actions.Node(
+            package='cougars_py',
+            executable='gps_odom',
+            name='gps_odom',
+            parameters=[config_file],
         ),
         # launch_ros.actions.Node(
         #     package='cougars_cpp',
