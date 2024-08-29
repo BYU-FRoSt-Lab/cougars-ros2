@@ -8,7 +8,7 @@
 
 cleanup() {
 
-    killall ros2 && killall micro_ros_agent
+    killall micro_ros_agent
     wait
     
     exit 0

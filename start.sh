@@ -9,7 +9,7 @@
 ##########################################################
 
 cleanup() {
-    
+
     case $1 in
         moos)
             bash ~/ros2_ws/moos_tools/mission_kill.sh
@@ -18,7 +18,7 @@ cleanup() {
 
     bash ~/teensy_ws/strobe.sh off
 
-    killall ros2 && killall micro_ros_agent
+    killall micro_ros_agent
     wait
 
     exit 0

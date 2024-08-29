@@ -11,12 +11,13 @@ import yaml
 
 def generate_launch_description():
 
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
-    with open(config_file, 'r') as f:
-        vehicle_config_params = yaml.safe_load(f)
+    vehicle_file = "/home/frostlab/config/vehicle_config.yaml"
+    mission_file = "/home/frostlab/config/mission_config.yaml"
+    with open(mission_file, 'r') as f:
+        mission_config_params = yaml.safe_load(f)
 
     # Get folder name from config file
-    folder = vehicle_config_params['general']['bag_folder_name']
+    folder = mission_config_params['bag_folder_name']
     folder = folder + "_moos_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
     # Get the directory of the launch files
@@ -39,12 +40,12 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_cpp',
             executable='pid_control',
-            parameters=[config_file],
+            parameters=[vehicle_file],
         ),
         launch_ros.actions.Node(
             package='cougars_cpp',
             executable='moos_bridge',
-            parameters=[config_file],
+            parameters=[vehicle_file],
             output='screen',
         ),
         # Start the EmergencyStop checks
