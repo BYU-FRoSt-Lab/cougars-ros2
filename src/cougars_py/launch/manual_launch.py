@@ -7,12 +7,16 @@ import launch_ros.descriptions
 from ament_index_python.packages import get_package_share_directory
 import os
 import datetime
+import sys
+
+for arg in sys.argv:
+    if arg.startswith("folder:="):
+        folder = arg.split(":=")[1]
 
 def generate_launch_description():
 
     folder_exists = True
     while folder_exists:
-        folder = input("Enter a new descriptive folder name: ")
         folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
             folder_exists = False
