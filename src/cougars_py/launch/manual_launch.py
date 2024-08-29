@@ -4,7 +4,7 @@ import launch_ros.descriptions
 
 import os
 import yaml
-from ament_index_python.packages import get_package_share_directory
+import datetime
 
 
 def generate_launch_description():
@@ -14,6 +14,7 @@ def generate_launch_description():
     while folder_exists:
 
         folder = input("Enter a new folder name: ")
+        folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
             folder_exists = False
     
