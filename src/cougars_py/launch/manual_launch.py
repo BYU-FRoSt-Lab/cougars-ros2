@@ -26,7 +26,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         # Start recording all topics to an mcap file
         launch.actions.ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-a'],
+            cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
             output='screen',
         ),
         # Set up the DVL
