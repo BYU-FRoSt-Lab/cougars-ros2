@@ -1,10 +1,10 @@
 import launch
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 import launch_ros.actions
 import launch_ros.descriptions
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import IncludeLaunchDescription
-from ament_index_python.packages import get_package_share_directory
 
+from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
@@ -21,8 +21,8 @@ def generate_launch_description():
     config_file = "/home/frostlab/config/vehicle_config.yaml"
     
     return launch.LaunchDescription([
-        sensors_launch,
         
+        sensors_launch,
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',

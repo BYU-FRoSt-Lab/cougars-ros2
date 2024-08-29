@@ -14,5 +14,4 @@ def generate_launch_description():
             executable='modem',
             parameters=[config_file]
         ),
-
     ])

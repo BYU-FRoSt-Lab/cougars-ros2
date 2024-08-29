@@ -1,14 +1,15 @@
 import launch
+from launch.actions import ExecuteProcess
 import launch_ros.actions
 import launch_ros.descriptions
 
 import os
 import yaml
 import datetime
-from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
+
     folder_exists = True
     while folder_exists:
         folder = input("Enter a new descriptive folder name: ")
@@ -17,15 +18,16 @@ def generate_launch_description():
             folder_exists = False
 
     rosbag = ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
-            output='screen',
-        )
+        cmd=['ros2', 'bag', 'record', '-o', '/home/frostlab/ros2_ws/bag/' + folder, '-s', 'mcap', '-a'],
+        output='screen',
+    )
 
     config_file = "/home/frostlab/config/vehicle_config.yaml"
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
     
     return launch.LaunchDescription([
+        
         rosbag,
         # Set up the DVL
         launch_ros.actions.Node(
