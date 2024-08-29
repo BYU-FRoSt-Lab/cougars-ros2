@@ -13,7 +13,7 @@ def generate_launch_description():
 
     while folder_exists:
 
-        folder = input("Enter a new folder name: ")
+        folder = input("Enter a new descriptive folder name: ")
         folder = folder + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         if not os.path.exists("/home/frostlab/ros2_ws/bag/" + folder):
             folder_exists = False
