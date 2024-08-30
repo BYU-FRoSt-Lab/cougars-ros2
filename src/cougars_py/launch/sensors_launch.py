@@ -10,6 +10,7 @@ def generate_launch_description():
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
     
+    
     return launch.LaunchDescription([
         
         # Set up the DVL
