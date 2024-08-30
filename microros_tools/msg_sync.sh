@@ -8,6 +8,4 @@
 #   own machine or locally on the the Pi
 ##########################################################
 
-rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/sensors/extra_packages
-rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/control/extra_packages
 rsync -avc --delete ~/CougarsRPi/src/frost_interfaces ~/CougarsTeensy/cougars/extra_packages
