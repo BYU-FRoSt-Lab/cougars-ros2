@@ -25,12 +25,12 @@ cleanup() {
 }
 trap cleanup SIGINT
 
-sudo echo "" # Prompt for sudo password (bug fix for strobe.sh)
+echo ""
 echo "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
 echo ""
 
 # Start the strobe light
-bash ~/teensy_ws/strobe.sh on
+sudo bash ~/teensy_ws/strobe.sh on # Prompt for sudo password (bug fix)
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list)" ]; then
