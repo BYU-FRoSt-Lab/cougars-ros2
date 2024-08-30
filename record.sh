@@ -9,7 +9,7 @@ cd ~/ros2_ws
 source install/setup.bash
 
 echo ""
-echo "Enter a descriptive rosbag folder name: "
+echo "Enter a descriptive folder name for the rosbag: "
 read FOLDER
 echo ""
 
