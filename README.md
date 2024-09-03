@@ -3,6 +3,8 @@ If you're doing code development, feel free to clone this repo directly, make a 
 Otherwise (if you're looking to set up a new Coug-UV from scratch), see this repo for instructions on how to get our custom Docker image running instead: https://github.com/snelsondurrant/CougarsSetup
 
 A quick high-level overview of the repo:
+- **dvl_tools/** - scripts for enabling, calibrating, and launching dvl modes and features.
+TODO: Add a more helpful description here in the future.
 - **microros_tools/** - helpful scripts for launching the microROS agent ("agent.sh"), syncing custom message changes ("msg_sync.sh"), and testing Teensy board connections ("test.sh").
 A description of what each script does is included as a header comment in the file.
 - **moos_tools/** - start scripts, mission files, and behavior files for MOOS-IvP mission planning and execution.
