@@ -26,7 +26,9 @@ cleanup() {
 trap cleanup SIGINT
 
 echo ""
-echo "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
+echo "######################################################################"
+echo "# BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS #"
+echo "######################################################################"
 echo ""
 
 # Start the strobe light
