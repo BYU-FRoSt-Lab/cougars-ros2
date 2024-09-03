@@ -16,7 +16,7 @@ cleanup() {
             ;;
     esac
 
-    bash ~/teensy_ws/strobe.sh off
+    sudo bash /home/frostlab/teensy_ws/strobe.sh off
 
     killall micro_ros_agent
     wait
@@ -30,7 +30,7 @@ echo "BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS"
 echo ""
 
 # Start the strobe light
-sudo bash ~/teensy_ws/strobe.sh on # Prompt for sudo password (bug fix)
+sudo bash /home/frostlab/teensy_ws/strobe.sh on # Prompt for sudo password (bug fix)
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list)" ]; then
