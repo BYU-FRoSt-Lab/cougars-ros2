@@ -36,7 +36,6 @@ sudo bash ~/teensy_ws/strobe.sh on # Prompt for sudo password (bug fix)
 if [ -z "$(tycmd list)" ]; then
     echo ""
     echo "ERROR: No Teensy boards avaliable to connect to"
-    echo ""
 
 else 
     cd ~/microros_ws
@@ -66,7 +65,6 @@ case $1 in
         ros2 launch cougars_py sensors_launch.py
         ;;
     *)
-        echo ""
         echo "ALERT: No start configuration specified, defaulting to 'manual'"
         echo "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
         echo ""
