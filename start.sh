@@ -34,8 +34,8 @@ sudo bash /home/frostlab/teensy_ws/strobe.sh on # Prompt for sudo password (bug 
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list)" ]; then
-    echo ""
     echo "ERROR: No Teensy boards avaliable to connect to"
+    echo ""
 
 else 
     cd ~/microros_ws
@@ -43,9 +43,8 @@ else
     ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
 
     sleep 5
+    echo ""
 fi
-
-echo ""
 
 # Start the ROS 2 launch files
 cd ~/ros2_ws
