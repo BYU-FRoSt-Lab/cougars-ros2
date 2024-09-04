@@ -10,12 +10,6 @@
 
 cleanup() {
 
-    case $1 in
-        moos)
-            bash ~/ros2_ws/moos_tools/mission_kill.sh
-            ;;
-    esac
-
     sudo bash /home/frostlab/teensy_ws/strobe.sh off
 
     killall micro_ros_agent
@@ -57,9 +51,6 @@ case $1 in
         ros2 launch cougars_py manual_launch.py
         ;;
     moos)
-        bash ~/ros2_ws/moos_tools/mission_start_processes.sh
-        bash ~/ros2_ws/moos_tools/mission_deploy.sh
-        
         ros2 launch cougars_py moos_launch.py
         ;;
     sensors)
