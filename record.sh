@@ -13,16 +13,16 @@ cleanup() {
 }
 trap cleanup SIGINT
 
-cd ~/ros2_ws
-source install/setup.bash
-
 echo ""
 echo "Enter a descriptive folder name for the rosbag: "
 read FOLDER
 echo ""
 
-# Start the DVL
+cd ~/ros2_ws
+source install/setup.bash
+
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
+bash ~/ros2_ws/init_factor_graph.sh
 
 # Start the MOOS-IvP mission
 bash ~/ros2_ws/moos_tools/mission_start_processes.sh
