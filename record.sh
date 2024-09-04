@@ -21,6 +21,7 @@ echo ""
 cd ~/ros2_ws
 source install/setup.bash
 
+# TODO: Add scripting wizardry here
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
 bash ~/ros2_ws/init_factor_graph.sh
 
