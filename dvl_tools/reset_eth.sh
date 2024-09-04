@@ -1,5 +1,9 @@
 #!/bin/bash
 
+##########################################################
+# ADD HERE
+##########################################################
+
 # Replace 'eth0' with your Ethernet connection name
 CONNECTION_NAME="eth0"
 
