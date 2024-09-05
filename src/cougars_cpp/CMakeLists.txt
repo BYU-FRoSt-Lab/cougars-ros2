@@ -15,6 +15,7 @@ find_package(nav_msgs REQUIRED)
 find_package(frost_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
 find_package(MOOS 10 REQUIRED)
+find_package(Eigen3 REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -39,6 +40,8 @@ ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometr
 add_executable(depth_convertor src/depth_convertor.cpp)
 ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs)
 
+add_executable(seatrac_ahrs_convertor src/seatrac_ahrs_convertor.cpp)
+ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs Eigen3)
 
 # Link libraries
 target_link_libraries(moos_bridge)
@@ -54,6 +57,7 @@ install(TARGETS
   depth_convertor
   vehicle_status
   dvl_config
+  seatrac_ahrs_convertor
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
