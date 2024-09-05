@@ -1,7 +1,8 @@
 #!/bin/bash
 
 ##########################################################
-# TESTS EACH OF THE EXPECTED ROS TOPICS
+# ENABLES DVL ACOUSTICS AND TESTS ROS TOPICS
+# - Run this after running the 'start.sh' script
 ##########################################################
 
 cd ~/ros2_ws
