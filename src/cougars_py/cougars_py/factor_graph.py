@@ -31,8 +31,8 @@ class FactorGraphNode(Node):
         # self.plot = Plotter()
 
         # Create Plotter objects with different series
-        self.x_output = Series('Output', 'b', size=800)
-        self.x_dvl = Series('DVL', 'r', size=600, alpha=0.5)
+        self.x_output = Series('Output', 'b', size=400)
+        self.x_dvl = Series('DVL', 'r', alpha=0.5)
         # delta_series_2 = Series(name='Delta 2', color='green', size=600, alpha=0.5)
         self.x_gps = Series('GPS', 'g')
         self.x_plot = Plot([self.x_output, self.x_dvl, self.x_gps])
@@ -104,8 +104,7 @@ class FactorGraphNode(Node):
         self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10) # for unary factor
         self.create_subscription(PoseWithCovarianceStamped, '/depth_data', self.depth_callback, 10) # for unary factor
         self.create_subscription(Odometry, '/gps_odom', self.gps_callback, 10) # for unary factor
-        self.create_subscription(Odometry, '/dvl_dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
-
+        self.create_subscription(PoseWithCovarianceStamped, '/dvl_dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
         # signal to add prior (should be sent after DVL-lock and ref. gps/ heading is stored and DVL is restarted)
         self.create_subscription(Empty, '/init', self.init_callback, 10)
 
@@ -335,12 +334,13 @@ class FactorGraphNode(Node):
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
         # self.plot.add_measurement(self.position[0],time,sensor='gps')
         self.x_gps.add_measurement(self.position[0], time)
+        # print("gps:", self.position[0], time)
         if self.deployed :
             self.q_gps.append(msg)
    
 
     # dvl for new odometry
-    def dvl_callback(self, msg: Odometry):
+    def dvl_callback(self, msg: PoseWithCovarianceStamped):
 
         self.dvl_received = True
         # Get the x, y, z position
@@ -368,6 +368,7 @@ class FactorGraphNode(Node):
                 'dvl_position': self.dvl_position.copy()
             }
 
+            ############## DO we need to get the orientation matrix of the DVL?  ############
 
             H = self.HfromRT(self.init_state['orientation_matrix'],self.init_state['position'])
 
@@ -393,9 +394,14 @@ class FactorGraphNode(Node):
         
             self.get_logger().info("Initial state has been set.")
 
+            #Plot
+            self.x_dvl.add_measurement(self.position[0], self.dvl_time)
+            print('Initial State DVL:', self.position[0])
+
             self.deployed = True
         else:
             self.get_logger().info("Have not received all necessary sensor inputs to begin")
+            self.get_logger().info(f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}")
 
 
     
@@ -410,7 +416,7 @@ class FactorGraphNode(Node):
             in_future = False
             new_id = int(self.agent.poseKey)    #The posekey id that you will start searching at
             curr_time = self.poseKey_to_time[new_id] 
-            while(len(self.q_gps) > 1 and in_future == False and new_id > 1):       #If measurement in queue and the oldest measurment is later than current posekey
+            while(len(self.q_gps) > 1 and in_future is False and new_id > 1):       #If measurement in queue and the oldest measurment is later than current posekey
                 print("new_id:%d"%new_id)
                 oldest_measurement_time = (self.q_gps[0].header.stamp.sec * 1_000_000_000 + self.q_gps[0].header.stamp.nanosec) 
                 print("oldest measurment time: %d\n"%oldest_measurement_time)
@@ -502,7 +508,7 @@ class FactorGraphNode(Node):
             in_future = False
             new_id = int(self.agent.poseKey)    #The posekey id that you will start searching at
             curr_time = self.poseKey_to_time[new_id] 
-            while(len(msg_queue) > 1 and in_future == False):       #If measurement in queue and the oldest measurment is later than current posekey
+            while(len(msg_queue) > 1 and in_future is False):       #If measurement in queue and the oldest measurment is later than current posekey
                 # print("new_id:%d"%new_id)
                 oldest_measurement_time = (msg_queue[0].header.stamp.sec * 1_000_000_000 + msg_queue[0].header.stamp.nanosec) 
                 # print("oldest measurment time: %d\n"%oldest_measurement_time)
@@ -713,12 +719,15 @@ class FactorGraphNode(Node):
             self.poseKey_to_time[int(self.agent.poseKey)] = self.dvl_time
             
             #PLOT 
-            delta_x = H_pose2_wrt_pose1_noisy.translation()[0] 
+            delta_local = H_pose2_wrt_pose1_noisy.translation()
+            delta_x_local = delta_local[0]
+            delta_global = np.matmul(self.init_state['orientation_matrix'], delta_local)
+            delta_x_global = delta_global[0]
             # self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
-            self.x_dvl.add_delta_measurement(delta_x,self.dvl_time,self.agent.poseKey)
+            self.x_dvl.add_delta_measurement(delta_x_global, self.dvl_time)
 
             # self.plot.update_plot()
-            print('COMPARISON:',(dvl_position[0]- self.prev_x), delta_x)
+            print('COMPARISON:',(dvl_position[0]- self.prev_x), delta_x_local, 'global:', delta_x_global)
             self.prev_x = dvl_position[0]
             # self.prev_x = delta_x
 
