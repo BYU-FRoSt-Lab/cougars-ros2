@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import time
+from scipy.spatial.transform import Rotation as R
 
 class Series:
     def __init__(self, name, color='r', alpha=0.7, size=200):
@@ -13,14 +13,9 @@ class Series:
         self.line = None
         self.scatter = None
 
-    def add_measurement(self, value, timestamp, pose_key=None):
-        """Add a new measurement with a specific timestamp and optionally link to a pose key."""
-        self.timestamps.append(timestamp)
-        self.values.append(value)
-        self.pose_keys.append(pose_key)
-
     def add_delta_measurement(self, delta_value, timestamp, pose_key=None):
         """Add a new delta measurement with a specific timestamp and pose key."""
+
         self.timestamps.append(timestamp)
         if self.values:
             new_value = self.values[-1] + delta_value
@@ -28,6 +23,13 @@ class Series:
             new_value = delta_value
         self.values.append(new_value)
         self.pose_keys.append(pose_key)
+
+    def add_measurement(self, value, timestamp, pose_key=None):
+        """Add a new measurement with a specific timestamp and optionally link to a pose key."""
+        self.timestamps.append(timestamp)
+        self.values.append(value)
+        self.pose_keys.append(pose_key)
+
 
     def plot(self, ax):
         """Plot the series on the given axis."""
@@ -39,12 +41,16 @@ class Series:
         self.line.set_data(self.timestamps, self.values)
         self.scatter.set_offsets(list(zip(self.timestamps, self.values)))
 
-        if len(self.timestamps) > 1:
-            ax.set_xlim(min(self.timestamps), max(self.timestamps))
-            ax.set_ylim(min(self.values) - 1, max(self.values) + 1)
-        else:
-            ax.set_xlim(self.timestamps[0] - 1, self.timestamps[0] + 1)
-            ax.set_ylim(self.values[0] - 1, self.values[0] + 1)
+        ax.set_xlim(1724953702000000000, 1724953854000000000)
+        ax.set_ylim(-2395, -2367)
+
+
+        # if len(self.timestamps) > 1:
+        #     ax.set_xlim(min(self.timestamps), max(self.timestamps))
+        #     ax.set_ylim(min(self.values) - 1, max(self.values) + 1)
+        # else:
+        #     ax.set_xlim(self.timestamps[0] - 1, self.timestamps[0] + 1)
+        #     ax.set_ylim(self.values[0] - 1, self.values[0] + 1)
 
         # Draw pose keys as text on the plot
         for i, (x, y, key) in enumerate(zip(self.timestamps, self.values, self.pose_keys)):
