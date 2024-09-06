@@ -7,8 +7,8 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
-#include "frost_interfaces/msg/u_command.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"
+#include "frost_interfaces/msg/u_command.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -98,8 +98,7 @@ public:
 
     yaw_subscription_ =
         this->create_subscription<frost_interfaces::msg::ModemRec>(
-            "modem_rec", 10,
-            std::bind(&PIDControl::yaw_callback, this, _1));
+            "modem_rec", 10, std::bind(&PIDControl::yaw_callback, this, _1));
 
     // declare ros timers
     pid_timer_ = this->create_wall_timer(
@@ -129,8 +128,7 @@ private:
     this->depth = depth_msg.pose.pose.position.z;
   }
 
-  void yaw_callback(
-      const frost_interfaces::msg::ModemRec &yaw_msg) {
+  void yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg) {
 
     // Check if the message is a status message
     if (yaw_msg.msg_id == 0x10) {
