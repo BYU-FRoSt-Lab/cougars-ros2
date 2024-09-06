@@ -65,3 +65,5 @@ ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 0, 0
 
 echo ""
 echo "TEST COMPLETE"
+
+cleanup

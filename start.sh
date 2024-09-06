@@ -62,3 +62,5 @@ case $1 in
         ros2 launch cougars_py manual_launch.py
         ;;
 esac
+
+cleanup
