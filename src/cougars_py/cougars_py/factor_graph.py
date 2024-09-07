@@ -16,12 +16,13 @@ from cougars_py.factor_class_plot import Series
 
 class Agent():
     def __init__(self, H_init):
-        self.pose_world_noisy = gtsam.Pose3(H_init)
+        self.pose_world = gtsam.Pose3(H_init)
         self.poseKey = int(1)
         self.prevPoseKey = self.poseKey
 
 DUMMY_DEPTH_VAL = 5.0
 DUMMY_IMU_VAL = 10.0
+DEPTH_THRESHOLD = -0.25
 
 class FactorGraphNode(Node):
 
@@ -67,9 +68,9 @@ class FactorGraphNode(Node):
         # gtsam stuff
 
         # noise models
-        self.std_pose = np.array([0.1, 0.1, 0.1, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
+        self.std_pose = np.array([0.001, 0.001, 0.001, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
         self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
-        self.std_gps = 0.0001
+        self.std_gps = 6.0
         # TODO: make the z on gps really  high covariance, ignore the 
         self.GPS_NOISE = gtsam.noiseModel.Isotropic.Sigma(3, self.std_gps) 
         self.std_orientation = np.deg2rad(3)
@@ -277,7 +278,18 @@ class FactorGraphNode(Node):
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
-        self.xyz = self.result.atPose3(self.agent.poseKey).translation()  
+        print("translation ", self.result.atPose3(self.agent.poseKey).translation())
+        print("poseKey number: ", self.agent.poseKey)
+        self.xyz = self.result.atPose3(self.agent.poseKey).translation()
+        print("latest pose x result: ", self.result.atPose3(self.agent.poseKey).translation()[0])
+        print("latest pose y result: ", self.result.atPose3(self.agent.poseKey).translation()[1])
+        print("1st pose x result: ", self.result.atPose3(int(1)).translation()[0])
+        print("1st pose y result: ", self.result.atPose3(int(1)).translation()[1])
+        # print("2nd pose x result: ", self.result.atPose3(int(2)).translation()[0])
+        # print("2nd pose y result: ", self.result.atPose3(int(2)).translation()[1])
+        self.isam.update()
+        self.isam.update()
+        self.isam.update()
         self.initialEstimate.clear()
         self.graph.resize(0)
 
@@ -370,33 +382,57 @@ class FactorGraphNode(Node):
 
             ############## DO we need to get the orientation matrix of the DVL?  ############
 
-            H = self.HfromRT(self.init_state['orientation_matrix'],self.init_state['position'])
+            H = self.HfromRT(self.init_state['orientation_matrix'], self.init_state['position'])
+
+            
 
 
             self.agent = Agent(H)
 
-            self.dvl_pose_current = gtsam.Pose3(H)
+            # self.dvl_pose_current = gtsam.Pose3(H)
+            
             self.poseKey = int(1)
             self.prevPoseKey = self.poseKey
 
             
+            #TODO: change noise model?
+            priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.agent.pose_world, self.DVL_NOISE)
+            print("x prior: ", self.agent.pose_world.translation()[0])
+            print("y prior: ", self.agent.pose_world.translation()[1])
 
-            priorFactor = gtsam.PriorFactorPose3(self.agent.poseKey, self.dvl_pose_current, self.DVL_NOISE)
+            print("x gps: ", self.init_state['position'][0])
+            print("y gps: ", self.init_state['position'][1])
+            print("x dvl: ", self.init_state['dvl_position'][0])
+            print("y dvl: ", self.init_state['dvl_position'][1])
+
+
             self.graph.push_back(priorFactor)
-            self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
+            self.initialEstimate.insert(self.agent.poseKey, self.agent.pose_world)
+
+
             self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
             self.gps_last_pose_key = self.agent.poseKey
             self.depth_last_pose_key = self.agent.poseKey
             self.imu_last_pose_key = self.agent.poseKey
 
 
-            self.dvl_position_last = self.dvl_pose_current
+            # self.dvl_position_last = self.agent.pose_world
+
+
+            dvl_position = self.init_state['dvl_position']
+            r = R.from_quat(self.dvl_quat)
+            self.dvl_orientation_matrix = r.as_matrix()
+            self.dvl_position_last = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix , dvl_position))
         
             self.get_logger().info("Initial state has been set.")
 
-            #Plot
+            # Plot
             self.x_dvl.add_measurement(self.position[0], self.dvl_time)
             print('Initial State DVL:', self.position[0])
+
+
+            self.update()
+            self.publish_vehicle_status()
 
             self.deployed = True
         else:
@@ -474,7 +510,8 @@ class FactorGraphNode(Node):
 
                                 
                                 gps_meas = gtsam.Point3(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z)
-                                self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
+                                if(self.position[2] > DEPTH_THRESHOLD):
+                                    self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
                                 self.get_logger().info("added gps unary %d"%new_id)
                                 
                                 #PLOT
@@ -700,26 +737,30 @@ class FactorGraphNode(Node):
             dvl_position = self.dvl_position
             r = R.from_quat(self.dvl_quat)
             self.dvl_orientation_matrix = r.as_matrix()
-            self.dvl_pose_current = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix ,dvl_position))
+            self.dvl_pose_current = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix , dvl_position))
             
             
             # get the pose2 wrt pose1
-            H_pose2_wrt_pose1_noisy = self.dvl_position_last.inverse().compose(self.dvl_pose_current)
+            H_pose2_wrt_pose1= self.dvl_position_last.inverse().compose(self.dvl_pose_current)
 
 
             # add the odometry
             self.agent.prevPoseKey = int(self.agent.poseKey)
             self.agent.poseKey = int(1 + self.agent.poseKey)
             print('posekey:', self.agent.poseKey)
+
+
+            global_pose_current_init = self.result.atPose3(self.agent.prevPoseKey).compose(H_pose2_wrt_pose1)
             
 
             # this is the 
-            self.initialEstimate.insert(self.agent.poseKey, self.dvl_pose_current)
-            self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1_noisy, self.DVL_NOISE))
+            self.initialEstimate.insert(self.agent.poseKey, global_pose_current_init)
+            self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1, self.DVL_NOISE))
             self.poseKey_to_time[int(self.agent.poseKey)] = self.dvl_time
             
+
             #PLOT 
-            delta_local = H_pose2_wrt_pose1_noisy.translation()
+            delta_local = H_pose2_wrt_pose1.translation()
             delta_x_local = delta_local[0]
             delta_global = np.matmul(self.init_state['orientation_matrix'], delta_local)
             delta_x_global = delta_global[0]
@@ -742,6 +783,14 @@ class FactorGraphNode(Node):
             # GPS unary factor
             self.unary_assignment('gps')
             # print('out of gps')
+
+
+
+
+
+
+
+
 
             self.dvl_position_last = self.dvl_pose_current
 
@@ -774,6 +823,9 @@ class FactorGraphNode(Node):
         # this is the only gtsam output right now, orientation and depth are raw from the sensors
         self.odom_msg.pose.pose.position.x = self.xyz[0]
         self.odom_msg.pose.pose.position.y = self.xyz[1]
+        print("vehicle status xyz[0]: ", self.xyz[0])
+
+        print("vehicle status x: ", self.odom_msg.pose.pose.position.x)
 
 
         self.odom_msg.pose.pose.position.z = self.position[2]
