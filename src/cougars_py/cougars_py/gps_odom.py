@@ -37,42 +37,38 @@ class NavSatFixToOdom(Node):
             always_xy=True
         )
         
-        # Subscribe to PoseWithCovarianceStamped
+        # Subscribe to NavSatFix
         self.subscriber = self.create_subscription(
             NavSatFix,
             '/fix',
             self.gps_callback,
             10
         )
+        
         self.last_msg = None
-        self.gps_last_time = None
-        self.gps_covariance = [1e-3] * 9  # Initial low covariance
-        self.timeout_duration = 3.0  
+        self.gps_covariance_threshold = 20.0  # Maximum acceptable covariance value
+        self.min_sats = 5  # Minimum number of satellites
 
-        # self.timer = self.create_timer(1.0, self.check_gps_timeout)
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, '/gps_odom', 10)
     
-    def check_gps_timeout(self):
-        if self.gps_last_time is not None:
-            elapsed_time = (self.get_clock().now() - self.gps_last_time).nanoseconds / 1e9
-            if elapsed_time > self.timeout_duration:
-                # GPS timeout - increase covariance
-                self.gps_covariance = [1e6] * 36
-                # Publish/update the EKF covariance accordingly
-                self.last_msg.pose.covariance = self.gps_covariance
-
-                self.publisher.publish(self.last_msg)
-            else:
-                # GPS is available, keep low covariance
-                self.gps_covariance = [1e-3] * 36
-            
-    
     def gps_callback(self, msg: NavSatFix):
-        self.gps_last_time = self.get_clock().now()
-        # Convert latitude/longitude to UTM or another flat-earth coordinate system
-        x, y = self.inv_transformer.transform(msg.longitude ,msg.latitude )
+        # Filter out bad readings based on covariance
+        if any(cov > self.gps_covariance_threshold for cov in msg.position_covariance):
+            self.get_logger().warn("High covariance detected, skipping this GPS reading")
+            return
         
+        # Filter out bad readings based on the number of satellites (if available)
+        if msg.status.status < 0:
+            self.get_logger().warn("Bad GPS status, skipping this GPS reading")
+            return
+        
+        # Convert latitude/longitude to local Cartesian coordinates
+        x, y = self.inv_transformer.transform(msg.longitude, msg.latitude)
+        
+        # Access the altitude (z) value from the NavSatFix message
+        z = msg.altitude
+
         # Fill in the odometry message
         odom = Odometry()
         odom.header.stamp = msg.header.stamp
@@ -80,22 +76,16 @@ class NavSatFixToOdom(Node):
         odom.child_frame_id = "odom"
         odom.pose.pose.position.x = x
         odom.pose.pose.position.y = y
-        odom.pose.pose.position.z = 0.0
+        odom.pose.pose.position.z = z  # Use the altitude as the z-value
 
-        odom.pose.covariance[0] = msg.position_covariance[0] # xx
-        # msg.position_covariance[1] = odom.pose.covariance[1]  # xy
-        # msg.position_covariance[2] = odom.pose.covariance[5]  # xz
-        # msg.position_covariance[3] = odom.pose.covariance[6]  # yx
+        # Set the covariance values for x, y, and z
+        odom.pose.covariance[0] = msg.position_covariance[0]  # xx
         odom.pose.covariance[7] = msg.position_covariance[4]  # yy
-        # msg.position_covariance[5] = odom.pose.covariance[11] # yz
-        # msg.position_covariance[6] = odom.pose.covariance[30] # zx
-        # msg.position_covariance[7] = odom.pose.covariance[31] # zy
-        odom.pose.covariance[14]  = msg.position_covariance[8] # zz
-        
+        odom.pose.covariance[14] = msg.position_covariance[8]  # zz
+
         # Publish the odometry message
         self.last_msg = odom
         self.publisher.publish(odom)
-    
 
 def main(args=None):
     rclpy.init(args=args)
@@ -106,4 +96,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
