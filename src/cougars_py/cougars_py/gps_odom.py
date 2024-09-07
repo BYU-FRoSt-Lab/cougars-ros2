@@ -1,8 +1,9 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import NavSatFix
+from gps_msgs.msg import GPSFix
 from nav_msgs.msg import Odometry
 from pyproj import Proj, Transformer
+import math
 
 class NavSatFixToOdom(Node):
     def __init__(self):
@@ -39,28 +40,26 @@ class NavSatFixToOdom(Node):
         
         # Subscribe to NavSatFix
         self.subscriber = self.create_subscription(
-            NavSatFix,
-            '/fix',
+            GPSFix,
+            '/extended_fix',
             self.gps_callback,
             10
         )
         
         self.last_msg = None
-        self.gps_covariance_threshold = 20.0  # Maximum acceptable covariance value
         self.min_sats = 5  # Minimum number of satellites
 
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, '/gps_odom', 10)
     
-    def gps_callback(self, msg: NavSatFix):
-        # Filter out bad readings based on covariance
-        if any(cov > self.gps_covariance_threshold for cov in msg.position_covariance):
-            self.get_logger().warn("High covariance detected, skipping this GPS reading")
+    def gps_callback(self, msg: GPSFix):
+        # Filter out bad readings based on the number of satellites (if available)
+        if msg.status.satellites_used < self.min_sats:
+            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}")
             return
         
-        # Filter out bad readings based on the number of satellites (if available)
-        if msg.status.status < 0:
-            self.get_logger().warn("Bad GPS status, skipping this GPS reading")
+        if math.isnan(msg.latitude) or math.isnan(msg.longitude) or math.isnan(msg.altitude):
+            self.get_logger().warn("NaN detected in GPS position, skipping this reading")
             return
         
         # Convert latitude/longitude to local Cartesian coordinates
