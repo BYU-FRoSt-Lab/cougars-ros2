@@ -16,7 +16,7 @@ class NavSatFixToOdom(Node):
         # Get parameters
         origin_lat = self.get_parameter('origin.latitude').get_parameter_value().double_value
         origin_lon = self.get_parameter('origin.longitude').get_parameter_value().double_value
-        origin_alt = self.get_parameter('origin.altitude').get_parameter_value().double_value
+        self.origin_alt = self.get_parameter('origin.altitude').get_parameter_value().double_value
         
         # Create local Cartesian projection with the origin
         self.local_proj = Proj(proj='aeqd', lat_0=origin_lat, lon_0=origin_lon, datum='WGS84')
@@ -67,7 +67,7 @@ class NavSatFixToOdom(Node):
         x, y = self.inv_transformer.transform(msg.longitude, msg.latitude)
         
         # Access the altitude (z) value from the NavSatFix message
-        z = msg.altitude
+        z = msg.altitude - self.origin_alt
 
         # Fill in the odometry message
         odom = Odometry()
