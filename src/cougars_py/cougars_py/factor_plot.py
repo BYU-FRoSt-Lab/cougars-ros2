@@ -116,7 +116,7 @@ class Plotter:
             self.ax.set_xlim(self.timestamps[0] - 1, self.timestamps[0] + 1)
         
         if len(self.values) > 1:
-            self.ax.set_ylim(min(self.values) - 1, max(self.values) + 1)
+            self.ax.set_ylim(min(self.values) - 10, max(self.values) + 10)
         else:
             self.ax.set_ylim(self.values[0] - 1, self.values[0] + 1)
         

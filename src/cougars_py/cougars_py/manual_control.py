@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
 from frost_interfaces.srv import EmergencyStop
+from std_msgs.msg import Empty
 from rclpy.qos import qos_profile_system_default
 
 
@@ -45,6 +46,15 @@ class ManualControl(Node):
             qos_profile_system_default
         )
 
+        # Create the subscriptions
+        self.subscription = self.create_subscription(
+            Empty, 
+            "init", 
+            self.listener_callback, 
+            qos_profile_system_default
+        )
+        self.subscription  # prevent unused variable warning
+
         # Create the timers
         self.timer = self.create_timer(
             self.get_parameter("command_timer_period").get_parameter_value().double_value,
@@ -59,7 +69,13 @@ class ManualControl(Node):
         )
 
         self.counter = 0
+        self.stopped = True
+
+    # Enables the run flag when init message is received
+    def listener_callback(self, msg):
+        self.get_logger().info("INIT RECEIVED")
         self.stopped = False
+
 
     # Runs the state machine and high-level controller, publishes to pid_request
     def timer_callback(self):
@@ -78,14 +94,23 @@ class ManualControl(Node):
             depth_msg.desired_depth = self.get_parameter("state_1_depth").get_parameter_value().double_value
             heading_msg.desired_heading = self.get_parameter("state_1_heading").get_parameter_value().double_value
             speed_msg.desired_speed = self.get_parameter("state_1_speed").get_parameter_value().double_value
+
+            self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
+
         elif not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value:
             depth_msg.desired_depth = self.get_parameter("state_2_depth").get_parameter_value().double_value
             heading_msg.desired_heading = self.get_parameter("state_2_heading").get_parameter_value().double_value
             speed_msg.desired_speed = self.get_parameter("state_2_speed").get_parameter_value().double_value
+
+            self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
+
         elif not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value + self.get_parameter("state_3_count").get_parameter_value().integer_value:
             depth_msg.desired_depth = self.get_parameter("state_3_depth").get_parameter_value().double_value
             heading_msg.desired_heading = self.get_parameter("state_3_heading").get_parameter_value().double_value
             speed_msg.desired_speed = self.get_parameter("state_3_speed").get_parameter_value().double_value
+
+            self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
+
         else:
             depth_msg.desired_depth = 0.0
             heading_msg.desired_heading = 0.0
@@ -105,8 +130,6 @@ class ManualControl(Node):
             heading_msg.desired_heading,
             speed_msg.desired_speed,
         ))
-
-        self.counter += 1
 
         ##########################################################
         # HIGH-LEVEL CONTROLLER CODE ENDS HERE

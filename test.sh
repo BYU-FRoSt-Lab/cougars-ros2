@@ -1,14 +1,15 @@
 #!/bin/bash
 
 ##########################################################
-# TESTS EACH OF THE EXPECTED ROS TOPICS
+# ENABLES DVL ACOUSTICS AND TESTS ROS TOPICS
+# - Run this after running the 'start.sh' script
 ##########################################################
 
 cd ~/ros2_ws
 source install/setup.bash
 
 # Turn on DVL acoustics
-bash ~/ros2_ws/dvl_tools/acoustics_on.sh
+bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
 
 echo ""
 echo "LISTING FOUND TOPICS..."
