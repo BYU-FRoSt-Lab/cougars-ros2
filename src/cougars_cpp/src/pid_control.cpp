@@ -7,8 +7,8 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
+#include "frost_interfaces/msg/modem_rec.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
-#include "frost_interfaces/msg/vehicle_status.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -96,10 +96,9 @@ public:
         geometry_msgs::msg::PoseWithCovarianceStamped>(
         "depth_data", 10, std::bind(&PIDControl::depth_callback, this, _1));
 
-    velocity_yaw_subscription_ =
-        this->create_subscription<frost_interfaces::msg::VehicleStatus>(
-            "vehicle_status", 10,
-            std::bind(&PIDControl::velocity_yaw_callback, this, _1));
+    yaw_subscription_ =
+        this->create_subscription<frost_interfaces::msg::ModemRec>(
+            "modem_rec", 10, std::bind(&PIDControl::yaw_callback, this, _1));
 
     // declare ros timers
     pid_timer_ = this->create_wall_timer(
@@ -129,10 +128,12 @@ private:
     this->depth = depth_msg.pose.pose.position.z;
   }
 
-  void velocity_yaw_callback(
-      const frost_interfaces::msg::VehicleStatus &velocity_yaw_msg) {
-    this->x_velocity = velocity_yaw_msg.coug_odom.twist.twist.linear.x;
-    this->yaw = velocity_yaw_msg.attitude_yaw;
+  void yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg) {
+
+    // Check if the message is a status message
+    if (yaw_msg.msg_id == 0x10) {
+      this->yaw = yaw_msg.attitude_yaw;
+    }
   }
 
   void timer_callback() {
@@ -184,8 +185,8 @@ private:
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       depth_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
-      velocity_yaw_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr
+      yaw_subscription_;
 
   // class desired value variables
   float desired_depth = 0.0;
