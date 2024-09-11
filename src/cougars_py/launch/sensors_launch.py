@@ -52,7 +52,7 @@ def generate_launch_description():
             executable='dvl_convertor'
         ),
         launch_ros.actions.Node(
-            package='cougars_cpp',
+            package='cougars_py',
             executable='seatrac_ahrs_convertor'
         ),
         launch_ros.actions.Node(
