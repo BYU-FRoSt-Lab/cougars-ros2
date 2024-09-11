@@ -29,7 +29,7 @@ setup(
             'leak_sub = cougars_py.leak_sub:main',
             'battery_sub = cougars_py.battery_sub:main',
             'modem_pinger = cougars_py.modem_pinger:main',
-            'seatrac_ahrs_converter = cougars_py.seatrac_ahrs_converter:main',
+            'seatrac_ahrs_convertor = cougars_py.seatrac_ahrs_converter:main',
             'gps_odom = cougars_py.gps_odom:main',
             'factor_graph = cougars_py.factor_graph:main',
 
