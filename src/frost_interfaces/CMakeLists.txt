@@ -22,6 +22,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DesiredSpeed.msg"
   "msg/LeakStatus.msg"
   "msg/ModemRec.msg"
+  "msg/ModemStatus.msg"
+  "msg/ModemCmdUpdate.msg"
   "msg/ModemSend.msg"
   "msg/UCommand.msg"
   "msg/VehicleStatus.msg"

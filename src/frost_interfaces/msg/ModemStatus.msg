@@ -3,7 +3,7 @@ std_msgs/Header header
 # Definitions of Seatrac defined enums and types (ie CID_E, BID_E, CST_E, ...) can be found
 # in the Seatrac Developer Guide https://www.blueprintsubsea.com/downloads/seatrac/UM-140-D00221-07.pdf
 
-uint8 msg_id = 0x10     # CIDE - Command Identification Code. Indicates the type of report recieved from the beacon.
+uint8 msg_id            # CIDE - Command Identification Code. Indicates the type of report recieved from the beacon.
                         # Different msg types include different information, and therefore populate different fields.
                         # Not all CID_E msg types are captured or supported in this ros message.
 
