@@ -36,12 +36,16 @@ echo "# BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS #"
 echo "######################################################################"
 echo ""
 
+# Quick fix for daemon error (TODO: find a better solution)
+ros2 daemon stop
+ros2 daemon start
+
 # Start the strobe light and Teensy board
 sudo bash /home/frostlab/teensy_ws/strobe.sh on # Prompt for sudo password (bug fix)
 sudo bash /home/frostlab/teensy_ws/power.sh on
 
 # Start the micro-ROS agent
-if [ -z "$(tycmd list)" ]; then
+if [ -z "$(tycmd list | grep Teensy)" ]; then
     printError "No Teensy boards avaliable to connect to"
     echo ""
 

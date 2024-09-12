@@ -42,7 +42,7 @@ echo ""
 cd ~/ros2_ws
 source install/setup.bash
 
-# Reset dead reckoning and start factor graph, high-level controls
+# Reset dead reckoning and start factor graph, controls
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
 ros2 topic pub /init std_msgs/msg/Empty -1
 
