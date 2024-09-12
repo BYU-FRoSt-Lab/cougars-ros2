@@ -10,10 +10,22 @@
 #   running the docker container
 ##########################################################
 
+function printInfo {
+  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
+}
+
+function printWarning {
+  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
+}
+
+function printError {
+  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
+}
+
 cleanup() {
 
     case $1 in
-        moos)
+        "moos")
             bash ~/ros2_ws/moos_tools/mission_kill.sh
             ;;
     esac
@@ -36,7 +48,7 @@ ros2 topic pub /init std_msgs/msg/Empty -1
 
 # Start the MOOS-IvP mission
 case $1 in
-    moos)
+    "moos")
         bash ~/ros2_ws/moos_tools/mission_start_processes.sh
         bash ~/ros2_ws/moos_tools/mission_deploy.sh
         ;;
