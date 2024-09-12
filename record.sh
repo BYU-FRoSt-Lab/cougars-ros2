@@ -2,8 +2,8 @@
 
 ##########################################################
 # RESETS DR, STARTS HLC, AND RECORDS A ROS2 BAG FILE
-# - Specify a start configuration using 'bash start.sh 
-#   <launch>' (ex. 'bash start.sh moos')
+# - Specify a start configuration using 'bash record.sh 
+#   <launch>' (ex. 'bash record.sh moos')
 # - Run this after running the 'start.sh' and 'test.sh'
 #   scripts
 # - Log files are saved in "~/bag" on the host machine
