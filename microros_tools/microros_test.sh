@@ -27,7 +27,7 @@ cleanup() {
 }
 trap cleanup SIGINT
 
-if [ -z "$(tycmd list)" ]; then
+if [ -z "$(tycmd list | grep Teensy)" ]; then
     echo ""
     printError "No Teensy boards avaliable to connect to"
     echo ""

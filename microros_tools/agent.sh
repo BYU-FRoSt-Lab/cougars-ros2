@@ -16,7 +16,7 @@ function printError {
   echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
 }
 
-if [ -z "$(tycmd list)" ]; then
+if [ -z "$(tycmd list | grep Teensy)" ]; then
     echo ""
     printError "No Teensy boards avaliable to connect to"
     echo ""
