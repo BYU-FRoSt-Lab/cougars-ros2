@@ -6,9 +6,22 @@
 #   <launch>' (ex. 'bash start.sh moos')
 ##########################################################
 
+function printInfo {
+  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
+}
+
+function printWarning {
+  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
+}
+
+function printError {
+  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
+}
+
 cleanup() {
 
     sudo bash /home/frostlab/teensy_ws/strobe.sh off
+    bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
 
     killall micro_ros_agent
     wait
@@ -23,12 +36,13 @@ echo "# BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS #"
 echo "######################################################################"
 echo ""
 
-# Start the strobe light
+# Start the strobe light and Teensy board
 sudo bash /home/frostlab/teensy_ws/strobe.sh on # Prompt for sudo password (bug fix)
+sudo bash /home/frostlab/teensy_ws/power.sh on
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list)" ]; then
-    echo "ERROR: No Teensy boards avaliable to connect to"
+    printError "No Teensy boards avaliable to connect to"
     echo ""
 
 else 
@@ -45,18 +59,18 @@ cd ~/ros2_ws
 source install/setup.bash
 
 case $1 in
-    manual)
+    "manual")
         ros2 launch cougars_py manual_launch.py
         ;;
-    moos)
+    "moos")
         ros2 launch cougars_py moos_launch.py
         ;;
-    sensors)
+    "sensors")
         ros2 launch cougars_py sensors_launch.py
         ;;
     *)
-        echo "ALERT: No start configuration specified, defaulting to 'manual'"
-        echo "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
+        printInfo "No start configuration specified, defaulting to 'manual'"
+        printInfo "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
         echo ""
 
         ros2 launch cougars_py manual_launch.py
