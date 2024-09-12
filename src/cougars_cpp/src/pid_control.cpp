@@ -195,6 +195,7 @@ private:
       depth_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr
       yaw_subscription_;
+  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr init_subscription_;
 
   // flags
   bool init_flag = false;
