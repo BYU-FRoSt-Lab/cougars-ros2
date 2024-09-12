@@ -114,12 +114,11 @@ public:
   }
 
 private:
-  void
-  init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
+  void init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
     this->init_flag = true;
   }
 
-  desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
+  void desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
     this->desired_depth = depth_msg.desired_depth;
   }
 
