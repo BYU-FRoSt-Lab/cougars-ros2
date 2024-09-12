@@ -37,6 +37,8 @@ echo "######################################################################"
 echo ""
 
 # Quick fix for daemon error (TODO: find a better solution)
+cd ~/ros2_ws
+source install/setup.bash
 ros2 daemon stop
 ros2 daemon start
 
