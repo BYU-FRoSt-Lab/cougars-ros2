@@ -75,8 +75,8 @@ case $1 in
         ros2 launch cougars_py sensors_launch.py
         ;;
     *)
-        printInfo "No start configuration specified, defaulting to 'manual'"
-        printInfo "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
+        printWarning "No start configuration specified, defaulting to 'manual'"
+        printWarning "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
         echo ""
 
         ros2 launch cougars_py manual_launch.py
