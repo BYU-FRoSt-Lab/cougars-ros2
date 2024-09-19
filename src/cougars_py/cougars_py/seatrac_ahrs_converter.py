@@ -31,7 +31,7 @@ class SeatracAHRSConverter(Node):
             modem_imu = Imu()
             modem_imu.header.stamp = self.get_clock().now().to_msg()
 
-            yaw   = 0.1 * msg.attitude_yaw - self.get_parameter('magnetic_declination').get_parameter_value().double_value
+            yaw   = 0.1 * msg.attitude_yaw + self.get_parameter('magnetic_declination').get_parameter_value().double_value
             # since the declination is East, we subtract it from the yaw
             pitch = 0.1 * msg.attitude_pitch
             roll  = 0.1 * msg.attitude_roll
