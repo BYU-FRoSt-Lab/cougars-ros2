@@ -26,6 +26,7 @@ public:
   PIDControl() : Node("pid_control") {
 
     // declare ros params
+    this->declare_parameter("trim_ratio", 0.0)
     this->declare_parameter("pid_timer_period",
                             80); // from experimentation with depth sensor
     this->declare_parameter("depth_kp", 0.0);
@@ -153,8 +154,6 @@ private:
 
       //////////////////////////////////////////////////////////
       // LOW-LEVEL CONTROLLER CODE STARTS HERE
-      // - Reference wanted values using the desired_depth_msg,
-      //   desired_heading_msg, and desired_speed_msg objects
       //////////////////////////////////////////////////////////
 
       int depth_pos = myDepthPID.compute(this->desired_depth, -depth);
@@ -163,9 +162,9 @@ private:
           this->desired_speed; // myVelocityPID.compute(this->desired_speed,
                               // x_velocity);
 
-      message.fin[0] = heading_pos;
-      message.fin[1] = depth_pos; // TODO: counter-rotation offset?
-      message.fin[2] = depth_pos;
+      message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
+      message.fin[1] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
+      message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
       message.thruster = velocity_level;
 
       u_command_publisher_->publish(message);
