@@ -1,7 +1,8 @@
 #!/bin/bash
+# Created by Matthew McMurray, Sep 2024
 
 ##########################################################
-# just starts all the moos apps
+# ADD HERE
 ##########################################################
 
 pAntler coug.moos > /dev/null 2>&1 &

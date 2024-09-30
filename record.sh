@@ -1,4 +1,5 @@
 #!/bin/bash
+# Created by Nelson Durrant, Sep 2024
 
 ##########################################################
 # RESETS DR, STARTS HLC, AND RECORDS A ROS2 BAG FILE
@@ -6,7 +7,7 @@
 #   <launch>' (ex. 'bash record.sh moos')
 # - Run this after running the 'start.sh' and 'test.sh'
 #   scripts
-# - Log files are saved in "~/bag" on the host machine
+# - Log files are saved in '~/bag' on the host machine
 #   running the docker container
 ##########################################################
 

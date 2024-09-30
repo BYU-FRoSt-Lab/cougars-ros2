@@ -1,4 +1,5 @@
 #!/bin/bash
+# Created by Nelson Durrant, Sep 2024
 
 ##########################################################
 # STARTS THE AGENT AND RUNS A SPECIFIED LAUNCH FILE
@@ -23,6 +24,8 @@ cleanup() {
     sudo bash /home/frostlab/teensy_ws/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
 
+    printInfo "Acoustics successfully disabled"
+
     killall micro_ros_agent
     wait
 
@@ -43,7 +46,7 @@ ros2 daemon stop
 ros2 daemon start
 
 # Start the strobe light and Teensy board
-sudo bash /home/frostlab/teensy_ws/strobe.sh on # Prompt for sudo password (bug fix)
+sudo bash /home/frostlab/teensy_ws/strobe.sh on
 sudo bash /home/frostlab/teensy_ws/power.sh on
 
 # Start the micro-ROS agent
@@ -75,11 +78,9 @@ case $1 in
         ros2 launch cougars_py sensors_launch.py
         ;;
     *)
-        printWarning "No start configuration specified, defaulting to 'manual'"
+        printWarning "No start configuration specified"
         printWarning "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
         echo ""
-
-        ros2 launch cougars_py manual_launch.py
         ;;
 esac
 
