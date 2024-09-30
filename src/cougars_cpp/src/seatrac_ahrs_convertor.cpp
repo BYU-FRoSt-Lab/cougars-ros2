@@ -29,14 +29,14 @@ private:
             auto modem_imu = std::make_shared<sensor_msgs::msg::Imu>();
             modem_imu->header.stamp = this->get_clock()->now();
 
-            double yaw   = (M_PI/180.0)*(0.1 * msg->attitude_yaw - this->get_parameter("magnetic_declination").as_double());
+            double yaw   = (M_PI/180.0)*(0.1 * msg->attitude_yaw + this->get_parameter("magnetic_declination").as_double());
             double pitch = (M_PI/180.0)*0.1 * msg->attitude_pitch;
             double roll  = (M_PI/180.0)*0.1 * msg->attitude_roll;
 
             // Create the NED quaternion using Eigen
-            Eigen::Matrix3d R_ned(Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
+            Eigen::Matrix3d R_ned(Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
                                     Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
-                                    Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()));
+                                    Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()));
 
             // Define the NED to ENU conversion as a quaternion
             Eigen::Matrix3d R_ned_enu;
