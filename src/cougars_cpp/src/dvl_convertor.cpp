@@ -95,33 +95,46 @@ public:
     float pitch_rad = degreesToRadians(pitch_deg);
     float roll_rad = degreesToRadians(roll_deg);
 
-    //Option 1: use properties of quaternions
-    //already tested because this was easy to do in the factor graph file
+    // Option 1: use properties of quaternions
+    // already tested because this was easy to do in the factor graph file
     // i*(w + xi + yj + zk)*i
     // = i*(wi - x - yk + zj)
     // = -w - xi + yj + zk
-    // Eigen::Matrix3f R;
-    // R = Eigen::AngleAxisf(yaw, Eigen::Vector3f::UnitZ()) *
-    //     Eigen::AngleAxisf(pitch, Eigen::Vector3f::UnitY()) *
-    //     Eigen::AngleAxisf(roll, Eigen::Vector3f::UnitX());
-    // Eigen::Quaternionf quaternion_R(R);
-    // stamped_msg.pose.pose.orientation.x = -quaternion_R.x();
-    // stamped_msg.pose.pose.orientation.y = quaternion_R.y();
-    // stamped_msg.pose.pose.orientation.z = quaternion_R.z();
-    // stamped_msg.pose.pose.orientation.w = -quaternion_R.w();
-
-    //Option 2: convert with rotations. Same effect but more readable
     Eigen::Matrix3f R;
-    R = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX()) *
-        Eigen::AngleAxisf(yaw, Eigen::Vector3f::UnitZ()) *
-        Eigen::AngleAxisf(pitch, Eigen::Vector3f::UnitY()) *
-        Eigen::AngleAxisf(roll, Eigen::Vector3f::UnitX()) *
-        Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX());
+    R = Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ()) *
+        Eigen::AngleAxisf(pitch_rad, Eigen::Vector3f::UnitY()) *
+        Eigen::AngleAxisf(roll_rad, Eigen::Vector3f::UnitX());
     Eigen::Quaternionf quaternion_R(R);
-    stamped_msg.pose.pose.orientation.x = quaternion_R.x();
+    stamped_msg.pose.pose.orientation.x = -quaternion_R.x();
     stamped_msg.pose.pose.orientation.y = quaternion_R.y();
     stamped_msg.pose.pose.orientation.z = quaternion_R.z();
-    stamped_msg.pose.pose.orientation.w = quaternion_R.w();
+    stamped_msg.pose.pose.orientation.w = -quaternion_R.w();
+
+    //Option 2: convert with rotations. Same effect but more readable
+    // Eigen::Matrix3f R;
+    // R = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX()) *
+    //     Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ()) *
+    //     Eigen::AngleAxisf(pitch_rad, Eigen::Vector3f::UnitY()) *
+    //     Eigen::AngleAxisf(roll_rad, Eigen::Vector3f::UnitX()) *
+    //     Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX());
+    // Eigen::Quaternionf quaternion_R(R);
+    // stamped_msg.pose.pose.orientation.x = quaternion_R.x();
+    // stamped_msg.pose.pose.orientation.y = quaternion_R.y();
+    // stamped_msg.pose.pose.orientation.z = quaternion_R.z();
+    // stamped_msg.pose.pose.orientation.w = quaternion_R.w();
+
+
+    // Eigen::Matrix3f R;
+    // R = Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ())*
+    //     Eigen::AngleAxisf(pitch_rad, Eigen::Vector3f::UnitY()) *
+    //     Eigen::AngleAxisf(roll_rad, Eigen::Vector3f::UnitX()) ;
+
+    // Eigen::Quaternionf quaternion_R(R);
+    // stamped_msg.pose.pose.orientation.x = quaternion_R.x();
+    // stamped_msg.pose.pose.orientation.y = quaternion_R.y();
+    // stamped_msg.pose.pose.orientation.z = quaternion_R.z();
+    // stamped_msg.pose.pose.orientation.w = quaternion_R.w();
+        
 
     //TODO: Check and tune covariance parameters
     double pvr = msg->pos_std * msg->pos_std; //variance = std squared
