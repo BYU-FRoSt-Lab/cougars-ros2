@@ -26,7 +26,7 @@ public:
   PIDControl() : Node("pid_control") {
 
     // declare ros params
-    this->declare_parameter("trim_ratio", 0.0)
+    this->declare_parameter("trim_ratio", 0.0);
     this->declare_parameter("pid_timer_period",
                             80); // from experimentation with depth sensor
     this->declare_parameter("depth_kp", 0.0);
