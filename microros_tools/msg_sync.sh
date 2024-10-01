@@ -1,9 +1,10 @@
 #!/bin/bash
+# Created by Nelson Durrant, Sep 2024
 
 ##########################################################
 # SYNCS FROST_INTERFACES CHANGES WITH THE TEENSY_WS
 # - After running this script, recompile micro-ROS in 
-#   PlatformIO using "msg_update.sh"
+#   PlatformIO using 'msg_update.sh'
 # - Don't run this in the Docker image -- run it on your 
 #   own machine or locally on the the Pi
 ##########################################################

@@ -1,7 +1,8 @@
 #!/bin/bash
+# Created by Nelson Durrant, Sep 2024
 
 ##########################################################
-# ENABLES DVL ACOUSTICS AND TESTS ROS TOPICS
+# ENABLES DVL ACOUSTICS AND TESTS EXPECTED ROS TOPICS
 # - Run this after running the 'start.sh' script
 ##########################################################
 
