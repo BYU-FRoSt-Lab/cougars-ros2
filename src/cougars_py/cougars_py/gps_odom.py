@@ -54,7 +54,7 @@ class NavSatFixToOdom(Node):
     
     def gps_callback(self, msg: GPSFix):
         # Filter out bad readings based on the number of satellites (if available)
-        if msg.status.satellites_used < self.min_sats:
+        if msg.status.satellites_used < self.min_sats or msg.latitude == 0:
             self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}")
             return
         
