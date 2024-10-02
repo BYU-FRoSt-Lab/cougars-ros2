@@ -1,8 +1,7 @@
 #!/bin/bash
 # Created by Nelson Durrant, Sep 2024
-
-##########################################################
-# ENABLES DVL ACOUSTICS AND TESTS EXPECTED ROS TOPICS
+#
+# Enables acoustics and tests vehicle sensors
 # - Run this after running the 'start.sh' script
 ##########################################################
 

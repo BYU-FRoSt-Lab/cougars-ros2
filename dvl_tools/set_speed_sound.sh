@@ -1,9 +1,7 @@
 #!/bin/bash
 # Created by Matthew McMurray, Sep 2024
-
-##########################################################
+#
 # ADD HERE
-##########################################################
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 1 ]; then
