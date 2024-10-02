@@ -1,9 +1,7 @@
 #!/bin/bash
 # Created by Nelson Durrant, Sep 2024
-
-##########################################################
-# STARTS THE MICRO-ROS AGENT
-##########################################################
+#
+# Starts the micro-ROS agent
 
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
