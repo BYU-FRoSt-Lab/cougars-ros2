@@ -29,7 +29,7 @@ private:
         if (msg->msg_id == 0x10) // 0x10 = CID_STATUS
         {
             auto modem_imu = std::make_shared<sensor_msgs::msg::Imu>();
-            modem_imu->header.stamp = this->get_clock()->now();
+            modem_imu->header.stamp = msg->header.stamp;
 
             double yaw   = (M_PI/180.0)*(0.1 * msg->attitude_yaw + this->get_parameter("magnetic_declination").as_double());
             double pitch = (M_PI/180.0)*0.1 * msg->attitude_pitch;
