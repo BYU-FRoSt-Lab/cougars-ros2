@@ -1,8 +1,7 @@
 #!/bin/bash
-
-##########################################################
+# Created by Matthew McMurray, Sep 2024
+#
 # ADD HERE
-##########################################################
 
 # Replace 'eth0' with your Ethernet connection name
 CONNECTION_NAME="eth0"
