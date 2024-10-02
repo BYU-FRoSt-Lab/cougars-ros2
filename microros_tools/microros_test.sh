@@ -1,10 +1,21 @@
 #!/bin/bash
-
-##########################################################
-# TESTS EACH OF THE EXPECTED MICROROS TOPICS
+# Created by Nelson Durrant, Sep 2024
+#
+# Tests each of the expected micro-ROS topics
 # - Use this after setting up a new PCB to test the agent
-#   and Teensy board connections
-##########################################################
+# and Teensy board connections
+
+function printInfo {
+  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
+}
+
+function printWarning {
+  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
+}
+
+function printError {
+  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
+}
 
 cleanup() {
 
@@ -15,9 +26,9 @@ cleanup() {
 }
 trap cleanup SIGINT
 
-if [ -z "$(tycmd list)" ]; then
+if [ -z "$(tycmd list | grep Teensy)" ]; then
     echo ""
-    echo "ERROR: No Teensy boards avaliable to connect to"
+    printError "No Teensy boards avaliable to connect to"
     echo ""
 
     exit 1

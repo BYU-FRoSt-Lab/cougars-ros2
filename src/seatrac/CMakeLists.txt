@@ -30,14 +30,17 @@ seatrac_driver
 )
 
 add_executable(calibrate_modem src/calibrate_modem.cpp)
-ament_target_dependencies(calibrate_modem rclcpp std_msgs frost_interfaces)
+#ament_target_dependencies(calibrate_modem rclcpp std_msgs frost_interfaces)
 target_link_libraries(calibrate_modem
 seatrac_driver
 )
-
+add_executable(setup_seatrac_beacon src/seatrac_beacon_setup_tool.cpp)
+#ament_target_dependencies(setup_seatrac_beacon rclcpp std_msgs frost_interfaces)
+target_link_libraries(setup_seatrac_beacon seatrac_driver)
 install(TARGETS
   modem
   calibrate_modem
+  setup_seatrac_beacon
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
