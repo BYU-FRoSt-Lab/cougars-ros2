@@ -9,6 +9,7 @@
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
+#include "std_msgs/msg/empty.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -25,6 +26,7 @@ public:
   PIDControl() : Node("pid_control") {
 
     // declare ros params
+    this->declare_parameter("trim_ratio", 0.0)
     this->declare_parameter("pid_timer_period",
                             80); // from experimentation with depth sensor
     this->declare_parameter("depth_kp", 0.0);
@@ -77,6 +79,11 @@ public:
             "control_command", 10);
 
     // declare ros subscribers
+    init_subscription_ = 
+        this->create_subscription<std_msgs::msg::Empty>(
+            "init", 10,
+            std::bind(&PIDControl::init_callback, this, _1));
+
     desired_depth_subscription_ =
         this->create_subscription<frost_interfaces::msg::DesiredDepth>(
             "desired_depth", 10,
@@ -108,8 +115,11 @@ public:
   }
 
 private:
-  void
-  desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
+  void init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
+    this->init_flag = true;
+  }
+
+  void desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
     this->desired_depth = depth_msg.desired_depth;
   }
 
@@ -140,37 +150,33 @@ private:
     auto message = frost_interfaces::msg::UCommand();
     message.header.stamp = this->now();
 
-    //////////////////////////////////////////////////////////
-    // LOW-LEVEL CONTROLLER CODE STARTS HERE
-    // - Reference wanted values using the desired_depth_msg,
-    //   desired_heading_msg, and desired_speed_msg objects
-    //////////////////////////////////////////////////////////
+    if (this->init_flag) {
 
-    // TODO: reset the dead reckoning on the dvl as soon as we start moving (?)
+      //////////////////////////////////////////////////////////
+      // LOW-LEVEL CONTROLLER CODE STARTS HERE
+      //////////////////////////////////////////////////////////
 
-    int depth_pos = myDepthPID.compute(this->desired_depth, -depth);
-    int heading_pos = myHeadingPID.compute(this->desired_heading, yaw);
-    int velocity_level =
-        this->desired_speed; // myVelocityPID.compute(this->desired_speed,
-                             // x_velocity);
+      int depth_pos = myDepthPID.compute(this->desired_depth, -depth);
+      int heading_pos = myHeadingPID.compute(this->desired_heading, yaw);
+      int velocity_level =
+          this->desired_speed; // myVelocityPID.compute(this->desired_speed,
+                              // x_velocity);
 
-    message.fin[0] = heading_pos;
-    message.fin[1] = depth_pos; // TODO: counter-rotation offset?
-    message.fin[2] = depth_pos;
-    message.thruster = velocity_level;
+      message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
+      message.fin[1] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
+      message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
+      message.thruster = velocity_level;
 
-    u_command_publisher_->publish(message);
+      u_command_publisher_->publish(message);
 
-    // RCLCPP_INFO(this->get_logger(),
-    //             "Actual Depth: %f, Actual Heading: %f, Actual Speed: %f",
-    //             depth, yaw, x_velocity);
-    RCLCPP_INFO(this->get_logger(),
-                "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
-                heading_pos, velocity_level);
+      RCLCPP_INFO(this->get_logger(),
+                  "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
+                  heading_pos, velocity_level);
 
-    //////////////////////////////////////////////////////////
-    // LOW-LEVEL CONTROLLER CODE ENDS HERE
-    //////////////////////////////////////////////////////////
+      //////////////////////////////////////////////////////////
+      // LOW-LEVEL CONTROLLER CODE ENDS HERE
+      //////////////////////////////////////////////////////////
+    }
   }
 
   // micro-ROS objects
@@ -187,6 +193,10 @@ private:
       depth_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr
       yaw_subscription_;
+  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr init_subscription_;
+
+  // flags
+  bool init_flag = false;
 
   // class desired value variables
   float desired_depth = 0.0;
