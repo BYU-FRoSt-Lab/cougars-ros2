@@ -23,7 +23,13 @@ using namespace narval::seatrac;
 
 //TODO: add ros parameters to setup beacon and driver node. At least serial port
 
-// The class needs to inherit from both the ROS node and driver classes
+/**
+ * @brief ADD HERE
+ * @author Clayton Smith
+ * @date September 2024
+ * 
+ * ADD HERE
+ */
 class ModemRosNode : public rclcpp::Node, public SeatracDriver {
 public:
 
