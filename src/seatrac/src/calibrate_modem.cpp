@@ -8,6 +8,13 @@
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
+/**
+ * @brief ADD HERE
+ * @author Clayton Smith
+ * @date September 2024
+ * 
+ * ADD HERE
+ */
 class MyDriver : public SeatracDriver
 {
     public:
