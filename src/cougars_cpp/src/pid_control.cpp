@@ -26,22 +26,18 @@ auto qos = rclcpp::QoS(
  * @author Nelson Durrant
  * @date September 2024
  * 
- * This class subscribes to desired depth, heading, and speed topics and actual
+ * This node subscribes to desired depth, heading, and speed topics and actual
  * depth and heading topics. It then computes the control commands using PID
  * controllers and publishes the control commands to a control command topic.
  * 
  * Subscribes to:
- * - desired_depth (frost_interfaces/DesiredDepth)
- * - desired_heading (frost_interfaces/DesiredHeading)
- * - desired_speed (frost_interfaces/DesiredSpeed)
- * - depth_data (geometry_msgs/PoseWithCovarianceStamped)
- * - modem_rec (frost_interfaces/ModemRec)
+ * - desired_depth (frost_interfaces/msg/DesiredDepth)
+ * - desired_heading (frost_interfaces/msg/DesiredHeading)
+ * - desired_speed (frost_interfaces/msg/DesiredSpeed)
+ * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
+ * - modem_rec (frost_interfaces/msg/ModemRec)
  * Publishes to:
- * - control_command (frost_interfaces/UCommand)
- * Parameters: trim_ratio, pid_timer_period, depth_kp, depth_ki, depth_kd,
- * depth_min_output, depth_max_output, depth_bias, heading_kp, heading_ki,
- * heading_kd, heading_min_output, heading_max_output, heading_bias, speed_kp,
- * speed_ki, speed_kd, speed_min_output, speed_max_output, speed_bias
+ * - control_command (frost_interfaces/msg/UCommand)
  */
 class PIDControl : public rclcpp::Node {
 public:
@@ -322,36 +318,36 @@ public:
 private:
 
   /**
-   * @brief Initializes the PID control node.
+   * @brief Callback function for the init subscription.
    * 
    * This method initializes the PID control node by setting the init flag to
    * true.
    * 
-   * @param msg The empty message.
+   * @param msg The Empty message recieved from the init topic.
    */
   void init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
     this->init_flag = true;
   }
 
   /**
-   * @brief Sets the desired depth value.
+   * @brief Callback function for the desired_depth subscription.
    * 
    * This method sets the desired depth value to the value received from the
    * desired depth message.
    * 
-   * @param depth_msg The desired depth message.
+   * @param depth_msg The DesiredDepth message recieved from the desired_depth topic.
    */
   void desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
     this->desired_depth = depth_msg.desired_depth;
   }
 
   /**
-   * @brief Sets the desired heading value.
+   * @brief Callback function for the desired_heading subscription.
    * 
    * This method sets the desired heading value to the value received from the
    * desired heading message.
    * 
-   * @param heading_msg The desired heading message.
+   * @param heading_msg The DesiredHeading message recieved from the desired_heading topic.
    */
   void desired_heading_callback(
       const frost_interfaces::msg::DesiredHeading &heading_msg) {
@@ -359,12 +355,12 @@ private:
   }
 
   /**
-   * @brief Sets the desired speed value.
+   * @brief Callback function for the desired_speed subscription.
    * 
    * This method sets the desired speed value to the value received from the
    * desired speed message.
    * 
-   * @param speed_msg The desired speed message.
+   * @param speed_msg The DesiredSpeed message recieved from the desired_speed topic.
    */
   void
   desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) {
@@ -372,12 +368,12 @@ private:
   }
 
   /**
-   * @brief Sets the depth value.
+   * @brief Callback function for the depth subscription.
    * 
    * This method sets the depth value to the value received from the depth
    * message.
    * 
-   * @param depth_msg The depth message.
+   * @param depth_msg The PoseWithCovarianceStamped message recieved from the depth_data topic.
    */
   void depth_callback(
       const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
@@ -385,11 +381,11 @@ private:
   }
 
   /**
-   * @brief Sets the yaw value.
+   * @brief Callback function for the yaw subscription.
    * 
    * This method sets the yaw value to the value received from the yaw message.
    * 
-   * @param yaw_msg The yaw message.
+   * @param yaw_msg The ModemRec message recieved from the modem_rec topic.
    */
   void yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg) {
 
@@ -400,10 +396,10 @@ private:
   }
 
   /**
-   * @brief Computes the control commands.
+   * @brief Callback function for the PID control timer.
    * 
    * This method computes the control commands using the PID controllers and
-   * publishes the control commands to the control command topic.
+   * publishes the control commands to the control_command topic.
    */
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
@@ -417,6 +413,8 @@ private:
           this->desired_speed; // myVelocityPID.compute(this->desired_speed,
                               // x_velocity);
 
+      // the "trim_ratio" parameter is used to adjust the control commands to
+      // account for thruster trim, depending on the velocity level
       message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
       message.fin[1] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
       message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;

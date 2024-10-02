@@ -27,10 +27,9 @@ auto qos = rclcpp::QoS(
  * data to depth data. The depth data is then published to a depth data topic.
  * 
  * Subscribes to:
- * - pressure_data (sensor_msgs/FluidPressure)
+ * - pressure_data (sensor_msgs/msg/FluidPressure)
  * Publishes to:
- * - depth_data (geometry_msgs/PoseWithCovarianceStamped)
- * Parameters: water_salinity_ppt, fluid_pressure_atm
+ * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
  */
 class DepthConvertor : public rclcpp::Node {
 public:
