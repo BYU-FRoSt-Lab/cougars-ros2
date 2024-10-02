@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timedelta
 import threading
 
+# TODO: Convert to C++, add to seatrac package
 
 class SeatracPinger(Node):
 

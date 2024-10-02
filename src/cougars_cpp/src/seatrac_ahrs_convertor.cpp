@@ -6,6 +6,8 @@
 #include <Eigen/Geometry>
 #include <cmath>
 
+// TODO: Add to seatrac package
+
 class SeatracAHRSConverter : public rclcpp::Node
 {
 public:

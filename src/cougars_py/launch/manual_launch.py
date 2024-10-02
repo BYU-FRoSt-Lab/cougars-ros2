@@ -8,6 +8,14 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
+    '''
+    :author: Nelson Durrant
+    :date: September 2024
+
+    Launches the manual control and sensor nodes for the vehicle.
+
+    :return: The launch description.
+    '''
 
     config_file = "/home/frostlab/config/vehicle_config.yaml"
 
