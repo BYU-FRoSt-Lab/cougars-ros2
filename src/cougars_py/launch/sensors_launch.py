@@ -5,6 +5,14 @@ import launch_ros.descriptions
 import yaml
 
 def generate_launch_description():
+    '''
+    :author: Nelson Durrant
+    :date: September 2024
+    
+    Launches the sensor nodes for the vehicle.
+
+    :return: The launch description.
+    '''
 
     config_file = "/home/frostlab/config/vehicle_config.yaml"
     with open(config_file, 'r') as f:

@@ -6,10 +6,22 @@ from std_msgs.msg import Empty
 from rclpy.qos import qos_profile_system_default
 
 
+# TODO: Add to cougars_control package
+
 class ManualControl(Node):
     '''
+    :author: Nelson Durrant
+    :date: September 2024
+
     A simple ROS2 node that publishes desired depth, heading, and speed values to control the vehicle.
     The desired values are set based on a simple state machine that transitions between three states.
+
+    Subscribes:
+        - init (std_msgs/msg/Empty)
+    Publishes:
+        - desired_depth (frost_interfaces/msg/DesiredDepth)
+        - desired_heading (frost_interfaces/msg/DesiredHeading)
+        - desired_speed (frost_interfaces/msg/DesiredSpeed)
     '''
     def __init__(self):
         '''
@@ -208,7 +220,7 @@ class ManualControl(Node):
         self.heading_publisher.publish(heading_msg)
         self.speed_publisher.publish(speed_msg)
 
-        self.get_logger().info("Depth: %f, Heading: %f, Speed: %f" % (
+        self.get_logger().info("[INFO] Depth: %f, Heading: %f, Speed: %f" % (
             depth_msg.desired_depth,
             heading_msg.desired_heading,
             speed_msg.desired_speed,
@@ -224,7 +236,7 @@ class ManualControl(Node):
         :param response: The EmergencyStop response message.
         '''
 
-        self.get_logger().info("EMERGENCY STOP EXECUTED")
+        self.get_logger().info("[ERROR] EMERGENCY STOP EXECUTED")
         self.get_logger().info(request.error)
         self.stopped = True
         response.stopped = True

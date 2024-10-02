@@ -14,6 +14,8 @@ from cougars_py.factor_plot import Plotter
 from cougars_py.factor_class_plot import Plotter as Plot
 from cougars_py.factor_class_plot import Series
 
+# TODO: Add to cougars_localization package
+
 class Agent():
     def __init__(self, H_init):
         self.pose_world = gtsam.Pose3(H_init)

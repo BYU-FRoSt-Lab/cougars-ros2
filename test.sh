@@ -3,7 +3,6 @@
 #
 # Enables acoustics and tests vehicle sensors
 # - Run this after running the 'start.sh' script
-##########################################################
 
 cd ~/ros2_ws
 source install/setup.bash
