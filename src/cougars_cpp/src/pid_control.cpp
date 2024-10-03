@@ -56,7 +56,7 @@ public:
      * The trim ratio is used to adjust the control commands to account for
      * thruster trim. The default value is 0.0.
      */
-    this->declare_parameter("trim_ratio", 0.0)
+    this->declare_parameter("trim_ratio", 0.0);
 
     /**
      * @param pid_timer_period
