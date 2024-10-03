@@ -414,8 +414,11 @@ private:
 
     // Check if the message is a status message
     if (yaw_msg.msg_id == 0x10) {
-      this->yaw = yaw_msg.attitude_yaw;
+      this->yaw = yaw_msg.attitude_yaw / 10.0;
+      RCLCPP_INFO(this->get_logger(),
+                  "[INFO] Yaw Info Recieved: %f", this->yaw);
     }
+
   }
 
   /**
