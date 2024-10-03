@@ -349,6 +349,8 @@ private:
    * @param msg The Empty message recieved from the init topic.
    */
   void init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
+
+    RCLCPP_INFO(this->get_logger(), "[INFO] Init message recieved");
     this->init_flag = true;
   }
 
@@ -415,8 +417,7 @@ private:
     // Check if the message is a status message
     if (yaw_msg.msg_id == 0x10) {
       this->yaw = yaw_msg.attitude_yaw / 10.0;
-      RCLCPP_INFO(this->get_logger(),
-                  "[INFO] Yaw Info Recieved: %f", this->yaw);
+      RCLCPP_INFO(this->get_logger(), "[INFO] Yaw Info Recieved: %f", this->yaw);
     }
 
   }
@@ -441,11 +442,12 @@ private:
 
       // the "trim_ratio" parameter is used to adjust the control commands to
       // account for thruster trim, depending on the velocity level
-      //TOP FIN:
+      // top fin
       message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("top_fin_offset").as_double();
-      //RIGHT FIN //TODO: Make this negative on the teensy side 
-      message.fin[1] = (-1 *depth_pos) + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("right_fin_offset").as_double();
-      //LEFT FIN  //TODO: Comment if positive makes fins dive or surface
+      // right fin (from the front)
+      message.fin[1] = (-1 * depth_pos) + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("right_fin_offset").as_double();
+      // left fin (from the front)  
+      // TODO: Comment if positive makes fins dive or surface
       message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("left_fin_offset").as_double();
       message.thruster = velocity_level;
 

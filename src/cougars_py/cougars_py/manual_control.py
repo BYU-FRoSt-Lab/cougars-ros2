@@ -169,7 +169,7 @@ class ManualControl(Node):
 
         :param msg: The Empty message received from the init topic.
         '''
-        self.get_logger().warn("INIT RECEIVED ....................................")
+        self.get_logger().info("[INFO] Init message received")
         self.stopped = False
 
 
