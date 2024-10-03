@@ -205,6 +205,27 @@ public:
      */
     this->declare_parameter("speed_bias", 0);
 
+    /**
+     * @param top_fin_offset
+     * 
+     * The offset for the fin to make it align properly. The default value is 0.0.
+     */
+    this->declare_parameter("top_fin_offset", 0.0);
+
+    /**
+     * @param right_fin_offset
+     * 
+     * The offset for the fin to make it align properly. The default value is 0.0.
+     */
+    this->declare_parameter("right_fin_offset", 0.0);
+
+    /**
+     * @param left_fin_offset
+     * 
+     * The offset for the fin to make it align properly. The default value is 0.0.
+     */
+    this->declare_parameter("left_fin_offset", 0.0);
+
     // calibrate PID controllers
     myDepthPID.calibrate(this->get_parameter("depth_kp").as_double(),
                          this->get_parameter("depth_ki").as_double(),
@@ -415,9 +436,12 @@ private:
 
       // the "trim_ratio" parameter is used to adjust the control commands to
       // account for thruster trim, depending on the velocity level
-      message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
-      message.fin[1] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
-      message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level;
+      //TOP FIN:
+      message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("top_fin_offset").as_double();
+      //TODO: RIGHT FIN?
+      message.fin[1] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("right_fin_offset").as_double();
+      //TODO: LEFT FIN?
+      message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("left_fin_offset").as_double();
       message.thruster = velocity_level;
 
       u_command_publisher_->publish(message);
