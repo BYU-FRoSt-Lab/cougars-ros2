@@ -440,9 +440,9 @@ private:
       // account for thruster trim, depending on the velocity level
       //TOP FIN:
       message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("top_fin_offset").as_double();
-      //RIGHT FIN
-      message.fin[1] = -1 * (depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("right_fin_offset").as_double());
-      //LEFT FIN
+      //RIGHT FIN //TODO: Make this negative on the teensy side 
+      message.fin[1] = (-1 *depth_pos) + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("right_fin_offset").as_double();
+      //LEFT FIN  //TODO: Comment if positive makes fins dive or surface
       message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("left_fin_offset").as_double();
       message.thruster = velocity_level;
 
