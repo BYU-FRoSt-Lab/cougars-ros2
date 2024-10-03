@@ -131,7 +131,7 @@ class ManualControl(Node):
         # Create the subscriptions
         self.subscription = self.create_subscription(
             Empty, 
-            "init", 
+            "/init", 
             self.listener_callback, 
             qos_profile_system_default
         )
@@ -169,7 +169,7 @@ class ManualControl(Node):
 
         :param msg: The Empty message received from the init topic.
         '''
-        self.get_logger().info("INIT RECEIVED")
+        self.get_logger().warn("INIT RECEIVED ....................................")
         self.stopped = False
 
 
