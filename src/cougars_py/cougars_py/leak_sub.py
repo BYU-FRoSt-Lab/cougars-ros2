@@ -5,14 +5,19 @@ from frost_interfaces.msg import LeakStatus
 from rclpy.qos import qos_profile_sensor_data
 
 
+# TODO: Add to cougars_control package
+
 class LeakSubscriber(Node):
     '''
+    :author: Nelson Durrant
+    :date: September 2024
+
     A simple ROS2 node that subscribes to the leak_data topic and listens for the leak status.
     If a leak is detected, it sends a request to the emergency_stop service to stop the robot.
     
-    Subscribes to:
+    Subscribes:
         - leak_data (frost_interfaces/msg/LeakStatus)
-    Client for:
+    Clients:
         - emergency_stop (frost_interfaces/srv/EmergencyStop)
     '''
     def __init__(self):

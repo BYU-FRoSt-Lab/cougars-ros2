@@ -79,6 +79,7 @@ public:
   // it copies the modem data to a ros message of type ModemRec
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
     auto msg = frost_interfaces::msg::ModemRec();
+    msg.header.stamp = this->get_clock()->now();
     msg.msg_id = msgId;
     switch (msgId) {
       default: {

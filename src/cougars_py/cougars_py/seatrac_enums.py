@@ -4,6 +4,8 @@
  #      and interpret ros messages from the seatrac modem                 #
  #========================================================================#
 
+# TODO: Convert to C++, add to seatrac package
+
 
  # all definitions included in this file are defined in this manual
  # https://www.seascapesubsea.com/downloads/Blueprint-Subsea-SeaTrac-Developer-Guide.pdf

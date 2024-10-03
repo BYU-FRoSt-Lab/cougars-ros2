@@ -10,6 +10,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/fluid_pressure.hpp"
 
+// TODO: Add to cougars_localization package
+
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
@@ -26,9 +28,9 @@ auto qos = rclcpp::QoS(
  * This node subscribes to a pressure sensor topic and converts the pressure
  * data to depth data. The depth data is then published to a depth data topic.
  * 
- * Subscribes to:
+ * Subscribes:
  * - pressure_data (sensor_msgs/msg/FluidPressure)
- * Publishes to:
+ * Publishes:
  * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
  */
 class DepthConvertor : public rclcpp::Node {

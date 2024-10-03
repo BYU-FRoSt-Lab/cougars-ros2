@@ -17,6 +17,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
+// TODO: Add to cougars_localization package
+
 using std::placeholders::_1;
 
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
