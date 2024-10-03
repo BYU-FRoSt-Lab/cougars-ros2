@@ -441,7 +441,7 @@ private:
       //TOP FIN:
       message.fin[0] = heading_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("top_fin_offset").as_double();
       //RIGHT FIN
-      message.fin[1] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("right_fin_offset").as_double();
+      message.fin[1] = -1 * (depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("right_fin_offset").as_double());
       //LEFT FIN
       message.fin[2] = depth_pos + this->get_parameter("trim_ratio").as_double() * velocity_level + this->get_parameter("left_fin_offset").as_double();
       message.thruster = velocity_level;
