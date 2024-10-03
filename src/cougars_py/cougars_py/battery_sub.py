@@ -5,14 +5,19 @@ from frost_interfaces.msg import BatteryStatus
 from rclpy.qos import qos_profile_sensor_data
 
 
+# TODO: Add to cougars_control package
+
 class BatterySubscriber(Node):
     '''
+    :author: Nelson Durrant
+    :date: September 2024
+
     A simple ROS2 node that subscribes to the battery_data topic and listens for the battery voltage.
     If the voltage is below a critical threshold, it sends a request to the emergency_stop service to stop the robot.
 
-    Subscribes to:
+    Subscribes:
         - battery_data (frost_interfaces/msg/BatteryStatus)
-    Client for:
+    Clients:
         - emergency_stop (frost_interfaces/srv/EmergencyStop)
     '''
     def __init__(self):

@@ -26,6 +26,8 @@ cleanup() {
 }
 trap cleanup SIGINT
 
+sudo bash /home/frostlab/teensy_ws/power.sh on
+
 if [ -z "$(tycmd list | grep Teensy)" ]; then
     echo ""
     printError "No Teensy boards avaliable to connect to"

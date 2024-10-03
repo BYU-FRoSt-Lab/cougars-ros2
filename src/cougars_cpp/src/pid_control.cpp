@@ -13,6 +13,8 @@
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+// TODO: Add to cougars_control package
+
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
@@ -30,13 +32,13 @@ auto qos = rclcpp::QoS(
  * depth and heading topics. It then computes the control commands using PID
  * controllers and publishes the control commands to a control command topic.
  * 
- * Subscribes to:
+ * Subscribes:
  * - desired_depth (frost_interfaces/msg/DesiredDepth)
  * - desired_heading (frost_interfaces/msg/DesiredHeading)
  * - desired_speed (frost_interfaces/msg/DesiredSpeed)
  * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
  * - modem_rec (frost_interfaces/msg/ModemRec)
- * Publishes to:
+ * Publishes:
  * - control_command (frost_interfaces/msg/UCommand)
  */
 class PIDControl : public rclcpp::Node {
@@ -447,7 +449,7 @@ private:
       u_command_publisher_->publish(message);
 
       RCLCPP_INFO(this->get_logger(),
-                  "Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
+                  "[INFO] Bottom Servos: %d, Top Servo: %d, Thruster: %d", depth_pos,
                   heading_pos, velocity_level);
 
     }

@@ -35,6 +35,7 @@
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+// TODO: Add to cougars_localization package
 
 #define UPDATE_TIMER_MS std::chrono::milliseconds(10)
 
