@@ -51,13 +51,13 @@ target_link_libraries(depth_convertor)
 target_link_libraries(vehicle_status)
 # target_link_libraries(dvl_config)
 install(TARGETS
-  moos_bridge
-  pid_control
-  dvl_convertor
+  coug_controls
+  coug_kinematics
   depth_convertor
-  vehicle_status
-  # dvl_config
+  dvl_convertor
+  moos_bridge
   seatrac_ahrs_convertor
+  vehicle_status
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

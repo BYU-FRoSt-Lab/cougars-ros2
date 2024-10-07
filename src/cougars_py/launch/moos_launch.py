@@ -33,7 +33,12 @@ def generate_launch_description():
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_cpp',
-            executable='pid_control',
+            executable='coug_kinematics',
+            parameters=[config_file],
+        ),
+        launch_ros.actions.Node(
+            package='cougars_cpp',
+            executable='coug_controls',
             parameters=[config_file],
         ),
         launch_ros.actions.Node(

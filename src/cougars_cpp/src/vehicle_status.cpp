@@ -28,7 +28,6 @@
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/modem_rec.hpp"
 
-
 #include "frost_interfaces/msg/u_command.hpp"
 #include "frost_interfaces/msg/vehicle_status.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
@@ -41,10 +40,8 @@
 
 #define PI_NUM 3.141592653589
 
-
 using namespace std::chrono_literals;
 using std::placeholders::_1;
-
 
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 auto qos = rclcpp::QoS(
@@ -53,14 +50,13 @@ auto qos = rclcpp::QoS(
 
 class VehicleStatus : public rclcpp::Node {
 
-
   /// TODO: have this listen to the x,y from the filter
 
 public:
   VehicleStatus() : Node("vehicle_status") {
-    x_y_subscription_ = this->create_subscription<
-        nav_msgs::msg::Odometry>(
-        "/smoothed_output", 10, std::bind(&VehicleStatus::x_y_callback, this, _1));
+    x_y_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
+        "/smoothed_output", 10,
+        std::bind(&VehicleStatus::x_y_callback, this, _1));
 
     depth_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -71,19 +67,27 @@ public:
         "dvl_velocity", 10,
         std::bind(&VehicleStatus::velocity_callback, this, _1));
 
-    // orientation_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
-    //     "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback, this, _1));
+    // orientation_subscription_ =
+    // this->create_subscription<sensor_msgs::msg::Imu>(
+    //     "modem_imu", qos, std::bind(&VehicleStatus::orientation_callback,
+    //     this, _1));
 
-    modem_yaw_subscription_ = this->create_subscription<frost_interfaces::msg::ModemRec>("modem_rec", qos, std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
+    modem_yaw_subscription_ =
+        this->create_subscription<frost_interfaces::msg::ModemRec>(
+            "modem_rec", qos,
+            std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
 
     update_timer_ = this->create_wall_timer(
-        UPDATE_TIMER_MS, std::bind(&VehicleStatus::broadcast_status_callback, this));
+        UPDATE_TIMER_MS,
+        std::bind(&VehicleStatus::broadcast_status_callback, this));
 
-    vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>("vehicle_status", 10);
+    vehicle_status_publisher_ =
+        this->create_publisher<frost_interfaces::msg::VehicleStatus>(
+            "vehicle_status", 10);
   }
 
 private:
-  void x_y_callback(const nav_msgs::msg::Odometry &x_y_message ){
+  void x_y_callback(const nav_msgs::msg::Odometry &x_y_message) {
     this->y_pos = x_y_message.pose.pose.position.y;
     this->x_pos = x_y_message.pose.pose.position.x;
   }
@@ -95,18 +99,20 @@ private:
       const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
     this->x_velocity = velocity_msg.twist.twist.linear.x;
   }
-  // void orientation_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &orientation_msg) {
+  // void orientation_callback(const
+  // geometry_msgs::msg::PoseWithCovarianceStamped &orientation_msg) {
   //   this->q_w = orientation_msg.pose.pose.orientation.w;
   //   this->q_x = orientation_msg.pose.pose.orientation.x;
   //   this->q_y = orientation_msg.pose.pose.orientation.y;
   //   this->q_z = orientation_msg.pose.pose.orientation.z;
   // }
 
-  void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg){
-    if(yaw_msg.msg_id == 0x10) this->yaw = 0.1 * (PI_NUM / 180.0) * yaw_msg.attitude_yaw;
-    // ^^^ Makes sure the yaw comes from a status message. Other messages will have a zero yaw and mess up the calculation
+  void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg) {
+    if (yaw_msg.msg_id == 0x10)
+      this->yaw = 0.1 * (PI_NUM / 180.0) * yaw_msg.attitude_yaw;
+    // ^^^ Makes sure the yaw comes from a status message. Other messages will
+    // have a zero yaw and mess up the calculation
   }
-
 
   void broadcast_status_callback() {
     auto message = frost_interfaces::msg::VehicleStatus();
@@ -120,12 +126,11 @@ private:
     // message.coug_odom.pose.pose.orientation.x = this->q_x;
     message.coug_odom.twist.twist.linear.x = this->x_velocity;
     message.attitude_yaw = this->yaw;
-    
-    // publishes speed, depth, global x,y, 
-    // and orientation (quaternion)
-    // to be used by MOOS and anything else to 
-    vehicle_status_publisher_->publish(message);
 
+    // publishes speed, depth, global x,y,
+    // and orientation (quaternion)
+    // to be used by MOOS and anything else to
+    vehicle_status_publisher_->publish(message);
   }
 
   // call back timer to update
@@ -135,12 +140,14 @@ private:
       depth_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::
       SharedPtr velocity_subscription_;
-  // rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr orientation_subscription_;
+  // rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
+  // orientation_subscription_;
 
   // current x,y
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr x_y_subscription_;
 
-  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr modem_yaw_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr
+      modem_yaw_subscription_;
 
   rclcpp::Publisher<frost_interfaces::msg::VehicleStatus>::SharedPtr
       vehicle_status_publisher_;

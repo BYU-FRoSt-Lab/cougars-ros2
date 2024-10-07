@@ -12,10 +12,10 @@
 #include "std_msgs/msg/string.hpp"
 #include <vector>
 
-#include <math.h>
-#include <stdint.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+#include <math.h>
+#include <stdint.h>
 
 // TODO: Add to cougars_localization package
 
@@ -50,9 +50,10 @@ public:
     geometry_msgs::msg::TwistWithCovarianceStamped stamped_msg;
     stamped_msg.header.stamp = msg->header.stamp;
 
-    // double msg_time = msg->time TODO: Figure how to use the NTP time from DVL. 
+    // double msg_time = msg->time TODO: Figure how to use the NTP time from
+    // DVL.
 
-    //stamped_msg.header.stamp
+    // stamped_msg.header.stamp
 
     // filling in the upper left corner of the 6X6 covariance matrix
     int index = 0;
@@ -82,7 +83,8 @@ public:
     geometry_msgs::msg::PoseWithCovarianceStamped stamped_msg;
     stamped_msg.header.stamp = msg->header.stamp;
 
-    stamped_msg.header.frame_id = "odom"; //odom is the coordinate frame of the dvl in robot_localization
+    stamped_msg.header.frame_id =
+        "odom"; // odom is the coordinate frame of the dvl in robot_localization
 
     stamped_msg.pose.pose.position.x = msg->position.x;
     stamped_msg.pose.pose.position.y = -1.0 * msg->position.y;
@@ -112,19 +114,18 @@ public:
     stamped_msg.pose.pose.orientation.z = quaternion_R.z();
     stamped_msg.pose.pose.orientation.w = -quaternion_R.w();
 
-    //Option 2: convert with rotations. Same effect but more readable
-    // Eigen::Matrix3f R;
-    // R = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX()) *
-    //     Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ()) *
-    //     Eigen::AngleAxisf(pitch_rad, Eigen::Vector3f::UnitY()) *
-    //     Eigen::AngleAxisf(roll_rad, Eigen::Vector3f::UnitX()) *
-    //     Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX());
-    // Eigen::Quaternionf quaternion_R(R);
-    // stamped_msg.pose.pose.orientation.x = quaternion_R.x();
-    // stamped_msg.pose.pose.orientation.y = quaternion_R.y();
-    // stamped_msg.pose.pose.orientation.z = quaternion_R.z();
-    // stamped_msg.pose.pose.orientation.w = quaternion_R.w();
-
+    // Option 2: convert with rotations. Same effect but more readable
+    //  Eigen::Matrix3f R;
+    //  R = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX()) *
+    //      Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ()) *
+    //      Eigen::AngleAxisf(pitch_rad, Eigen::Vector3f::UnitY()) *
+    //      Eigen::AngleAxisf(roll_rad, Eigen::Vector3f::UnitX()) *
+    //      Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX());
+    //  Eigen::Quaternionf quaternion_R(R);
+    //  stamped_msg.pose.pose.orientation.x = quaternion_R.x();
+    //  stamped_msg.pose.pose.orientation.y = quaternion_R.y();
+    //  stamped_msg.pose.pose.orientation.z = quaternion_R.z();
+    //  stamped_msg.pose.pose.orientation.w = quaternion_R.w();
 
     // Eigen::Matrix3f R;
     // R = Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ())*
@@ -136,18 +137,14 @@ public:
     // stamped_msg.pose.pose.orientation.y = quaternion_R.y();
     // stamped_msg.pose.pose.orientation.z = quaternion_R.z();
     // stamped_msg.pose.pose.orientation.w = quaternion_R.w();
-        
 
-    //TODO: Check and tune covariance parameters
-    double pvr = msg->pos_std * msg->pos_std; //variance = std squared
-    double yvr = 1.0; //An estimate for the variance in yaw
-    stamped_msg.pose.covariance = { 
-      pvr, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, pvr, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, pvr, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, yvr,
+    // TODO: Check and tune covariance parameters
+    double pvr = msg->pos_std * msg->pos_std; // variance = std squared
+    double yvr = 1.0; // An estimate for the variance in yaw
+    stamped_msg.pose.covariance = {
+        pvr, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pvr, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, pvr, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, yvr,
     };
 
     publisher_dvl_dead_reckoning->publish(stamped_msg);
