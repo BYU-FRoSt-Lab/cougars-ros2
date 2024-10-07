@@ -65,11 +65,11 @@ public:
             "desired_speed", 10);
   }
 
-
 private:
   // needs to listen to (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
-  void ros_vehicle_status_listener(const frost_interfaces::msg::VehicleStatus &msg){
+  void
+  ros_vehicle_status_listener(const frost_interfaces::msg::VehicleStatus &msg) {
 
     double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
 
@@ -77,13 +77,12 @@ private:
     nav_y = msg.coug_odom.pose.pose.position.y;
     nav_depth = -1.0 * msg.coug_odom.pose.pose.position.z;
     nav_speed = msg.coug_odom.twist.twist.linear.x;
-    
+
     // yaw comes in -180 to 180 (degrees)
-    if(msg.attitude_yaw < 0.0){
+    if (msg.attitude_yaw < 0.0) {
 
       nav_heading = 360.0 + (0.1 * msg.attitude_yaw);
-    }
-    else{
+    } else {
       nav_heading = (0.1 * msg.attitude_yaw);
     }
 
@@ -108,32 +107,32 @@ bool OnConnect(void *pParam) {
   pC->Register("NAV_SPEED", 0.0);
   pC->Register("NAV_HEADING", 0.0);
   pC->Register("NAV_DEPTH", 0.0);
-  
+
   // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
   // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
   // system(command.c_str());
   return 0;
 }
 
-void PublishDesiredValue(double value, std::string key){
+void PublishDesiredValue(double value, std::string key) {
 
   if (key == "DESIRED_SPEED") {
-      auto message = frost_interfaces::msg::DesiredSpeed();
-      message.desired_speed = value;
-      desired_speed_publisher_->publish(message);
-    } else if (key == "DESIRED_HEADING") {
-      auto message = frost_interfaces::msg::DesiredHeading();
-      if (value > 180.0) {
-        message.desired_heading = -1.0 * (360.0 - value);
-      } else {
-        message.desired_heading = value;
-      }
-      desired_heading_publisher_->publish(message);
-    } else if (key == "DESIRED_DEPTH") {
-      auto message = frost_interfaces::msg::DesiredDepth();
-      message.desired_depth = value;
-      desired_depth_publisher_->publish(message);
+    auto message = frost_interfaces::msg::DesiredSpeed();
+    message.desired_speed = value;
+    desired_speed_publisher_->publish(message);
+  } else if (key == "DESIRED_HEADING") {
+    auto message = frost_interfaces::msg::DesiredHeading();
+    if (value > 180.0) {
+      message.desired_heading = -1.0 * (360.0 - value);
+    } else {
+      message.desired_heading = value;
     }
+    desired_heading_publisher_->publish(message);
+  } else if (key == "DESIRED_DEPTH") {
+    auto message = frost_interfaces::msg::DesiredDepth();
+    message.desired_depth = value;
+    desired_depth_publisher_->publish(message);
+  }
 }
 
 // Receives the moos stuff
@@ -146,12 +145,11 @@ bool OnMail(void *pParam) {
     CMOOSMsg &msg = *q;
     std::string key = msg.GetKey();
     double value = msg.GetDouble();
-    PublishDesiredValue(value,key);
-    std::cout << "DESIRED_" << key << ": "<< value << std::endl;
+    PublishDesiredValue(value, key);
+    std::cout << "DESIRED_" << key << ": " << value << std::endl;
 
     // if you want to print all the values registered for, then uncomment this
     // q->Trace();
-
   }
   return true;
 }

@@ -52,13 +52,13 @@ echo ""
 echo "LISTENING TO TOPIC 'PRESSURE_DATA'..."
 ros2 topic echo --once /pressure_data
 
-echo ""
-echo "LISTENING TO TOPIC 'LEAK_DATA'..."
-ros2 topic echo --once /leak_data
+# echo ""
+# echo "LISTENING TO TOPIC 'LEAK_DATA'..."
+# ros2 topic echo --once /leak_data
 
-echo ""
-echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
-ros2 topic echo --once /battery_data
+# echo ""
+# echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
+# ros2 topic echo --once /battery_data
 
 echo ""
 echo "TESTING TOP SERVO, PUBLISHING TO 'CONTROL_COMMAND'..."
