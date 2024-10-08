@@ -12,11 +12,11 @@ class LeakSubscriber(Node):
     :author: Nelson Durrant
     :date: September 2024
 
-    A simple ROS2 node that subscribes to the leak_data topic and listens for the leak status.
+    A simple ROS2 node that subscribes to the leak/data topic and listens for the leak status.
     If a leak is detected, it sends a request to the emergency_stop service to stop the robot.
     
     Subscribes:
-        - leak_data (frost_interfaces/msg/LeakStatus)
+        - leak/data (frost_interfaces/msg/LeakStatus)
     Clients:
         - emergency_stop (frost_interfaces/srv/EmergencyStop)
     '''
@@ -27,11 +27,11 @@ class LeakSubscriber(Node):
         super().__init__("leak_subscriber")
 
         self.subscription = self.create_subscription(
-            LeakStatus, "leak_data", self.listener_callback, qos_profile_sensor_data
+            LeakStatus, "leak/data", self.listener_callback, qos_profile_sensor_data
         )
         self.subscription  # prevent unused variable warning
         '''
-        Create a subscription to the "leak_data" topic with the message type LeakStatus.
+        Create a subscription to the "leak/data" topic with the message type LeakStatus.
         '''
         
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
@@ -55,10 +55,10 @@ class LeakSubscriber(Node):
 
     def listener_callback(self, msg):
         '''
-        Callback function for the leak_data subscription.
+        Callback function for the leak/data subscription.
         If a leak is detected, this method sends a request to the emergency_stop service to stop the robot.
 
-        :param msg: The LeakStatus message received from the leak_data topic.
+        :param msg: The LeakStatus message received from the leak/data topic.
         '''
         if msg.leak:
             error = "[ERROR] Leak Detected"
