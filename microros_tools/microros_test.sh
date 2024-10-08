@@ -52,13 +52,13 @@ echo ""
 echo "LISTENING TO TOPIC 'PRESSURE_DATA'..."
 ros2 topic echo --once /pressure_data
 
-echo ""
-echo "LISTENING TO TOPIC 'LEAK_DATA'..."
-ros2 topic echo --once /leak_data
+# echo ""
+# echo "LISTENING TO TOPIC 'LEAK_DATA'..."
+# ros2 topic echo --once /leak_data
 
-echo ""
-echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
-ros2 topic echo --once /battery_data
+# echo ""
+# echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
+# ros2 topic echo --once /battery_data
 
 echo ""
 echo "TESTING TOP SERVO, PUBLISHING TO 'CONTROL_COMMAND'..."
@@ -69,12 +69,12 @@ echo "TESTING SIDE SERVOS, PUBLISHING TO 'CONTROL_COMMAND'..."
 ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
 
 echo ""
-echo "TESTING THRUSTER (ON), PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
+echo "TESTING THRUSTER (ON), PUBLISHING TO 'KINEMATICS/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
 
 echo ""
-echo "TESTING THRUSTER (OFF), PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
+echo "TESTING THRUSTER (OFF), PUBLISHING TO 'KINEMATICS/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
 
 echo ""
 echo "TEST COMPLETE"
