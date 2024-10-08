@@ -56,8 +56,8 @@ install(TARGETS
 
 # Install Python executables
 install(PROGRAMS
-  scripts/factor_graph.py
-  scripts/gps_odom.py
+  cougars_localization/factor_graph.py
+  cougars_localization/gps_odom.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -51,9 +51,9 @@ install(TARGETS
 
 # Install Python executables
 install(PROGRAMS
-  scripts/battery_sub.py
-  scripts/leak_sub.py
-  scripts/manual_mission.py
+  cougars_control/battery_sub.py
+  cougars_control/leak_sub.py
+  cougars_control/manual_mission.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
