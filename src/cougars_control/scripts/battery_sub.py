@@ -34,10 +34,10 @@ class BatterySubscriber(Node):
         self.subscription = self.create_subscription(
             BatteryStatus, "battery/data", self.listener_callback, qos_profile_sensor_data
         )
-        self.subscription  # prevent unused variable warning
         '''
         Subscription to the "battery/data" topic with the message type BatteryStatus.
         '''
+        self.subscription  # prevent unused variable warning
         
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
         '''
