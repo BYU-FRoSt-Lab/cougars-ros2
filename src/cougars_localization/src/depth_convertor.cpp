@@ -58,7 +58,7 @@ public:
     this->declare_parameter("fluid_pressure_atm", 87250.0);
 
     /**
-     * @brief Creates a new depth publisher.
+     * @brief Depth publisher.
      *
      * This publisher publishes the depth data to the "depth_data" topic. It
      * uses the PoseWithCovarianceStamped message type.
@@ -68,7 +68,7 @@ public:
             "depth_data", 10);
 
     /**
-     * @brief Creates a new pressure subscriber.
+     * @brief Pressure subscriber.
      *
      * This subscriber subscribes to the "pressure/data" topic. It uses the
      * FluidPressure message type.

@@ -71,7 +71,7 @@ class NavSatFixToOdom(Node):
             10
         )
         '''
-        Create a subscription to the "extended_fix" topic with the message type GPSFix.
+        Subscription to the "extended_fix" topic with the message type GPSFix.
         '''
         
         self.last_msg = None
@@ -80,7 +80,7 @@ class NavSatFixToOdom(Node):
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, '/gps_odom', 10)
         '''
-        Create a publisher for the "gps_odom" topic with the message type Odometry.
+        Publisher for the "gps_odom" topic with the message type Odometry.
         '''
     
     def gps_callback(self, msg: GPSFix):

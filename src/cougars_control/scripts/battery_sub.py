@@ -36,7 +36,7 @@ class BatterySubscriber(Node):
         )
         self.subscription  # prevent unused variable warning
         '''
-        Create a subscription to the "battery/data" topic with the message type BatteryStatus.
+        Subscription to the "battery/data" topic with the message type BatteryStatus.
         '''
         
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
@@ -44,7 +44,7 @@ class BatterySubscriber(Node):
             self.get_logger().info("EmergencyStop service not available, waiting...")
         self.req = EmergencyStop.Request()
         '''
-        Create a client for the "emergency_stop" service with the service type EmergencyStop.
+        Client for the "emergency_stop" service with the service type EmergencyStop.
         '''
 
     def send_request(self, err):

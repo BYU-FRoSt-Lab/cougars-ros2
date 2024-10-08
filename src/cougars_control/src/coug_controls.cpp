@@ -169,7 +169,7 @@ public:
                            this->get_parameter("heading_bias").as_int());
 
     /**
-     * @brief Creates a new control command publisher.
+     * @brief Control command publisher.
      *
      * This publisher publishes the control commands to the "control_command"
      * topic. It uses the UCommand message type.
@@ -179,7 +179,7 @@ public:
             "control_command", 10);
 
     /**
-     * @brief Creates a new initialization subscriber.
+     * @brief Initialization subscriber.
      *
      * This subscriber subscribes to the "init" topic. It uses the Empty message
      * type.
@@ -188,7 +188,7 @@ public:
         "init", 10, std::bind(&CougControls::init_callback, this, _1));
 
     /**
-     * @brief Creates a new desired depth subscriber.
+     * @brief Desired depth subscriber.
      *
      * This subscriber subscribes to the "desired_depth" topic. It uses the
      * DesiredDepth message type.
@@ -199,7 +199,7 @@ public:
             std::bind(&CougControls::desired_depth_callback, this, _1));
 
     /**
-     * @brief Creates a new desired heading subscriber.
+     * @brief Desired heading subscriber.
      *
      * This subscriber subscribes to the "desired_heading" topic. It uses the
      * DesiredHeading message type.
@@ -210,7 +210,7 @@ public:
             std::bind(&CougControls::desired_heading_callback, this, _1));
 
     /**
-     * @brief Creates a new desired speed subscriber.
+     * @brief Desired speed subscriber.
      *
      * This subscriber subscribes to the "desired_speed" topic. It uses the
      * DesiredSpeed message type.
@@ -221,7 +221,7 @@ public:
             std::bind(&CougControls::desired_speed_callback, this, _1));
 
     /**
-     * @brief Creates a new depth subscriber.
+     * @brief Depth subscriber.
      *
      * This subscriber subscribes to the "depth_data" topic. It uses the
      * PoseWithCovarianceStamped message type.
@@ -232,7 +232,7 @@ public:
         std::bind(&CougControls::actual_depth_callback, this, _1));
 
     /**
-     * @brief Creates a new yaw subscriber.
+     * @brief Yaw subscriber.
      *
      * This subscriber subscribes to the "modem_rec" topic. It uses the ModemRec
      * message type.
@@ -243,7 +243,7 @@ public:
             std::bind(&CougControls::actual_heading_callback, this, _1));
 
     /**
-     * @brief Creates a new control timer.
+     * @brief Control timer.
      *
      * This timer calls the control loop at the specified period.
      */
@@ -264,7 +264,7 @@ private:
   void init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
 
     (void)msg; // supress unused variable warning
-    
+
     RCLCPP_INFO(this->get_logger(), "[INFO] Init message recieved");
     this->init_flag = true;
   }
