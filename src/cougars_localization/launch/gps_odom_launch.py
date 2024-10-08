@@ -8,7 +8,7 @@ def generate_launch_description():
     :author: Braden Meyers
     :date: September 2024
     
-    Launches the sensor nodes for the vehicle.
+    Launches the GPS to Odometry conversion node.
 
     :return: The launch description.
     '''
@@ -23,8 +23,4 @@ def generate_launch_description():
             name='gps_odom',
             parameters=[config_file],
         ),
-        # launch_ros.actions.Node(
-        #     package='cougars_localization',
-        #     executable='vehicle_status'
-        # ),
     ])

@@ -52,7 +52,7 @@ install(TARGETS
 install(PROGRAMS
   scripts/battery_sub.py
   scripts/leak_sub.py
-  scripts/manual_control.py
+  scripts/manual_mission.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
