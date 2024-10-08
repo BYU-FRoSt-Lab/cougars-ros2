@@ -27,7 +27,7 @@ auto qos = rclcpp::QoS(
  * data to depth data. The depth data is then published to a depth data topic.
  *
  * Subscribes:
- * - pressure_data (sensor_msgs/msg/FluidPressure)
+ * - pressure/data (sensor_msgs/msg/FluidPressure)
  * Publishes:
  * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
  */
@@ -70,12 +70,12 @@ public:
     /**
      * @brief Creates a new pressure subscriber.
      *
-     * This subscriber subscribes to the "pressure_data" topic. It uses the
+     * This subscriber subscribes to the "pressure/data" topic. It uses the
      * FluidPressure message type.
      */
     pressure_subscription_ =
         this->create_subscription<sensor_msgs::msg::FluidPressure>(
-            "pressure_data", qos,
+            "pressure/data", qos,
             std::bind(&DepthConvertor::pressure_callback, this, _1));
   }
 

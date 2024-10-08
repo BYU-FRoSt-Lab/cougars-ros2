@@ -49,24 +49,24 @@ echo "LISTING FOUND TOPICS..."
 ros2 topic list
 
 echo ""
-echo "LISTENING TO TOPIC 'PRESSURE_DATA'..."
-ros2 topic echo --once /pressure_data
+echo "LISTENING TO TOPIC 'PRESSURE/DATA'..."
+ros2 topic echo --once /pressure/data
 
 # echo ""
-# echo "LISTENING TO TOPIC 'LEAK_DATA'..."
-# ros2 topic echo --once /leak_data
+# echo "LISTENING TO TOPIC 'LEAK/DATA'..."
+# ros2 topic echo --once /leak/data
 
 # echo ""
-# echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
-# ros2 topic echo --once /battery_data
+# echo "LISTENING TO TOPIC 'BATTERY/DATA'..."
+# ros2 topic echo --once /battery/data
 
 echo ""
-echo "TESTING TOP SERVO, PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
+echo "TESTING TOP SERVO, PUBLISHING TO 'KINEMATICS/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
 
 echo ""
-echo "TESTING SIDE SERVOS, PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
+echo "TESTING SIDE SERVOS, PUBLISHING TO 'KINEMATICS/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
 
 echo ""
 echo "TESTING THRUSTER (ON), PUBLISHING TO 'KINEMATICS/COMMAND'..."

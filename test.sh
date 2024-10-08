@@ -15,16 +15,16 @@ echo "LISTING FOUND TOPICS..."
 ros2 topic list
 
 # echo ""
-# echo "LISTENING TO TOPIC 'LEAK_DATA'..."
-# ros2 topic echo --once /leak_data
+# echo "LISTENING TO TOPIC 'LEAK/DATA'..."
+# ros2 topic echo --once /leak/data
 
 # echo ""
-# echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
-# ros2 topic echo --once /battery_data
+# echo "LISTENING TO TOPIC 'BATTERY/DATA'..."
+# ros2 topic echo --once /battery/data
 
 echo ""
-echo "LISTENING TO TOPIC 'PRESSURE_DATA'..."
-ros2 topic echo --once /pressure_data
+echo "LISTENING TO TOPIC 'PRESSURE/DATA'..."
+ros2 topic echo --once /pressure/data
 
 echo ""
 echo "LISTENING TO TOPIC 'DEPTH_DATA'..."
