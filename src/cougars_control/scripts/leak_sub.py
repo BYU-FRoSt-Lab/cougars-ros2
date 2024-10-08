@@ -29,10 +29,10 @@ class LeakSubscriber(Node):
         self.subscription = self.create_subscription(
             LeakStatus, "leak/data", self.listener_callback, qos_profile_sensor_data
         )
-        self.subscription  # prevent unused variable warning
         '''
         Subscription to the "leak/data" topic with the message type LeakStatus.
         '''
+        self.subscription  # prevent unused variable warning
         
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
         '''
