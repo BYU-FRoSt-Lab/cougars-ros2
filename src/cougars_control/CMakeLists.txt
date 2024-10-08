@@ -19,6 +19,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(frost_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
+find_package(gps_msgs REQUIRED)
 find_package(MOOS 10 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
