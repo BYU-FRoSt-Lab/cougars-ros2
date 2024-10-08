@@ -263,6 +263,8 @@ private:
    */
   void init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
 
+    (void)msg; // supress unused variable warning
+    
     RCLCPP_INFO(this->get_logger(), "[INFO] Init message recieved");
     this->init_flag = true;
   }
