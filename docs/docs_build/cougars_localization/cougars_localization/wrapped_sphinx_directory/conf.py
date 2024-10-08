@@ -19,9 +19,9 @@ def ensure_global(name, default):
 ensure_global('rosdoc2_settings', {})
 ensure_global('extensions', [])
 ensure_global('project', "cougars_localization")
-ensure_global('author', """frostlab""")
-ensure_global('release', "0.0.0")
-ensure_global('version', "0.0")
+ensure_global('author', """Nelson Durrant""")
+ensure_global('release', "1.0.0")
+ensure_global('version', "1.0")
 
 if rosdoc2_settings.get('enable_autodoc', True):
     print('[rosdoc2] enabling autodoc', file=sys.stderr)

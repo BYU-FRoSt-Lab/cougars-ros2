@@ -3,7 +3,7 @@
 cougars_control
 ===============
 
-TODO: Package description
+Control nodes for use with the CoUGARs fleet in the BYU FRoSt Lab
 
 .. toctree::
    :maxdepth: 2

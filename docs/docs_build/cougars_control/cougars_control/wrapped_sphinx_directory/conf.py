@@ -19,9 +19,9 @@ def ensure_global(name, default):
 ensure_global('rosdoc2_settings', {})
 ensure_global('extensions', [])
 ensure_global('project', "cougars_control")
-ensure_global('author', """frostlab""")
-ensure_global('release', "0.0.0")
-ensure_global('version', "0.0")
+ensure_global('author', """Nelson Durrant""")
+ensure_global('release', "1.0.0")
+ensure_global('version', "1.0")
 
 if rosdoc2_settings.get('enable_autodoc', True):
     print('[rosdoc2] enabling autodoc', file=sys.stderr)
@@ -29,7 +29,7 @@ if rosdoc2_settings.get('enable_autodoc', True):
 
     pkgs_to_mock = []
     import importlib
-    for exec_depend in ['std_msgs', 'sensor_msgs', 'geometry_msgs', 'nav_msgs', 'frost_interfaces', 'dvl_msgs', 'ros2launch', 'rclcpp', 'rclpy']:
+    for exec_depend in ['std_msgs', 'sensor_msgs', 'geometry_msgs', 'nav_msgs', 'frost_interfaces', 'dvl_msgs', 'gps_msgs', 'ros2launch', 'rclcpp', 'rclpy']:
         try:
             # Some python dependencies may be dist packages.
             exec_depend = exec_depend.split("python3-")[-1]
@@ -128,7 +128,7 @@ if rosdoc2_settings.get('automatically_extend_intersphinx_mapping', True):
             "Cannot extend intersphinx mapping if 'sphinx.ext.intersphinx' "
             "has not been added to the extensions")
     ensure_global('intersphinx_mapping', {
-        
+        'cougars_localization': ('http://docs.ros.org/en/latest/p/cougars_localization/', '/home/frostlab/ros2_ws/docs/cross_reference/cougars_localization/objects.inv')
     })
 
 if rosdoc2_settings.get('support_markdown', True):
