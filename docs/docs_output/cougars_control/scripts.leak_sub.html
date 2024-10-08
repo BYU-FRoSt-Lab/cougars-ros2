@@ -138,6 +138,12 @@ If a leak is detected, it sends a request to the emergency_stop service to stop 
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber.cli">
+<span class="sig-name descname"><span class="pre">cli</span></span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber.cli" title="Permalink to this definition"></a></dt>
+<dd><p>Client for the “emergency_stop” service with the service type EmergencyStop.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber.listener_callback">
 <span class="sig-name descname"><span class="pre">listener_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber.listener_callback" title="Permalink to this definition"></a></dt>
@@ -148,12 +154,6 @@ If a leak is detected, this method sends a request to the emergency_stop service
 <dd class="field-odd"><p><strong>msg</strong> – The LeakStatus message received from the leak/data topic.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber.req">
-<span class="sig-name descname"><span class="pre">req</span></span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber.req" title="Permalink to this definition"></a></dt>
-<dd><p>Client for the “emergency_stop” service with the service type EmergencyStop.</p>
 </dd></dl>
 
 <dl class="py method">
