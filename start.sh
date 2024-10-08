@@ -67,13 +67,13 @@ source install/setup.bash
 
 case $1 in
     "manual")
-        ros2 launch cougars_py manual_launch.py
+        ros2 launch cougars_control manual_launch.py
         ;;
     "moos")
-        ros2 launch cougars_py moos_launch.py
+        ros2 launch cougars_control moos_launch.py
         ;;
     "sensors")
-        ros2 launch cougars_py sensors_launch.py
+        ros2 launch cougars_localization sensors_launch.py
         ;;
     *)
         printWarning "No start configuration specified"

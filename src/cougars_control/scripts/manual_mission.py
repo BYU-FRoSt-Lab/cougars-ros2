@@ -8,7 +8,7 @@ from std_msgs.msg import Empty
 from rclpy.qos import qos_profile_system_default
 
 
-class ManualControl(Node):
+class ManualMission(Node):
     '''
     :author: Nelson Durrant
     :date: September 2024
@@ -25,9 +25,9 @@ class ManualControl(Node):
     '''
     def __init__(self):
         '''
-        Creates a new ManualControl node.
+        Creates a new ManualMission node.
         '''
-        super().__init__("manual_control")
+        super().__init__("manual_mission")
 
         # Declare parameters
         self.declare_parameter('vehicle_id', 0)
@@ -246,11 +246,11 @@ class ManualControl(Node):
 def main(args=None):
     rclpy.init(args=args)
     executor = rclpy.executors.MultiThreadedExecutor()
-    manual_control = ManualControl()
-    executor.add_node(manual_control)
+    manual_mission = ManualMission()
+    executor.add_node(manual_mission)
     executor.spin()
     executor.shutdown()
-    manual_control.destroy_node()
+    manual_mission.destroy_node()
     rclpy.shutdown()
 
 

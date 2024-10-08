@@ -43,7 +43,7 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_control',
-            executable='manual_control',
+            executable='manual_mission',
             parameters=[config_file],
         ),
         # Start the EmergencyStop checks
