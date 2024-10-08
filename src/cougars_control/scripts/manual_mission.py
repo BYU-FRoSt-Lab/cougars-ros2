@@ -107,7 +107,7 @@ class ManualMission(Node):
             qos_profile_system_default
         )
         '''
-        Create a publisher for the "desired_depth" topic with the message type DesiredDepth.
+        Publisher for the "desired_depth" topic with the message type DesiredDepth.
         '''
 
         self.heading_publisher = self.create_publisher(
@@ -116,7 +116,7 @@ class ManualMission(Node):
             qos_profile_system_default
         )
         '''
-        Create a publisher for the "desired_heading" topic with the message type DesiredHeading.
+        Publisher for the "desired_heading" topic with the message type DesiredHeading.
         '''
 
         self.speed_publisher = self.create_publisher(
@@ -125,7 +125,7 @@ class ManualMission(Node):
             qos_profile_system_default
         )
         '''
-        Create a publisher for the "desired_speed" topic with the message type DesiredSpeed.
+        Publisher for the "desired_speed" topic with the message type DesiredSpeed.
         '''
 
         # Create the subscriptions
@@ -137,7 +137,7 @@ class ManualMission(Node):
         )
         self.subscription  # prevent unused variable warning
         '''
-        Create a subscription to the "init" topic with the message type Empty.
+        Subscription to the "init" topic with the message type Empty.
         '''
 
         # Create the timers
@@ -146,7 +146,7 @@ class ManualMission(Node):
             self.timer_callback
         )
         '''
-        Create a timer that calls the timer_callback method at the specified period.
+        Timer that calls the timer_callback method at the specified period.
         '''
 
         # Create the services
@@ -156,7 +156,7 @@ class ManualMission(Node):
             self.emergency_stop_callback
         )
         '''
-        Create a service for the "emergency_stop" service with the service type EmergencyStop.
+        Service for the "emergency_stop" service with the service type EmergencyStop.
         '''
 
         self.counter = 0

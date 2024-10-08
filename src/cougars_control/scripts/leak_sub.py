@@ -31,7 +31,7 @@ class LeakSubscriber(Node):
         )
         self.subscription  # prevent unused variable warning
         '''
-        Create a subscription to the "leak/data" topic with the message type LeakStatus.
+        Subscription to the "leak/data" topic with the message type LeakStatus.
         '''
         
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
@@ -39,7 +39,7 @@ class LeakSubscriber(Node):
             self.get_logger().info("EmergencyStop service not available, waiting...")
         self.req = EmergencyStop.Request()
         '''
-        Create a client for the "emergency_stop" service with the service type EmergencyStop.
+        Client for the "emergency_stop" service with the service type EmergencyStop.
         '''
 
     def send_request(self, err):

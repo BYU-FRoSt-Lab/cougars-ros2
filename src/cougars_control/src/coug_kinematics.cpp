@@ -70,7 +70,7 @@ public:
     this->declare_parameter("left_fin_offset", 0.0);
 
     /**
-     * @brief Creates a new kinematics command publisher.
+     * @brief Kinematics command publisher.
      *
      * This publisher publishes the commands to the "kinematics/command" topic.
      * It uses the UCommand message type.
@@ -80,7 +80,7 @@ public:
             "kinematics/command", 10);
 
     /**
-     * @brief Creates a new controls command subscriber.
+     * @brief Controls command subscriber.
      *
      * This subscriber subscribes to the "controls/command" topic. It uses the
      * UCommand message type.
