@@ -12,11 +12,11 @@ class BatterySubscriber(Node):
     :author: Nelson Durrant
     :date: September 2024
 
-    A simple ROS2 node that subscribes to the battery_data topic and listens for the battery voltage.
+    A simple ROS2 node that subscribes to the battery/data topic and listens for the battery voltage.
     If the voltage is below a critical threshold, it sends a request to the emergency_stop service to stop the robot.
 
     Subscribes:
-        - battery_data (frost_interfaces/msg/BatteryStatus)
+        - battery/data (frost_interfaces/msg/BatteryStatus)
     Clients:
         - emergency_stop (frost_interfaces/srv/EmergencyStop)
     '''
@@ -32,11 +32,11 @@ class BatterySubscriber(Node):
         '''
 
         self.subscription = self.create_subscription(
-            BatteryStatus, "battery_data", self.listener_callback, qos_profile_sensor_data
+            BatteryStatus, "battery/data", self.listener_callback, qos_profile_sensor_data
         )
         self.subscription  # prevent unused variable warning
         '''
-        Create a subscription to the "battery_data" topic with the message type BatteryStatus.
+        Create a subscription to the "battery/data" topic with the message type BatteryStatus.
         '''
         
         self.cli = self.create_client(EmergencyStop, "emergency_stop")
@@ -60,10 +60,10 @@ class BatterySubscriber(Node):
 
     def listener_callback(self, msg):
         '''
-        Callback function for the battery_data subscription.
+        Callback function for the battery/data subscription.
         If the voltage is below the critical threshold, this method sends a request to the emergency_stop service to stop the robot.
 
-        :param msg: The BatteryStatus message received from the battery_data topic.
+        :param msg: The BatteryStatus message received from the battery/data topic.
         '''
         if msg.voltage < self.get_parameter("critical_voltage").get_parameter_value().double_value:
             error = "[ERROR] Low Voltage (" + str(msg.voltage) + ")"
