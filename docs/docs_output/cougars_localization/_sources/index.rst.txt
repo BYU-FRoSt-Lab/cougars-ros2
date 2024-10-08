@@ -3,7 +3,7 @@
 cougars_localization
 ====================
 
-TODO: Package description
+Localization nodes for use with the CoUGARs fleet in the BYU FRoSt Lab
 
 .. toctree::
    :maxdepth: 2

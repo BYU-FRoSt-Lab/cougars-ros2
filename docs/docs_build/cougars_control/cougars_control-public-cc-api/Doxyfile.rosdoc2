@@ -10,3 +10,4 @@
 OUTPUT_DIRECTORY = /home/frostlab/ros2_ws/docs/docs_build/cougars_control/cougars_control-public-cc-api/doxygen_output
 GENERATE_XML = YES
 GENERATE_TAGFILE = /home/frostlab/ros2_ws/docs/docs_build/cougars_control/cougars_control-public-cc-api/doxygen_output/cougars_control.tag
+TAGFILES += "/home/frostlab/ros2_ws/docs/cross_reference/cougars_localization/cougars_localization.tag=http://docs.ros.org/en/latest/p/cougars_localization/generated/doxygen/html"

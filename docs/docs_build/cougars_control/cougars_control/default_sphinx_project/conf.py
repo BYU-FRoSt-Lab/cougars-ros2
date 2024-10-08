@@ -23,12 +23,12 @@ sys.path.insert(0, os.path.abspath(os.path.join('/home/frostlab/ros2_ws/src/coug
 project = 'cougars_control'
 # TODO(tfoote) The docs say year and author but we have this and it seems more relevant.
 copyright = 'The <cougars_control> Contributors. License: Apache-2.0'
-author = """frostlab"""
+author = """Nelson Durrant"""
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.0'
+release = '1.0.0'
 
-version = '0.0'
+version = '1.0'
 
 
 # -- General configuration ---------------------------------------------------

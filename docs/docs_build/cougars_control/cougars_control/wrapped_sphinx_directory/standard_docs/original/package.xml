@@ -2,9 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>cougars_control</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="frostlab@todo.todo">frostlab</maintainer>
+  <version>1.0.0</version>
+  <description>Control nodes for use with the CoUGARs fleet in the BYU FRoSt Lab</description>
+  <maintainer email="snelsondurrant@gmail.com">Nelson Durrant</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -19,6 +19,7 @@
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>frost_interfaces</exec_depend>
   <exec_depend>dvl_msgs</exec_depend>
+  <exec_depend>gps_msgs</exec_depend>
   <exec_depend>ros2launch</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>

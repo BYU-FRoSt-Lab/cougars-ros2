@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scripts.manual_mission module &mdash; cougars_control 0.0.0 documentation</title>
+  <title>scripts.manual_mission module &mdash; cougars_control 1.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/collapsible-lists/css/tree_view.css" type="text/css" />
@@ -30,7 +30,7 @@
             <a href="index.html" class="icon icon-home"> cougars_control
           </a>
               <div class="version">
-                0.0
+                1.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -143,7 +143,7 @@ The desired values are set based on a simple state machine that transitions betw
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scripts.manual_mission.ManualMission.depth_publisher">
 <span class="sig-name descname"><span class="pre">depth_publisher</span></span><a class="headerlink" href="#scripts.manual_mission.ManualMission.depth_publisher" title="Permalink to this definition"></a></dt>
-<dd><p>Create a publisher for the “desired_depth” topic with the message type DesiredDepth.</p>
+<dd><p>Publisher for the “desired_depth” topic with the message type DesiredDepth.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -164,7 +164,7 @@ Logs the error message and sets the stopped flag to True.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scripts.manual_mission.ManualMission.heading_publisher">
 <span class="sig-name descname"><span class="pre">heading_publisher</span></span><a class="headerlink" href="#scripts.manual_mission.ManualMission.heading_publisher" title="Permalink to this definition"></a></dt>
-<dd><p>Create a publisher for the “desired_heading” topic with the message type DesiredHeading.</p>
+<dd><p>Publisher for the “desired_heading” topic with the message type DesiredHeading.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -182,19 +182,19 @@ Sets the stopped flag to False when the init message is received.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scripts.manual_mission.ManualMission.speed_publisher">
 <span class="sig-name descname"><span class="pre">speed_publisher</span></span><a class="headerlink" href="#scripts.manual_mission.ManualMission.speed_publisher" title="Permalink to this definition"></a></dt>
-<dd><p>Create a publisher for the “desired_speed” topic with the message type DesiredSpeed.</p>
+<dd><p>Publisher for the “desired_speed” topic with the message type DesiredSpeed.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scripts.manual_mission.ManualMission.srv">
 <span class="sig-name descname"><span class="pre">srv</span></span><a class="headerlink" href="#scripts.manual_mission.ManualMission.srv" title="Permalink to this definition"></a></dt>
-<dd><p>Create a service for the “emergency_stop” service with the service type EmergencyStop.</p>
+<dd><p>Service for the “emergency_stop” service with the service type EmergencyStop.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scripts.manual_mission.ManualMission.timer">
 <span class="sig-name descname"><span class="pre">timer</span></span><a class="headerlink" href="#scripts.manual_mission.ManualMission.timer" title="Permalink to this definition"></a></dt>
-<dd><p>Create a timer that calls the timer_callback method at the specified period.</p>
+<dd><p>Timer that calls the timer_callback method at the specified period.</p>
 </dd></dl>
 
 <dl class="py method">
