@@ -28,7 +28,7 @@ settings:
     ## be assumed for 'sphinx-apidoc' invocation. The user can provide the path
     ## (relative to the 'package.xml' file) where the Python modules defined by this
     ## package are located.
-    python_source: 'cougars_localization'
+    python_source: 'scripts'
     python_source: 'launch'
 
     ## This setting, if true, attempts to run `doxygen` and the `breathe`/`exhale`

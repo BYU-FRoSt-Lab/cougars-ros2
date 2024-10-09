@@ -9,3 +9,5 @@ source install/setup.bash
 cd ~/ros2_ws/docs
 rosdoc2 build --package-path ../src/cougars_localization
 rosdoc2 build --package-path ../src/cougars_control
+
+sudo rm -rf ~/ros2_ws/docs/docs_build
