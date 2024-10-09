@@ -1,11 +1,11 @@
 #include <rclcpp/rclcpp.hpp>
-#include <frost_interfaces/msg/modem_send.hpp>
+#include "seatrac_interfaces/msg/modem_send.hpp"
 #include <seatrac_driver/SeatracEnums.h>
 #include <chrono>
 #include <thread>
 
 using namespace std::chrono_literals;
-using frost_interfaces::msg::ModemSend;
+using seatrac_interfaces::msg::ModemSend;
 using namespace narval::seatrac;
 
 class SeatracPinger : public rclcpp::Node
