@@ -19,7 +19,7 @@ function printError {
 
 cleanup() {
 
-    sudo bash /home/frostlab/teensy_ws/strobe.sh off
+    sudo bash ~/teensy_ws/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
 
     printInfo "Acoustics successfully disabled"
@@ -38,14 +38,13 @@ echo "######################################################################"
 echo ""
 
 # Quick fix for daemon error (TODO: find a better solution)
-cd ~/ros2_ws
-source install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 daemon stop
 ros2 daemon start
 
 # Start the strobe light and Teensy board
-sudo bash /home/frostlab/teensy_ws/strobe.sh on
-sudo bash /home/frostlab/teensy_ws/power.sh on
+sudo bash ~/teensy_ws/strobe.sh on
+sudo bash ~/teensy_ws/power.sh on
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list | grep Teensy)" ]; then
@@ -53,8 +52,7 @@ if [ -z "$(tycmd list | grep Teensy)" ]; then
     echo ""
 
 else 
-    cd ~/microros_ws
-    source install/setup.bash
+    source ~/microros_ws/install/setup.bash
     ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
 
     sleep 5
@@ -62,9 +60,7 @@ else
 fi
 
 # Start the ROS 2 launch files
-cd ~/ros2_ws
-source install/setup.bash
-
+source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")
         ros2 launch cougars_control manual_launch.py

@@ -4,8 +4,7 @@
 # Enables acoustics and tests vehicle sensors
 # - Run this after running the 'start.sh' script
 
-cd ~/ros2_ws
-source install/setup.bash
+source ~/ros2_ws/install/setup.bash
 
 # Turn on DVL acoustics
 bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
