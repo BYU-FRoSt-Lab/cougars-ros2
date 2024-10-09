@@ -6,3 +6,6 @@
 **/__pycache__
 **/.vscode
 core
+**/cross_reference
+**/docs_build
+**/docs_output
