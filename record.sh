@@ -38,8 +38,7 @@ echo "Enter a descriptive folder name for the rosbag: "
 read FOLDER
 echo ""
 
-cd ~/ros2_ws
-source install/setup.bash
+source ~/ros2_ws/install/setup.bash
 
 # Reset dead reckoning and start factor graph, controls
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
@@ -54,6 +53,6 @@ case $1 in
 esac
 
 FOLDER=$FOLDER-$(date +"%Y-%m-%d-%H-%M-%S")
-ros2 bag record -o /home/frostlab/ros2_ws/bag/$FOLDER -s mcap -a
+ros2 bag record -o ~/ros2_ws/bag/$FOLDER -s mcap -a
 
 cleanup $1
