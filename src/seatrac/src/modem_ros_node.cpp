@@ -25,7 +25,13 @@ using namespace narval::seatrac;
 
 //TODO: add ros parameters to setup beacon and driver node. At least serial port
 
-// The class needs to inherit from both the ROS node and driver classes
+/**
+ * @brief ADD HERE
+ * @author Clayton Smith
+ * @date September 2024
+ * 
+ * ADD HERE
+ */
 class ModemRosNode : public rclcpp::Node, public SeatracDriver {
 public:
 
@@ -80,6 +86,7 @@ public:
   // it copies the modem data to a ros message of type ModemRec
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
     auto msg = frost_interfaces::msg::ModemRec();
+    msg.header.stamp = this->get_clock()->now();
     msg.msg_id = msgId;
     switch (msgId) {
       default: {

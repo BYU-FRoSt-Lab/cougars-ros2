@@ -1,10 +1,8 @@
 #!/bin/bash
 # Created by Nelson Durrant, Sep 2024
-
-##########################################################
-# ENABLES DVL ACOUSTICS AND TESTS EXPECTED ROS TOPICS
+#
+# Enables acoustics and tests vehicle sensors
 # - Run this after running the 'start.sh' script
-##########################################################
 
 cd ~/ros2_ws
 source install/setup.bash
@@ -17,16 +15,16 @@ echo "LISTING FOUND TOPICS..."
 ros2 topic list
 
 # echo ""
-# echo "LISTENING TO TOPIC 'LEAK_DATA'..."
-# ros2 topic echo --once /leak_data
+# echo "LISTENING TO TOPIC 'LEAK/DATA'..."
+# ros2 topic echo --once /leak/data
 
 # echo ""
-# echo "LISTENING TO TOPIC 'BATTERY_DATA'..."
-# ros2 topic echo --once /battery_data
+# echo "LISTENING TO TOPIC 'BATTERY/DATA'..."
+# ros2 topic echo --once /battery/data
 
 echo ""
-echo "LISTENING TO TOPIC 'PRESSURE_DATA'..."
-ros2 topic echo --once /pressure_data
+echo "LISTENING TO TOPIC 'PRESSURE/DATA'..."
+ros2 topic echo --once /pressure/data
 
 echo ""
 echo "LISTENING TO TOPIC 'DEPTH_DATA'..."
@@ -53,20 +51,20 @@ echo "LISTENING TO TOPIC 'DVL/POSITION'..."
 ros2 topic echo --once /dvl/position
 
 echo ""
-echo "TESTING TOP SERVO, PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
+echo "TESTING TOP SERVO, PUBLISHING TO 'CONTROLS/COMMAND'..."
+ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
 
 echo ""
-echo "TESTING SIDE SERVOS, PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
+echo "TESTING SIDE SERVOS, PUBLISHING TO 'CONTROLS/COMMAND'..."
+ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
 
 echo ""
-echo "TESTING THRUSTER (ON), PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
+echo "TESTING THRUSTER (ON), PUBLISHING TO 'CONTROLS/COMMAND'..."
+ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
 
 echo ""
-echo "TESTING THRUSTER (OFF), PUBLISHING TO 'CONTROL_COMMAND'..."
-ros2 topic pub -1 /control_command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
+echo "TESTING THRUSTER (OFF), PUBLISHING TO 'CONTROLS/COMMAND'..."
+ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
 
 echo ""
 echo "TEST COMPLETE"
