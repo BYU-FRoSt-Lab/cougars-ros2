@@ -91,7 +91,7 @@ class NavSatFixToOdom(Node):
         :param msg: The GPSFix message received from the extended_fix topic.
         '''
         # Filter out bad readings based on the number of satellites (if available)
-        if msg.status.satellites_used < self.min_sats or msg.latitude == 0:
+        if msg.status.satellites_used < self.min_sats or msg.latitude < 0.1:
             self.get_logger().warn(f"[WARNING] Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}")
             return
         
@@ -103,7 +103,7 @@ class NavSatFixToOdom(Node):
         x, y = self.inv_transformer.transform(msg.longitude, msg.latitude)
         
         # Access the altitude (z) value from the NavSatFix message
-        z = msg.altitude - self.self.get_parameter('origin.altitude').get_parameter_value().double_value
+        z = msg.altitude - self.get_parameter('origin.altitude').get_parameter_value().double_value
 
         # Fill in the odometry message
         odom = Odometry()
