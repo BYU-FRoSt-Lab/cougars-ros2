@@ -13,7 +13,7 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
+    config_file = "~/config/vehicle_config.yaml"
     
     return launch.LaunchDescription([
         
