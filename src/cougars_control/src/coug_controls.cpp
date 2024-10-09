@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include "pid.h"
+#include "pid.cpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
