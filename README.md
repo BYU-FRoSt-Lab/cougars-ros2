@@ -11,3 +11,5 @@ TODO: Add a more helpful description here in the future.
 - **src/** - contains the ROS 2 packages we use to run the Coug-UV.
 Of note are "src/cougars_controls/" and "src/cougars_localization" (miscellaneous custom nodes running MOOS-ROS 2 bridges, PID controls, odometry conversions, etc), as well as "src/frost_interfaces/" (contains custom ROS message and service declarations).
 The ROS launch files for different start configurations are included in "src/<package>/launch/".
+- **scripts**
+A description of what each bash script does is included as a header comment in the file.
