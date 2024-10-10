@@ -7,8 +7,8 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
-#include "frost_interfaces/msg/modem_rec.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
+#include "seatrac_interfaces/msg/modem_status.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/empty.hpp"
@@ -36,7 +36,7 @@ auto qos = rclcpp::QoS(
  * - desired_heading (frost_interfaces/msg/DesiredHeading)
  * - desired_speed (frost_interfaces/msg/DesiredSpeed)
  * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
- * - modem_rec (frost_interfaces/msg/ModemRec)
+ * - modem_status (seatrac_interfaces/msg/ModemStatus)
  * Publishes:
  * - controls/command (frost_interfaces/msg/UCommand)
  */
@@ -151,6 +151,16 @@ public:
      */
     this->declare_parameter("heading_bias", 0);
 
+
+    /**
+     * @param magnetic_declination
+     * 
+     * determines the offset to apply to the imu output based on location in degrees. 
+     * The default is 10.7 degrees for Utah Lake
+     */
+    this->declare_parameter("magnetic_declination", 10.7);
+    this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
+
     // calibrate PID controllers
     myDepthPID.calibrate(this->get_parameter("depth_kp").as_double(),
                          this->get_parameter("depth_ki").as_double(),
@@ -234,12 +244,12 @@ public:
     /**
      * @brief Yaw subscriber.
      *
-     * This subscriber subscribes to the "modem_rec" topic. It uses the ModemRec
+     * This subscriber subscribes to the "modem_status" topic. It uses the ModemStatus
      * message type.
      */
     actual_heading_subscription_ =
-        this->create_subscription<frost_interfaces::msg::ModemRec>(
-            "modem_rec", 10,
+        this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
+            "modem_status", 10,
             std::bind(&CougControls::actual_heading_callback, this, _1));
 
     /**
@@ -331,17 +341,16 @@ private:
    * This method sets the actual heading value to the value received from the
    * yaw message.
    *
-   * @param heading_msg The ModemRec message recieved from the modem_rec topic.
+   * @param heading_msg The ModemStatus message recieved from the modem_status topic.
    */
   void
-  actual_heading_callback(const frost_interfaces::msg::ModemRec &heading_msg) {
-
-    // Check if the message is a status message
-    if (heading_msg.msg_id == 0x10) {
-      this->actual_heading = heading_msg.attitude_yaw / 10.0;
+  actual_heading_callback(const seatrac_interfaces::msg::ModemStatus &heading_msg) {
+      //Heading is in degrees east of true north between -180 and 180
+      //TODO: make sure this is what we want 
+      // (Note: MOOS defines yaw to be negative heading)
+      this->actual_heading = 0.1*heading_msg.attitude_yaw + this->magnetic_declination;
       RCLCPP_INFO(this->get_logger(), "[INFO] Yaw Info Recieved: %f",
                   this->actual_heading);
-    }
   }
 
   /**
@@ -382,7 +391,7 @@ private:
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       actual_depth_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr
+  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr
       actual_heading_subscription_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr init_subscription_;
 
@@ -392,6 +401,9 @@ private:
   // control objects
   PID myHeadingPID;
   PID myDepthPID;
+
+  // magnetic declination parameter
+  double magnetic_declination;
 
   // node desired values
   float desired_depth = 0.0;

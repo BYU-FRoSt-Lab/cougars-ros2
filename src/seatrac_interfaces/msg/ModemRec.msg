@@ -7,51 +7,6 @@ uint8 msg_id            # CIDE - Command Identification Code. Indicates the type
                         # Different msg types include different information, and therefore populate different fields.
                         # Not all CID_E msg types are captured or supported in this ros message.
 
-bool  from_acoustic_tx  # True if this report was generated from an acoustic transmission successfully received from a remote beacon
-                        # False if this report is a Status message or response to a command from the client program
-
-
-### Command Status Code Fields ###
-        # Command Status Codes tell you if a command executed sucessfully, and if not, what error the command encountered
-        # Reports that include a command status code usually do not include any other fields besides msg_id and local_beacon_id
-bool  includes_command_status_code
-uint8 command_status_code
-uint8 target_id   # BID_E. For error reports from acoustic transmissions, the target_id is the id of the remote beacon.
-
-
-### Acoustic Fix OR Status Fields ###
-        # Fields included in both Acoustic Fix reports and Status Reports
-bool     includes_local_attitude
-int16    attitude_yaw    # Divide by 10 for local yaw in degrees
-int16    attitude_pitch  # Divide by 10 for local pitch in degrees
-int16    attitude_roll   # Divide by 10 for local roll in degrees
-
-bool     includes_local_depth_and_vos
-int16    depth_local  # Divide by 10 for local depth im meters
-uint16   vos          # Divide by 10 for velocity of sound in meters per second.
-
-
-### Status Fields ###
-        # This report is a Status message if CID_E msg_id = CID_STATUS = 0x10
-        # Status messages can be generated at a user defined interval between 1 and 25 Hz
-bool   includes_status_timestamp
-uint64 timestamp  # time since beacon was last powered up in milliseconds
-
-bool   includes_status_env_fields
-uint16 supply_voltage  # Beacon's supply voltage. Divide by 1000 for value in Volts.
-int16  env_temp        # Temperature of air/water in contact with pressure sensor. Divide by 10 for value in Celsius.
-int32  env_pressure    # External air/water pressure in milli-bars, with tolerance of +\-1 Bar.
-
-bool   includes_com_ahrs
-float64 acc_x
-float64 acc_y
-float64 acc_z
-float64 mag_x
-float64 mag_y
-float64 mag_z
-float64 gyro_x
-float64 gyro_y
-float64 gyro_z
 
 ### Acoustic Fix (ACOFIX_T) Fields ###
         # An Acoustic Fix structure is generated for every successfully received acoustic transmission.
@@ -63,7 +18,13 @@ uint8 dest_id  # BID_E. The id of the beacon the acoustic transmission was addre
                #        Usually the same as the beacon that genrated this report.
 uint8 src_id   # BID_E. The id of the remote beacon that sent the acoustic transmission.
 
-uint16 rssi  # rssi for main transceiver. Divide by 10 for rssi in decibels.
+int16    attitude_yaw    # Divide by 10 for local yaw in degrees
+int16    attitude_pitch  # Divide by 10 for local pitch in degrees
+int16    attitude_roll   # Divide by 10 for local roll in degrees
+
+int16    depth_local  # Divide by 10 for local depth im meters
+uint16   vos          # Divide by 10 for velocity of sound in meters per second.
+uint16   rssi  # rssi for main transceiver. Divide by 10 for rssi in decibels.
 
 bool     includes_range  # Indicates whether or not range information could be included in this report.
 uint32   range_count     # Number of 16kHz timer intervals counted between req and resp.
