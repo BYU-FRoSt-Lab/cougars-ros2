@@ -25,7 +25,7 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
-#include "frost_interfaces/msg/modem_rec.hpp"
+#include "seatrac_interfaces/msg/modem_status.hpp"
 
 #include "frost_interfaces/msg/u_command.hpp"
 #include "frost_interfaces/msg/vehicle_status.hpp"
@@ -51,6 +51,11 @@ class VehicleStatus : public rclcpp::Node {
 
 public:
   VehicleStatus() : Node("vehicle_status") {
+
+    // 10.7 for Utah lake
+    this->declare_parameter("magnetic_declination", 10.7);
+    this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
+
     x_y_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
         "/smoothed_output", 10,
         std::bind(&VehicleStatus::x_y_callback, this, _1));
@@ -70,8 +75,8 @@ public:
     //     this, _1));
 
     modem_yaw_subscription_ =
-        this->create_subscription<frost_interfaces::msg::ModemRec>(
-            "modem_rec", qos,
+        this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
+            "modem_status", qos,
             std::bind(&VehicleStatus::modem_yaw_callback, this, _1));
 
     update_timer_ = this->create_wall_timer(
@@ -104,11 +109,11 @@ private:
   //   this->q_z = orientation_msg.pose.pose.orientation.z;
   // }
 
-  void modem_yaw_callback(const frost_interfaces::msg::ModemRec &yaw_msg) {
-    if (yaw_msg.msg_id == 0x10)
-      this->yaw = 0.1 * (PI_NUM / 180.0) * yaw_msg.attitude_yaw;
-    // ^^^ Makes sure the yaw comes from a status message. Other messages will
-    // have a zero yaw and mess up the calculation
+  void modem_yaw_callback(const seatrac_interfaces::msg::ModemStatus &yaw_msg) {
+    //this yaw is in radians west of true north between -pi and pi
+    //TODO: make sure this is what we want
+    // (Note: MOOS defines yaw to be negative heading)
+    this->yaw = -(PI_NUM / 180.0) * (0.1*yaw_msg.attitude_yaw + this->magnetic_declination);
   }
 
   void broadcast_status_callback() {
@@ -143,11 +148,14 @@ private:
   // current x,y
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr x_y_subscription_;
 
-  rclcpp::Subscription<frost_interfaces::msg::ModemRec>::SharedPtr
+  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr
       modem_yaw_subscription_;
 
   rclcpp::Publisher<frost_interfaces::msg::VehicleStatus>::SharedPtr
       vehicle_status_publisher_;
+
+  //magnetic declination
+  double magnetic_declination;
 
   // status variables
   float q_x = 0.0;

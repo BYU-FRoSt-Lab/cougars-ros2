@@ -10,8 +10,10 @@
 #include <seatrac_driver/messages/Messages.h>
 
 #include "rclcpp/rclcpp.hpp"
-#include "frost_interfaces/msg/modem_rec.hpp"
-#include "frost_interfaces/msg/modem_send.hpp"
+#include "seatrac_interfaces/msg/modem_rec.hpp"
+#include "seatrac_interfaces/msg/modem_status.hpp"
+#include "seatrac_interfaces/msg/modem_cmd_update.hpp"
+#include "seatrac_interfaces/msg/modem_send.hpp"
 
 // Replace this with the serial port that your seatrac beacon is connected to.
 #define SEATRAC_SERIAL_PORT "/dev/ttyUSB0"
@@ -41,10 +43,15 @@ public:
   ModemRosNode()
       : Node("modem_ros_node"), SeatracDriver(this->get_serial_port()), count_(0) {
     RCLCPP_INFO(this->get_logger(), "Starting seatrac modem Node");
-    publisher_ =
-        this->create_publisher<frost_interfaces::msg::ModemRec>("modem_rec", 10);
+    rec_pub_ =
+        this->create_publisher<seatrac_interfaces::msg::ModemRec>("modem_rec", 10);
+    status_pub_ =
+        this->create_publisher<seatrac_interfaces::msg::ModemStatus>("modem_status", 10);
+    cmd_update_pub_ =
+        this->create_publisher<seatrac_interfaces::msg::ModemCmdUpdate>("modem_cmd_update", 10);
+    
     subscriber_ = 
-        this->create_subscription<frost_interfaces::msg::ModemSend>("modem_send", 10,
+        this->create_subscription<seatrac_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
 
     this->declare_parameter("vehicle_ID", 1);
@@ -78,108 +85,152 @@ public:
   // this method is called on any message returned by the beacon.
   // it copies the modem data to a ros message of type ModemRec
   void on_message(CID_E msgId, const std::vector<uint8_t> &data) {
-    auto msg = frost_interfaces::msg::ModemRec();
-    msg.header.stamp = this->get_clock()->now();
-    msg.msg_id = msgId;
+    auto timestamp = this->get_clock()->now();
     switch (msgId) {
       default: {
         //RCLCPP_INFO(this->get_logger(), "Received unknown message from seatrac modem. msgId: %d", msgId); 
       } break;
       case CID_DAT_RECEIVE: {
+        auto msg = seatrac_interfaces::msg::ModemRec();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::DataReceive report;     //struct that contains report fields
         report = data;                    //operator overload fills in report struct with correct data
         msg.packet_len = report.packetLen;
         msg.local_flag = report.localFlag;
         std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
         cpyFixtoRosmsg(msg, report.acoFix);
+        rec_pub_->publish(msg);
       } break;
+
       case CID_DAT_ERROR: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::DataError report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-
+        cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic DATA Error. Status Code = " << report.status << ", Target ID = " << report.beaconId;
         RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
+
       case CID_DAT_SEND: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::DataSend report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+        cmd_update_pub_->publish(msg);
       } break;
 
       case CID_ECHO_RESP: {
+        auto msg = seatrac_interfaces::msg::ModemRec();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::EchoResp report;     //struct that contains report fields
         report = data;                    //operator overload fills in report struct with correct data
         msg.local_flag = true;
         msg.packet_len = report.packetLen;
         std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
         cpyFixtoRosmsg(msg, report.acoFix);
+        rec_pub_->publish(msg);
       } break;
+
       case CID_ECHO_REQ: {
+        auto msg = seatrac_interfaces::msg::ModemRec();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::EchoReq report;
         report = data;
         msg.packet_len = report.packetLen;
         std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
         cpyFixtoRosmsg(msg, report.acoFix);
+        rec_pub_->publish(msg);
       } break;
+
       case CID_ECHO_ERROR: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::EchoError report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-
+        cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic ECHO Error. Status Code = " << report.status << ", Target ID = " << report.beaconId;
         RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
+
       case CID_ECHO_SEND: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::EchoSend report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+        cmd_update_pub_->publish(msg);
       } break;
 
       case CID_PING_RESP: {
+        auto msg = seatrac_interfaces::msg::ModemRec();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::PingResp report;
         report = data;
         msg.packet_len = 0;
         msg.local_flag = true; //Ping messages are not sniffed.
         cpyFixtoRosmsg(msg, report.acoFix);
+        rec_pub_->publish(msg);
       } break;
+
       case CID_PING_REQ: {
+        auto msg = seatrac_interfaces::msg::ModemRec();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::PingReq report;
         report = data;
         msg.packet_len = 0;
         msg.local_flag = true;
         cpyFixtoRosmsg(msg, report.acoFix);
+        rec_pub_->publish(msg);
       } break;
+
       case CID_PING_ERROR: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::PingError report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.beaconId;
-
+        cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic PING Error. Status Code = " << report.statusCode << ", Target ID = " << report.beaconId;
         RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
+
       case CID_PING_SEND: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::PingSend report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.target;
+        cmd_update_pub_->publish(msg);
       } break;
 
       case CID_NAV_QUERY_RESP: {
+        auto msg = seatrac_interfaces::msg::ModemRec();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::NavQueryResp report;
         report = data;
         msg.local_flag = report.localFlag;
@@ -200,54 +251,70 @@ public:
           msg.packet_len = report.packetLen;
           std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
         } else msg.packet_len = 0;
+        rec_pub_->publish(msg);
       } break;
+
       case CID_NAV_QUERY_REQ: {
+        auto msg = seatrac_interfaces::msg::ModemRec();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::NavQueryReq report;
         report = data;
         msg.local_flag = report.localFlag;
         msg.packet_len = report.packetLen;
         std::memcpy(&msg.packet_data, report.packetData, report.packetLen);
         cpyFixtoRosmsg(msg, report.acoFix);
+        rec_pub_->publish(msg);
         //Note that the field report.queryFlags is not saved to the ros msg.
       } break;
+
       case CID_NAV_ERROR: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::NavError report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.beaconId;
-
+        cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic NAV Error. Status Code = " << report.statusCode << ", Target ID = " << report.beaconId;
         RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
+
       case CID_NAV_QUERY_SEND: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::NavQuerySend report;
         report = data;
-        msg.includes_command_status_code = true;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+        cmd_update_pub_->publish(msg);
       } break;
 
-      case CID_XCVR_RX_ERR: {
-        messages::XcvrReceptionError report;
-        report = data;
-        msg.includes_command_status_code = true;
-        msg.command_status_code = report.statusCode;
-        cpyFixtoRosmsg(msg, report.acousticFix);
-      } break;
+      // Fields don't match the ros message types provided.
+      // case CID_XCVR_RX_ERR: {
+      //   auto msg = seatrac_interfaces::msg::ModemRec();
+      //   msg.msg_id = msgId;
+      //   messages::XcvrReceptionError report;
+      //   report = data;
+      //   msg.command_status_code = report.statusCode;
+      //   cpyFixtoRosmsg(msg, report.acousticFix);
+      // } break;
 
       case CID_STATUS: {
+        auto msg = seatrac_interfaces::msg::ModemStatus();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
         messages::Status report;
         report = data;
-        msg.includes_status_timestamp = true;
         msg.timestamp = report.timestamp;
         if(report.contentType & ENVIRONMENT) {
-          msg.includes_status_env_fields = true;
+          msg.includes_env_fields = true;
           msg.supply_voltage = report.environment.envSupply;
           msg.env_temp = report.environment.envTemp;
           msg.env_pressure = report.environment.envPressure;
-          msg.includes_local_depth_and_vos = true;
           msg.depth_local = report.environment.envDepth;
           msg.vos = report.environment.envVos;
         }
@@ -258,6 +325,7 @@ public:
           msg.attitude_roll  = report.attitude.attRoll;
         }
         if(report.contentType & AHRS_COMP_DATA) {
+          msg.includes_comp_ahrs = true;
           msg.acc_x = report.compensatedAHRS.ahrsCompAccX;
           msg.acc_y = report.compensatedAHRS.ahrsCompAccY;
           msg.acc_z = report.compensatedAHRS.ahrsCompAccZ;
@@ -268,16 +336,19 @@ public:
           msg.gyro_y = report.compensatedAHRS.ahrsCompGyroY;
           msg.gyro_z = report.compensatedAHRS.ahrsCompGyroZ;
         }
+        status_pub_->publish(msg);
       } break;
     }
 
-    publisher_->publish(msg);
+    //rec_pub_->publish(msg);
   }
 
 private:
 
-  rclcpp::Publisher<frost_interfaces::msg::ModemRec>::SharedPtr publisher_;
-  rclcpp::Subscription<frost_interfaces::msg::ModemSend>::SharedPtr subscriber_;
+  rclcpp::Publisher<seatrac_interfaces::msg::ModemRec>::SharedPtr rec_pub_;
+  rclcpp::Publisher<seatrac_interfaces::msg::ModemStatus>::SharedPtr status_pub_;
+  rclcpp::Publisher<seatrac_interfaces::msg::ModemCmdUpdate>::SharedPtr cmd_update_pub_;
+  rclcpp::Subscription<seatrac_interfaces::msg::ModemSend>::SharedPtr subscriber_;
 
   size_t count_;
 
@@ -285,7 +356,7 @@ private:
 
   // recieves command to modem from the ModemRec topic and sends the command
   // to the modem
-  void modem_send_callback(const frost_interfaces::msg::ModemSend::SharedPtr rosmsg) {
+  void modem_send_callback(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     if(!beacon_connected) return;
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
     switch(msgId) {
@@ -353,18 +424,15 @@ private:
   }
 
   //copies the fields from the acofix struct into the ModemRec ros message
-  inline void cpyFixtoRosmsg(frost_interfaces::msg::ModemRec& msg, ACOFIX_T& acoFix) {
+  inline void cpyFixtoRosmsg(seatrac_interfaces::msg::ModemRec& msg, ACOFIX_T& acoFix) {
 
     msg.dest_id = acoFix.destId;
     msg.src_id  = acoFix.srcId;
 
-    msg.includes_local_attitude = true;
     msg.attitude_yaw = acoFix.attitudeYaw;
     msg.attitude_pitch = acoFix.attitudePitch;
     msg.attitude_roll = acoFix.attitudeRoll;
     
-    
-    msg.includes_local_depth_and_vos = true;
     msg.depth_local = acoFix.depthLocal;
     msg.vos = acoFix.vos;
     msg.rssi = acoFix.rssi;

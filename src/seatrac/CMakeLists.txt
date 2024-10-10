@@ -8,7 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(frost_interfaces REQUIRED)
+find_package(seatrac_interfaces REQUIRED)
 
 #find_package(seatrac_driver REQUIRED)
 if(NOT TARGET seatrac_driver)
@@ -24,23 +24,25 @@ if(NOT TARGET seatrac_driver)
 endif()
 
 add_executable(modem src/modem_ros_node.cpp)
-ament_target_dependencies(modem rclcpp std_msgs frost_interfaces)
+ament_target_dependencies(modem rclcpp std_msgs seatrac_interfaces)
 target_link_libraries(modem
 seatrac_driver
 )
+add_executable(modem_pinger src/modem_pinger.cpp)
+ament_target_dependencies(modem_pinger rclcpp std_msgs seatrac_interfaces)
+target_link_libraries(modem_pinger seatrac_driver)
 
 add_executable(calibrate_modem src/calibrate_modem.cpp)
-#ament_target_dependencies(calibrate_modem rclcpp std_msgs frost_interfaces)
 target_link_libraries(calibrate_modem
 seatrac_driver
 )
 add_executable(setup_seatrac_beacon src/seatrac_beacon_setup_tool.cpp)
-#ament_target_dependencies(setup_seatrac_beacon rclcpp std_msgs frost_interfaces)
 target_link_libraries(setup_seatrac_beacon seatrac_driver)
 install(TARGETS
   modem
   calibrate_modem
   setup_seatrac_beacon
+  modem_pinger
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

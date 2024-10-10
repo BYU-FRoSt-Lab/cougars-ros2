@@ -18,6 +18,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(frost_interfaces REQUIRED)
+find_package(seatrac_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
 find_package(MOOS 10 REQUIRED)
@@ -32,10 +33,10 @@ add_executable(dvl_convertor src/dvl_convertor.cpp)
 ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
 
 add_executable(seatrac_ahrs_convertor src/seatrac_ahrs_convertor.cpp)
-ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs Eigen3)
+ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs seatrac_interfaces geometry_msgs sensor_msgs Eigen3)
 
 add_executable(vehicle_status src/vehicle_status.cpp)
-ament_target_dependencies(vehicle_status rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs sensor_msgs nav_msgs)
+ament_target_dependencies(vehicle_status rclcpp std_msgs frost_interfaces seatrac_interfaces geometry_msgs dvl_msgs sensor_msgs nav_msgs)
 
 # Link libraries
 target_link_libraries(depth_convertor)
