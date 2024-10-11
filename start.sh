@@ -41,6 +41,7 @@ echo ""
 source ~/ros2_ws/install/setup.bash
 ros2 daemon stop
 ros2 daemon start
+sleep 5
 
 # Start the strobe light and Teensy board
 sudo bash ~/gpio/strobe.sh on

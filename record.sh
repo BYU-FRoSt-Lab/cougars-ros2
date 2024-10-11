@@ -42,7 +42,7 @@ source ~/ros2_ws/install/setup.bash
 
 # Reset dead reckoning and start factor graph, controls
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
-ros2 topic pub /init std_msgs/msg/Empty -1
+# ros2 topic pub /init std_msgs/msg/Empty -1
 
 # Start the MOOS-IvP mission
 case $1 in
