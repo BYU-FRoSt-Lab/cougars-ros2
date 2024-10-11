@@ -1,0 +1,180 @@
+
+Full C++ API
+------------
+
+Namespaces
+**********
+
+
+.. toctree::
+   :maxdepth: 1
+
+   namespace_rclcpp.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   namespace_std__chrono_literals.rst
+
+Classes and Structs
+*******************
+
+
+.. toctree::
+   :maxdepth: 1
+
+   classCougControls.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   classCougKinematics.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   classMOOSBridge.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   classPID.rst
+
+Functions
+*********
+
+
+.. toctree::
+   :maxdepth: 1
+
+   function_coug__controls_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   function_coug__kinematics_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   function_moos__bridge_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   function_moos__bridge_8cpp_1a6be152e8761701d01dfbe3ffaefcfc44.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   function_moos__bridge_8cpp_1a3038a0d4da73e5a9eec4d9c74dc08318.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   function_moos__bridge_8cpp_1a515259521f650dcb62c11cf8641b030a.rst
+
+Variables
+*********
+
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_moos__bridge_8cpp_1add0549dba280d84bc067ceab2d80e04d.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_moos__bridge_8cpp_1aa9e772c394beceea46d860acb5b46685.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_moos__bridge_8cpp_1af5160110926ed501bd2cb5e301603451.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_moos__bridge_8cpp_1a2f756e1ea2f1603a5a45d320be92e955.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_coug__controls_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_coug__kinematics_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_coug__controls_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   variable_coug__kinematics_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012.rst
+
+Defines
+*******
+
+
+.. toctree::
+   :maxdepth: 1
+
+   define_pid_8cpp_1a406dc2bd4bf507a0ca28cce0cc0ae9c9.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   define_moos__bridge_8cpp_1ab262685e60a13ca93d7d8ef03d87f31f.rst
+
+Typedefs
+********
+
+
+.. toctree::
+   :maxdepth: 1
+
+   typedef_moos__bridge_8cpp_1ae91353bc51204da54a10acab91ebc376.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   typedef_moos__bridge_8cpp_1a2b181c0c8d00bab2bc2f3e23acbb8063.rst
+
+Directories
+***********
+
+
+.. toctree::
+   :maxdepth: 1
+
+   dir_src.rst
+
+Files
+*****
+
+
+.. toctree::
+   :maxdepth: 1
+
+   file_src_coug_controls.cpp.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   file_src_coug_kinematics.cpp.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   file_src_moos_bridge.cpp.rst
+
+.. toctree::
+   :maxdepth: 1
+
+   file_src_pid.cpp.rst
