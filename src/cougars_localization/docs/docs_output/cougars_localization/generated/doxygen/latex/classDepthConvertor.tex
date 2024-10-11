@@ -1,0 +1,80 @@
+\hypertarget{classDepthConvertor}{}\doxysection{Depth\+Convertor Class Reference}
+\label{classDepthConvertor}\index{DepthConvertor@{DepthConvertor}}
+
+
+A simple depth convertor node.  
+
+
+
+
+Inheritance diagram for Depth\+Convertor\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=174pt]{classDepthConvertor__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Depth\+Convertor\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=174pt]{classDepthConvertor__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classDepthConvertor_ac68a7b44b8d422329318974ba78ec663}{Depth\+Convertor}} ()
+\begin{DoxyCompactList}\small\item\em Creates a new depth convertor node. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A simple depth convertor node. 
+
+\begin{DoxyAuthor}{Author}
+Nelson Durrant 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+September 2024
+\end{DoxyDate}
+This node subscribes to a pressure sensor topic and converts the pressure data to depth data. The depth data is then published to a depth data topic.
+
+Subscribes\+:
+\begin{DoxyItemize}
+\item pressure/data (sensor\+\_\+msgs/msg/\+Fluid\+Pressure) Publishes\+:
+\item depth\+\_\+data (geometry\+\_\+msgs/msg/\+Pose\+With\+Covariance\+Stamped) 
+\end{DoxyItemize}
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classDepthConvertor_ac68a7b44b8d422329318974ba78ec663}\label{classDepthConvertor_ac68a7b44b8d422329318974ba78ec663}} 
+\index{DepthConvertor@{DepthConvertor}!DepthConvertor@{DepthConvertor}}
+\index{DepthConvertor@{DepthConvertor}!DepthConvertor@{DepthConvertor}}
+\doxysubsubsection{\texorpdfstring{DepthConvertor()}{DepthConvertor()}}
+{\footnotesize\ttfamily Depth\+Convertor\+::\+Depth\+Convertor (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Creates a new depth convertor node. 
+
+This constructor creates a new depth convertor node with default values. 
+\begin{DoxyParams}{Parameters}
+{\em water\+\_\+salinity\+\_\+ppt} & The salinity of the water in parts per thousand (ppt). The default value is 0.\+0 ppt for fresh water. The value should be set to 35.\+0 ppt for salt water.\\
+\hline
+{\em fluid\+\_\+pressure\+\_\+atm} & The atmospheric pressure in Pascals (Pa). The default value is 87250.\+0 Pa from our lab\textquotesingle{}s field testing.\\
+\hline
+\end{DoxyParams}
+Depth publisher.
+
+This publisher publishes the depth data to the \char`\"{}depth\+\_\+data\char`\"{} topic. It uses the Pose\+With\+Covariance\+Stamped message type.
+
+Pressure subscriber.
+
+This subscriber subscribes to the \char`\"{}pressure/data\char`\"{} topic. It uses the Fluid\+Pressure message type.
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/depth\+\_\+convertor.\+cpp\end{DoxyCompactItemize}

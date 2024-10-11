@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Function OnMail &mdash; cougars_control 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/collapsible-lists/css/tree_view.css" type="text/css" />
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js"></script>
+        <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Function PublishDesiredValue" href="function_moos__bridge_8cpp_1a515259521f650dcb62c11cf8641b030a.html" />
+    <link rel="prev" title="Function OnConnect" href="function_moos__bridge_8cpp_1a6be152e8761701d01dfbe3ffaefcfc44.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> cougars_control
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../scripts.html">scripts package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../scripts.html#submodules">Submodules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../scripts.battery_sub.html">scripts.battery_sub module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scripts.leak_sub.html">scripts.leak_sub module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scripts.manual_mission.html">scripts.manual_mission module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../scripts.html#module-scripts">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">C++ API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#class-hierarchy">Class Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#file-hierarchy">File Hierarchy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#full-c-api">Full C++ API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#namespaces">Namespaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="namespace_rclcpp.html">Namespace rclcpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="namespace_std__chrono_literals.html">Namespace std::chrono_literals</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#classes-and-structs">Classes and Structs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="classCougControls.html">Class CougControls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classCougKinematics.html">Class CougKinematics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classMOOSBridge.html">Class MOOSBridge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classPID.html">Class PID</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#functions">Functions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="function_coug__controls_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_coug__kinematics_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_moos__bridge_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_moos__bridge_8cpp_1a6be152e8761701d01dfbe3ffaefcfc44.html">Function OnConnect</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Function OnMail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_moos__bridge_8cpp_1a515259521f650dcb62c11cf8641b030a.html">Function PublishDesiredValue</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#variables">Variables</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="variable_moos__bridge_8cpp_1add0549dba280d84bc067ceab2d80e04d.html">Variable Comms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable_moos__bridge_8cpp_1aa9e772c394beceea46d860acb5b46685.html">Variable desired_depth_publisher_</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable_moos__bridge_8cpp_1af5160110926ed501bd2cb5e301603451.html">Variable desired_heading_publisher_</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable_moos__bridge_8cpp_1a2f756e1ea2f1603a5a45d320be92e955.html">Variable desired_speed_publisher_</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable_coug__controls_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b.html">Variable qos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable_coug__kinematics_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b.html">Variable qos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable_coug__controls_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012.html">Variable qos_profile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable_coug__kinematics_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012.html">Variable qos_profile</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#defines">Defines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="define_pid_8cpp_1a406dc2bd4bf507a0ca28cce0cc0ae9c9.html">Define INTEGRAL_ARRAY_SIZE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="define_moos__bridge_8cpp_1ab262685e60a13ca93d7d8ef03d87f31f.html">Define MOOS_MISSION_DIR</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#typedefs">Typedefs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="typedef_moos__bridge_8cpp_1ae91353bc51204da54a10acab91ebc376.html">Typedef CommsStatusVector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="typedef_moos__bridge_8cpp_1a2b181c0c8d00bab2bc2f3e23acbb8063.html">Typedef MsgVector</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#directories">Directories</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dir_src.html">Directory src</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#files">Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="file_src_coug_controls.cpp.html">File coug_controls.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="file_src_coug_kinematics.cpp.html">File coug_kinematics.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="file_src_moos_bridge.cpp.html">File moos_bridge.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="file_src_pid.cpp.html">File pid.cpp</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../standards.html">Standard Documents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../standard_docs/LICENSE.html">LICENSE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../standard_docs/PACKAGE.html">PACKAGE</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cougars_control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">C++ API</a> &raquo;</li>
+      <li>Function OnMail</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/function_moos__bridge_8cpp_1a3038a0d4da73e5a9eec4d9c74dc08318.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="function-onmail">
+<span id="exhale-function-moos-bridge-8cpp-1a3038a0d4da73e5a9eec4d9c74dc08318"></span><h1>Function OnMail<a class="headerlink" href="#function-onmail" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p>Defined in <a class="reference internal" href="file_src_moos_bridge.cpp.html#file-src-moos-bridge-cpp"><span class="std std-ref">File moos_bridge.cpp</span></a></p></li>
+</ul>
+<section id="function-documentation">
+<h2>Function Documentation<a class="headerlink" href="#function-documentation" title="Permalink to this headline"></a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenfunction: Cannot find function “OnMail” in doxygen xml output for project “cougars_control Doxygen Project” from directory: /home/frostlab/ros2_ws/src/cougars_control/docs/docs_build/cougars_control/output_staging/generated/doxygen/xml</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="function_moos__bridge_8cpp_1a6be152e8761701d01dfbe3ffaefcfc44.html" class="btn btn-neutral float-left" title="Function OnConnect" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="function_moos__bridge_8cpp_1a515259521f650dcb62c11cf8641b030a.html" class="btn btn-neutral float-right" title="Function PublishDesiredValue" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright The &lt;cougars_control&gt; Contributors. License: Apache-2.0.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

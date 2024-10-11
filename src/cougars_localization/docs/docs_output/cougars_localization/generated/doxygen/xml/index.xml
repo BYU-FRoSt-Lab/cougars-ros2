@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.9.1" xml:lang="en-US">
+  <compound refid="classDepthConvertor" kind="class"><name>DepthConvertor</name>
+    <member refid="classDepthConvertor_1a33012bcfb3f59a6ff6734e89caf50beb" kind="variable"><name>depth_publisher_</name></member>
+    <member refid="classDepthConvertor_1aadea494f9e35405c00131c30109bb698" kind="variable"><name>pressure_subscription_</name></member>
+    <member refid="classDepthConvertor_1ac68a7b44b8d422329318974ba78ec663" kind="function"><name>DepthConvertor</name></member>
+    <member refid="classDepthConvertor_1a092c3ead8cd0e7ac32fa2d8a26785374" kind="function"><name>pressure_callback</name></member>
+  </compound>
+  <compound refid="classDVLConvertor" kind="class"><name>DVLConvertor</name>
+    <member refid="classDVLConvertor_1a7c6d7449d21d90fb76ef15c88f3e8e96" kind="variable"><name>publisher_dvl_velocity</name></member>
+    <member refid="classDVLConvertor_1aecd92f1ff6e984dcab359dbf58d7ef55" kind="variable"><name>publisher_dvl_dead_reckoning</name></member>
+    <member refid="classDVLConvertor_1afc14e7bf9ecd96fee5dad6f3b837ebcb" kind="variable"><name>publisher_dvl_depth</name></member>
+    <member refid="classDVLConvertor_1ac252643d19450e62891a572d3b7378a2" kind="variable"><name>subscriber_dvl_data</name></member>
+    <member refid="classDVLConvertor_1a36fd50e2677bf4d97b8e27520cbac239" kind="variable"><name>subscriber_dvl_position</name></member>
+    <member refid="classDVLConvertor_1a2b86c2072d0b43e244c5e901d0ed0e5a" kind="function"><name>DVLConvertor</name></member>
+    <member refid="classDVLConvertor_1a0b9705e5597c7ccdfffa7dca3f13fc15" kind="function"><name>dvl_data_callback</name></member>
+    <member refid="classDVLConvertor_1aec8d4dc41ae16aa9d6277c7f25e5e50d" kind="function"><name>degreesToRadians</name></member>
+    <member refid="classDVLConvertor_1aff3e697be60ad20eea690661a2546de2" kind="function"><name>dvl_pos_callback</name></member>
+  </compound>
+  <compound refid="classSeatracAHRSConverter" kind="class"><name>SeatracAHRSConverter</name>
+    <member refid="classSeatracAHRSConverter_1ab23e756a82506634032bee655068d9ff" kind="variable"><name>modem_subscriber_</name></member>
+    <member refid="classSeatracAHRSConverter_1a3428df8000e9b608012f3f523c5f282f" kind="variable"><name>modem_imu_pub_</name></member>
+    <member refid="classSeatracAHRSConverter_1afe47946cc0c57f421baad656e8a2e9fa" kind="variable"><name>magnetic_declination</name></member>
+    <member refid="classSeatracAHRSConverter_1a50e7b3d00de2e083ff6acc04336c88da" kind="function"><name>SeatracAHRSConverter</name></member>
+    <member refid="classSeatracAHRSConverter_1afdfbacfadcb8fc37e4cda52437265428" kind="function"><name>modem_callback</name></member>
+  </compound>
+  <compound refid="classVehicleStatus" kind="class"><name>VehicleStatus</name>
+    <member refid="classVehicleStatus_1a993601981ae6df046ba72f0a20d8fdeb" kind="variable"><name>update_timer_</name></member>
+    <member refid="classVehicleStatus_1afab0fe9032ddd3b3e4955c7efc46ab4a" kind="variable"><name>depth_subscription_</name></member>
+    <member refid="classVehicleStatus_1ae7bf884219990227914c5de3c7c77f25" kind="variable"><name>velocity_subscription_</name></member>
+    <member refid="classVehicleStatus_1aa1ed84138ff49f2c77ab915f64abbf37" kind="variable"><name>x_y_subscription_</name></member>
+    <member refid="classVehicleStatus_1adaaaf0de99dc83235a8949c9bafc0af7" kind="variable"><name>modem_yaw_subscription_</name></member>
+    <member refid="classVehicleStatus_1acf22ca1a3716772dadae7198d845fcd0" kind="variable"><name>vehicle_status_publisher_</name></member>
+    <member refid="classVehicleStatus_1aecf22b368eb0d8cfec482d8299c317f4" kind="variable"><name>magnetic_declination</name></member>
+    <member refid="classVehicleStatus_1ae481455ff986082cc2ad9f016b1fde31" kind="variable"><name>q_x</name></member>
+    <member refid="classVehicleStatus_1a379f9320b5960a9afeff055e65d4812d" kind="variable"><name>q_y</name></member>
+    <member refid="classVehicleStatus_1ad4327c443ee1c7598caf2153832a4b1f" kind="variable"><name>q_z</name></member>
+    <member refid="classVehicleStatus_1ad317f6afce8ff0674c4a468019b9501f" kind="variable"><name>q_w</name></member>
+    <member refid="classVehicleStatus_1adbda6a3fbf4a116e8ac2a2e1918e2235" kind="variable"><name>x_velocity</name></member>
+    <member refid="classVehicleStatus_1ade043dd95b267daa4f6e10024f764b93" kind="variable"><name>depth</name></member>
+    <member refid="classVehicleStatus_1a8b019c7d1b3b6c0d867b1bae5f2e3d97" kind="variable"><name>x_pos</name></member>
+    <member refid="classVehicleStatus_1abde6e38020f0311f53fd70a318c19551" kind="variable"><name>y_pos</name></member>
+    <member refid="classVehicleStatus_1af73bff026fcb568c8dc14379cb41e109" kind="variable"><name>yaw</name></member>
+    <member refid="classVehicleStatus_1abbb98e39b790442acc8c77dccafbc89a" kind="function"><name>VehicleStatus</name></member>
+    <member refid="classVehicleStatus_1ad6d22875dbdf88e16b87c6c3a5ab5920" kind="function"><name>x_y_callback</name></member>
+    <member refid="classVehicleStatus_1afa565c1c4e3ab4c88044cc9aef2251f8" kind="function"><name>depth_callback</name></member>
+    <member refid="classVehicleStatus_1a6902095193de0201c66a9705bffc2892" kind="function"><name>velocity_callback</name></member>
+    <member refid="classVehicleStatus_1aaf83fc62d5ddaeb42b9b5edb9b21119e" kind="function"><name>modem_yaw_callback</name></member>
+    <member refid="classVehicleStatus_1ad4cfb8d2cb0dd0f2bfdf4a95438429b6" kind="function"><name>broadcast_status_callback</name></member>
+  </compound>
+  <compound refid="namespacerclcpp" kind="namespace"><name>rclcpp</name>
+  </compound>
+  <compound refid="namespacestd_1_1chrono__literals" kind="namespace"><name>std::chrono_literals</name>
+  </compound>
+  <compound refid="depth__convertor_8cpp" kind="file"><name>depth_convertor.cpp</name>
+    <member refid="depth__convertor_8cpp_1a6801baa546c6112d19eb095111d24720" kind="define"><name>GRAVITY</name></member>
+    <member refid="depth__convertor_8cpp_1ae13964a8a3ccfef4cd82f49b55e27d03" kind="define"><name>FLUID_DENSITY_BASE</name></member>
+    <member refid="depth__convertor_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012" kind="variable"><name>qos_profile</name></member>
+    <member refid="depth__convertor_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b" kind="variable"><name>qos</name></member>
+    <member refid="depth__convertor_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="dvl__convertor_8cpp" kind="file"><name>dvl_convertor.cpp</name>
+    <member refid="dvl__convertor_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012" kind="variable"><name>qos_profile</name></member>
+    <member refid="dvl__convertor_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b" kind="variable"><name>qos</name></member>
+    <member refid="dvl__convertor_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="seatrac__ahrs__convertor_8cpp" kind="file"><name>seatrac_ahrs_convertor.cpp</name>
+    <member refid="seatrac__ahrs__convertor_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="vehicle__status_8cpp" kind="file"><name>vehicle_status.cpp</name>
+    <member refid="vehicle__status_8cpp_1a145b755a49074981133b758968d156d4" kind="define"><name>UPDATE_TIMER_MS</name></member>
+    <member refid="vehicle__status_8cpp_1a0c8beb662260254241dfbbf8a8ee5f99" kind="define"><name>PI_NUM</name></member>
+    <member refid="vehicle__status_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012" kind="variable"><name>qos_profile</name></member>
+    <member refid="vehicle__status_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b" kind="variable"><name>qos</name></member>
+    <member refid="vehicle__status_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="dir_68267d1309a1af8e8297ef4c3efbcdba" kind="dir"><name>src</name>
+  </compound>
+</doxygenindex>
