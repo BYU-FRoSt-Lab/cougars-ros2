@@ -96,7 +96,7 @@ private:
   }
 
   void
-  actual_heading_callback(seatrac_interfaces::msg::ModemStatus &msg) {
+  actual_heading_callback(const seatrac_interfaces::msg::ModemStatus &msg) {
       //Heading is in degrees east of true north between -180 and 180
       //TODO: make sure this is what we want 
       // (Note: MOOS defines yaw to be negative heading)
