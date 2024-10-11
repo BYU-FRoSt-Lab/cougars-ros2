@@ -51,6 +51,9 @@ class ManualMission(Node):
         '''
         :param state_1_depth: The desired depth value for state 1. The default value is 0.0.
         '''
+        self.get_logger().info("[INFO] Depth state 1: %f," % (
+            self.get_parameter('state_1_depth')
+        ))
 
         self.declare_parameter('state_1_heading', 0.0)
         '''
