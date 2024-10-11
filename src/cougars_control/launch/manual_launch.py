@@ -17,7 +17,7 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = "~/config/vehicle_config.yaml"
+    config_file = "/home/frostlab/config/vehicle_config.yaml"
 
     # Get the directory of the launch files
     package_dir = os.path.join(
@@ -43,17 +43,17 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_control',
-            executable='manual_mission',
+            executable='manual_mission.py',
             parameters=[config_file],
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
-        #     executable='leak_sub',
+        #     executable='leak_sub.py',
         # ),
         # launch_ros.actions.Node(
         #     package='cougars_control',
-        #     executable='battery_sub',
+        #     executable='battery_sub.py',
         #     parameters=[config_file],
         # ),
     ])

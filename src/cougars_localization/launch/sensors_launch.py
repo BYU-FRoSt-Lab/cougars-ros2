@@ -14,7 +14,7 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = "~/config/vehicle_config.yaml"
+    config_file = "/home/frostlab/config/vehicle_config.yaml"
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
     
@@ -65,8 +65,7 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
-            executable='gps_odom',
-            name='gps_odom',
+            executable='gps_odom.py',
             parameters=[config_file],
         ),
         # launch_ros.actions.Node(
