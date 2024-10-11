@@ -53,6 +53,6 @@ case $1 in
 esac
 
 FOLDER=$FOLDER-$(date +"%Y-%m-%d-%H-%M-%S")
-ros2 bag record -o ~/ros2_ws/bag/$FOLDER -s mcap -a
+ros2 bag record -o ~/bag/$FOLDER -s mcap -a
 
 cleanup $1
