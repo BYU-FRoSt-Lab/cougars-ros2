@@ -8,7 +8,8 @@
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/vehicle_status.hpp"
-#include "sensor_interfaces/msg/imu.hpp"
+#include "seatrac_interfaces/msg/modem_status.hpp"
+
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
