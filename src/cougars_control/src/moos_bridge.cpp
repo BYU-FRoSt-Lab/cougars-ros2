@@ -113,7 +113,7 @@ private:
     Comms.Notify("NAV_HEADING", nav_heading);
   }
 
-  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr
       subscription_vehicle_status_;
   rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr
       actual_heading_subscription_;
