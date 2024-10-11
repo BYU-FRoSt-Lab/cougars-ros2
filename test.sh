@@ -68,20 +68,20 @@ echo "LISTENING TO TOPIC 'DVL/POSITION'..."
 ros2 topic echo --once /dvl/position
 
 echo ""
-echo "TESTING TOP SERVO, PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
+echo "TESTING TOP SERVO, PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
 
 echo ""
-echo "TESTING SIDE SERVOS, PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
+echo "TESTING SIDE SERVOS, PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
 
 echo ""
-echo "TESTING THRUSTER (ON), PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
+echo "TESTING THRUSTER (ON), PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
 
 echo ""
-echo "TESTING THRUSTER (OFF), PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
+echo "TESTING THRUSTER (OFF), PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
 
 echo ""
 echo "TEST COMPLETE"
