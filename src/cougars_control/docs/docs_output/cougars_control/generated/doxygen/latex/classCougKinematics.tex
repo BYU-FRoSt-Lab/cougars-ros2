@@ -1,0 +1,84 @@
+\hypertarget{classCougKinematics}{}\doxysection{Coug\+Kinematics Class Reference}
+\label{classCougKinematics}\index{CougKinematics@{CougKinematics}}
+
+
+Coug\+UV kinematics node.  
+
+
+
+
+Inheritance diagram for Coug\+Kinematics\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=176pt]{classCougKinematics__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Coug\+Kinematics\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=176pt]{classCougKinematics__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classCougKinematics_a3d5324d55a7a97e251224a408ea7f631}{Coug\+Kinematics}} ()
+\begin{DoxyCompactList}\small\item\em Creates a new kinematics node. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Coug\+UV kinematics node. 
+
+\begin{DoxyAuthor}{Author}
+Nelson Durrant 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+September 2024
+\end{DoxyDate}
+This node subscribes to the \char`\"{}controls/command\char`\"{} topic and modifies the commands to account for thruster trim and fin offsets. The modified commands are then published to the \char`\"{}kinematics/command\char`\"{} topic.
+
+Subscribes\+:
+\begin{DoxyItemize}
+\item controls/command (frost\+\_\+interfaces/msg/\+UCommand) Publishes\+:
+\item kinematics/command (frost\+\_\+interfaces/msg/\+UCommand) 
+\end{DoxyItemize}
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classCougKinematics_a3d5324d55a7a97e251224a408ea7f631}\label{classCougKinematics_a3d5324d55a7a97e251224a408ea7f631}} 
+\index{CougKinematics@{CougKinematics}!CougKinematics@{CougKinematics}}
+\index{CougKinematics@{CougKinematics}!CougKinematics@{CougKinematics}}
+\doxysubsubsection{\texorpdfstring{CougKinematics()}{CougKinematics()}}
+{\footnotesize\ttfamily Coug\+Kinematics\+::\+Coug\+Kinematics (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Creates a new kinematics node. 
+
+This constructor creates a new kinematics node with default values. 
+\begin{DoxyParams}{Parameters}
+{\em trim\+\_\+ratio} & The trim ratio is used to adjust the control commands to account for thruster trim. The default value is 0.\+0.\\
+\hline
+{\em top\+\_\+fin\+\_\+offset} & The offset for the top fin to make it align properly. The default value is 0.\+0.\\
+\hline
+{\em right\+\_\+fin\+\_\+offset} & The offset for the right fin (from the front) to make it align properly. The default value is 0.\+0.\\
+\hline
+{\em left\+\_\+fin\+\_\+offset} & The offset for the left fin (from the front) to make it align properly. The default value is 0.\+0.\\
+\hline
+\end{DoxyParams}
+Kinematics command publisher.
+
+This publisher publishes the commands to the \char`\"{}kinematics/command\char`\"{} topic. It uses the UCommand message type.
+
+Controls command subscriber.
+
+This subscriber subscribes to the \char`\"{}controls/command\char`\"{} topic. It uses the UCommand message type.
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/coug\+\_\+kinematics.\+cpp\end{DoxyCompactItemize}

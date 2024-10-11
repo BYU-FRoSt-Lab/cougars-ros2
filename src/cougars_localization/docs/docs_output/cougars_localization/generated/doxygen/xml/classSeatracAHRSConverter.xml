@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classSeatracAHRSConverter" kind="class" language="C++" prot="public">
+    <compoundname>SeatracAHRSConverter</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">rclcpp::Node</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classSeatracAHRSConverter_1ab23e756a82506634032bee655068d9ff" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; seatrac_interfaces::msg::ModemStatus &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;seatrac_interfaces::msg::ModemStatus&gt;::SharedPtr SeatracAHRSConverter::modem_subscriber_</definition>
+        <argsstring></argsstring>
+        <name>modem_subscriber_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/seatrac_ahrs_convertor.cpp" line="68" column="7" bodyfile="src/seatrac_ahrs_convertor.cpp" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classSeatracAHRSConverter_1a3428df8000e9b608012f3f523c5f282f" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; sensor_msgs::msg::Imu &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;sensor_msgs::msg::Imu&gt;::SharedPtr SeatracAHRSConverter::modem_imu_pub_</definition>
+        <argsstring></argsstring>
+        <name>modem_imu_pub_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/seatrac_ahrs_convertor.cpp" line="69" column="33" bodyfile="src/seatrac_ahrs_convertor.cpp" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classSeatracAHRSConverter_1afe47946cc0c57f421baad656e8a2e9fa" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double SeatracAHRSConverter::magnetic_declination</definition>
+        <argsstring></argsstring>
+        <name>magnetic_declination</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/seatrac_ahrs_convertor.cpp" line="70" column="10" bodyfile="src/seatrac_ahrs_convertor.cpp" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classSeatracAHRSConverter_1a50e7b3d00de2e083ff6acc04336c88da" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>SeatracAHRSConverter::SeatracAHRSConverter</definition>
+        <argsstring>()</argsstring>
+        <name>SeatracAHRSConverter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/seatrac_ahrs_convertor.cpp" line="11" column="3" bodyfile="src/seatrac_ahrs_convertor.cpp" bodystart="11" bodyend="26"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classSeatracAHRSConverter_1afdfbacfadcb8fc37e4cda52437265428" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void SeatracAHRSConverter::modem_callback</definition>
+        <argsstring>(const seatrac_interfaces::msg::ModemStatus::SharedPtr msg)</argsstring>
+        <name>modem_callback</name>
+        <param>
+          <type>const seatrac_interfaces::msg::ModemStatus::SharedPtr</type>
+          <declname>msg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/seatrac_ahrs_convertor.cpp" line="29" column="8" bodyfile="src/seatrac_ahrs_convertor.cpp" bodystart="29" bodyend="65"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>SeatracAHRSConverter</label>
+        <link refid="classSeatracAHRSConverter"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>SeatracAHRSConverter</label>
+        <link refid="classSeatracAHRSConverter"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+    </collaborationgraph>
+    <location file="src/seatrac_ahrs_convertor.cpp" line="9" column="1" bodyfile="src/seatrac_ahrs_convertor.cpp" bodystart="9" bodyend="71"/>
+    <listofallmembers>
+      <member refid="classSeatracAHRSConverter_1afe47946cc0c57f421baad656e8a2e9fa" prot="private" virt="non-virtual"><scope>SeatracAHRSConverter</scope><name>magnetic_declination</name></member>
+      <member refid="classSeatracAHRSConverter_1afdfbacfadcb8fc37e4cda52437265428" prot="private" virt="non-virtual"><scope>SeatracAHRSConverter</scope><name>modem_callback</name></member>
+      <member refid="classSeatracAHRSConverter_1a3428df8000e9b608012f3f523c5f282f" prot="private" virt="non-virtual"><scope>SeatracAHRSConverter</scope><name>modem_imu_pub_</name></member>
+      <member refid="classSeatracAHRSConverter_1ab23e756a82506634032bee655068d9ff" prot="private" virt="non-virtual"><scope>SeatracAHRSConverter</scope><name>modem_subscriber_</name></member>
+      <member refid="classSeatracAHRSConverter_1a50e7b3d00de2e083ff6acc04336c88da" prot="public" virt="non-virtual"><scope>SeatracAHRSConverter</scope><name>SeatracAHRSConverter</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

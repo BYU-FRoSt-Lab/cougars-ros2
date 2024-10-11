@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.leak_sub module &mdash; cougars_control 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/collapsible-lists/css/tree_view.css" type="text/css" />
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/collapsible-lists/js/CollapsibleLists.compressed.js"></script>
+        <script src="_static/collapsible-lists/js/apply-collapsible-lists.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="scripts.manual_mission module" href="scripts.manual_mission.html" />
+    <link rel="prev" title="scripts.battery_sub module" href="scripts.battery_sub.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> cougars_control
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="scripts.html">scripts package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="scripts.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="scripts.battery_sub.html">scripts.battery_sub module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">scripts.leak_sub module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="scripts.manual_mission.html">scripts.manual_mission module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scripts.html#module-scripts">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="generated/index.html">C++ API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/index.html#class-hierarchy">Class Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/index.html#file-hierarchy">File Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/index.html#full-c-api">Full C++ API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#namespaces">Namespaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/namespace_rclcpp.html">Namespace rclcpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/namespace_std__chrono_literals.html">Namespace std::chrono_literals</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#classes-and-structs">Classes and Structs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/classCougControls.html">Class CougControls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/classCougKinematics.html">Class CougKinematics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/classMOOSBridge.html">Class MOOSBridge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/classPID.html">Class PID</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/function_coug__controls_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/function_coug__kinematics_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/function_moos__bridge_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/function_moos__bridge_8cpp_1a6be152e8761701d01dfbe3ffaefcfc44.html">Function OnConnect</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/function_moos__bridge_8cpp_1a3038a0d4da73e5a9eec4d9c74dc08318.html">Function OnMail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/function_moos__bridge_8cpp_1a515259521f650dcb62c11cf8641b030a.html">Function PublishDesiredValue</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#variables">Variables</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_moos__bridge_8cpp_1add0549dba280d84bc067ceab2d80e04d.html">Variable Comms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_moos__bridge_8cpp_1aa9e772c394beceea46d860acb5b46685.html">Variable desired_depth_publisher_</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_moos__bridge_8cpp_1af5160110926ed501bd2cb5e301603451.html">Variable desired_heading_publisher_</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_moos__bridge_8cpp_1a2f756e1ea2f1603a5a45d320be92e955.html">Variable desired_speed_publisher_</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_coug__controls_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b.html">Variable qos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_coug__kinematics_8cpp_1a780fcbbccc2b3ce6d42fd10e0638cd3b.html">Variable qos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_coug__controls_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012.html">Variable qos_profile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/variable_coug__kinematics_8cpp_1a40ba3dcf6fce3a49be9444da2f08b012.html">Variable qos_profile</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#defines">Defines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/define_pid_8cpp_1a406dc2bd4bf507a0ca28cce0cc0ae9c9.html">Define INTEGRAL_ARRAY_SIZE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/define_moos__bridge_8cpp_1ab262685e60a13ca93d7d8ef03d87f31f.html">Define MOOS_MISSION_DIR</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#typedefs">Typedefs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/typedef_moos__bridge_8cpp_1ae91353bc51204da54a10acab91ebc376.html">Typedef CommsStatusVector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/typedef_moos__bridge_8cpp_1a2b181c0c8d00bab2bc2f3e23acbb8063.html">Typedef MsgVector</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#directories">Directories</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/dir_src.html">Directory src</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="generated/index.html#files">Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/file_src_coug_controls.cpp.html">File coug_controls.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/file_src_coug_kinematics.cpp.html">File coug_kinematics.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/file_src_moos_bridge.cpp.html">File moos_bridge.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/file_src_pid.cpp.html">File pid.cpp</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="standards.html">Standard Documents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="standard_docs/LICENSE.html">LICENSE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="standard_docs/PACKAGE.html">PACKAGE</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cougars_control</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">scripts</a> &raquo;</li>
+          <li><a href="scripts.html">scripts package</a> &raquo;</li>
+      <li>scripts.leak_sub module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/scripts.leak_sub.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-scripts.leak_sub">
+<span id="scripts-leak-sub-module"></span><h1>scripts.leak_sub module<a class="headerlink" href="#module-scripts.leak_sub" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.leak_sub.</span></span><span class="sig-name descname"><span class="pre">LeakSubscriber</span></span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">rclpy.node.Node</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Author</dt>
+<dd class="field-odd"><p>Nelson Durrant</p>
+</dd>
+<dt class="field-even">Date</dt>
+<dd class="field-even"><p>September 2024</p>
+</dd>
+</dl>
+<p>A simple ROS2 node that subscribes to the leak/data topic and listens for the leak status.
+If a leak is detected, it sends a request to the emergency_stop service to stop the robot.</p>
+<dl class="simple">
+<dt>Subscribes:</dt><dd><ul class="simple">
+<li><p>leak/data (frost_interfaces/msg/LeakStatus)</p></li>
+</ul>
+</dd>
+<dt>Clients:</dt><dd><ul class="simple">
+<li><p>emergency_stop (frost_interfaces/srv/EmergencyStop)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber.cli">
+<span class="sig-name descname"><span class="pre">cli</span></span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber.cli" title="Permalink to this definition"></a></dt>
+<dd><p>Client for the “emergency_stop” service with the service type EmergencyStop.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber.listener_callback">
+<span class="sig-name descname"><span class="pre">listener_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber.listener_callback" title="Permalink to this definition"></a></dt>
+<dd><p>Callback function for the leak/data subscription.
+If a leak is detected, this method sends a request to the emergency_stop service to stop the robot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>msg</strong> – The LeakStatus message received from the leak/data topic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber.send_request">
+<span class="sig-name descname"><span class="pre">send_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">err</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber.send_request" title="Permalink to this definition"></a></dt>
+<dd><p>Sends a request to the emergency_stop service to stop the robot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>err</strong> – The error message to send.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scripts.leak_sub.LeakSubscriber.subscription">
+<span class="sig-name descname"><span class="pre">subscription</span></span><a class="headerlink" href="#scripts.leak_sub.LeakSubscriber.subscription" title="Permalink to this definition"></a></dt>
+<dd><p>Subscription to the “leak/data” topic with the message type LeakStatus.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.leak_sub.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.leak_sub.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.leak_sub.main" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="scripts.battery_sub.html" class="btn btn-neutral float-left" title="scripts.battery_sub module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scripts.manual_mission.html" class="btn btn-neutral float-right" title="scripts.manual_mission module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright The &lt;cougars_control&gt; Contributors. License: Apache-2.0.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
