@@ -39,7 +39,7 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_control',
-            executable='manual_mission',
+            executable='manual_mission.py',
             parameters=[config_file],
         ),
     ])
