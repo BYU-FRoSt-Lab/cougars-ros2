@@ -2,13 +2,14 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <Eigen/Geometry>
 
 #include "pid.cpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
-#include "sensor_interfaces/msg/imu.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/empty.hpp"
@@ -255,9 +256,9 @@ public:
      * message type.
      */
     actual_orientation_subscription_ =
-        this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
-            "modem_status", 10,
-            std::bind(&CougControls::actual_heading_callback, this, _1));
+        this->create_subscription<sensor_msgs::msg::Imu>(
+            "modem_imu", 10,
+            std::bind(&CougControls::actual_orientation_callback, this, _1));
 
     /**
      * @brief Control timer.
@@ -351,16 +352,38 @@ private:
    *
    * @param orientation_msg The Imu message recieved from the modem_imu topic.
    */
-  void actual_heading_callback(const sensor_msgs::msg::Imu &orientation_msg) {
-      //Heading is in degrees east of true north between -180 and 180
-      //TODO: make sure this is what we want 
-      // (Note: MOOS defines yaw to be negative heading)
+  void actual_orientation_callback(const sensor_msgs::msg::Imu &orientation_msg) {
+    // Extract quaternion from the IMU message
+    Eigen::Quaterniond q(
+        orientation_msg.orientation.w,
+        orientation_msg.orientation.x,
+        orientation_msg.orientation.y,
+        orientation_msg.orientation.z
+    );
 
+    // Convert quaternion to a 3x3 rotation matrix
+    Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
 
-      this->actual_heading = 
-      this->actual_pitch = 
-      RCLCPP_INFO(this->get_logger(), "[INFO] Yaw Info Recieved: %f",
-                  this->actual_heading);
+    // Extract Euler angles (roll, pitch, yaw) from the rotation matrix
+    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);  // ZYX order: yaw (Z), pitch (Y), roll (X)
+
+    // Yaw (heading), Pitch
+    double yaw = euler_angles[0];   // Yaw (rotation around Z-axis)
+    double pitch = euler_angles[1]; // Pitch (rotation around Y-axis)
+
+    // Convert yaw from radians to degrees, and adjust for range -180 to 180 degrees
+    double heading = yaw * (180.0 / M_PI); // Convert from radians to degrees
+    if (heading > 180.0) {
+        heading -= 360.0;
+    }
+
+    // Store heading and pitch
+    this->actual_heading = heading;
+    this->actual_pitch = pitch * (180.0 / M_PI); // Convert pitch to degrees for consistency
+
+    // Log the information
+    RCLCPP_INFO(this->get_logger(), "[INFO] Yaw Info Received: %f, Pitch Info Received: %f",
+                this->actual_heading, this->actual_pitch);
   }
 
   /**
@@ -375,14 +398,14 @@ private:
 
     if (this->init_flag) {
       
-      auto look_ahead = this->get_parameter("look_ahead").as_double()
+      float look_ahead = this->get_parameter("look_ahead").as_double();
+      
         
-      look_ahead_theta()
+      // look_ahead_theta();
 
       int depth_pos =
           myDepthPID.compute(this->desired_depth, this->actual_depth);
-      int heading_pos =
-          myHeadingPID.compute(this->desired_heading, this->actual_heading);
+      int heading_pos = myHeadingPID.compute(this->desired_heading, this->actual_heading);
 
       message.fin[0] = heading_pos;    // top fin
       message.fin[1] = -1 * depth_pos; // right fin (from the front)
@@ -395,6 +418,7 @@ private:
 
   void look_ahead_theta(float distance, float actual, float desired){
 
+    float check = distance;
   }
 
   // micro-ROS objects
@@ -409,8 +433,8 @@ private:
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       actual_depth_subscription_;
-  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr
-      actual_heading_subscription_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
+      actual_orientation_subscription_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr init_subscription_;
 
   // node initialization flag
@@ -430,6 +454,7 @@ private:
 
   // node actual values
   float actual_depth = 0.0;
+  float actual_pitch = 0.0;
   float actual_heading = 0.0;
 };
 
