@@ -137,10 +137,10 @@ class ManualMission(Node):
             self.listener_callback, 
             qos_profile_system_default
         )
-        self.subscription  # prevent unused variable warning
         '''
         Subscription to the "init" topic with the message type Empty.
         '''
+        self.subscription  # prevent unused variable warning
 
         # Create the timers
         self.timer = self.create_timer(
