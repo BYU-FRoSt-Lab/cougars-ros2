@@ -9,15 +9,15 @@ import os
 
 def generate_launch_description():
     '''
-    :author: Nelson Durrant
+    :author: Braden Meyers
     :date: September 2024
 
-    Launches the manual control and sensor nodes for the vehicle.
+    Launches the controller and any data convertes needed to test nodes in simulation
 
     :return: The launch description.
     '''
 
-    config_file = "~/config/sim_config.yaml"
+    config_file = "~/CoUGARs/config/sim_config.yaml"
 
     # Get the directory of the launch files
     package_dir = os.path.join(
