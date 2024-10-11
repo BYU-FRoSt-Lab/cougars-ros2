@@ -8,7 +8,7 @@
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
-#include "seatrac_interfaces/msg/modem_status.hpp"
+#include "sensor_interfaces/msg/imu.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/empty.hpp"
@@ -105,6 +105,13 @@ public:
     this->declare_parameter("depth_bias", 0);
 
     /**
+     * @param look_ahead_distance
+     *
+     * The bias value for the depth PID controller. The default value is 0.
+     */
+    this->declare_parameter("look_ahead", 5.0);
+
+    /**
      * @param heading_kp
      *
      * The proportional constant for the heading PID controller. The default
@@ -181,12 +188,12 @@ public:
     /**
      * @brief Control command publisher.
      *
-     * This publisher publishes the control commands to the "control_command"
+     * This publisher publishes the control commands to the "controls/command"
      * topic. It uses the UCommand message type.
      */
     u_command_publisher_ =
         this->create_publisher<frost_interfaces::msg::UCommand>(
-            "control_command", 10);
+            "controls/command", 10);
 
     /**
      * @brief Initialization subscriber.
@@ -201,7 +208,7 @@ public:
      * @brief Desired depth subscriber.
      *
      * This subscriber subscribes to the "desired_depth" topic. It uses the
-     * DesiredDepth message type.
+     * DesiredDepth message type. 
      */
     desired_depth_subscription_ =
         this->create_subscription<frost_interfaces::msg::DesiredDepth>(
@@ -212,7 +219,7 @@ public:
      * @brief Desired heading subscriber.
      *
      * This subscriber subscribes to the "desired_heading" topic. It uses the
-     * DesiredHeading message type.
+     * DesiredHeading message type. Expects the value to be in degrees from -180 to 180. ENU coordinate frame (0 being true east) 
      */
     desired_heading_subscription_ =
         this->create_subscription<frost_interfaces::msg::DesiredHeading>(
@@ -223,7 +230,7 @@ public:
      * @brief Desired speed subscriber.
      *
      * This subscriber subscribes to the "desired_speed" topic. It uses the
-     * DesiredSpeed message type.
+     * DesiredSpeed message type. Expected value from 0 to 100 (Non-dimensional)
      */
     desired_speed_subscription_ =
         this->create_subscription<frost_interfaces::msg::DesiredSpeed>(
@@ -234,7 +241,7 @@ public:
      * @brief Depth subscriber.
      *
      * This subscriber subscribes to the "depth_data" topic. It uses the
-     * PoseWithCovarianceStamped message type.
+     * PoseWithCovarianceStamped message type. Expects data in ENU with the z value being more negative with increasing depth
      */
     actual_depth_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -242,12 +249,12 @@ public:
         std::bind(&CougControls::actual_depth_callback, this, _1));
 
     /**
-     * @brief Yaw subscriber.
+     * @brief Yaw and Pitch subscriber.
      *
-     * This subscriber subscribes to the "modem_status" topic. It uses the ModemStatus
+     * This subscriber subscribes to the "modem_imu" topic. It uses the Imu
      * message type.
      */
-    actual_heading_subscription_ =
+    actual_orientation_subscription_ =
         this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
             "modem_status", 10,
             std::bind(&CougControls::actual_heading_callback, this, _1));
@@ -297,7 +304,7 @@ private:
    * @brief Callback function for the desired_heading subscription.
    *
    * This method sets the desired heading value to the value received from the
-   * desired heading message.
+   * desired heading message. ENU yaw value -180 to 180
    *
    * @param heading_msg The DesiredHeading message recieved from the
    * desired_heading topic.
@@ -314,7 +321,7 @@ private:
    * desired speed message.
    *
    * @param speed_msg The DesiredSpeed message recieved from the desired_speed
-   * topic.
+   * topic. The 
    */
   void
   desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) {
@@ -325,30 +332,33 @@ private:
    * @brief Callback function for the depth subscription.
    *
    * This method sets the actual depth value to the value received from the
-   * depth message.
+   * depth message. 
    *
    * @param depth_msg The PoseWithCovarianceStamped message recieved from the
    * depth_data topic.
    */
   void actual_depth_callback(
       const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
-    this->actual_depth = depth_msg.pose.pose.position.z;
+    this->actual_depth = -depth_msg.pose.pose.position.z;
+    //Negate the z value in ENU to get postive depth value
   }
 
   /**
-   * @brief Callback function for the yaw subscription.
+   * @brief Callback function for the orientation subscription.
    *
    * This method sets the actual heading value to the value received from the
-   * yaw message.
+   * yaw message and the pitch value.  
    *
-   * @param heading_msg The ModemStatus message recieved from the modem_status topic.
+   * @param orientation_msg The Imu message recieved from the modem_imu topic.
    */
-  void
-  actual_heading_callback(const seatrac_interfaces::msg::ModemStatus &heading_msg) {
+  void actual_heading_callback(const sensor_msgs::msg::Imu &orientation_msg) {
       //Heading is in degrees east of true north between -180 and 180
       //TODO: make sure this is what we want 
       // (Note: MOOS defines yaw to be negative heading)
-      this->actual_heading = 0.1*heading_msg.attitude_yaw + this->magnetic_declination;
+
+
+      this->actual_heading = 
+      this->actual_pitch = 
       RCLCPP_INFO(this->get_logger(), "[INFO] Yaw Info Recieved: %f",
                   this->actual_heading);
   }
@@ -357,16 +367,20 @@ private:
    * @brief Callback function for the PID control timer.
    *
    * This method computes the control commands using the PID controllers and
-   * publishes the control commands to the control_command topic.
+   * publishes the control commands to the controls/command topic.
    */
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
     message.header.stamp = this->now();
 
     if (this->init_flag) {
+      
+      auto look_ahead = this->get_parameter("look_ahead").as_double()
+        
+      look_ahead_theta()
 
       int depth_pos =
-          myDepthPID.compute(this->desired_depth, -this->actual_depth);
+          myDepthPID.compute(this->desired_depth, this->actual_depth);
       int heading_pos =
           myHeadingPID.compute(this->desired_heading, this->actual_heading);
 
@@ -377,6 +391,10 @@ private:
 
       u_command_publisher_->publish(message);
     }
+  }
+
+  void look_ahead_theta(float distance, float actual, float desired){
+
   }
 
   // micro-ROS objects
