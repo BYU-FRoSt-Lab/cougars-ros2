@@ -19,8 +19,7 @@ def generate_launch_description():
         
         launch_ros.actions.Node(
             package='cougars_localization',
-            executable='gps_odom',
-            name='gps_odom',
+            executable='gps_odom.py',
             parameters=[config_file],
         ),
     ])
