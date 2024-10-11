@@ -6,7 +6,7 @@
 #   <launch>' (ex. 'bash record.sh moos')
 # - Run this after running the 'start.sh' and 'test.sh'
 #   scripts
-# - Log files are saved in '~/bag' on the host machine
+# - Log files are saved in '../bag' on the host machine
 #   running the docker container
 
 function printInfo {
