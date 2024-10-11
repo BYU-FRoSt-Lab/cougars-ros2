@@ -179,7 +179,7 @@ class ManualMission(Node):
         '''
         Callback function for the timer.
         Runs the state machine and high-level controller, and publishes the desired depth, heading, and speed values.
-        For a faster update time, adjust the PUB_TIMER_PERIOD.
+        For a faster update time, adjust the command_timer_period parameter.
         '''
 
         depth_msg = DesiredDepth()
