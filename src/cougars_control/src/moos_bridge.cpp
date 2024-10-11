@@ -59,7 +59,7 @@ public:
     actual_heading_subscription_ =
         this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
             "modem_status", 10,
-            std::bind(&CougControls::actual_heading_callback, this, _1));
+            std::bind(&MOOSBridge::actual_heading_callback, this, _1));
     // publishers
     desired_depth_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredDepth>(
@@ -76,9 +76,9 @@ private:
   // needs to listen to (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
   void
-  ros_vehicle_status_listener(const nav_msgs::msg::Odometry &msg) {
+  ros_vehicle_status_listener(nav_msgs::msg::Odometry &msg) {
 
-    double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
+    double nav_x, nav_y, nav_depth, nav_speed;
 
     nav_x = msg.pose.pose.position.x;
     nav_y = msg.pose.pose.position.y;
@@ -95,18 +95,15 @@ private:
     
   }
 
-  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
-      subscription_vehicle_status_;
-  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr
-      actual_heading_subscription_;
-};
-
-void
-  actual_heading_callback(const seatrac_interfaces::msg::ModemStatus &msg) {
+  void
+  actual_heading_callback(seatrac_interfaces::msg::ModemStatus &msg) {
       //Heading is in degrees east of true north between -180 and 180
       //TODO: make sure this is what we want 
       // (Note: MOOS defines yaw to be negative heading)
                   // yaw comes in -180 to 180 (degrees)
+
+    double nav_heading;
+    
     if (msg.attitude_yaw < 0.0) {
       nav_heading = 360.0 + (0.1 * msg.attitude_yaw);
     } else {
@@ -115,6 +112,14 @@ void
 
     Comms.Notify("NAV_HEADING", nav_heading);
   }
+
+  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
+      subscription_vehicle_status_;
+  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr
+      actual_heading_subscription_;
+};
+
+
 
 bool OnConnect(void *pParam) {
   CMOOSCommClient *pC = reinterpret_cast<CMOOSCommClient *>(pParam);
