@@ -22,6 +22,8 @@ class ManualMission(Node):
         - desired_depth (frost_interfaces/msg/DesiredDepth)
         - desired_heading (frost_interfaces/msg/DesiredHeading)
         - desired_speed (frost_interfaces/msg/DesiredSpeed)
+    Services:
+        - emergency_stop (frost_interfaces/srv/EmergencyStop)
     '''
     def __init__(self):
         '''
