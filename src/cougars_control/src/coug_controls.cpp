@@ -392,6 +392,12 @@ private:
    * This method computes the control commands using the PID controllers and
    * publishes the control commands to the controls/command topic.
    */
+
+  void look_ahead_theta(float distance, float actual, float desired){
+
+    float check = distance;
+  }
+
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
     message.header.stamp = this->now();
@@ -401,7 +407,7 @@ private:
       float look_ahead = this->get_parameter("look_ahead").as_double();
       
         
-      // look_ahead_theta();
+      look_ahead_theta(look_ahead, look_ahead, look_ahead);
 
       int depth_pos =
           myDepthPID.compute(this->desired_depth, this->actual_depth);
@@ -414,11 +420,6 @@ private:
 
       u_command_publisher_->publish(message);
     }
-  }
-
-  void look_ahead_theta(float distance, float actual, float desired){
-
-    float check = distance;
   }
 
   // micro-ROS objects

@@ -33,7 +33,7 @@ add_executable(coug_kinematics src/coug_kinematics.cpp)
 ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces)
 
 add_executable(moos_bridge src/moos_bridge.cpp)
-ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs)
+ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces)
 
 # Link libraries
 target_link_libraries(coug_controls)
