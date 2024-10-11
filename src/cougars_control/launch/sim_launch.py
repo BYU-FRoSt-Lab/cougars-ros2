@@ -17,7 +17,7 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = "~/CoUGARs/config/sim_config.yaml"
+    config_file = "~/config/sim_config.yaml"
 
     # Get the directory of the launch files
     package_dir = os.path.join(
