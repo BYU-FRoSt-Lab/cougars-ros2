@@ -238,8 +238,8 @@ class ManualMission(Node):
         :param response: The EmergencyStop response message.
         '''
 
-        self.get_logger().info("[ERROR] EMERGENCY STOP EXECUTED")
-        self.get_logger().info(request.error)
+        self.get_logger().error("[ERROR] EMERGENCY STOP EXECUTED")
+        self.get_logger().error(request.error)
         self.stopped = True
         response.stopped = True
         return response
