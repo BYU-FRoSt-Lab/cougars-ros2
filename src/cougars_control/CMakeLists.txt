@@ -27,13 +27,13 @@ find_package(Eigen3 REQUIRED)
 include_directories(include/${PROJECT_NAME})
 
 add_executable(coug_controls src/coug_controls.cpp src/pid.cpp)
-ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces seatrac_interfaces geometry_msgs)
+ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces sensor_msgs geometry_msgs)
 
 add_executable(coug_kinematics src/coug_kinematics.cpp)
 ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces)
 
 add_executable(moos_bridge src/moos_bridge.cpp)
-ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs)
+ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces)
 
 # Link libraries
 target_link_libraries(coug_controls)
