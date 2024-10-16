@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <Eigen/Geometry>
+#include <cmath>  // For atan2, M_PI, fmin, fmax
 
 #include "pid.cpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
@@ -111,6 +112,13 @@ public:
      * The bias value for the depth PID controller. The default value is 0.
      */
     this->declare_parameter("look_ahead", 5.0);
+
+    /**
+     * @param theta_max
+     *
+     * The bias value for the depth PID controller. The default value is 0.
+     */
+    this->declare_parameter("theta_max", 25.0);
 
     /**
      * @param heading_kp
@@ -393,10 +401,21 @@ private:
    * publishes the control commands to the controls/command topic.
    */
 
-  void look_ahead_theta(float distance, float actual, float desired){
+  double look_ahead_theta(double distance, double actual, double desired, double theta_max) {
+    // Find the depth error
+    double depth_error = desired - actual;
 
-    float check = distance;
-  }
+    // Calculate the angle using atan2 (rise over run: depth_error / distance)
+    double theta_desired = atan2(depth_error, distance); // atan2(y, x)
+
+    // Convert theta_desired from radians to degrees (optional, depending on your needs)
+    // theta_desired *= 180.0 / M_PI; // Uncomment if you want degrees instead of radians
+
+    // Cap the desired theta within the range [-theta_max, theta_max]
+    theta_desired = std::fmax(-theta_max, std::fmin(theta_desired, theta_max));
+
+    return theta_desired;
+}
 
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
@@ -404,13 +423,14 @@ private:
 
     if (this->init_flag) {
       
-      float look_ahead = this->get_parameter("look_ahead").as_double();
+      double look_ahead = this->get_parameter("look_ahead").as_double();
+      double theta_max = this->get_parameter("theta_max").as_double();
       
         
-      look_ahead_theta(look_ahead, look_ahead, look_ahead);
+      double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
 
       int depth_pos =
-          myDepthPID.compute(this->desired_depth, this->actual_depth);
+          myDepthPID.compute(theta_desired, this->actual_pitch);
       int heading_pos = myHeadingPID.compute(this->desired_heading, this->actual_heading);
 
       message.fin[0] = heading_pos;    // top fin
