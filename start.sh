@@ -19,7 +19,7 @@ function printError {
 
 cleanup() {
 
-    sudo bash ~/gpio/strobe.sh off
+    sudo bash /home/frostlab/gpio/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
 
     printInfo "Acoustics successfully disabled"
@@ -41,10 +41,11 @@ echo ""
 source ~/ros2_ws/install/setup.bash
 ros2 daemon stop
 ros2 daemon start
+sleep 5
 
 # Start the strobe light and Teensy board
-sudo bash ~/gpio/strobe.sh on
-sudo bash ~/gpio/power.sh on
+sudo bash /home/frostlab/gpio/strobe.sh on
+sudo bash /home/frostlab/gpio/power.sh on
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list | grep Teensy)" ]; then
