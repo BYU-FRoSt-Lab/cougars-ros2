@@ -8,6 +8,8 @@
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/vehicle_status.hpp"
+#include "seatrac_interfaces/msg/modem_status.hpp"
+
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -46,11 +48,17 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-    // vehicle status listener
+
+    // vehicle status listener from the factor graph filter
     subscription_vehicle_status_ =
-        this->create_subscription<frost_interfaces::msg::VehicleStatus>(
-            "vehicle_status", 10,
+        this->create_subscription<nav_msgs::msg::Odometry>(
+            "/smoothed_output", 10,
             std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
+    // just grab the heading straight from the modem for now
+    actual_heading_subscription_ =
+        this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
+            "modem_status", 10,
+            std::bind(&MOOSBridge::actual_heading_callback, this, _1));
     // publishers
     desired_depth_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredDepth>(
@@ -67,34 +75,49 @@ private:
   // needs to listen to (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
   void
-  ros_vehicle_status_listener(const frost_interfaces::msg::VehicleStatus &msg) {
+  ros_vehicle_status_listener(const nav_msgs::msg::Odometry &msg) {
 
-    double nav_x, nav_y, nav_depth, nav_heading, nav_speed;
+    double nav_x, nav_y, nav_depth, nav_speed;
 
-    nav_x = msg.coug_odom.pose.pose.position.x;
-    nav_y = msg.coug_odom.pose.pose.position.y;
-    nav_depth = -1.0 * msg.coug_odom.pose.pose.position.z;
-    nav_speed = msg.coug_odom.twist.twist.linear.x;
+    nav_x = msg.pose.pose.position.x;
+    nav_y = msg.pose.pose.position.y;
+    // nav_depth = msg.pose.pose.position.z;
+    // nav_speed = msg.coug_odom.twist.twist.linear.x;
 
-    // yaw comes in -180 to 180 (degrees)
+    
+
+    // publish to MOOS-IvP
+    Comms.Notify("NAV_X", nav_x);
+    Comms.Notify("NAV_Y", nav_y);
+    // Comms.Notify("NAV_DEPTH", nav_depth);
+    // Comms.Notify("NAV_SPEED", nav_speed);
+    
+  }
+
+
+  void
+  actual_heading_callback(const seatrac_interfaces::msg::ModemStatus &msg) {
+      //Heading is in degrees east of true north between -180 and 180
+      //TODO: make sure this is what we want 
+      // (Note: MOOS defines yaw to be negative heading)
+                  // yaw comes in -180 to 180 (degrees)
+
+    double nav_heading;
+    
     if (msg.attitude_yaw < 0.0) {
-
       nav_heading = 360.0 + (0.1 * msg.attitude_yaw);
     } else {
       nav_heading = (0.1 * msg.attitude_yaw);
     }
 
-    // publish to MOOS-IvP
-    Comms.Notify("NAV_X", nav_x);
-    Comms.Notify("NAV_Y", nav_y);
-    Comms.Notify("NAV_DEPTH", nav_depth);
-    Comms.Notify("NAV_SPEED", nav_speed);
     Comms.Notify("NAV_HEADING", nav_heading);
   }
 
-  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
-      subscription_vehicle_status_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_vehicle_status_;
+  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr actual_heading_subscription_;
 };
+
+
 
 bool OnConnect(void *pParam) {
   CMOOSCommClient *pC = reinterpret_cast<CMOOSCommClient *>(pParam);
@@ -120,16 +143,15 @@ void PublishDesiredValue(double value, std::string key) {
     desired_speed_publisher_->publish(message);
   } else if (key == "DESIRED_HEADING") {
     auto message = frost_interfaces::msg::DesiredHeading();
-    if (value > 180.0) {
-      message.desired_heading = -1.0 * (360.0 - value);
-    } else {
-      message.desired_heading = value;
-    }
+    message.desired_heading = 90 - value;
+    if (message.desired_heading < -180.0) {
+      message.desired_heading = message.desired_heading + 360;
     desired_heading_publisher_->publish(message);
   } else if (key == "DESIRED_DEPTH") {
     auto message = frost_interfaces::msg::DesiredDepth();
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
+  }
   }
 }
 

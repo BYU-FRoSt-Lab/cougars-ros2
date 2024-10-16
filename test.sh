@@ -7,7 +7,25 @@
 source ~/ros2_ws/install/setup.bash
 
 # Turn on DVL acoustics
-bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
+# Check if a parameter was provided
+if [ -z "$1" ]; then
+  echo "Error: You need to input a parameter ('true' or 'false') to enable or disable acoustics."
+  exit 1
+fi
+
+# Check if the parameter is 'true' or 'false'
+if [ "$1" == "true" ]; then
+  echo "Turning on DVL acoustics..."
+  # Add your command for enabling acoustics here
+  bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
+elif [ "$1" == "false" ]; then
+  echo "Turning off DVL acoustics..."
+  # Add your command for disabling acoustics here
+  bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
+else
+  echo "Error: Invalid parameter. Please input either 'true' or 'false' to control acoustics."
+  exit 1
+fi
 
 echo ""
 echo "LISTING FOUND TOPICS..."
@@ -50,20 +68,20 @@ echo "LISTENING TO TOPIC 'DVL/POSITION'..."
 ros2 topic echo --once /dvl/position
 
 echo ""
-echo "TESTING TOP SERVO, PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
+echo "TESTING TOP SERVO, PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
 
 echo ""
-echo "TESTING SIDE SERVOS, PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
+echo "TESTING SIDE SERVOS, PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
 
 echo ""
-echo "TESTING THRUSTER (ON), PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
+echo "TESTING THRUSTER (ON), PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
 
 echo ""
-echo "TESTING THRUSTER (OFF), PUBLISHING TO 'CONTROLS/COMMAND'..."
-ros2 topic pub -1 /controls/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
+echo "TESTING THRUSTER (OFF), PUBLISHING TO 'kinematics/COMMAND'..."
+ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
 
 echo ""
 echo "TEST COMPLETE"

@@ -6,7 +6,7 @@
 #   <launch>' (ex. 'bash record.sh moos')
 # - Run this after running the 'start.sh' and 'test.sh'
 #   scripts
-# - Log files are saved in '~/bag' on the host machine
+# - Log files are saved in '../bag' on the host machine
 #   running the docker container
 
 function printInfo {
@@ -42,7 +42,7 @@ source ~/ros2_ws/install/setup.bash
 
 # Reset dead reckoning and start factor graph, controls
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
-ros2 topic pub /init std_msgs/msg/Empty -1
+# ros2 topic pub /init std_msgs/msg/Empty -1
 
 # Start the MOOS-IvP mission
 case $1 in
