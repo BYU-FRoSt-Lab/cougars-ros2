@@ -23,14 +23,25 @@ using std::placeholders::_1;
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
-//TODO: add ros parameters to setup beacon and driver node. At least serial port
-
 /**
- * @brief ADD HERE
+ * @brief A driver node for the Seatrac x150 USBL beacon
  * @author Clayton Smith
  * @date September 2024
  * 
- * ADD HERE
+ * This node interfaces with the seatrac x150 beacon. It publishes modem_rec 
+ * with information on acoustic transmissions, modem_status with regular 
+ * beacon status updates, and modem_cmd_update with command status codes and 
+ * error codes. It broadcasts an acoustic message when it recieves modem_send.
+ * 
+ * Code copied from 
+ * https://bitbucket.org/frostlab/seatrac_driver/src/main/tools/ros2_seatrac_ws/seatrac/src/modem_ros_node.cpp
+ * 
+ * Subscribes:
+ * - modem_send (seatrac_interfaces/msg/ModemSend)
+ * Publishes:
+ * - modem_rec (seatrac_interfaces/msg/ModemRec)
+ * - modem_status (seatrac_interfaces/msg/ModemStatus)
+ * - modem_cmd_update (seatrac_interfaces/msg/ModemCmdUpdate)
  */
 class ModemRosNode : public rclcpp::Node, public SeatracDriver {
 public:
@@ -54,8 +65,24 @@ public:
         this->create_subscription<seatrac_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
 
+    /**
+     * @param vehicle_ID
+     *
+     * The Coug-UV vehicle ID, used to set the beacon ID.
+     * The beacon ID is used to address acoustic messages.
+     * An integer between 1 and 15 inclusive.
+     */
     this->declare_parameter("vehicle_ID", 1);
+
+    /**
+     * @param water_salinity_ppt
+     *
+     * The salinity of the surounding water in parts per ton (ppt). 
+     * Used to determine the velocity of sound to find the distance 
+     * between beacons. 0 ppt for fresh water, 35 ppt for salt water.
+     */
     this->declare_parameter("water_salinity_ppt", 0);
+
     BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
     uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_int()*10);
 
