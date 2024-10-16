@@ -48,7 +48,6 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-    
 
     // vehicle status listener from the factor graph filter
     subscription_vehicle_status_ =
@@ -76,7 +75,7 @@ private:
   // needs to listen to (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
   void
-  ros_vehicle_status_listener(nav_msgs::msg::Odometry &msg) {
+  ros_vehicle_status_listener(const nav_msgs::msg::Odometry &msg) {
 
     double nav_x, nav_y, nav_depth, nav_speed;
 
@@ -95,8 +94,9 @@ private:
     
   }
 
+
   void
-  actual_heading_callback(seatrac_interfaces::msg::ModemStatus &msg) {
+  actual_heading_callback(const seatrac_interfaces::msg::ModemStatus &msg) {
       //Heading is in degrees east of true north between -180 and 180
       //TODO: make sure this is what we want 
       // (Note: MOOS defines yaw to be negative heading)
@@ -113,10 +113,8 @@ private:
     Comms.Notify("NAV_HEADING", nav_heading);
   }
 
-  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr
-      subscription_vehicle_status_;
-  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr
-      actual_heading_subscription_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_vehicle_status_;
+  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr actual_heading_subscription_;
 };
 
 
