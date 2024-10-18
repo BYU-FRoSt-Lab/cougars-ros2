@@ -51,25 +51,30 @@ source ~/ros2_ws/install/setup.bash
 
 echo ""
 
+# TODO: Test this implementation with a string
 leak_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
 if [ -z "$leak_data" ]; then
   printFailure "No leak sensor connection found."
 else
   if [[ $(echo "$leak_data" | awk '{if ($1 == false) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "Leak sensor connected! (leak: $leak_data)"
+    printSuccess "Leak sensor connected!"
+    print "leak: $leak_data"
   else
-    printFailure "Leak sensor may not be working. (leak: $leak_data)"
+    printFailure "Leak sensor may not be working."
+    print "leak: $leak_data"
   fi
 fi
 
-battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+')
+battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+(\.\d+)?')
 if [ -z "$battery_data" ]; then
   printFailure "No battery monitor connection found."
 else
   if [[ $(echo "$battery_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "Battery monitor connected! (voltage: $battery_data)"
+    printSuccess "Battery monitor connected!"
+    print "voltage: $battery_data"
   else
-    printFailure "Battery monitor may not be working. (voltage: $battery_data)"
+    printFailure "Battery monitor may not be working."
+    print "voltage: $battery_data"
   fi
 fi
 
@@ -78,9 +83,11 @@ if [ -z "$pressure_data" ]; then
   printFailure "No pressure sensor connection found."
 else
   if [[ $(echo "$pressure_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "Pressure sensor connected! (fluid_pressure: $pressure_data)"
+    printSuccess "Pressure sensor connected!"
+    print "fluid_pressure: $pressure_data"
   else
-    printFailure "Pressure sensor may not be working. (fluid_pressure: $pressure_data)"
+    printFailure "Pressure sensor may not be working."
+    print "fluid_pressure: $pressure_data"
   fi
 fi
 
@@ -101,9 +108,11 @@ if [ -z "$gps_data" ]; then
   printFailure "No GPS connection found."
 else
   if [[ $(echo "$gps_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "GPS connected! (latitude: $gps_data)"
+    printSuccess "GPS connected!"
+    print "latitude: $gps_data"
   else
-    printFailure "GPS may not be working. (latitude: $gps_data)"
+    printFailure "GPS may not be working."
+    print "latitude: $gps_data"
   fi
 fi
 
@@ -124,9 +133,11 @@ if [ -z "$dvl_position_data" ]; then
   printFailure "No DVL connection (position) found."
 else
   if [[ $(echo "$dvl_position_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "DVL (position) connected! (x: $dvl_position_data)"
+    printSuccess "DVL (position) connected!"
+    print "x: $dvl_position_data"
   else
-    printFailure "DVL (position) may not be working. (x: $dvl_position_data)"
+    printFailure "DVL (position) may not be working."
+    print "x: $dvl_position_data"
   fi
 fi
 
