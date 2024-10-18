@@ -12,5 +12,3 @@ echo ""
 
 FOLDER=$FOLDER-$(date +"%Y-%m-%d-%H-%M-%S")
 ros2 bag record -o ~/bag/$FOLDER -s mcap -a
-
-cleanup $1
