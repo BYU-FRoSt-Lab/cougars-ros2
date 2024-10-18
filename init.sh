@@ -5,6 +5,8 @@
 # - Specify a start configuration using 'bash record.sh <launch>' (ex. 'bash record.sh moos')
 # - Run this after running the 'launch.sh' and 'test.sh' scripts
 
+# TODO: Make the init message a service instead? Doesn't seem to be incredibly reliable.
+
 source ~/config/bash_vars.sh
 
 cleanup() {
