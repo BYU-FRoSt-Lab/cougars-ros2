@@ -116,15 +116,16 @@ else
   fi
 fi
 
-# TODO: Update this with the right values
-dvl_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=velocity: \[)\d+')
+dvl_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=altitude: \[)\d+(\.\d+)?')
 if [ -z "$dvl_data" ]; then
   printFailure "No DVL connection (data) found."
 else
   if [[ $(echo "$dvl_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "DVL (data) connected! (velocity: $dvl_data)"
+    printSuccess "DVL (data) connected!"
+    echo "  altitude: $dvl_data"
   else
-    printFailure "DVL (data) may not be working. (velocity: $dvl_data)"
+    printFailure "DVL (data) may not be working."
+    echo "  altitude: $dvl_data"
   fi
 fi
   
