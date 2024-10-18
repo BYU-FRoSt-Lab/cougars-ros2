@@ -5,6 +5,9 @@
 # - Specify a start configuration using 'bash start.sh 
 #   <launch>' (ex. 'bash start.sh moos')
 
+# Match with the username defined in the Dockerfile
+export UNAME=frostlab
+
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
 }
@@ -19,7 +22,7 @@ function printError {
 
 cleanup() {
 
-    sudo bash /home/frostlab/gpio/strobe.sh off
+    sudo bash /home/$UNAME/gpio/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
 
     printInfo "Acoustics successfully disabled"
@@ -44,8 +47,8 @@ ros2 daemon start
 sleep 5
 
 # Start the strobe light and Teensy board
-sudo bash /home/frostlab/gpio/strobe.sh on
-sudo bash /home/frostlab/gpio/power.sh on
+sudo bash /home/$UNAME/gpio/strobe.sh on
+sudo bash /home/$UNAME/gpio/power.sh on
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list | grep Teensy)" ]; then
