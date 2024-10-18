@@ -84,7 +84,7 @@ public:
     this->declare_parameter("water_salinity_ppt", 0);
 
     BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
-    uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_int()*10);
+    uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_double()*10);
 
     wait_for_alive(beaconId, salinity);
   }
