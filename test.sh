@@ -49,6 +49,21 @@ source ~/ros2_ws/install/setup.bash
 #   exit 1
 # fi
 
+case $1 in
+  "on")
+    echo ""
+    # bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
+    # echo "[COMPLETE] Acoustics enabled"
+    ;;
+  "off")
+    ;;
+  *)
+    printError "No state specified for DVL acoustics"
+    printError "Specify a state using either 'bash test.sh on' or 'bash test.sh off'"
+    exit 1
+    ;;
+esac
+
 echo ""
 
 # TODO: Test this implementation with a string

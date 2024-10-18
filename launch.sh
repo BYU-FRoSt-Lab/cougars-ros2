@@ -4,7 +4,7 @@
 # Starts the micro-ROS agent and ROS 2 launch files
 # - Specify a start configuration using 'bash start.sh <launch>' (ex. 'bash start.sh moos')
 
-source ~/config/bash_params.sh
+source ~/config/bash_vars.sh
 
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
@@ -19,10 +19,11 @@ function printError {
 }
 
 cleanup() {
-    bash ~/gpio/strobe.sh off
-    bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-    echo "[COMPLETE] Acoustics successfully disabled"
-    exit 0
+  echo ""
+  bash ~/gpio/strobe.sh off
+  bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
+  echo "[COMPLETE] Acoustics successfully disabled"
+  exit 0
 }
 trap cleanup SIGINT
 
@@ -32,13 +33,13 @@ echo "# BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS #"
 echo "######################################################################"
 echo ""
 
-source ~/config/bash_vars.sh
-
 # Quick fix for daemon error (TODO: find a better solution)
 source ~/ros2_ws/install/setup.bash
 ros2 daemon stop
 ros2 daemon start
 sleep 5
+
+echo ""
 
 # Start the strobe light and Teensy board
 bash ~/gpio/strobe.sh on
@@ -49,6 +50,8 @@ if [ -z "$(tycmd list | grep Teensy)" ]; then
     printError "No Teensy boards avaliable to connect to"
     exit 1
 fi
+
+echo ""
 
 # Start both workspaces
 source ~/microros_ws/install/setup.bash

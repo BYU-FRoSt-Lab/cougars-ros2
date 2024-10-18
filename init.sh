@@ -21,10 +21,12 @@ source ~/ros2_ws/install/setup.bash
 ros2 topic pub $NAMESPACE/init std_msgs/msg/Empty -1
 
 # bash ~/ros2_ws/dvl_tools/reset_dr.sh
+# echo "[COMPLETE] Reset DVL dead reckoning"
 
 # Start the MOOS-IvP mission
 case $1 in
     "moos")
+        echo ""
         bash ~/ros2_ws/moos_tools/mission_start_processes.sh
         bash ~/ros2_ws/moos_tools/mission_deploy.sh
         ;;
