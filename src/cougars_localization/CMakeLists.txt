@@ -35,21 +35,16 @@ ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometr
 add_executable(seatrac_ahrs_convertor src/seatrac_ahrs_convertor.cpp)
 ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs seatrac_interfaces geometry_msgs sensor_msgs Eigen3)
 
-add_executable(vehicle_status src/vehicle_status.cpp)
-ament_target_dependencies(vehicle_status rclcpp std_msgs frost_interfaces seatrac_interfaces geometry_msgs dvl_msgs sensor_msgs nav_msgs)
-
 # Link libraries
 target_link_libraries(depth_convertor)
 target_link_libraries(dvl_convertor)
 target_link_libraries(seatrac_ahrs_convertor)
-target_link_libraries(vehicle_status)
 
 # Install executables
 install(TARGETS
   depth_convertor
   dvl_convertor
   seatrac_ahrs_convertor
-  vehicle_status
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules
