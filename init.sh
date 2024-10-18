@@ -20,7 +20,7 @@ cleanup() {
 trap cleanup SIGINT
 
 source ~/ros2_ws/install/setup.bash
-ros2 topic pub $NAMESPACE/init std_msgs/msg/Empty -1
+ros2 topic pub coug3/init std_msgs/msg/Empty -1
 
 # bash ~/ros2_ws/dvl_tools/reset_dr.sh
 # echo "[COMPLETE] Reset DVL dead reckoning" # TODO: Add this to the reset_dr script to make sure it worked

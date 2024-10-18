@@ -450,6 +450,7 @@ private:
 
 
           // Calculate the desired pitch angle
+          RCLCPP_INFO(this->get_logger(), "desired_depth: %f, actual_depth: %f", this->desired_depth, this->actual_depth);
           float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
           // RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth));
 
@@ -468,7 +469,7 @@ private:
           double pitch_err = 2.0 * error_vec.y() * 180.0 / M_PI;  // Scaled by 2 and converted to degrees
           double yaw_err = 2.0 * error_vec.z() * 180.0 / M_PI;
 
-          // RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
+          RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
 
           // Step 4: Apply PID control to pitch and heading errors directly
           int depth_pos = (int)myPitchPID.compute(0.0, pitch_err);  // No additional scaling needed

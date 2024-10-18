@@ -5,6 +5,9 @@
  * This class is a simple implementation of a PID controller based on the BYU
  * ECEn 483 approach.
  */
+
+#include <iostream>
+
 class PID {
 
 public:
@@ -25,20 +28,20 @@ public:
    */
   void initialize(float p, float i, float d, float min, float max,
                   float interval) {
-    kp = p;
-    ki = i;
-    kd = d;
-    min_output = min;
-    max_output = max;
-    interval = interval;
+    this->kp = p;
+    this->ki = i;
+    this->kd = d;
+    this->min_output = min;
+    this->max_output = max;
+    this->pid_interval = interval;
 
-    x_dot = 0.0;      // estimated derivative of x
-    x_d1 = 0.0;       // x delayed by one sample
-    error_d1 = 0.0;   // error delayed by one sample
-    integrator = 0.0; // integrator
+    this->x_dot = 0.0;      // estimated derivative of x
+    this->x_d1 = 0.0;       // x delayed by one sample
+    this->error_d1 = 0.0;   // error delayed by one sample
+    this->integrator = 0.0; // integrator
 
     float sigma = 0.05; // cutoff freq for dirty derivative
-    beta = (2 * sigma - interval) / (2 * sigma + interval);
+    this->beta = (2.0 * sigma - interval) / (2.0 * sigma + interval);
   }
 
   /**
@@ -52,33 +55,37 @@ public:
 
     float error = x_r - x;
 
-    // integrate error in x
-    integrator = integrator + (interval / 2) * (error + error_d1);
+    // integrate error in x with anti-windup
+    if (std::abs(this->x_dot) < 0.08) {
+      this->integrator = this->integrator + (this->pid_interval / 2.0) * (error + this->error_d1);
+    }
+
+    std::cout << "integrator " << this->integrator << std::endl;
 
     // differentiate x
-    x_dot = beta * x_dot + (1 - beta) * ((x - x_d1) / interval);
+    this->x_dot = this->beta * this->x_dot + (1.0 - this->beta) * ((x - this->x_d1) / this->pid_interval);
+
+    std::cout << "x_dot " << this->x_dot << std::endl;
 
     // calculate the force
-    float force_unsat = kp * error + ki * integrator - kd * x_dot;
+    float force_unsat = this->kp * error + this->ki * this->integrator - this->kd * this->x_dot;
 
     // saturate the force
     float force_sat;
-    if (force_unsat > max_output) {
-      force_sat = max_output;
-    } else if (force_unsat < min_output) {
-      force_sat = min_output;
+    if (force_unsat > this->max_output) {
+      force_sat = this->max_output;
+    } else if (force_unsat < this->min_output) {
+      force_sat = this->min_output;
     } else {
       force_sat = force_unsat;
     }
 
-    // integrator anti-windup
-    if (ki != 0.0) {
-      integrator = integrator + interval / ki * (force_sat - force_unsat);
-    }
+    std::cout << "force_unsat " << force_unsat << std::endl;
+    std::cout << "force_sat " << force_sat << std::endl;
 
     // update delayed variables
-    error_d1 = error;
-    x_d1 = x;
+    this->error_d1 = error;
+    this->x_d1 = x;
 
     return force_sat;
   }
@@ -89,11 +96,11 @@ private:
   float kd;
   float min_output;
   float max_output;
-  float interval;
+  float pid_interval;
 
-  float beta = 0.0;
-  float x_dot = 0.0;
-  float x_d1 = 0.0;
-  float error_d1 = 0.0;
-  float integrator = 0.0;
+  float beta;
+  float x_dot;
+  float x_d1;
+  float error_d1;
+  float integrator;
 };
