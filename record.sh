@@ -22,13 +22,11 @@ function printError {
 }
 
 cleanup() {
-
     case $1 in
         "moos")
             bash ~/ros2_ws/moos_tools/mission_kill.sh
             ;;
     esac
-
     exit 0
 }
 trap cleanup SIGINT
@@ -38,10 +36,9 @@ echo "Enter a descriptive folder name for the rosbag: "
 read FOLDER
 echo ""
 
-source ~/ros2_ws/install/setup.bash
-
 # Reset dead reckoning and start factor graph, controls
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
+source ~/ros2_ws/install/setup.bash
 # ros2 topic pub /init std_msgs/msg/Empty -1
 
 # Start the MOOS-IvP mission
