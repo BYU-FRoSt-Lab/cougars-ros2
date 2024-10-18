@@ -291,7 +291,7 @@ private:
 
     (void)msg; // supress unused variable warning
 
-    RCLCPP_INFO(this->get_logger(), "[INFO] Init message recieved");
+    RCLCPP_INFO(this->get_logger(), "Init message recieved");
     this->init_flag = true;
   }
 
@@ -390,7 +390,7 @@ private:
     this->actual_pitch = pitch * (180.0 / M_PI); // Convert pitch to degrees for consistency
 
     // Log the information
-    RCLCPP_INFO(this->get_logger(), "[INFO] Yaw Info Received: %f, Pitch Info Received: %f",
+    RCLCPP_INFO(this->get_logger(), "Yaw Info Received: %f, Pitch Info Received: %f",
                 this->actual_heading, this->actual_pitch);
   }
 

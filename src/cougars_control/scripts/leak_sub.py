@@ -39,7 +39,7 @@ class LeakSubscriber(Node):
         Client for the "emergency_stop" service with the service type EmergencyStop.
         '''
         while not self.cli.wait_for_service(timeout_sec=1):
-            self.get_logger().info("EmergencyStop service not available, waiting...")
+            self.get_logger().warn("EmergencyStop service not available, waiting...")
         self.req = EmergencyStop.Request()
 
     def send_request(self, err):
