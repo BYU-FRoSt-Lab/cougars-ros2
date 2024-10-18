@@ -91,15 +91,16 @@ else
   fi
 fi
 
-# TODO: Update this with the right values
-modem_imu_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
-if [ -z "$modem_imu_data" ]; then
-  printFailure "No modem IMU connection found."
+modem_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/modem_status 2>/dev/null | grep -oP '(?<=attitude_yaw: \[)\d+(\.\d+)?')
+if [ -z "$modem_data" ]; then
+  printFailure "No USBL modem connection found."
 else
-  if [[ $(echo "$modem_imu_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "Modem IMU connected! (orientation: $modem_imu_data)"
+  if [[ $(echo "$modem_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
+    printSuccess "USBL modem connected!"
+    echo "attitude_yaw: $modem_data"
   else
-    printFailure "Modem IMU may not be working. (orientation: $modem_imu_data)"
+    printFailure "USBL modem may not be working."
+    echo "attitude_yaw: $modem_data"
   fi
 fi
 
@@ -129,7 +130,7 @@ else
   fi
 fi
   
-dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -A 3 position: | grep -oP '(?<=z: )\d+(\.\d+)?')
+dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -A 3 position: | grep -oP '(?<=x: )\d+(\.\d+)?')
 if [ -z "$dvl_position_data" ]; then
   printFailure "No DVL connection (position) found."
 else
@@ -155,4 +156,3 @@ timeout 5 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/U
 
 printInfo "Testing thruster (OFF), publishing to 'kinematics/command'..."
 timeout 5 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}' 2>/dev/null
-
