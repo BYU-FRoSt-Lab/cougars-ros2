@@ -21,10 +21,9 @@ function printError {
 }
 
 cleanup() {
-
+    
     sudo bash /home/$UNAME/gpio/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-
     printInfo "Acoustics successfully disabled"
 
     killall micro_ros_agent
@@ -53,14 +52,10 @@ sudo bash /home/$UNAME/gpio/power.sh on
 # Start the micro-ROS agent
 if [ -z "$(tycmd list | grep Teensy)" ]; then
     printError "No Teensy boards avaliable to connect to"
-    echo ""
-
 else 
     source ~/microros_ws/install/setup.bash
     ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
-
     sleep 5
-    echo ""
 fi
 
 # Start the ROS 2 launch files
@@ -78,7 +73,6 @@ case $1 in
     *)
         printWarning "No start configuration specified"
         printWarning "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
-        echo ""
         ;;
 esac
 
