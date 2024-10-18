@@ -81,7 +81,7 @@ public:
      * Used to determine the velocity of sound to find the distance 
      * between beacons. 0 ppt for fresh water, 35 ppt for salt water.
      */
-    this->declare_parameter("water_salinity_ppt", 0);
+    this->declare_parameter("water_salinity_ppt", 0.0);
 
     BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
     uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_double()*10);
