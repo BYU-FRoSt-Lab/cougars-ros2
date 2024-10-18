@@ -28,30 +28,19 @@ public:
    * @param d The derivative constant.
    * @param min The minimum output value.
    * @param max The maximum output value.
-   * @param timer_interval The interval at which the PID controller is called.
-   * @param adjust The bias value.
    */
-  void calibrate(float p, float i, float d, int min, int max,
-                 float timer_interval, int adjust) {
+  void calibrate(float p, float i, float d, int min, int max, float interval) {
     kp = p;
     ki = i;
     kd = d;
     min_output = min;
     max_output = max;
-    interval = timer_interval;
-    bias = adjust;
+    interval = interval;
 
-    error = 0;
-    error_prior = 0;
-    integral = 0;
-    integral_prior = 0;
-    derivative = 0;
-
-    integral_index = 0;
-    // initialize the integral array with zeros
-    for (int i = 0; i < INTEGRAL_ARRAY_SIZE; i++) {
-      integralArray[i] = 0;
-    }
+    x_dot = 0.0;  // estimated derivative of x
+    x_d1 = 0.0;  // x delayed by one sample
+    error_d1 = 0.0;  // error delayed by one sample
+    integrator = 0.0; // integrator
   }
 
   /**
@@ -65,31 +54,29 @@ public:
    */
   float compute(float desired, float actual) {
 
-    // PROPORTIONAL CALCULATIONS
     error = desired - actual;
 
-    // INTEGRAL CALCULATIONS
-    // add the new error to the integral sum and subtract the oldest
-    integral =
-        integral_prior + (error * interval) - integralArray[integral_index];
-    integralArray[integral_index] = error;
-    integral_index = (integral_index + 1) % INTEGRAL_ARRAY_SIZE;
-    integral_prior = integral;
+    // integrate error in x
+    integrator = integrator + (interval / 2) * (error + error_d1);
 
-    // DERIVATIVE CALCULATIONS
-    derivative = (error - error_prior) / interval;
-    error_prior = error;
+    // differentiate x
+    x_dot = beta * x_dot + (1 - beta) * ((x - x_d1) / interval);
 
-    // SUM IT ALL TOGETHER
-    float output = error * kp + integral * ki - derivative * kd + bias;
+    // calculate the force
+    force_unsat = kp * error + ki * integrator - kd * x_dot;
 
-    // clamp the output so we don't exceed the limit
-    if (output > max_output) {
-      output = max_output;
-    } else if (output < min_output) {
-      output = min_output;
+    // saturate the force
+
+    // integrator anti-windup
+    if (ki != 0.0) {
+      integrator = integrator + interval / ki * (force_sat - force_unsat);
     }
-    return (float)output;
+
+    // update delayed variables
+    error_d1 = error
+    x_d1 = actual
+
+    return force_sat
   }
 
 private:
@@ -97,17 +84,11 @@ private:
   float kp;
   float ki;
   float kd;
-  int min_output;
-  int max_output;
+  float min_output;
+  float max_output;
 
-  float interval;
-  int bias;
-  float integral;
-  float integral_prior;
-  float error;
-  float error_prior;
-  float derivative;
-
-  int integral_index;
-  float integralArray[INTEGRAL_ARRAY_SIZE];
+  float x_dot = 0.0
+  float x_d1 = 0.0
+  float error_d1 = 0.0
+  float integrator = 0.0
 };
