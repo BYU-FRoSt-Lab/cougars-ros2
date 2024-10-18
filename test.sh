@@ -154,3 +154,6 @@ timeout 5 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/U
 
 printInfo "Testing thruster (OFF), publishing to 'kinematics/command'..."
 timeout 5 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}' 2>/dev/null
+
+printInfo "System test completed."
+echo ""
