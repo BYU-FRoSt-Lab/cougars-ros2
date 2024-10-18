@@ -32,7 +32,7 @@ case $1 in
   "on")
     echo ""
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
-    echo "[COMPLETE] Acoustics enabled"
+    echo "[COMPLETE] Acoustics enabled" # TODO: Add this to the acoustics_on script to make sure it worked
     ;;
   "off")
     ;;

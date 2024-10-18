@@ -22,7 +22,7 @@ cleanup() {
   echo ""
   bash ~/gpio/strobe.sh off
   bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-  echo "[COMPLETE] Acoustics successfully disabled"
+  echo "[COMPLETE] Acoustics successfully disabled" # TODO: Add this to the acoustics_on script to make sure it worked
   exit 0
 }
 trap cleanup SIGINT
