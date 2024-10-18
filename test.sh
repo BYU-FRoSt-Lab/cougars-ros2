@@ -58,10 +58,10 @@ if [ -z "$leak_data" ]; then
 else
   if [[ $(echo "$leak_data" | awk '{if ($1 == false) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Leak sensor connected!"
-    print "leak: $leak_data"
+    echo "  leak: $leak_data"
   else
     printFailure "Leak sensor may not be working."
-    print "leak: $leak_data"
+    echo "  leak: $leak_data"
   fi
 fi
 
@@ -71,10 +71,10 @@ if [ -z "$battery_data" ]; then
 else
   if [[ $(echo "$battery_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Battery monitor connected!"
-    print "voltage: $battery_data"
+    echo "  voltage: $battery_data"
   else
     printFailure "Battery monitor may not be working."
-    print "voltage: $battery_data"
+    echo "  voltage: $battery_data"
   fi
 fi
 
@@ -84,10 +84,10 @@ if [ -z "$pressure_data" ]; then
 else
   if [[ $(echo "$pressure_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Pressure sensor connected!"
-    print "fluid_pressure: $pressure_data"
+    echo "  fluid_pressure: $pressure_data"
   else
     printFailure "Pressure sensor may not be working."
-    print "fluid_pressure: $pressure_data"
+    echo "  fluid_pressure: $pressure_data"
   fi
 fi
 
@@ -109,10 +109,10 @@ if [ -z "$gps_data" ]; then
 else
   if [[ $(echo "$gps_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "GPS connected!"
-    print "latitude: $gps_data"
+    echo "  latitude: $gps_data"
   else
     printFailure "GPS may not be working."
-    print "latitude: $gps_data"
+    echo "  latitude: $gps_data"
   fi
 fi
 
@@ -134,10 +134,10 @@ if [ -z "$dvl_position_data" ]; then
 else
   if [[ $(echo "$dvl_position_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "DVL (position) connected!"
-    print "x: $dvl_position_data"
+    echo "  x: $dvl_position_data"
   else
     printFailure "DVL (position) may not be working."
-    print "x: $dvl_position_data"
+    echo "  x: $dvl_position_data"
   fi
 fi
 
@@ -155,5 +155,3 @@ timeout 5 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/U
 printInfo "Testing thruster (OFF), publishing to 'kinematics/command'..."
 timeout 5 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}' 2>/dev/null
 
-printInfo "System test completed."
-echo ""
