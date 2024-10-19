@@ -27,7 +27,7 @@ def generate_launch_description():
 
     # Get the directory of the launch files
     package_dir = os.path.join(
-        get_package_share_directory('cougars_control'), 'launch')
+        get_package_share_directory('cougars_localization'), 'launch')
 
     return launch.LaunchDescription([
         
