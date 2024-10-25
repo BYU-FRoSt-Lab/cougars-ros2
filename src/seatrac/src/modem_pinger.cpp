@@ -73,7 +73,7 @@ public:
          * By default this will be the vehicle_ID, so coug1
          * will ping first, then coug2, etc.
          * 
-         * WARNING: If specified, this parameter should different for all vehicles.
+         * WARNING: If specified, vehicle_order should different for all vehicles.
          * If two vehicles have the same vehicle_order, they will send pings 
          * at the same time.
          */
