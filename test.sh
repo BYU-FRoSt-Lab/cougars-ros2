@@ -42,60 +42,60 @@ else
 fi
 
 echo ""
-echo "LISTING FOUND TOPICS..."
+printInfo "LISTING FOUND TOPICS..."
 ros2 topic list
 
 # echo ""
-# echo "LISTENING TO TOPIC 'LEAK/DATA'..."
+# printInfo "LISTENING TO TOPIC 'LEAK/DATA'..."
 # ros2 topic echo --once $NAMESPACE/leak/data
 
 # echo ""
-# echo "LISTENING TO TOPIC 'BATTERY/DATA'..."
+# printInfo "LISTENING TO TOPIC 'BATTERY/DATA'..."
 # ros2 topic echo --once $NAMESPACE/battery/data
 
 echo ""
-echo "LISTENING TO TOPIC 'PRESSURE/DATA'..."
+printInfo "LISTENING TO TOPIC 'PRESSURE/DATA'..."
 ros2 topic echo --once $NAMESPACE/pressure/data
 
 echo ""
-echo "LISTENING TO TOPIC 'DEPTH_DATA'..."
+printInfo "LISTENING TO TOPIC 'DEPTH_DATA'..."
 ros2 topic echo --once $NAMESPACE/depth_data
 
 echo ""
-echo "LISTENING TO TOPIC 'MODEM_IMU'..."
+printInfo "LISTENING TO TOPIC 'MODEM_IMU'..."
 ros2 topic echo --once $NAMESPACE/modem_imu
 
 echo ""
-echo "LISTENING TO TOPIC 'FIX'..."
+printInfo "LISTENING TO TOPIC 'FIX'..."
 ros2 topic echo --once $NAMESPACE/fix
 
 echo ""
-echo "LISTENING TO TOPIC 'GPS_ODOM'..."
+printInfo "LISTENING TO TOPIC 'GPS_ODOM'..."
 ros2 topic echo --once $NAMESPACE/gps_odom
 
 echo ""
-echo "LISTENING TO TOPIC 'DVL/DATA'..."
+printInfo "LISTENING TO TOPIC 'DVL/DATA'..."
 ros2 topic echo --once $NAMESPACE/dvl/data
 
 echo ""
-echo "LISTENING TO TOPIC 'DVL/POSITION'..."
+printInfo "LISTENING TO TOPIC 'DVL/POSITION'..."
 ros2 topic echo --once $NAMESPACE/dvl/position
 
 echo ""
-echo "TESTING TOP SERVO, PUBLISHING TO 'kinematics/COMMAND'..."
+printInfo "TESTING TOP SERVO, PUBLISHING TO 'kinematics/COMMAND'..."
 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
 
 echo ""
-echo "TESTING SIDE SERVOS, PUBLISHING TO 'kinematics/COMMAND'..."
+printInfo "TESTING SIDE SERVOS, PUBLISHING TO 'kinematics/COMMAND'..."
 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
 
 echo ""
-echo "TESTING THRUSTER (ON), PUBLISHING TO 'kinematics/COMMAND'..."
+printInfo "TESTING THRUSTER (ON), PUBLISHING TO 'kinematics/COMMAND'..."
 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
 
 echo ""
-echo "TESTING THRUSTER (OFF), PUBLISHING TO 'kinematics/COMMAND'..."
+printInfo "TESTING THRUSTER (OFF), PUBLISHING TO 'kinematics/COMMAND'..."
 ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
 
 echo ""
-echo "TEST COMPLETE"
+printInfo "TEST COMPLETE"
