@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ModemRec &mdash; seatrac_interfaces 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ModemSend" href="ModemSend.html" />
+    <link rel="prev" title="ModemCmdUpdate" href="ModemCmdUpdate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> seatrac_interfaces
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../message_definitions.html">Message Definitions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ModemCmdUpdate.html">ModemCmdUpdate</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ModemRec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ModemSend.html">ModemSend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ModemStatus.html">ModemStatus</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../standards.html">Standard Documents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../standard_docs/LICENSE.html">LICENSE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../standard_docs/PACKAGE.html">PACKAGE</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">seatrac_interfaces</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../message_definitions.html">Message Definitions</a> &raquo;</li>
+      <li>ModemRec</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/interfaces/msg/ModemRec.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="modemrec">
+<h1>ModemRec<a class="headerlink" href="#modemrec" title="Permalink to this headline"></a></h1>
+<p>This is a ROS message definition.</p>
+<p><strong>Source</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">std_msgs</span><span class="o">/</span><span class="n">Header</span> <span class="n">header</span>
+
+<span class="c1"># Definitions of Seatrac defined enums and types (ie CID_E, BID_E, CST_E, ...) can be found</span>
+<span class="c1"># in the Seatrac Developer Guide https://www.blueprintsubsea.com/downloads/seatrac/UM-140-D00221-07.pdf</span>
+
+<span class="n">uint8</span> <span class="n">msg_id</span>            <span class="c1"># CIDE - Command Identification Code. Indicates the type of report recieved from the beacon.</span>
+                        <span class="c1"># Different msg types include different information, and therefore populate different fields.</span>
+                        <span class="c1"># Not all CID_E msg types are captured or supported in this ros message.</span>
+
+
+<span class="c1">### Acoustic Fix (ACOFIX_T) Fields ###</span>
+        <span class="c1"># An Acoustic Fix structure is generated for every successfully received acoustic transmission.</span>
+<span class="nb">bool</span>  <span class="n">local_flag</span>          <span class="c1"># True if the transmission was addressed to this beacon. False if it was &quot;sniffed&quot; by the beacon.</span>
+<span class="nb">bool</span>  <span class="n">position_enhanced</span>   <span class="c1"># True if depth was sent in the acoustic transmission. False if depth was not transmitted.</span>
+<span class="nb">bool</span>  <span class="n">position_flt_error</span>  <span class="c1"># True if the position filter detected a discrepancy between this position and the last position.</span>
+
+<span class="n">uint8</span> <span class="n">dest_id</span>  <span class="c1"># BID_E. The id of the beacon the acoustic transmission was addressed to. </span>
+               <span class="c1">#        Usually the same as the beacon that genrated this report.</span>
+<span class="n">uint8</span> <span class="n">src_id</span>   <span class="c1"># BID_E. The id of the remote beacon that sent the acoustic transmission.</span>
+
+<span class="n">int16</span>    <span class="n">attitude_yaw</span>    <span class="c1"># Divide by 10 for local yaw in degrees</span>
+<span class="n">int16</span>    <span class="n">attitude_pitch</span>  <span class="c1"># Divide by 10 for local pitch in degrees</span>
+<span class="n">int16</span>    <span class="n">attitude_roll</span>   <span class="c1"># Divide by 10 for local roll in degrees</span>
+
+<span class="n">int16</span>    <span class="n">depth_local</span>  <span class="c1"># Divide by 10 for local depth im meters</span>
+<span class="n">uint16</span>   <span class="n">vos</span>          <span class="c1"># Divide by 10 for velocity of sound in meters per second.</span>
+<span class="n">uint16</span>   <span class="n">rssi</span>  <span class="c1"># rssi for main transceiver. Divide by 10 for rssi in decibels.</span>
+
+<span class="nb">bool</span>     <span class="n">includes_range</span>  <span class="c1"># Indicates whether or not range information could be included in this report.</span>
+<span class="n">uint32</span>   <span class="n">range_count</span>     <span class="c1"># Number of 16kHz timer intervals counted between req and resp.</span>
+<span class="n">int32</span>    <span class="n">range_time</span>      <span class="c1"># Time between req and resp. Divide by 10 for time in microseconds.</span>
+<span class="n">uint16</span>   <span class="n">range_dist</span>      <span class="c1"># Divide by 10 for range in meters.</span>
+
+<span class="nb">bool</span>     <span class="n">includes_usbl</span>   <span class="c1"># Indicates whether or not usbl information could be included in this report.</span>
+<span class="n">uint8</span>    <span class="n">usbl_channels</span>   <span class="c1"># number of usbl channels used to compute signal (usually 3 or 4)</span>
+<span class="n">int16</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="n">usbl_rssi</span>       <span class="c1"># rssi for each usbl reciever. Divide by 10 for rssi in decibels.</span>
+<span class="n">int16</span>    <span class="n">usbl_azimuth</span>    <span class="c1"># Azimuth of remote beacon relative to local beacon. Divide by 10 for azimuth in degrees.</span>
+<span class="n">int16</span>    <span class="n">usbl_elevation</span>  <span class="c1"># Elevation of remote beacon relative to local beacon. Divide by 10 for elevation in degrees.</span>
+<span class="n">int16</span>    <span class="n">usbl_fit_error</span>  <span class="c1"># Dimensionless value indicating level of confidence in usbl azimuth and elevation</span>
+                         <span class="c1">#     where 0 is high confidence and 2 or greater is low confidence.</span>
+
+<span class="nb">bool</span>     <span class="n">includes_position</span>  <span class="c1"># Indicates whether or not position information could be included in this report.</span>
+<span class="n">int16</span>    <span class="n">position_easting</span>   <span class="c1"># Easting component of relative position to remote beacon. Divide by 10 for value in meters.</span>
+<span class="n">int16</span>    <span class="n">position_northing</span>  <span class="c1"># Northing component of relative position to remote beacon. Divide by 10 for value in meters.</span>
+<span class="n">int16</span>    <span class="n">position_depth</span>     <span class="c1"># Vertical depth compoenent of remote beacon from the surface. Divide by 10 for value in meters.</span>
+                            <span class="c1">#     If position_enhanced is true, this value is the transmitted depth sensor value from the remote beacon.</span>
+                            <span class="c1">#     Otherwise, this value is computed from the usbl information.</span>
+
+
+<span class="c1">### Acoustic Transmission Data Fields ###</span>
+<span class="n">uint8</span>     <span class="n">packet_len</span>    <span class="c1"># Packet length. If packet length is 0, the message conains no packet data.</span>
+<span class="n">uint8</span><span class="p">[</span><span class="mi">30</span><span class="p">]</span> <span class="n">packet_data</span>   <span class="c1"># Data packet received from remote beacon. Can be no longer than 30 bytes.</span>
+
+
+<span class="c1">### NAV fields ###</span>
+        <span class="c1"># The NAV protocol is used to query information from remote beacons.</span>
+        <span class="c1"># If the recieved acoustic transmission was a response to a NAV query transmission,</span>
+        <span class="c1"># it may include the following information.</span>
+<span class="nb">bool</span>   <span class="n">includes_remote_depth</span>
+<span class="n">int32</span>  <span class="n">remote_depth</span>  <span class="c1"># Divide by 10 for remote depth in meters.</span>
+
+<span class="nb">bool</span>   <span class="n">includes_remote_supply</span>
+<span class="n">uint16</span> <span class="n">remote_supply</span> <span class="c1"># Divide by 1000 for remote supply voltage in Volts.</span>
+
+<span class="nb">bool</span>   <span class="n">includes_remote_temp</span>
+<span class="n">int16</span>  <span class="n">remote_temp</span>   <span class="c1"># Divide by 10 for remote temperature in Celsius.</span>
+
+<span class="nb">bool</span>   <span class="n">includes_remote_attitude</span>
+<span class="n">int16</span>  <span class="n">remote_yaw</span>    <span class="c1"># Divide by 10 for remote yaw in degrees.</span>
+<span class="n">int16</span>  <span class="n">remote_pitch</span>  <span class="c1"># Divide by 10 for remote pitch in degrees.</span>
+<span class="n">int16</span>  <span class="n">remote_roll</span>   <span class="c1"># Divide by 10 for remote roll in degrees.</span>
+
+
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ModemCmdUpdate.html" class="btn btn-neutral float-left" title="ModemCmdUpdate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ModemSend.html" class="btn btn-neutral float-right" title="ModemSend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright The &lt;seatrac_interfaces&gt; Contributors. License: Apache License 2.0.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

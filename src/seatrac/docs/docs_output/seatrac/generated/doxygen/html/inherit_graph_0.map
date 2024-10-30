@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title=" " alt="" coords="9,19,112,45"/>
+<area shape="rect" id="node2" href="$classModemRosNode.html" title="A driver node for the Seatrac x150 USBL beacon." alt="" coords="164,56,293,83"/>
+<area shape="rect" id="node3" href="$classSeatracPinger.html" title="Sends acoustic pings on a schedule." alt="" coords="173,5,285,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,81,116,108"/>
+<area shape="rect" id="node5" href="$classMyDriver.html" title="ADD HERE." alt="" coords="187,107,270,133"/>
+</map>
