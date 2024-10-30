@@ -18,13 +18,17 @@ def generate_launch_description():
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
 
-        # Define the namespace parameter
-    namespace = launch.substitution.LaunchSubstitution(
-        'namespace', description="The unique namespace for the vehicle")
-    
+    # Define the namespace parameter
+    namespace = launch.substitution.LaunchConfiguration('namespace')
     
     return launch.LaunchDescription([
         
+        # Define the namespace parameter
+        launch.actions.DeclareLaunchArgument(
+            'namespace',
+            default_value='',
+            description='Unique vehicle namespace'
+        ),
         # Launch microROS
         launch_ros.actions.Node(
             package='micro_ros_agent',
