@@ -4,6 +4,8 @@
 # Enables acoustics and tests vehicle sensors
 # - Run this after running the 'start.sh' script
 
+source ~/config/constants.sh
+
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
 }
@@ -45,55 +47,55 @@ ros2 topic list
 
 # echo ""
 # echo "LISTENING TO TOPIC 'LEAK/DATA'..."
-# ros2 topic echo --once /leak/data
+# ros2 topic echo --once $NAMESPACE/leak/data
 
 # echo ""
 # echo "LISTENING TO TOPIC 'BATTERY/DATA'..."
-# ros2 topic echo --once /battery/data
+# ros2 topic echo --once $NAMESPACE/battery/data
 
 echo ""
 echo "LISTENING TO TOPIC 'PRESSURE/DATA'..."
-ros2 topic echo --once /pressure/data
+ros2 topic echo --once $NAMESPACE/pressure/data
 
 echo ""
 echo "LISTENING TO TOPIC 'DEPTH_DATA'..."
-ros2 topic echo --once /depth_data
+ros2 topic echo --once $NAMESPACE/depth_data
 
 echo ""
 echo "LISTENING TO TOPIC 'MODEM_IMU'..."
-ros2 topic echo --once /modem_imu
+ros2 topic echo --once $NAMESPACE/modem_imu
 
 echo ""
 echo "LISTENING TO TOPIC 'FIX'..."
-ros2 topic echo --once /fix
+ros2 topic echo --once $NAMESPACE/fix
 
 echo ""
 echo "LISTENING TO TOPIC 'GPS_ODOM'..."
-ros2 topic echo --once /gps_odom
+ros2 topic echo --once $NAMESPACE/gps_odom
 
 echo ""
 echo "LISTENING TO TOPIC 'DVL/DATA'..."
-ros2 topic echo --once /dvl/data
+ros2 topic echo --once $NAMESPACE/dvl/data
 
 echo ""
 echo "LISTENING TO TOPIC 'DVL/POSITION'..."
-ros2 topic echo --once /dvl/position
+ros2 topic echo --once $NAMESPACE/dvl/position
 
 echo ""
 echo "TESTING TOP SERVO, PUBLISHING TO 'kinematics/COMMAND'..."
-ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
+ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [45, 0, 0, 0], thruster: 0}'
 
 echo ""
 echo "TESTING SIDE SERVOS, PUBLISHING TO 'kinematics/COMMAND'..."
-ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
+ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 45, 45, 0], thruster: 0}'
 
 echo ""
 echo "TESTING THRUSTER (ON), PUBLISHING TO 'kinematics/COMMAND'..."
-ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
+ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 10}'
 
 echo ""
 echo "TESTING THRUSTER (OFF), PUBLISHING TO 'kinematics/COMMAND'..."
-ros2 topic pub -1 /kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
+ros2 topic pub -1 $NAMESPACE/kinematics/command frost_interfaces/msg/UCommand '{fin: [0, 0, 0, 0], thruster: 0}'
 
 echo ""
 echo "TEST COMPLETE"

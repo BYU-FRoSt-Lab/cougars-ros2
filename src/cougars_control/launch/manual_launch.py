@@ -22,7 +22,10 @@ def generate_launch_description():
     # Get the directory of the launch files
     package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
-
+    
+    # Define the namespace parameter
+    namespace = launch.substitution.LaunchSubstitution(
+        'namespace', description="The unique namespace for the vehicle")
 
     return launch.LaunchDescription([
         
@@ -35,25 +38,30 @@ def generate_launch_description():
             package='cougars_control',
             executable='coug_kinematics',
             parameters=[config_file],
+            namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
             parameters=[config_file],
+            namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
             parameters=[config_file],
+            namespace=namespace,
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='leak_sub.py',
+        #     namespace=namespace,
         # ),
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='battery_sub.py',
         #     parameters=[config_file],
+        #     namespace=namespace,
         # ),
     ])

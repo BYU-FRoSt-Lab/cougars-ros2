@@ -5,8 +5,7 @@
 # - Specify a start configuration using 'bash start.sh 
 #   <launch>' (ex. 'bash start.sh moos')
 
-# Match with the username defined in the Dockerfile
-export UNAME=frostlab
+source ~/config/constants.sh
 
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
@@ -62,13 +61,13 @@ fi
 source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")
-        ros2 launch cougars_control manual_launch.py
+        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE
         ;;
     "moos")
-        ros2 launch cougars_control moos_launch.py
+        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE
         ;;
     "sensors")
-        ros2 launch cougars_localization sensors_launch.py
+        ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE
         ;;
     *)
         printWarning "No start configuration specified"
