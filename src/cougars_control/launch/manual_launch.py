@@ -24,7 +24,7 @@ def generate_launch_description():
         get_package_share_directory('cougars_localization'), 'launch')
     
     # Define the namespace parameter
-    namespace = launch.substitution.LaunchConfiguration('namespace')
+    namespace = launch.substitutions.LaunchConfiguration('namespace')
 
     return launch.LaunchDescription([
         
