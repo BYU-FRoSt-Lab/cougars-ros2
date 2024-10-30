@@ -17,6 +17,10 @@ def generate_launch_description():
     config_file = "/home/frostlab/config/vehicle_config.yaml"
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
+
+        # Define the namespace parameter
+    namespace = launch.substitution.LaunchSubstitution(
+        'namespace', description="The unique namespace for the vehicle")
     
     
     return launch.LaunchDescription([
@@ -25,7 +29,8 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='micro_ros_agent',
             executable='micro_ros_agent',
-            arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000']
+            arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
+            namespace=namespace,
         ),
         # Set up the DVL
         launch_ros.actions.Node(
