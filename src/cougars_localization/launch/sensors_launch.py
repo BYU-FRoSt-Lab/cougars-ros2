@@ -1,6 +1,7 @@
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
+from launch.substitutions import LaunchConfiguration
 
 import yaml
 
@@ -17,9 +18,6 @@ def generate_launch_description():
     config_file = "/home/frostlab/config/vehicle_config.yaml"
     with open(config_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
-
-    # Define the namespace parameter
-    namespace = launch.substitutions.LaunchConfiguration('namespace')
     
     return launch.LaunchDescription([
         
@@ -34,25 +32,26 @@ def generate_launch_description():
             package='micro_ros_agent',
             executable='micro_ros_agent',
             arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
-            namespace=namespace,
         ),
         # Set up the DVL
         launch_ros.actions.Node(
             package='dvl_a50', 
             executable='dvl_a50_sensor', 
+            namespace=LaunchConfiguration('namespace'),
         ),
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[config_file]
+            parameters=[config_file],
+            namespace=LaunchConfiguration('namespace'),
         ),
         # Setup the GPS
         launch_ros.actions.ComposableNodeContainer(
             package='rclcpp_components',
             executable='component_container',
             name='fix_and_odometry_container',
-            namespace='',
+            namespace=LaunchConfiguration('namespace'),
             composable_node_descriptions=[
                 launch_ros.descriptions.ComposableNode(
                     package='gpsd_client',
@@ -68,23 +67,23 @@ def generate_launch_description():
         # Start the data conversion nodes
         launch_ros.actions.Node(
             package='cougars_localization',
-            executable='depth_convertor'
+            executable='depth_convertor',
+            namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
-            executable='dvl_convertor'
+            executable='dvl_convertor',
+            namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
-            executable='seatrac_ahrs_convertor'
+            executable='seatrac_ahrs_convertor',
+            namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='gps_odom.py',
             parameters=[config_file],
+            namespace=LaunchConfiguration('namespace'),
         ),
-        # launch_ros.actions.Node(
-        #     package='cougars_localization',
-        #     executable='vehicle_status'
-        # ),
     ])

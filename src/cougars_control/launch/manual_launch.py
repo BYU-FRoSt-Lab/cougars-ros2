@@ -1,6 +1,7 @@
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
+from launch.substitutions import LaunchConfiguration
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
@@ -22,9 +23,6 @@ def generate_launch_description():
     # Get the directory of the launch files
     package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
-    
-    # Define the namespace parameter
-    namespace = launch.substitutions.LaunchConfiguration('namespace')
 
     return launch.LaunchDescription([
         
@@ -43,30 +41,30 @@ def generate_launch_description():
             package='cougars_control',
             executable='coug_kinematics',
             parameters=[config_file],
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
             parameters=[config_file],
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
             parameters=[config_file],
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='leak_sub.py',
-        #     namespace=namespace,
+        #     namespace=LaunchConfiguration('namespace'),
         # ),
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='battery_sub.py',
         #     parameters=[config_file],
-        #     namespace=namespace,
+        #     namespace=LaunchConfiguration('namespace'),
         # ),
     ])
