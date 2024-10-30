@@ -24,11 +24,16 @@ def generate_launch_description():
         get_package_share_directory('cougars_localization'), 'launch')
     
     # Define the namespace parameter
-    namespace = launch.substitution.LaunchSubstitution(
-        'namespace', description="The unique namespace for the vehicle")
+    namespace = launch.substitution.LaunchConfiguration('namespace')
 
     return launch.LaunchDescription([
         
+        # Define the namespace parameter
+        launch.actions.DeclareLaunchArgument(
+            'namespace',
+            default_value='',
+            description='Unique vehicle namespace'
+        ),
         # Include additional launch files
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
