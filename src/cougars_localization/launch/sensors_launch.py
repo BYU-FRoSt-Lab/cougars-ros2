@@ -57,11 +57,13 @@ def generate_launch_description():
                     package='gpsd_client',
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
+                    namespace=LaunchConfiguration('namespace'),
                     parameters=[vehicle_config_params['/gpsd_client']['ros__parameters']]),
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
-                    name='utm_gpsfix_to_odometry_node')
+                    name='utm_gpsfix_to_odometry_node'),
+                    namespace=LaunchConfiguration('namespace'),
             ],
         ),
         # Start the data conversion nodes
