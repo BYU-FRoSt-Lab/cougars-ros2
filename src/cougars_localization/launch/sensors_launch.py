@@ -62,8 +62,8 @@ def generate_launch_description():
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
-                    name='utm_gpsfix_to_odometry_node'),
                     namespace=LaunchConfiguration('namespace'),
+                    name='utm_gpsfix_to_odometry_node'),
             ],
         ),
         # Start the data conversion nodes
