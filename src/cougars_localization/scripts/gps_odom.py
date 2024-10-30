@@ -66,7 +66,7 @@ class NavSatFixToOdom(Node):
         # Subscribe to NavSatFix
         self.subscriber = self.create_subscription(
             GPSFix,
-            '/extended_fix',
+            'extended_fix',
             self.gps_callback,
             10
         )
@@ -78,7 +78,7 @@ class NavSatFixToOdom(Node):
         self.min_sats = 5  # Minimum number of satellites
 
         # Publisher for Odometry
-        self.publisher = self.create_publisher(Odometry, '/gps_odom', 10)
+        self.publisher = self.create_publisher(Odometry, 'gps_odom', 10)
         '''
         Publisher for the "gps_odom" topic with the message type Odometry.
         '''
