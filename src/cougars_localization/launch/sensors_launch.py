@@ -19,7 +19,7 @@ def generate_launch_description():
         vehicle_config_params = yaml.safe_load(f)
 
     # Define the namespace parameter
-    namespace = launch.substitution.LaunchConfiguration('namespace')
+    namespace = launch.substitutions.LaunchConfiguration('namespace')
     
     return launch.LaunchDescription([
         
