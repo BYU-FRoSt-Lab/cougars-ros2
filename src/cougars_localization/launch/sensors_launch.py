@@ -21,6 +21,12 @@ def generate_launch_description():
     
     return launch.LaunchDescription([
         
+        # Launch microROS
+        launch_ros.actions.Node(
+            package='micro_ros_agent',
+            executable='micro_ros_agent',
+            arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000']
+        ),
         # Set up the DVL
         launch_ros.actions.Node(
             package='dvl_a50', 

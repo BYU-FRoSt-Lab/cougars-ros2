@@ -21,13 +21,12 @@ function printError {
 
 cleanup() {
     
-    sudo bash /home/$UNAME/gpio/strobe.sh off
+    sudo bash /home/$LABNAME/gpio/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
     printInfo "Acoustics successfully disabled"
 
-    killall micro_ros_agent
+    # killall micro_ros_agent
     wait
-
     exit 0
 }
 trap cleanup SIGINT
@@ -45,19 +44,21 @@ ros2 daemon start
 sleep 5
 
 # Start the strobe light and Teensy board
-sudo bash /home/$UNAME/gpio/strobe.sh on
-sudo bash /home/$UNAME/gpio/power.sh on
+sudo bash /home/$LABNAME/gpio/strobe.sh on
+sudo bash /home/$LABNAME/gpio/power.sh on
 
 # Start the micro-ROS agent
 if [ -z "$(tycmd list | grep Teensy)" ]; then
     printError "No Teensy boards avaliable to connect to"
-else 
-    source ~/microros_ws/install/setup.bash
-    ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
-    sleep 5
+    exit 1
+# else 
+#     source ~/microros_ws/install/setup.bash
+#     ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 6000000 &
+#     sleep 5
 fi
 
-# Start the ROS 2 launch files
+# Start both workspaces
+source ~/microros_ws/install/setup.bash
 source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")

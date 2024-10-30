@@ -27,6 +27,8 @@ cleanup() {
             bash ~/ros2_ws/moos_tools/mission_kill.sh
             ;;
     esac
+     
+    wait
     exit 0
 }
 trap cleanup SIGINT
