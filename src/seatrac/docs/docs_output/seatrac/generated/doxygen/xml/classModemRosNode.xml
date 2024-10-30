@@ -1,0 +1,282 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="classModemRosNode" kind="class" language="C++" prot="public">
+    <compoundname>ModemRosNode</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">rclcpp::Node</basecompoundref>
+    <basecompoundref prot="public" virt="non-virtual">SeatracDriver</basecompoundref>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classModemRosNode_1aa7ad848955751be3e550050821139b86" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; seatrac_interfaces::msg::ModemRec &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;seatrac_interfaces::msg::ModemRec&gt;::SharedPtr ModemRosNode::rec_pub_</definition>
+        <argsstring></argsstring>
+        <name>rec_pub_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="375" column="33" bodyfile="src/modem_ros_node.cpp" bodystart="375" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classModemRosNode_1a930b2394885bd814b6e581f5fc3cfeec" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; seatrac_interfaces::msg::ModemStatus &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;seatrac_interfaces::msg::ModemStatus&gt;::SharedPtr ModemRosNode::status_pub_</definition>
+        <argsstring></argsstring>
+        <name>status_pub_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="376" column="33" bodyfile="src/modem_ros_node.cpp" bodystart="376" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classModemRosNode_1a5759e546fe6ebf13cbbe7e8ac6648a16" prot="private" static="no" mutable="no">
+        <type>rclcpp::Publisher&lt; seatrac_interfaces::msg::ModemCmdUpdate &gt;::SharedPtr</type>
+        <definition>rclcpp::Publisher&lt;seatrac_interfaces::msg::ModemCmdUpdate&gt;::SharedPtr ModemRosNode::cmd_update_pub_</definition>
+        <argsstring></argsstring>
+        <name>cmd_update_pub_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="377" column="33" bodyfile="src/modem_ros_node.cpp" bodystart="377" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classModemRosNode_1aa8d70f95105d8ff3b11d968780ee8a85" prot="private" static="no" mutable="no">
+        <type>rclcpp::Subscription&lt; seatrac_interfaces::msg::ModemSend &gt;::SharedPtr</type>
+        <definition>rclcpp::Subscription&lt;seatrac_interfaces::msg::ModemSend&gt;::SharedPtr ModemRosNode::subscriber_</definition>
+        <argsstring></argsstring>
+        <name>subscriber_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="378" column="36" bodyfile="src/modem_ros_node.cpp" bodystart="378" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classModemRosNode_1a49b3e6805b1bcd79cc166c55d21d9206" prot="private" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t ModemRosNode::count_</definition>
+        <argsstring></argsstring>
+        <name>count_</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="380" column="10" bodyfile="src/modem_ros_node.cpp" bodystart="380" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classModemRosNode_1a9239e3bcbcf1891653c10aed64d79a67" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ModemRosNode::beacon_connected</definition>
+        <argsstring></argsstring>
+        <name>beacon_connected</name>
+        <initializer>= false</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="382" column="8" bodyfile="src/modem_ros_node.cpp" bodystart="382" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classModemRosNode_1a797d36940718582784322fb28601a739" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string ModemRosNode::get_serial_port</definition>
+        <argsstring>()</argsstring>
+        <name>get_serial_port</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="49" column="15" bodyfile="src/modem_ros_node.cpp" bodystart="49" bodyend="52"/>
+      </memberdef>
+      <memberdef kind="function" id="classModemRosNode_1a484c5b53ddaafd9a02e7352a144ad7d5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ModemRosNode::ModemRosNode</definition>
+        <argsstring>()</argsstring>
+        <name>ModemRosNode</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>vehicle_ID</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The Coug-UV vehicle ID, used to set the beacon ID. The beacon ID is used to address acoustic messages. An integer between 1 and 15 inclusive.</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>water_salinity_ppt</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The salinity of the surounding water in parts per ton (ppt). Used to determine the velocity of sound to find the distance between beacons. 0 ppt for fresh water, 35 ppt for salt water.</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="54" column="3" bodyfile="src/modem_ros_node.cpp" bodystart="54" bodyend="90"/>
+      </memberdef>
+      <memberdef kind="function" id="classModemRosNode_1a727ffff8193a20383f03b1bf3e5f0ec2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ModemRosNode::wait_for_alive</definition>
+        <argsstring>(BID_E beaconId, uint16_t salinity)</argsstring>
+        <name>wait_for_alive</name>
+        <param>
+          <type>BID_E</type>
+          <declname>beaconId</declname>
+        </param>
+        <param>
+          <type>uint16_t</type>
+          <declname>salinity</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="92" column="8" bodyfile="src/modem_ros_node.cpp" bodystart="92" bodyend="110"/>
+      </memberdef>
+      <memberdef kind="function" id="classModemRosNode_1acf427cde16f58ee905df3d665522b5b4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ModemRosNode::on_message</definition>
+        <argsstring>(CID_E msgId, const std::vector&lt; uint8_t &gt; &amp;data)</argsstring>
+        <name>on_message</name>
+        <param>
+          <type>CID_E</type>
+          <declname>msgId</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; uint8_t &gt; &amp;</type>
+          <declname>data</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="114" column="8" bodyfile="src/modem_ros_node.cpp" bodystart="114" bodyend="371"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classModemRosNode_1ac4c2130b40ef65f90eb9d0377a62c714" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ModemRosNode::modem_send_callback</definition>
+        <argsstring>(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg)</argsstring>
+        <name>modem_send_callback</name>
+        <param>
+          <type>const seatrac_interfaces::msg::ModemSend::SharedPtr</type>
+          <declname>rosmsg</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="386" column="8" bodyfile="src/modem_ros_node.cpp" bodystart="386" bodyend="451"/>
+      </memberdef>
+      <memberdef kind="function" id="classModemRosNode_1aecb1a698ebbb48dc17d52756c86a8ab8" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void ModemRosNode::cpyFixtoRosmsg</definition>
+        <argsstring>(seatrac_interfaces::msg::ModemRec &amp;msg, ACOFIX_T &amp;acoFix)</argsstring>
+        <name>cpyFixtoRosmsg</name>
+        <param>
+          <type>seatrac_interfaces::msg::ModemRec &amp;</type>
+          <declname>msg</declname>
+        </param>
+        <param>
+          <type>ACOFIX_T &amp;</type>
+          <declname>acoFix</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="src/modem_ros_node.cpp" line="454" column="15" bodyfile="src/modem_ros_node.cpp" bodystart="454" bodyend="497"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>A driver node for the Seatrac x150 USBL beacon. </para>
+    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="author"><para>Clayton Smith </para>
+</simplesect>
+<simplesect kind="date"><para>September 2024</para>
+</simplesect>
+This node interfaces with the seatrac x150 beacon. It publishes modem_rec with information on acoustic transmissions, modem_status with regular beacon status updates, and modem_cmd_update with command status codes and error codes. It broadcasts an acoustic message when it recieves modem_send.</para>
+<para>Code copied from <ulink url="https://bitbucket.org/frostlab/seatrac_driver/src/main/tools/ros2_seatrac_ws/seatrac/src/modem_ros_node.cpp">https://bitbucket.org/frostlab/seatrac_driver/src/main/tools/ros2_seatrac_ws/seatrac/src/modem_ros_node.cpp</ulink></para>
+<para>Subscribes:<itemizedlist>
+<listitem><para>modem_send (seatrac_interfaces/msg/ModemSend) Publishes:</para>
+</listitem><listitem><para>modem_rec (seatrac_interfaces/msg/ModemRec)</para>
+</listitem><listitem><para>modem_status (seatrac_interfaces/msg/ModemStatus)</para>
+</listitem><listitem><para>modem_cmd_update (seatrac_interfaces/msg/ModemCmdUpdate) </para>
+</listitem></itemizedlist>
+</para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>ModemRosNode</label>
+        <link refid="classModemRosNode"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+      <node id="3">
+        <label>SeatracDriver</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>ModemRosNode</label>
+        <link refid="classModemRosNode"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+        <childnode refid="3" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>rclcpp::Node</label>
+      </node>
+      <node id="3">
+        <label>SeatracDriver</label>
+      </node>
+    </collaborationgraph>
+    <location file="src/modem_ros_node.cpp" line="46" column="1" bodyfile="src/modem_ros_node.cpp" bodystart="46" bodyend="498"/>
+    <listofallmembers>
+      <member refid="classModemRosNode_1a9239e3bcbcf1891653c10aed64d79a67" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>beacon_connected</name></member>
+      <member refid="classModemRosNode_1a5759e546fe6ebf13cbbe7e8ac6648a16" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>cmd_update_pub_</name></member>
+      <member refid="classModemRosNode_1a49b3e6805b1bcd79cc166c55d21d9206" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>count_</name></member>
+      <member refid="classModemRosNode_1aecb1a698ebbb48dc17d52756c86a8ab8" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>cpyFixtoRosmsg</name></member>
+      <member refid="classModemRosNode_1a797d36940718582784322fb28601a739" prot="public" virt="non-virtual"><scope>ModemRosNode</scope><name>get_serial_port</name></member>
+      <member refid="classModemRosNode_1ac4c2130b40ef65f90eb9d0377a62c714" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>modem_send_callback</name></member>
+      <member refid="classModemRosNode_1a484c5b53ddaafd9a02e7352a144ad7d5" prot="public" virt="non-virtual"><scope>ModemRosNode</scope><name>ModemRosNode</name></member>
+      <member refid="classModemRosNode_1acf427cde16f58ee905df3d665522b5b4" prot="public" virt="non-virtual"><scope>ModemRosNode</scope><name>on_message</name></member>
+      <member refid="classModemRosNode_1aa7ad848955751be3e550050821139b86" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>rec_pub_</name></member>
+      <member refid="classModemRosNode_1a930b2394885bd814b6e581f5fc3cfeec" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>status_pub_</name></member>
+      <member refid="classModemRosNode_1aa8d70f95105d8ff3b11d968780ee8a85" prot="private" virt="non-virtual"><scope>ModemRosNode</scope><name>subscriber_</name></member>
+      <member refid="classModemRosNode_1a727ffff8193a20383f03b1bf3e5f0ec2" prot="public" virt="non-virtual"><scope>ModemRosNode</scope><name>wait_for_alive</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

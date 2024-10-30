@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class ModemRosNode &mdash; seatrac 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/collapsible-lists/css/tree_view.css" type="text/css" />
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js"></script>
+        <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Class MyDriver" href="classMyDriver.html" />
+    <link rel="prev" title="Namespace std::chrono_literals" href="namespace_std__chrono_literals.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> seatrac
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">C++ API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#class-hierarchy">Class Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#file-hierarchy">File Hierarchy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#full-c-api">Full C++ API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#namespaces">Namespaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="namespace_narval__seatrac.html">Namespace narval::seatrac</a></li>
+<li class="toctree-l4"><a class="reference internal" href="namespace_rclcpp.html">Namespace rclcpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="namespace_std__chrono_literals.html">Namespace std::chrono_literals</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#classes-and-structs">Classes and Structs</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Class ModemRosNode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classMyDriver.html">Class MyDriver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classSeatracPinger.html">Class SeatracPinger</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="function_calibrate__modem_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_modem__pinger_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_modem__ros__node_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_seatrac__beacon__setup__tool_8cpp_1a0ddf1224851353fc92bfbff6f499fa97.html">Function main(int, char *)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_seatrac__beacon__setup__tool_8cpp_1aae9969cddd5bb3ae8769b001b8c44e1f.html">Function manual_set_settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_seatrac__beacon__setup__tool_8cpp_1ae0f82abc6c31d91734e1d619419057d7.html">Function skip_cin_line</a></li>
+<li class="toctree-l4"><a class="reference internal" href="function_seatrac__beacon__setup__tool_8cpp_1aab5a041d6c90f185d26e59f67dae26fa.html">Function yn_answer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#defines">Defines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="define_modem__ros__node_8cpp_1a3480af83fde9a3f7f2058f80f19dbb45.html">Define SEATRAC_SERIAL_PORT</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#directories">Directories</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dir_src.html">Directory src</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#files">Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="file_src_calibrate_modem.cpp.html">File calibrate_modem.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="file_src_modem_pinger.cpp.html">File modem_pinger.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="file_src_modem_ros_node.cpp.html">File modem_ros_node.cpp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="file_src_seatrac_beacon_setup_tool.cpp.html">File seatrac_beacon_setup_tool.cpp</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../standards.html">Standard Documents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../standard_docs/LICENSE.html">LICENSE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../standard_docs/PACKAGE.html">PACKAGE</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">seatrac</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">C++ API</a> &raquo;</li>
+      <li>Class ModemRosNode</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/classModemRosNode.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="class-modemrosnode">
+<span id="exhale-class-classmodemrosnode"></span><h1>Class ModemRosNode<a class="headerlink" href="#class-modemrosnode" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p>Defined in <a class="reference internal" href="file_src_modem_ros_node.cpp.html#file-src-modem-ros-node-cpp"><span class="std std-ref">File modem_ros_node.cpp</span></a></p></li>
+</ul>
+<section id="inheritance-relationships">
+<h2>Inheritance Relationships<a class="headerlink" href="#inheritance-relationships" title="Permalink to this headline"></a></h2>
+<section id="base-types">
+<h3>Base Types<a class="headerlink" href="#base-types" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">public</span> <span class="pre">rclcpp::Node</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">public</span> <span class="pre">SeatracDriver</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="class-documentation">
+<h2>Class Documentation<a class="headerlink" href="#class-documentation" title="Permalink to this headline"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv412ModemRosNode">
+<span id="_CPPv312ModemRosNode"></span><span id="_CPPv212ModemRosNode"></span><span id="ModemRosNode"></span><span class="target" id="classModemRosNode"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ModemRosNode</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">rclcpp</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Node</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">SeatracDriver</span></span><a class="headerlink" href="#_CPPv412ModemRosNode" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A driver node for the Seatrac x150 USBL beacon. </p>
+<p>
+This node interfaces with the seatrac x150 beacon. It publishes modem_rec with information on acoustic transmissions, modem_status with regular beacon status updates, and modem_cmd_update with command status codes and error codes. It broadcasts an acoustic message when it recieves modem_send.<dl class="simple">
+<dt><strong>Author</strong></dt><dd><p>Clayton Smith </p>
+</dd>
+<dt><strong>Date</strong></dt><dd><p>September 2024</p>
+</dd>
+</dl>
+</p>
+<p>Code copied from <a class="reference external" href="https://bitbucket.org/frostlab/seatrac_driver/src/main/tools/ros2_seatrac_ws/seatrac/src/modem_ros_node.cpp">https://bitbucket.org/frostlab/seatrac_driver/src/main/tools/ros2_seatrac_ws/seatrac/src/modem_ros_node.cpp</a></p>
+<p>Subscribes:<ul class="simple">
+<li><p>modem_send (seatrac_interfaces/msg/ModemSend) Publishes:</p></li>
+<li><p>modem_rec (seatrac_interfaces/msg/ModemRec)</p></li>
+<li><p>modem_status (seatrac_interfaces/msg/ModemStatus)</p></li>
+<li><p>modem_cmd_update (seatrac_interfaces/msg/ModemCmdUpdate) </p></li>
+</ul>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12ModemRosNode15get_serial_portEv">
+<span id="_CPPv3N12ModemRosNode15get_serial_portEv"></span><span id="_CPPv2N12ModemRosNode15get_serial_portEv"></span><span id="ModemRosNode::get_serial_port"></span><span class="target" id="classModemRosNode_1a797d36940718582784322fb28601a739"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_serial_port</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12ModemRosNode15get_serial_portEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12ModemRosNode12ModemRosNodeEv">
+<span id="_CPPv3N12ModemRosNode12ModemRosNodeEv"></span><span id="_CPPv2N12ModemRosNode12ModemRosNodeEv"></span><span id="ModemRosNode::ModemRosNode"></span><span class="target" id="classModemRosNode_1a484c5b53ddaafd9a02e7352a144ad7d5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ModemRosNode</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12ModemRosNode12ModemRosNodeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12ModemRosNode14wait_for_aliveE5BID_E8uint16_t">
+<span id="_CPPv3N12ModemRosNode14wait_for_aliveE5BID_E8uint16_t"></span><span id="_CPPv2N12ModemRosNode14wait_for_aliveE5BID_E8uint16_t"></span><span id="ModemRosNode::wait_for_alive__BID_E.uint16_t"></span><span class="target" id="classModemRosNode_1a727ffff8193a20383f03b1bf3e5f0ec2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wait_for_alive</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">BID_E</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">beaconId</span></span>, <span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">salinity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12ModemRosNode14wait_for_aliveE5BID_E8uint16_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12ModemRosNode10on_messageE5CID_ERKNSt6vectorI7uint8_tEE">
+<span id="_CPPv3N12ModemRosNode10on_messageE5CID_ERKNSt6vectorI7uint8_tEE"></span><span id="_CPPv2N12ModemRosNode10on_messageE5CID_ERKNSt6vectorI7uint8_tEE"></span><span id="ModemRosNode::on_message__CID_E.std::vector:uint8_t:CR"></span><span class="target" id="classModemRosNode_1acf427cde16f58ee905df3d665522b5b4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">on_message</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">CID_E</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">msgId</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">uint8_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12ModemRosNode10on_messageE5CID_ERKNSt6vectorI7uint8_tEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="namespace_std__chrono_literals.html" class="btn btn-neutral float-left" title="Namespace std::chrono_literals" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="classMyDriver.html" class="btn btn-neutral float-right" title="Class MyDriver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright The &lt;seatrac&gt; Contributors. License: Apache License 2.0.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
