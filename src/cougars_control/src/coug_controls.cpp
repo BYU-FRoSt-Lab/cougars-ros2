@@ -390,8 +390,8 @@ private:
     this->actual_pitch = pitch * (180.0 / M_PI); // Convert pitch to degrees for consistency
 
     // Log the information
-    RCLCPP_INFO(this->get_logger(), "Yaw Info Received: %f, Pitch Info Received: %f",
-                this->actual_heading, this->actual_pitch);
+    // RCLCPP_INFO(this->get_logger(), "Yaw Info Received: %f, Pitch Info Received: %f",
+    //             this->actual_heading, this->actual_pitch);
   }
 
   /**
