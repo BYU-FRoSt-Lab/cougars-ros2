@@ -9,6 +9,8 @@
 # - Log files are saved in '../bag' on the host machine
 #   running the docker container
 
+source ~/config/constants.sh
+
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
 }
@@ -27,8 +29,6 @@ cleanup() {
             bash ~/ros2_ws/moos_tools/mission_kill.sh
             ;;
     esac
-     
-    wait
     exit 0
 }
 trap cleanup SIGINT
@@ -41,7 +41,7 @@ echo ""
 # Reset dead reckoning and start factor graph, controls
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
 source ~/ros2_ws/install/setup.bash
-# ros2 topic pub /init std_msgs/msg/Empty -1
+# ros2 topic pub $NAMESPACE/init std_msgs/msg/Empty -1
 
 # Start the MOOS-IvP mission
 case $1 in
