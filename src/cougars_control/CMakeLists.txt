@@ -29,6 +29,9 @@ include_directories(include/${PROJECT_NAME})
 add_executable(coug_controls src/coug_controls.cpp src/pid.cpp)
 ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces sensor_msgs geometry_msgs)
 
+add_executable(coug_demo src/coug_demo.cpp)
+ament_target_dependencies(coug_demo rclcpp std_msgs frost_interfaces)
+
 add_executable(coug_kinematics src/coug_kinematics.cpp)
 ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces)
 
@@ -37,12 +40,14 @@ ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_
 
 # Link libraries
 target_link_libraries(coug_controls)
+target_link_libraries(coug_demo)
 target_link_libraries(coug_kinematics)
 target_link_libraries(moos_bridge)
 
 # Install executables
 install(TARGETS
   coug_controls
+  coug_demo
   coug_kinematics
   moos_bridge
   DESTINATION lib/${PROJECT_NAME})
