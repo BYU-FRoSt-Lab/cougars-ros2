@@ -108,7 +108,7 @@ private:
     command.fin[0] =
         msg.fin[0] + this->get_parameter("top_fin_offset").as_double() +
         this->get_parameter("trim_ratio").as_double() * msg.thruster;
-    command.fin[1] =
+    command.fin[1] = -1 *
         msg.fin[1] + this->get_parameter("right_fin_offset").as_double() +
         this->get_parameter("trim_ratio").as_double() * msg.thruster;
     command.fin[2] =
