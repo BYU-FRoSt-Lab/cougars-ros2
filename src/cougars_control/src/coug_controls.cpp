@@ -409,7 +409,7 @@ private:
     double theta_desired = atan2(depth_error, distance); // atan2(y, x)
 
     // Convert theta_desired from radians to degrees (optional, depending on your needs)
-    // theta_desired *= 180.0 / M_PI; // Uncomment if you want degrees instead of radians
+    theta_desired *= 180.0 / M_PI; // Uncomment if you want degrees instead of radians
 
     // Cap the desired theta within the range [-theta_max, theta_max]
     theta_desired = std::fmax(-theta_max, std::fmin(theta_desired, theta_max));
