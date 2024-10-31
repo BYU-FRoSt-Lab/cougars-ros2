@@ -2,6 +2,7 @@ import launch
 import launch_ros.actions
 import launch_ros.descriptions
 from launch.substitutions import LaunchConfiguration
+from launch_ros.parameter_descriptions import ParameterFile
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
@@ -20,11 +21,6 @@ def generate_launch_description():
 
     config_file = "/home/frostlab/config/sim_config.yaml"
 
-    # Get the directory of the launch files
-    package_dir = os.path.join(
-        get_package_share_directory('cougars_localization'), 'launch')
-
-
     return launch.LaunchDescription([
         
         # Define the namespace parameter
@@ -37,19 +33,19 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[config_file],
+            parameters=[ParameterFile(config_file, allow_substs=True)],
             namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[config_file],
+            parameters=[ParameterFile(config_file, allow_substs=True)],
             namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
-            parameters=[config_file],
+            parameters=[ParameterFile(config_file, allow_substs=True)],
             namespace=LaunchConfiguration('namespace'),
         ),
     ])
