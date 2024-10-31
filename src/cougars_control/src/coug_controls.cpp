@@ -426,8 +426,8 @@ private:
       double look_ahead = this->get_parameter("look_ahead").as_double();
       double theta_max = this->get_parameter("theta_max").as_double();
 
-      RCLCPP_INFO(this->get_logger(), "[INFO] Theta max: %f, theta desired: %f",
-                float(theta_max), float(theta_desired));
+      // RCLCPP_INFO(this->get_logger(), "[INFO] Theta max: %f, theta desired: %f",
+      //           float(theta_max), float(theta_desired));
       
       double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
 
