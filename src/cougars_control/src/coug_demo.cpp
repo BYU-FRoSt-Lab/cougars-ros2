@@ -38,7 +38,7 @@ public:
   CougDemo() : Node("coug_demo") {
 
     /**
-     * @brief demo command publisher.
+     * @brief Demo command publisher.
      *
      * This publisher publishes the commands to the "kinematics/command" topic.
      * It uses the UCommand message type.
