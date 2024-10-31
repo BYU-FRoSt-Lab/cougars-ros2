@@ -133,7 +133,7 @@ class ManualMission(Node):
         # Create the subscriptions
         self.subscription = self.create_subscription(
             Empty, 
-            "/init", 
+            "init", 
             self.listener_callback, 
             qos_profile_system_default
         )
