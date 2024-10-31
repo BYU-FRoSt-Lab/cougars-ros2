@@ -36,10 +36,10 @@ public:
         this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "dvl_dead_reckoning", 10);
     subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
-        "/dvl/data", qos,
+        "dvl/data", qos,
         std::bind(&DVLConvertor::dvl_data_callback, this, _1));
     subscriber_dvl_position = this->create_subscription<dvl_msgs::msg::DVLDR>(
-        "/dvl/position", qos,
+        "dvl/position", qos,
         std::bind(&DVLConvertor::dvl_pos_callback, this, _1));
   }
 
