@@ -114,7 +114,7 @@ private:
     command.fin[2] =
         msg.fin[2] + this->get_parameter("left_fin_offset").as_double() +
         this->get_parameter("trim_ratio").as_double() * msg.thruster;
-    command.thruster = 0 // msg.thruster;
+    command.thruster = 0; // msg.thruster;
 
     command_publisher_->publish(command);
   }
