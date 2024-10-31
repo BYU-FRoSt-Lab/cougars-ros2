@@ -105,17 +105,17 @@ class FactorGraphNode(Node):
         # Subscribers
 
         # sensor subscriptions
-        self.create_subscription(Imu, '/modem_imu', self.imu_callback, 10) # for unary factor
-        self.create_subscription(PoseWithCovarianceStamped, '/depth_data', self.depth_callback, 10) # for unary factor
-        self.create_subscription(Odometry, '/gps_odom', self.gps_callback, 10) # for unary factor
-        self.create_subscription(PoseWithCovarianceStamped, '/dvl_dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
+        self.create_subscription(Imu, 'modem_imu', self.imu_callback, 10) # for unary factor
+        self.create_subscription(PoseWithCovarianceStamped, 'depth_data', self.depth_callback, 10) # for unary factor
+        self.create_subscription(Odometry, 'gps_odom', self.gps_callback, 10) # for unary factor
+        self.create_subscription(PoseWithCovarianceStamped, 'dvl_dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
         # signal to add prior (should be sent after DVL-lock and ref. gps/ heading is stored and DVL is restarted)
-        self.create_subscription(Empty, '/init', self.init_callback, 10)
+        self.create_subscription(Empty, 'init', self.init_callback, 10)
 
         # Publisher
 
         # publishes the LATEST output of the smoothing and mapping (most importantly gps x,y), although remember the whole path is being smoothed
-        self.vehicle_status_pub = self.create_publisher(Odometry, '/smoothed_output', 10)
+        self.vehicle_status_pub = self.create_publisher(Odometry, 'smoothed_output', 10)
         self.odom_msg = Odometry()
         
         # Timer for adding state estimate/factors
