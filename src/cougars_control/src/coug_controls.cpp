@@ -371,7 +371,7 @@ private:
     );
     q.normalize();
     
-    this->current_quat = q
+    this->current_quat = q;
 
     // // Convert quaternion to a 3x3 rotation matrix
     // Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
