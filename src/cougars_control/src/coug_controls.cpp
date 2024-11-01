@@ -373,20 +373,23 @@ private:
     // Convert quaternion to a 3x3 rotation matrix
     Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
 
-    // Extract Euler angles (roll, pitch, yaw) in XYZ order: roll (X), pitch (Y), yaw (Z)
-    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(0, 1, 2);  // XYZ order
+    // Extract Euler angles using ZYX order: yaw (Z), pitch (Y), roll (X)
+    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);  // ZYX order
 
-    // Assign and convert angles from radians to degrees
-    double roll = euler_angles[0] * (180.0 / M_PI);   // Roll (X-axis rotation)
-    double pitch = euler_angles[1] * (180.0 / M_PI);  // Pitch (Y-axis rotation)
-    double yaw = euler_angles[2] * (180.0 / M_PI);    // Yaw (Z-axis rotation)
+    // Convert radians to degrees and center angles around 0
+    double yaw = euler_angles[0] * (180.0 / M_PI);
+    double pitch = euler_angles[1] * (180.0 / M_PI);
+    double roll = euler_angles[2] * (180.0 / M_PI);
 
-    // Adjust yaw (heading) to be within -180 to 180 degrees
-    if (yaw > 180.0) {
-        yaw -= 360.0;
-    } else if (yaw < -180.0) {
-        yaw += 360.0;
-    }
+    // Normalize yaw, pitch, and roll to be within -180 to 180 degrees
+    if (yaw > 180.0) yaw -= 360.0;
+    else if (yaw < -180.0) yaw += 360.0;
+
+    if (pitch > 180.0) pitch -= 360.0;
+    else if (pitch < -180.0) pitch += 360.0;
+
+    if (roll > 180.0) roll -= 360.0;
+    else if (roll < -180.0) roll += 360.0;
 
     // Store heading, pitch, and roll
     this->actual_heading = yaw;
@@ -396,7 +399,7 @@ private:
     // Log the information
     RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
                 this->actual_heading, this->actual_pitch, this->actual_roll);
-}
+  }
 
 
   /**
