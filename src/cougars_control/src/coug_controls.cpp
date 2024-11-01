@@ -361,38 +361,43 @@ private:
    * @param orientation_msg The Imu message recieved from the modem_imu topic.
    */
   void actual_orientation_callback(const sensor_msgs::msg::Imu &orientation_msg) {
-    // Extract quaternion from the IMU message
+    // Normalize and extract quaternion from the IMU message
     Eigen::Quaterniond q(
         orientation_msg.orientation.w,
         orientation_msg.orientation.x,
         orientation_msg.orientation.y,
         orientation_msg.orientation.z
     );
+    q.normalize();
 
     // Convert quaternion to a 3x3 rotation matrix
     Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
 
-    // Extract Euler angles (roll, pitch, yaw) from the rotation matrix
-    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);  // ZYX order: yaw (Z), pitch (Y), roll (X)
+    // Extract Euler angles (roll, pitch, yaw) in XYZ order: roll (X), pitch (Y), yaw (Z)
+    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(0, 1, 2);  // XYZ order
 
-    // Yaw (heading), Pitch
-    double yaw = euler_angles[0];   // Yaw (rotation around Z-axis)
-    double pitch = euler_angles[1]; // Pitch (rotation around Y-axis)
+    // Assign and convert angles from radians to degrees
+    double roll = euler_angles[0] * (180.0 / M_PI);   // Roll (X-axis rotation)
+    double pitch = euler_angles[1] * (180.0 / M_PI);  // Pitch (Y-axis rotation)
+    double yaw = euler_angles[2] * (180.0 / M_PI);    // Yaw (Z-axis rotation)
 
-    // Convert yaw from radians to degrees, and adjust for range -180 to 180 degrees
-    double heading = yaw * (180.0 / M_PI); // Convert from radians to degrees
-    if (heading > 180.0) {
-        heading -= 360.0;
+    // Adjust yaw (heading) to be within -180 to 180 degrees
+    if (yaw > 180.0) {
+        yaw -= 360.0;
+    } else if (yaw < -180.0) {
+        yaw += 360.0;
     }
 
-    // Store heading and pitch
-    this->actual_heading = heading;
-    this->actual_pitch = pitch * (180.0 / M_PI); // Convert pitch to degrees for consistency
+    // Store heading, pitch, and roll
+    this->actual_heading = yaw;
+    this->actual_pitch = pitch;
+    this->actual_roll = roll;
 
     // Log the information
-    // RCLCPP_INFO(this->get_logger(), "Yaw Info Received: %f, Pitch Info Received: %f",
-    //             this->actual_heading, this->actual_pitch);
-  }
+    RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
+                this->actual_heading, this->actual_pitch, this->actual_roll);
+}
+
 
   /**
    * @brief Callback function for the PID control timer.
@@ -428,8 +433,8 @@ private:
 
       
       double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
-      RCLCPP_INFO(this->get_logger(), "[INFO] Theta max: %f, theta desired: %f, theta actual %f",
-                float(theta_max), float(theta_desired), this->actual_pitch);
+      RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f",
+                 float(theta_desired));
 
       int depth_pos =
           myDepthPID.compute(theta_desired, this->actual_pitch);
@@ -478,6 +483,7 @@ private:
   // node actual values
   float actual_depth = 0.0;
   float actual_pitch = 0.0;
+  float actual_roll = 0.0;
   float actual_heading = 0.0;
 };
 
