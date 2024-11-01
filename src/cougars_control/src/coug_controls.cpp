@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <Eigen/Geometry>
+#include <Eigen/Dense>
 #include <cmath>  // For atan2, M_PI, fmin, fmax
 
 #include "pid.cpp"
@@ -369,36 +370,38 @@ private:
         orientation_msg.orientation.z
     );
     q.normalize();
+    
+    this->current_quat = q
 
-    // Convert quaternion to a 3x3 rotation matrix
-    Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
+    // // Convert quaternion to a 3x3 rotation matrix
+    // Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
 
-    // Extract Euler angles using ZYX order: yaw (Z), pitch (Y), roll (X)
-    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);  // ZYX order
+    // // Extract Euler angles using ZYX order: yaw (Z), pitch (Y), roll (X)
+    // Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);  // ZYX order
 
-    // Convert radians to degrees and center angles around 0
-    double yaw = euler_angles[0] * (180.0 / M_PI);
-    double pitch = euler_angles[1] * (180.0 / M_PI);
-    double roll = euler_angles[2] * (180.0 / M_PI);
+    // // Convert radians to degrees and center angles around 0
+    // double yaw = euler_angles[0] * (180.0 / M_PI);
+    // double pitch = euler_angles[1] * (180.0 / M_PI);
+    // double roll = euler_angles[2] * (180.0 / M_PI);
 
-    // Normalize yaw, pitch, and roll to be within -180 to 180 degrees
-    if (yaw > 180.0) yaw -= 360.0;
-    else if (yaw < -180.0) yaw += 360.0;
+    // // Normalize yaw, pitch, and roll to be within -180 to 180 degrees
+    // if (yaw > 180.0) yaw -= 360.0;
+    // else if (yaw < -180.0) yaw += 360.0;
 
-    if (pitch > 180.0) pitch -= 360.0;
-    else if (pitch < -180.0) pitch += 360.0;
+    // if (pitch > 180.0) pitch -= 360.0;
+    // else if (pitch < -180.0) pitch += 360.0;
 
-    if (roll > 180.0) roll -= 360.0;
-    else if (roll < -180.0) roll += 360.0;
+    // if (roll > 180.0) roll -= 360.0;
+    // else if (roll < -180.0) roll += 360.0;
 
-    // Store heading, pitch, and roll
-    this->actual_heading = yaw;
-    this->actual_pitch = pitch;
-    this->actual_roll = roll;
+    // // Store heading, pitch, and roll
+    // this->actual_heading = yaw;
+    // this->actual_pitch = pitch;
+    // this->actual_roll = roll;
 
-    // Log the information
-    RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
-                this->actual_heading, this->actual_pitch, this->actual_roll);
+    // // Log the information
+    // RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
+    //             this->actual_heading, this->actual_pitch, this->actual_roll);
   }
 
 
@@ -423,32 +426,46 @@ private:
     theta_desired = std::fmax(-theta_max, std::fmin(theta_desired, theta_max));
 
     return theta_desired;
-}
+  }
 
   void timer_callback() {
     auto message = frost_interfaces::msg::UCommand();
     message.header.stamp = this->now();
 
     if (this->init_flag) {
-      
-      double look_ahead = this->get_parameter("look_ahead").as_double();
-      double theta_max = this->get_parameter("theta_max").as_double();
 
-      
-      double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
-      RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f",
-                 float(theta_desired));
+        double look_ahead = this->get_parameter("look_ahead").as_double();
+        double theta_max = this->get_parameter("theta_max").as_double();
 
-      int depth_pos =
-          myDepthPID.compute(theta_desired, this->actual_pitch);
-      int heading_pos = myHeadingPID.compute(this->desired_heading, this->actual_heading);
+        // Calculate the desired pitch angle
+        double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
+        RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f", float(theta_desired));
 
-      message.fin[0] = heading_pos;    // top fin
-      message.fin[1] = depth_pos; // right fin (from the front)
-      message.fin[2] = depth_pos;      // left fin (from the front)
-      message.thruster = this->desired_speed;
+        // Step 1: Create the target quaternion from desired pitch and heading
+        Eigen::Quaterniond target_quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX()) *
+                                         Eigen::AngleAxisd(theta_desired * M_PI / 180.0, Eigen::Vector3d::UnitY()) *
+                                         Eigen::AngleAxisd(this->desired_heading * M_PI / 180.0, Eigen::Vector3d::UnitZ());
 
-      u_command_publisher_->publish(message);
+        // Step 3: Compute the quaternion error
+        Eigen::Quaterniond q_err = target_quat * this->current_quat.inverse();
+
+        // Step 4: Convert quaternion error to Euler angles to get pitch and yaw errors
+        Eigen::Vector3d euler_err = q_err.toRotationMatrix().eulerAngles(0, 1, 2);  // roll, pitch, yaw order
+
+        double pitch_err = euler_err[1];  // Pitch error in radians
+        double yaw_err = euler_err[2];    // Yaw error in radians
+
+        // Step 5: Apply PID control to pitch and heading errors
+        int depth_pos = myDepthPID.compute(0, pitch_err * 180.0 / M_PI);  // Convert to degrees if needed
+        int heading_pos = myHeadingPID.compute(0, yaw_err * 180.0 / M_PI);
+
+        // Step 6: Set fin positions and publish the command
+        message.fin[0] = heading_pos;    // top fin
+        message.fin[1] = depth_pos;      // right fin
+        message.fin[2] = depth_pos;      // left fin
+        message.thruster = this->desired_speed;
+
+        u_command_publisher_->publish(message);
     }
   }
 
@@ -485,9 +502,10 @@ private:
 
   // node actual values
   float actual_depth = 0.0;
-  float actual_pitch = 0.0;
-  float actual_roll = 0.0;
-  float actual_heading = 0.0;
+  Eigen::Quaterniond current_quat;
+  // float actual_pitch = 0.0;
+  // float actual_roll = 0.0;
+  // float actual_heading = 0.0;
 };
 
 int main(int argc, char *argv[]) {
