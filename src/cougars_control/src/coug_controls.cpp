@@ -441,8 +441,8 @@ private:
       int heading_pos = myHeadingPID.compute(this->desired_heading, this->actual_heading);
 
       message.fin[0] = heading_pos;    // top fin
-      message.fin[1] = -depth_pos; // right fin (from the front)
-      message.fin[2] = -depth_pos;      // left fin (from the front)
+      message.fin[1] = depth_pos; // right fin (from the front)
+      message.fin[2] = depth_pos;      // left fin (from the front)
       message.thruster = this->desired_speed;
 
       u_command_publisher_->publish(message);
