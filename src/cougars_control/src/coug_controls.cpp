@@ -429,49 +429,49 @@ private:
   }
 
   void timer_callback() {
-    auto message = frost_interfaces::msg::UCommand();
-    message.header.stamp = this->now();
+      auto message = frost_interfaces::msg::UCommand();
+      message.header.stamp = this->now();
 
-    if (this->init_flag) {
+      if (this->init_flag) {
 
-        double look_ahead = this->get_parameter("look_ahead").as_double();
-        double theta_max = this->get_parameter("theta_max").as_double();
+          double look_ahead = this->get_parameter("look_ahead").as_double();
+          double theta_max = this->get_parameter("theta_max").as_double();
 
-        // Calculate the desired pitch angle
-        double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
-        RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f", float(theta_desired));
+          // Calculate the desired pitch angle
+          double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
+          RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f", float(theta_desired));
 
-        // Step 1: Create the target quaternion from desired pitch and heading
-        Eigen::Quaterniond target_quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX()) *
-                                         Eigen::AngleAxisd(theta_desired * M_PI / 180.0, Eigen::Vector3d::UnitY()) *
-                                         Eigen::AngleAxisd(this->desired_heading * M_PI / 180.0, Eigen::Vector3d::UnitZ());
+          // Step 1: Create the target quaternion from desired pitch and heading
+          Eigen::Quaterniond target_quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX()) *
+                                          Eigen::AngleAxisd(theta_desired * M_PI / 180.0, Eigen::Vector3d::UnitY()) *
+                                          Eigen::AngleAxisd(this->desired_heading * M_PI / 180.0, Eigen::Vector3d::UnitZ());
 
-        // Step 3: Compute the quaternion error
-        Eigen::Quaterniond q_err = target_quat * this->current_quat.inverse();
+          // Step 2: Compute the quaternion error directly
+          Eigen::Quaterniond q_err = target_quat * this->current_quat.inverse();
 
-        // Step 4: Convert quaternion error to Euler angles to get pitch and yaw errors
-        Eigen::Vector3d euler_err = q_err.toRotationMatrix().eulerAngles(0, 1, 2);  // roll, pitch, yaw order
+          // Step 3: Extract pitch and yaw error directly from the quaternion error vector part
+          Eigen::Vector3d error_vec = q_err.vec();
 
-        double roll_err = euler_err[0] * 180.0 / M_PI;  // Pitch error in radians
-        double pitch_err = euler_err[1] * 180.0 / M_PI;  // Pitch error in radians
-        double yaw_err = euler_err[2] * 180.0 / M_PI;    // Yaw error in radians
+          // Convert the error vector’s Y and Z components to pitch and yaw errors (proportional to pitch and yaw deviations)
+          double pitch_err = 2.0 * error_vec.y() * 180.0 / M_PI;  // Scaled by 2 and converted to degrees
+          double yaw_err = 2.0 * error_vec.z() * 180.0 / M_PI;
 
-        RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Err: %f, Roll Err: %f",
-                yaw_err, pitch_err, roll_err);
+          RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
 
-        // Step 5: Apply PID control to pitch and heading errors
-        int depth_pos = myDepthPID.compute(0, pitch_err);  // Convert to degrees if needed
-        int heading_pos = myHeadingPID.compute(0, yaw_err );
+          // Step 4: Apply PID control to pitch and heading errors directly
+          int depth_pos = myDepthPID.compute(0, pitch_err);  // No additional scaling needed
+          int heading_pos = myHeadingPID.compute(0, yaw_err);
 
-        // Step 6: Set fin positions and publish the command
-        message.fin[0] = heading_pos;    // top fin
-        message.fin[1] = depth_pos;      // right fin
-        message.fin[2] = depth_pos;      // left fin
-        message.thruster = this->desired_speed;
+          // Step 5: Set fin positions and publish the command
+          message.fin[0] = heading_pos;    // top fin
+          message.fin[1] = depth_pos;      // right fin
+          message.fin[2] = depth_pos;      // left fin
+          message.thruster = this->desired_speed;
 
-        u_command_publisher_->publish(message);
-    }
+          u_command_publisher_->publish(message);
+      }
   }
+
 
   // micro-ROS objects
   rclcpp::TimerBase::SharedPtr controls_timer_;
