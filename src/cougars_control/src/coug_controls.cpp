@@ -452,16 +452,16 @@ private:
         // Step 4: Convert quaternion error to Euler angles to get pitch and yaw errors
         Eigen::Vector3d euler_err = q_err.toRotationMatrix().eulerAngles(0, 1, 2);  // roll, pitch, yaw order
 
-        double roll_err = euler_err[0];  // Pitch error in radians
-        double pitch_err = euler_err[1];  // Pitch error in radians
-        double yaw_err = euler_err[2];    // Yaw error in radians
+        double roll_err = euler_err[0] * 180.0 / M_PI;  // Pitch error in radians
+        double pitch_err = euler_err[1] * 180.0 / M_PI;  // Pitch error in radians
+        double yaw_err = euler_err[2] * 180.0 / M_PI;    // Yaw error in radians
 
         RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Err: %f, Roll Err: %f",
                 yaw_err, pitch_err, roll_err);
 
         // Step 5: Apply PID control to pitch and heading errors
-        int depth_pos = myDepthPID.compute(0, pitch_err * 180.0 / M_PI);  // Convert to degrees if needed
-        int heading_pos = myHeadingPID.compute(0, yaw_err * 180.0 / M_PI);
+        int depth_pos = myDepthPID.compute(0, pitch_err);  // Convert to degrees if needed
+        int heading_pos = myHeadingPID.compute(0, yaw_err );
 
         // Step 6: Set fin positions and publish the command
         message.fin[0] = heading_pos;    // top fin

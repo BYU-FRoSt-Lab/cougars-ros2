@@ -87,7 +87,7 @@ public:
     error_prior = error;
 
     // SUM IT ALL TOGETHER
-    float output = error * kp + integral * ki + derivative * kd + bias;
+    float output = error * kp + integral * ki - derivative * kd + bias;
 
     // clamp the output so we don't exceed the limit
     if (output > max_output) {
