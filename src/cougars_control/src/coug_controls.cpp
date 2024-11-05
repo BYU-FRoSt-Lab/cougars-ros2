@@ -439,7 +439,7 @@ private:
 
           // Calculate the desired pitch angle
           double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
-          RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f", float(theta_desired));
+          RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth));
 
           // Step 1: Create the target quaternion from desired pitch and heading
           Eigen::Quaterniond target_quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX()) *
