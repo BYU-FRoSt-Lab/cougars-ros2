@@ -117,7 +117,26 @@ public:
 
     /**
      * @param pitch_ki
+     * @param pitch_kp
      *
+     * The proportional constant for the pitch PID controller. The default value
+     * is 0.0.
+     */
+    this->declare_parameter("pitch_kp", 0.0);
+
+    /**
+     * @param pitch_ki
+     *
+     * The integral constant for the pitch PID controller. The default value is
+     * 0.0.
+     */
+    this->declare_parameter("pitch_ki", 0.0);
+
+    /**
+     * @param pitch_kd
+     *
+     * The derivative constant for the pitch PID controller. The default value
+     * is 0.0.
      * The integral constant for the pitch PID controller. The default value is
      * 0.0.
      */
@@ -138,6 +157,15 @@ public:
      * is 0.
      */
     this->declare_parameter("pitch_min_output", 0);
+    this->declare_parameter("pitch_kd", 0.0);
+
+    /**
+     * @param pitch_min_output
+     *
+     * The minimum output value for the pitch PID controller. The default value
+     * is 0.
+     */
+    this->declare_parameter("pitch_min_output", 0);
 
     /**
      * @param pitch_max_output
@@ -149,9 +177,20 @@ public:
 
     /**
      * @param pitch_bias
+     * @param pitch_max_output
+     *
+     * The maximum output value for the pitch PID controller. The default value
+     * is 0.
+     */
+    this->declare_parameter("pitch_max_output", 0);
+
+    /**
+     * @param pitch_bias
      *
      * The bias value for the pitch PID controller. The default value is 0.
+     * The bias value for the pitch PID controller. The default value is 0.
      */
+    this->declare_parameter("pitch_bias", 0);
     this->declare_parameter("pitch_bias", 0);
 
     /**
@@ -219,6 +258,14 @@ public:
                          this->get_parameter("depth_max_output").as_int(),
                          this->get_parameter("timer_period").as_int(),
                          this->get_parameter("depth_bias").as_int());
+
+    myPitchPID.calibrate(this->get_parameter("pitch_kp").as_double(),
+                         this->get_parameter("pitch_ki").as_double(),
+                         this->get_parameter("pitch_kd").as_double(),
+                         this->get_parameter("pitch_min_output").as_int(),
+                         this->get_parameter("pitch_max_output").as_int(),
+                         this->get_parameter("timer_period").as_int(),
+                         this->get_parameter("pitch_bias").as_int());
 
     myPitchPID.calibrate(this->get_parameter("pitch_kp").as_double(),
                          this->get_parameter("pitch_ki").as_double(),
@@ -469,11 +516,17 @@ private:
     return theta_desired;
   }
 
+  double 
+
   void timer_callback() {
       auto message = frost_interfaces::msg::UCommand();
       message.header.stamp = this->now();
 
       if (this->init_flag) {
+
+          double look_ahead = this->get_parameter("look_ahead").as_double();
+          double theta_max = this->get_parameter("theta_max").as_double();
+
 
 
           // Calculate the desired pitch angle
@@ -534,6 +587,7 @@ private:
   // control objects
   PID myHeadingPID;
   PID myDepthPID;
+  PID myPitchPID;
   PID myPitchPID;
 
   // magnetic declination parameter
