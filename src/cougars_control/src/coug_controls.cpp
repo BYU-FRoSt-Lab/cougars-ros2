@@ -477,7 +477,7 @@ private:
 
 
           // Calculate the desired pitch angle
-          double theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
+          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
           RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth));
 
           // Step 1: Create the target quaternion from desired pitch and heading
@@ -498,8 +498,8 @@ private:
           RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
 
           // Step 4: Apply PID control to pitch and heading errors directly
-          int depth_pos = myPitchPID.compute(0, pitch_err);  // No additional scaling needed
-          int heading_pos = myHeadingPID.compute(0, yaw_err);
+          int depth_pos = (int)myPitchPID.compute(0, pitch_err);  // No additional scaling needed
+          int heading_pos = (int)myHeadingPID.compute(0, yaw_err);
 
           // Step 5: Set fin positions and publish the command
           message.fin[0] = heading_pos;    // top fin
