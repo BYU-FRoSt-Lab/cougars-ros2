@@ -528,7 +528,7 @@ private:
 
 
           // Calculate the desired pitch angle
-          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
+          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);;
           RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth));
 
           // Step 1: Create the target quaternion from desired pitch and heading
