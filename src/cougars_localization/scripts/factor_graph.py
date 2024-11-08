@@ -12,9 +12,9 @@ from functools import partial
 import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
-from cougars_py.factor_plot import Plotter
-from cougars_py.factor_class_plot import Plotter as Plot
-from cougars_py.factor_class_plot import Series
+# from factor_plot import Plotter
+# from factor_class_plot import Plotter as Plot
+# from factor_class_plot import Series
 
 
 class Agent():
@@ -35,11 +35,11 @@ class FactorGraphNode(Node):
         # self.plot = Plotter()
 
         # Create Plotter objects with different series
-        self.x_output = Series('Output', 'b', size=400)
-        self.x_dvl = Series('DVL', 'r', alpha=0.5)
+        # self.x_output = Series('Output', 'b', size=400)
+        # self.x_dvl = Series('DVL', 'r', alpha=0.5)
         # delta_series_2 = Series(name='Delta 2', color='green', size=600, alpha=0.5)
-        self.x_gps = Series('GPS', 'g')
-        self.x_plot = Plot([self.x_output, self.x_dvl, self.x_gps])
+        
+
         self.prev_x = 0
 
         # number of seconds we take a dvl dead reck. pose
@@ -348,7 +348,7 @@ class FactorGraphNode(Node):
         #Plot
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
         # self.plot.add_measurement(self.position[0],time,sensor='gps')
-        self.x_gps.add_measurement(self.position[0], time)
+        # self.x_gps.add_measurement(self.position[0], time)
         # print("gps:", self.position[0], time)
         if self.deployed :
             self.q_gps.append(msg)
@@ -387,9 +387,6 @@ class FactorGraphNode(Node):
 
             H = self.HfromRT(self.init_state['orientation_matrix'], self.init_state['position'])
 
-            
-
-
             self.agent = Agent(H)
 
             # self.dvl_pose_current = gtsam.Pose3(H)
@@ -427,10 +424,10 @@ class FactorGraphNode(Node):
             self.dvl_orientation_matrix = r.as_matrix()
             self.dvl_position_last = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix , dvl_position))
         
-            self.get_logger().info("Initial state has been set.")
+            # self.get_logger().info("Initial state has been set.")
 
             # Plot
-            self.x_dvl.add_measurement(self.position[0], self.dvl_time)
+            # self.x_dvl.add_measurement(self.position[0], self.dvl_time)
             print('Initial State DVL:', self.position[0])
 
 
@@ -439,8 +436,9 @@ class FactorGraphNode(Node):
 
             self.deployed = True
         else:
-            self.get_logger().info("Have not received all necessary sensor inputs to begin")
-            self.get_logger().info(f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}")
+            dummy = 1
+            # self.get_logger().info("Have not received all necessary sensor inputs to begin")
+            # self.get_logger().info(f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}")
 
 
     
@@ -515,12 +513,12 @@ class FactorGraphNode(Node):
                                 gps_meas = gtsam.Point3(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z)
                                 if(self.position[2] > DEPTH_THRESHOLD):
                                     self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [new_id], partial(self.error_gps, gps_meas)))
-                                self.get_logger().info("added gps unary %d"%new_id)
+                                # self.get_logger().info("added gps unary %d"%new_id)
                                 
                                 #PLOT
                                 time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
                                 # self.plot.add_measurement(msg.pose.pose.position.x,time, posekey=new_id, sensor='gps' )
-                                self.x_gps.add_measurement(msg.pose.pose.position.x,time, pose_key=new_id)
+                                # self.x_gps.add_measurement(msg.pose.pose.position.x,time, pose_key=new_id)
                         
                                 self.gps_last_pose_key = new_id
                                 print('last gps key is now: ', self.gps_last_pose_key)
@@ -604,7 +602,7 @@ class FactorGraphNode(Node):
                                 self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [new_id], partial(self.error_depth, [np.array([msg.pose.pose.position.z])])))
                                 time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
                                 # self.plot.add_measurement(DUMMY_DEPTH_VAL,time, posekey=new_id, sensor='depth' )
-                                self.get_logger().info("added depth unary %d"% new_id)
+                                # self.get_logger().info("added depth unary %d"% new_id)
                                 time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
                 
                                 
@@ -621,7 +619,7 @@ class FactorGraphNode(Node):
                                 # self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=new_id, sensor='imu' )
 
 
-                                self.get_logger().info("added imu unary %d" % new_id)
+                                # self.get_logger().info("added imu unary %d" % new_id)
 
                             last_pose_key = new_id
                             new_id = self.agent.poseKey
@@ -768,7 +766,7 @@ class FactorGraphNode(Node):
             delta_global = np.matmul(self.init_state['orientation_matrix'], delta_local)
             delta_x_global = delta_global[0]
             # self.plot.add_delta_measurement(delta_x, self.dvl_time,self.agent.poseKey)
-            self.x_dvl.add_delta_measurement(delta_x_global, self.dvl_time)
+            # self.x_dvl.add_delta_measurement(delta_x_global, self.dvl_time)
 
             # self.plot.update_plot()
             print('COMPARISON:',(dvl_position[0]- self.prev_x), delta_x_local, 'global:', delta_x_global)
@@ -801,11 +799,11 @@ class FactorGraphNode(Node):
             self.publish_vehicle_status()
 
             #PLOT
-            self.x_output.add_measurement(self.xyz[0], self.dvl_time,self.agent.poseKey)
-            for i in range (len(self.x_output.pose_keys)):
-                self.x_output.values[i] = self.result.atPose3(self.x_output.pose_keys[i]).translation()[0]
+            # self.x_output.add_measurement(self.xyz[0], self.dvl_time,self.agent.poseKey)
+            # for i in range (len(self.x_output.pose_keys)):
+            #     self.x_output.values[i] = self.result.atPose3(self.x_output.pose_keys[i]).translation()[0]
 
-            self.x_plot.update_plot()
+            # self.x_plot.update_plot()
 
 
 
