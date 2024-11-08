@@ -54,13 +54,13 @@ source ~/microros_ws/install/setup.bash
 source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")
-        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE
+        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE config_file:=$CONFIG_FILE
         ;;
     "moos")
-        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE
+        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE config_file:=$CONFIG_FILE
         ;;
     "sensors")
-        ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE
+        ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE config_file:=$CONFIG_FILE
         ;;
     *)
         printWarning "No start configuration specified"

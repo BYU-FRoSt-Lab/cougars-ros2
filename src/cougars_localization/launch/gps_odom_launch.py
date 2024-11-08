@@ -13,8 +13,6 @@ def generate_launch_description():
 
     :return: The launch description.
     '''
-
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
     
     return launch.LaunchDescription([
         
@@ -24,10 +22,16 @@ def generate_launch_description():
             default_value='',
             description='Unique vehicle namespace'
         ),
+        # Define the config file parameter
+        launch.actions.DeclareLaunchArgument(
+            'config_file',
+            default_value='',
+            description='Path to the vehicle config file'
+        ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='gps_odom.py',
-            parameters=[config_file],
+            parameters=[LaunchConfiguration('config_file')],
             namespace=LaunchConfiguration('namespace')
         ),
     ])

@@ -14,10 +14,6 @@ def generate_launch_description():
 
     :return: The launch description.
     '''
-
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
-    with open(config_file, 'r') as f:
-        vehicle_config_params = yaml.safe_load(f)
     
     return launch.LaunchDescription([
         
@@ -26,6 +22,12 @@ def generate_launch_description():
             'namespace',
             default_value='',
             description='Unique vehicle namespace'
+        ),
+        # Define the config file parameter
+        launch.actions.DeclareLaunchArgument(
+            'config_file',
+            default_value='',
+            description='Path to the vehicle config file'
         ),
         # Launch microROS
         launch_ros.actions.Node(
@@ -43,7 +45,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[config_file],
+            parameters=[LaunchConfiguration('config_file')],
             namespace=LaunchConfiguration('namespace'),
         ),
         # Setup the GPS
@@ -58,7 +60,7 @@ def generate_launch_description():
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
                     namespace=LaunchConfiguration('namespace'),
-                    parameters=[vehicle_config_params['/gpsd_client']['ros__parameters']]),
+                    parameters=[yaml.safe_load(open(LaunchConfiguration('config_file'), 'r'))['/gpsd_client']['ros__parameters']]),
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
@@ -70,22 +72,25 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='depth_convertor',
+            parameters=[LaunchConfiguration('config_file')],
             namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='dvl_convertor',
+            parameters=[LaunchConfiguration('config_file')],
             namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='seatrac_ahrs_convertor',
+            parameters=[LaunchConfiguration('config_file')],
             namespace=LaunchConfiguration('namespace'),
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='gps_odom.py',
-            parameters=[config_file],
+            parameters=[LaunchConfiguration('config_file')],
             namespace=LaunchConfiguration('namespace'),
         ),
     ])
