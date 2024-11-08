@@ -26,6 +26,7 @@ auto qos = rclcpp::QoS(
 
 class DVLConvertor : public rclcpp::Node {
 public:
+
   DVLConvertor() : Node("dvl_convertor") {
     publisher_dvl_depth =
         this->create_publisher<std_msgs::msg::Float64>("dvl_dfb", 10);
