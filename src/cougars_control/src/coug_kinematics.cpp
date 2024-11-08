@@ -70,6 +70,14 @@ public:
     this->declare_parameter("left_fin_offset", 0.0);
 
     /**
+     * @param demo_mode
+     * 
+     * If true, the node will disable the thruster.
+     * The default value is false.
+     */
+    this->declare_parameter("demo_mode", false);
+
+    /**
      * @brief Kinematics command publisher.
      *
      * This publisher publishes the commands to the "kinematics/command" topic.
@@ -114,7 +122,12 @@ private:
     command.fin[2] =
         msg.fin[2] + this->get_parameter("left_fin_offset").as_double() +
         this->get_parameter("trim_ratio").as_double() * msg.thruster;
-    command.thruster = 0; // msg.thruster;
+
+    if (this->get_parameter("demo_mode").as_bool()) {
+      command.thruster = 0;
+    } else {
+      command.thruster = msg.thruster;
+    }
 
     command_publisher_->publish(command);
   }
