@@ -522,10 +522,6 @@ private:
 
       if (this->init_flag) {
 
-          double look_ahead = this->get_parameter("look_ahead").as_double();
-          double theta_max = this->get_parameter("theta_max").as_double();
-
-
 
           // Calculate the desired pitch angle
           float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);;
