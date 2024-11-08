@@ -39,15 +39,15 @@ ros2 daemon stop
 ros2 daemon start
 sleep 5
 
-# Start the strobe light and Teensy board
-bash ~/gpio/strobe.sh on
-bash ~/gpio/power.sh on
+# # Start the strobe light and Teensy board
+# bash ~/gpio/strobe.sh on
+# bash ~/gpio/power.sh on
 
-# Test for Teensy board connection
-if [ -z "$(tycmd list | grep Teensy)" ]; then
-    printError "No Teensy boards avaliable to connect to"
-    exit 1
-fi
+# # Test for Teensy board connection
+# if [ -z "$(tycmd list | grep Teensy)" ]; then
+#     printError "No Teensy boards avaliable to connect to"
+#     exit 1
+# fi
 
 # Start both workspaces
 source ~/microros_ws/install/setup.bash
