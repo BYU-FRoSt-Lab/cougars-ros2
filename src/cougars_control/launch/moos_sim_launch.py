@@ -38,6 +38,13 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_control',
+            executable='moos_bridge_sim',
+            parameters=[config_file],
+            namespace=LaunchConfiguration('namespace'),
+            output='screen',
+        ),
+        launch_ros.actions.Node(
+            package='cougars_control',
             executable='coug_controls',
             parameters=[ParameterFile(config_file, allow_substs=True)],
             namespace=LaunchConfiguration('namespace'),
