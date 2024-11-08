@@ -5,7 +5,7 @@
 # - Specify a start configuration using 'bash start.sh 
 #   <launch>' (ex. 'bash start.sh moos')
 
-source ~/config/env_config.sh
+source ~/config/bash_params.sh
 
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
