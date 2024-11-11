@@ -48,11 +48,13 @@ def generate_launch_description():
             executable='coug_controls',
             parameters=[ParameterFile(config_file, allow_substs=True)],
             namespace=LaunchConfiguration('namespace'),
+            output='screen',
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='factor_graph.py',
             parameters=[config_file],
             namespace=LaunchConfiguration('namespace'),
+            output='screen',
         ),
     ])
