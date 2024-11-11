@@ -96,7 +96,7 @@ else
   fi
 fi
 
-modem_imu_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
+modem_imu_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
 if [ -z "$modem_imu_data" ]; then
   printFailure "No modem IMU connection found."
 else
@@ -107,7 +107,7 @@ else
   fi
 fi
 
-gps_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
+gps_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
 if [ -z "$gps_data" ]; then
   printFailure "No GPS connection found."
 else
@@ -118,7 +118,7 @@ else
   fi
 fi
 
-dvl_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=velocity: \[)\d+')
+dvl_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=velocity: \[)\d+')
 if [ -z "$dvl_data" ]; then
   printFailure "No DVL connection (data) found."
 else
@@ -129,7 +129,7 @@ else
   fi
 fi
   
-dvl_position_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -oP '(?<=position: \[)\d+')
+dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -oP '(?<=position: \[)\d+')
 if [ -z "$dvl_position_data" ]; then
   printFailure "No DVL (position) connection found."
 else
