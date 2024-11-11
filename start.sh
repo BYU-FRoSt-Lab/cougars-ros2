@@ -8,7 +8,7 @@
 source ~/config/bash_params.sh
 
 function printInfo {
-  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
+  echo -e "\033[0m\033[96m[INFO] $1\033[0m"
 }
 
 function printWarning {
@@ -16,7 +16,7 @@ function printWarning {
 }
 
 function printError {
-  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
+  echo -e "\033[0m\033[91m[ERROR] $1\033[0m"
 }
 
 cleanup() {
@@ -65,8 +65,8 @@ case $1 in
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE config_file:=$VEHICLE_PARAMS_FILE
         ;;
     *)
-        printWarning "No start configuration specified"
-        printWarning "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
+        printError "No start configuration specified"
+        printError "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
         ;;
 esac
 
