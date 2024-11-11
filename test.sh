@@ -131,7 +131,7 @@ fi
   
 dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -oP '(?<=position: \[)\d+')
 if [ -z "$dvl_position_data" ]; then
-  printFailure "No DVL (position) connection found."
+  printFailure "No DVL connection (position) found."
 else
   if [[ $(echo "$dvl_position_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "DVL (position) connected! (position: $dvl_position_data)"
