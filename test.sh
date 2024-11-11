@@ -59,7 +59,7 @@ battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data
 if [ -z "$battery_data" ]; then
   printError "No battery monitor connection found."
 else
-  if [ $battery_data -eq 0 ]; then
+  if [[ $(echo "$battery_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Battery monitor connected! (voltage: $battery_data)"
   else
     printWarning "Battery monitor may not be working. (voltage: $battery_data)"
@@ -70,14 +70,14 @@ pressure_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/pressure/da
 if [ -z "$pressure_data" ]; then
   printError "No pressure sensor connection found."
 else
-  if [ $(bc <<< "$pressure_data != 0.0") ]; then
+  if [[ $(echo "$pressure_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Pressure sensor connected! (fluid_pressure: $pressure_data)"
   else
     printWarning "Pressure sensor may not be working. (fluid_pressure: $pressure_data)"
   fi
 fi
 
-depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 position: | grep -oP '(?<=z: )\d+(\.\d+)?')
+depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 orientation: | grep -oP '(?<=z: )\d+(\.\d+)?')
 if [ -z "$depth_data" ]; then
   printError "No depth sensor connection found."
 else
