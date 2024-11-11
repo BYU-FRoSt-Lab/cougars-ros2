@@ -49,7 +49,7 @@ echo ""
 printInfo "Testing vehicle sensors..."
 
 # get leak as a bool from the output of the topic echo
-leak_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
+leak_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
 if [ -z "$leak_data" ]; then
   printError "No leak sensor connection found."
 else
@@ -60,7 +60,7 @@ else
   fi
 fi
 
-battery_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+')
+battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+')
 if [ -z "$battery_data" ]; then
   printError "No battery monitor connection found."
 else
@@ -71,7 +71,7 @@ else
   fi
 fi
 
-pressure_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/pressure/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+')
+pressure_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/pressure/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+')
 if [ -z "$pressure_data" ]; then
   printError "No pressure sensor connection found."
 else
@@ -82,14 +82,14 @@ else
   fi
 fi
 
-depth_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -oP '(?<=x: )\d+')
+depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -oP '(?<=z: )\d+')
 if [ -z "$depth_data" ]; then
   printError "No depth sensor connection found."
 else
   if [ $depth_data -eq 0 ]; then
-    printSuccess "Depth sensor connected! (x: $depth_data)"
+    printSuccess "Depth sensor connected! (z: $depth_data)"
   else
-    printWarning "Depth sensor may not be working. (x: $depth_data)"
+    printWarning "Depth sensor may not be working. (z: $depth_data)"
   fi
 fi
 
