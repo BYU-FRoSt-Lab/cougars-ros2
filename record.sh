@@ -9,14 +9,14 @@
 # - Log files are saved in '../bag' on the host machine
 #   running the docker container
 
-source ~/config/constants.sh
+source ~/config/bash_params.sh
 
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
 }
 
 function printWarning {
-  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
+  echo -e "\033[0m\033[33m[WARN] $1\033[0m"
 }
 
 function printError {

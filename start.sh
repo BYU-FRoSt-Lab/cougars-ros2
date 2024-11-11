@@ -5,14 +5,14 @@
 # - Specify a start configuration using 'bash start.sh 
 #   <launch>' (ex. 'bash start.sh moos')
 
-source ~/config/constants.sh
+source ~/config/bash_params.sh
 
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
 }
 
 function printWarning {
-  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
+  echo -e "\033[0m\033[33m[WARN] $1\033[0m"
 }
 
 function printError {
@@ -32,6 +32,8 @@ echo "######################################################################"
 echo "# BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS #"
 echo "######################################################################"
 echo ""
+
+source ~/config/bash_vars.sh
 
 # Quick fix for daemon error (TODO: find a better solution)
 source ~/ros2_ws/install/setup.bash
@@ -54,13 +56,13 @@ source ~/microros_ws/install/setup.bash
 source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")
-        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE config_file:=$CONFIG_FILE
+        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE config_file:=$VEHICLE_PARAMS_FILE
         ;;
     "moos")
-        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE config_file:=$CONFIG_FILE
+        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE config_file:=$VEHICLE_PARAMS_FILE
         ;;
     "sensors")
-        ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE config_file:=$CONFIG_FILE
+        ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE config_file:=$VEHICLE_PARAMS_FILE
         ;;
     *)
         printWarning "No start configuration specified"

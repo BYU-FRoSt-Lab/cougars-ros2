@@ -17,6 +17,7 @@ class BatterySubscriber(Node):
 
     Subscribes:
         - battery/data (frost_interfaces/msg/BatteryStatus)
+
     Clients:
         - emergency_stop (frost_interfaces/srv/EmergencyStop)
     '''
