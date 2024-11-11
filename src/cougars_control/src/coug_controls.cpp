@@ -108,18 +108,51 @@ public:
     this->declare_parameter("depth_bias", 0);
 
     /**
-     * @param look_ahead_distance
+     * @param pitch_kp
      *
-     * The bias value for the depth PID controller. The default value is 0.
+     * The proportional constant for the pitch PID controller. The default value
+     * is 0.0.
      */
-    this->declare_parameter("look_ahead", 5.0);
+    this->declare_parameter("pitch_kp", 0.0);
 
     /**
-     * @param theta_max
+     * @param pitch_ki
      *
-     * The bias value for the depth PID controller. The default value is 0.
+     * The integral constant for the pitch PID controller. The default value is
+     * 0.0.
      */
-    this->declare_parameter("theta_max", 25.0);
+    this->declare_parameter("pitch_ki", 0.0);
+
+    /**
+     * @param pitch_kd
+     *
+     * The derivative constant for the pitch PID controller. The default value
+     * is 0.0.
+     */
+    this->declare_parameter("pitch_kd", 0.0);
+
+    /**
+     * @param pitch_min_output
+     *
+     * The minimum output value for the pitch PID controller. The default value
+     * is 0.
+     */
+    this->declare_parameter("pitch_min_output", 0);
+
+    /**
+     * @param pitch_max_output
+     *
+     * The maximum output value for the pitch PID controller. The default value
+     * is 0.
+     */
+    this->declare_parameter("pitch_max_output", 0);
+
+    /**
+     * @param pitch_bias
+     *
+     * The bias value for the pitch PID controller. The default value is 0.
+     */
+    this->declare_parameter("pitch_bias", 0);
 
     /**
      * @param heading_kp
@@ -186,6 +219,14 @@ public:
                          this->get_parameter("depth_max_output").as_int(),
                          this->get_parameter("timer_period").as_int(),
                          this->get_parameter("depth_bias").as_int());
+
+    myPitchPID.calibrate(this->get_parameter("pitch_kp").as_double(),
+                         this->get_parameter("pitch_ki").as_double(),
+                         this->get_parameter("pitch_kd").as_double(),
+                         this->get_parameter("pitch_min_output").as_int(),
+                         this->get_parameter("pitch_max_output").as_int(),
+                         this->get_parameter("timer_period").as_int(),
+                         this->get_parameter("pitch_bias").as_int());
 
     myHeadingPID.calibrate(this->get_parameter("heading_kp").as_double(),
                            this->get_parameter("heading_ki").as_double(),
@@ -432,11 +473,9 @@ private:
 
       if (this->init_flag) {
 
-          double look_ahead = this->get_parameter("look_ahead").as_double();
-          double theta_max = this->get_parameter("theta_max").as_double();
 
           // Calculate the desired pitch angle
-          double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
+          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
           RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth));
 
           // Step 1: Create the target quaternion from desired pitch and heading
@@ -457,8 +496,8 @@ private:
           RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
 
           // Step 4: Apply PID control to pitch and heading errors directly
-          int depth_pos = myDepthPID.compute(0, pitch_err);  // No additional scaling needed
-          int heading_pos = myHeadingPID.compute(0, yaw_err);
+          int depth_pos = (int)myPitchPID.compute(0, pitch_err);  // No additional scaling needed
+          int heading_pos = (int)myHeadingPID.compute(0, yaw_err);
 
           // Step 5: Set fin positions and publish the command
           message.fin[0] = heading_pos;    // top fin
@@ -493,6 +532,7 @@ private:
   // control objects
   PID myHeadingPID;
   PID myDepthPID;
+  PID myPitchPID;
 
   // magnetic declination parameter
   double magnetic_declination;
