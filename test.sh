@@ -50,7 +50,6 @@ source ~/ros2_ws/install/setup.bash
 # fi
 
 echo ""
-printInfo "Testing vehicle sensors..."
 
 leak_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
 if [ -z "$leak_data" ]; then
