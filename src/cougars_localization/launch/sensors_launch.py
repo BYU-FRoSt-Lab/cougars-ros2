@@ -58,25 +58,25 @@ def generate_launch_description():
             namespace=namespace,
         ),
         # Setup the GPS
-        # launch_ros.actions.ComposableNodeContainer(
-        #     package='rclcpp_components',
-        #     executable='component_container',
-        #     name='fix_and_odometry_container',
-        #     namespace=namespace,
-        #     composable_node_descriptions=[
-        #         launch_ros.descriptions.ComposableNode(
-        #             package='gpsd_client',
-        #             plugin='gpsd_client::GPSDClientComponent',
-        #             name='gpsd_client',
-        #             namespace=namespace,
-        #             parameters=[vehicle_config_params['coug1']['gpsd_client']['ros__parameters']]), # TODO: Figure out how to abstract this
-        #         launch_ros.descriptions.ComposableNode(
-        #             package='gps_tools',
-        #             plugin='gps_tools::UtmOdometryComponent',
-        #             namespace=namespace,
-        #             name='utm_gpsfix_to_odometry_node'),
-        #     ],
-        # ),
+        launch_ros.actions.ComposableNodeContainer(
+            package='rclcpp_components',
+            executable='component_container',
+            name='fix_and_odometry_container',
+            namespace=namespace,
+            composable_node_descriptions=[
+                launch_ros.descriptions.ComposableNode(
+                    package='gpsd_client',
+                    plugin='gpsd_client::GPSDClientComponent',
+                    name='gpsd_client',
+                    namespace=namespace,
+                    parameters=[vehicle_config_params['coug1']['gpsd_client']['ros__parameters']]), # TODO: Figure out how to abstract this
+                launch_ros.descriptions.ComposableNode(
+                    package='gps_tools',
+                    plugin='gps_tools::UtmOdometryComponent',
+                    namespace=namespace,
+                    name='utm_gpsfix_to_odometry_node'),
+            ],
+        ),
         # Start the data conversion nodes
         launch_ros.actions.Node(
             package='cougars_localization',
