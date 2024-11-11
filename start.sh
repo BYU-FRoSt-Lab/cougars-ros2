@@ -12,7 +12,7 @@ function printInfo {
 }
 
 function printWarning {
-  echo -e "\033[0m\033[73m[WARNING] $1\033[0m"
+  echo -e "\033[0m\033[93m[WARNING] $1\033[0m"
 }
 
 function printError {
