@@ -18,6 +18,9 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
+    config_file = LaunchConfiguration('config_file')
+    namespace = LaunchConfiguration('namespace')
+
     # Get the directory of the launch files
     package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
@@ -44,32 +47,32 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[LaunchConfiguration('config_file')],
-            namespace=LaunchConfiguration('namespace'),
+            parameters=[config_file],
+            namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[LaunchConfiguration('config_file')],
-            namespace=LaunchConfiguration('namespace'),
+            parameters=[config_file],
+            namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
-            parameters=[LaunchConfiguration('config_file')],
-            namespace=LaunchConfiguration('namespace'),
+            parameters=[config_file],
+            namespace=namespace,
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='leak_sub.py',
-        #     parameters=[LaunchConfiguration('config_file')],
-        #     namespace=LaunchConfiguration('namespace'),
+        #     parameters=[config_file],
+        #     namespace=namespace,
         # ),
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='battery_sub.py',
-        #     parameters=[LaunchConfiguration('config_file')],
-        #     namespace=LaunchConfiguration('namespace'),
+        #     parameters=[config_file],
+        #     namespace=namespace,
         # ),
     ])

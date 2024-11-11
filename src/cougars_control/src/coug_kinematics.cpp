@@ -25,15 +25,14 @@ auto qos = rclcpp::QoS(
  *
  * Subscribes:
  * - controls/command (frost_interfaces/msg/UCommand)
+ * 
  * Publishes:
  * - kinematics/command (frost_interfaces/msg/UCommand)
  */
 class CougKinematics : public rclcpp::Node {
 public:
   /**
-   * @brief Creates a new kinematics node.
-   *
-   * This constructor creates a new kinematics node with default values.
+   * Creates a new kinematics node.
    */
   CougKinematics() : Node("coug_kinematics") {
 
@@ -100,14 +99,15 @@ public:
   }
 
 private:
+
   /**
-   * @brief Callback function for the controls/command subscription.
-   *
+   * @brief Callback function for the controls command subscription.
+   * 
    * This method is called whenever a new controls command message is received.
    * It adds the declared offsets and trim ratio to the commands and publishes
    * the new modified commands.
    *
-   * @param
+   * @param msg The received UCommand message
    */
   void command_callback(const frost_interfaces::msg::UCommand &msg) {
 

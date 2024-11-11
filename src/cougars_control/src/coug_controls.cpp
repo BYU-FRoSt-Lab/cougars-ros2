@@ -40,15 +40,15 @@ auto qos = rclcpp::QoS(
  * - desired_speed (frost_interfaces/msg/DesiredSpeed)
  * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
  * - modem_status (seatrac_interfaces/msg/ModemStatus)
+ * 
  * Publishes:
  * - controls/command (frost_interfaces/msg/UCommand)
  */
 class CougControls : public rclcpp::Node {
 public:
+
   /**
-   * @brief Creates a new controls node.
-   *
-   * This constructor creates a new controls node with default values.
+   * Creates a new controls node.
    */
   CougControls() : Node("coug_controls") {
 
@@ -404,14 +404,6 @@ private:
     //             this->actual_heading, this->actual_pitch, this->actual_roll);
   }
 
-
-  /**
-   * @brief Callback function for the PID control timer.
-   *
-   * This method computes the control commands using the PID controllers and
-   * publishes the control commands to the controls/command topic.
-   */
-
   double look_ahead_theta(double distance, double actual, double desired, double theta_max) {
     // Find the depth error
     double depth_error = desired - actual;
@@ -428,6 +420,12 @@ private:
     return theta_desired;
   }
 
+  /**
+   * @brief Callback function for the PID control timer.
+   *
+   * This method computes the control commands using the PID controllers and
+   * publishes the control commands to the controls/command topic.
+   */
   void timer_callback() {
       auto message = frost_interfaces::msg::UCommand();
       message.header.stamp = this->now();

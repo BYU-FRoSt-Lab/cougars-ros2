@@ -13,6 +13,9 @@ def generate_launch_description():
 
     :return: The launch description.
     '''
+
+    config_file = LaunchConfiguration('config_file')
+    namespace = LaunchConfiguration('namespace')
     
     return launch.LaunchDescription([
         
@@ -31,7 +34,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='gps_odom.py',
-            parameters=[LaunchConfiguration('config_file')],
-            namespace=LaunchConfiguration('namespace')
+            parameters=[config_file],
+            namespace=namespace,
         ),
     ])
