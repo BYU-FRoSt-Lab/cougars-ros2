@@ -19,7 +19,7 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = "/home/frostlab/config/sim_params.yaml"
+    config_file = "/home/frostlab/config/sim_config.yaml"
 
     return launch.LaunchDescription([
         
