@@ -65,8 +65,8 @@ case $1 in
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE config_file:=$VEHICLE_PARAMS_FILE
         ;;
     *)
-        printWarning "No start configuration specified"
-        printWarning "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
+        printError "No start configuration specified"
+        printError "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
         ;;
 esac
 
