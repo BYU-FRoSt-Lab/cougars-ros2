@@ -129,7 +129,7 @@ else
   fi
 fi
   
-dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -oP '(?<=position: \[)\d+')
+dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -A 3 position: | grep -oP '(?<=z: )\d+(\.\d+)?')
 if [ -z "$dvl_position_data" ]; then
   printFailure "No DVL connection (position) found."
 else
