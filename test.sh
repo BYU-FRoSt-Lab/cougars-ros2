@@ -71,7 +71,7 @@ else
   fi
 fi
 
-pressure_data=$(timeout 3 ros2 topic echo --once --no-arr fluid_pressure $NAMESPACE/pressure/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+(\.\d+)?')
+pressure_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/pressure/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+(\.\d+)?')
 if [ -z "$pressure_data" ]; then
   printError "No pressure sensor connection found."
 else
