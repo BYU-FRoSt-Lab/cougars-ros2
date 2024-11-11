@@ -33,6 +33,8 @@ echo "# BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS #"
 echo "######################################################################"
 echo ""
 
+source ~/config/bash_vars.sh
+
 # Quick fix for daemon error (TODO: find a better solution)
 source ~/ros2_ws/install/setup.bash
 ros2 daemon stop
