@@ -54,7 +54,7 @@ printInfo "Testing vehicle sensors..."
 
 leak_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
 if [ -z "$leak_data" ]; then
-  printError "No leak sensor connection found."
+  printFailure "No leak sensor connection found."
 else
   if [[ $(echo "$leak_data" | awk '{if ($1 == false) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Leak sensor connected! (leak: $leak_data)"
@@ -65,7 +65,7 @@ fi
 
 battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+')
 if [ -z "$battery_data" ]; then
-  printError "No battery monitor connection found."
+  printFailure "No battery monitor connection found."
 else
   if [[ $(echo "$battery_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Battery monitor connected! (voltage: $battery_data)"
@@ -76,7 +76,7 @@ fi
 
 pressure_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/pressure/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+(\.\d+)?')
 if [ -z "$pressure_data" ]; then
-  printError "No pressure sensor connection found."
+  printFailure "No pressure sensor connection found."
 else
   if [[ $(echo "$pressure_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Pressure sensor connected! (fluid_pressure: $pressure_data)"
@@ -87,7 +87,7 @@ fi
 
 depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 orientation: | grep -oP '(?<=z: )\d+(\.\d+)?')
 if [ -z "$depth_data" ]; then
-  printError "No depth sensor connection found."
+  printFailure "No depth sensor connection found."
 else
   if [[ $(echo "$depth_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Depth sensor connected! (z: $depth_data)"
@@ -98,7 +98,7 @@ fi
 
 # modem_imu_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
 # if [ -z "$modem_imu_data" ]; then
-#   printError "No modem IMU connection found."
+#   printFailure "No modem IMU connection found."
 # else
 #   if [ $modem_imu_data -eq 0 ]; then
 #     printSuccess "Modem IMU connected! (orientation: $modem_imu_data)"
@@ -109,7 +109,7 @@ fi
 
 # fix_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+')
 # if [ -z "$fix_data" ]; then
-#   printError "No GPS fix connection found."
+#   printFailure "No GPS fix connection found."
 # else
 #   if [ $fix_data -eq 0 ]; then
 #     printSuccess "GPS fix connected! (latitude: $fix_data)"
@@ -120,7 +120,7 @@ fi
 
 # gps_odom_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/gps_odom 2>/dev/null | grep -oP '(?<=latitude: )\d+')
 # if [ -z "$gps_odom_data" ]; then
-#   printError "No GPS odom connection found."
+#   printFailure "No GPS odom connection found."
 # else
 #   if [ $gps_odom_data -eq 0 ]; then
 #     printSuccess "GPS odom connected! (latitude: $gps_odom_data)"
@@ -131,7 +131,7 @@ fi
 
 # dvl_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=velocity: \[)\d+')
 # if [ -z "$dvl_data" ]; then
-#   printError "No DVL data connection found."
+#   printFailure "No DVL data connection found."
 # else
 #   if [ $dvl_data -eq 0 ]; then
 #     printSuccess "DVL data connected! (velocity: $dvl_data)"
@@ -142,7 +142,7 @@ fi
 
 # dvl_position_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -oP '(?<=position: \[)\d+')
 # if [ -z "$dvl_position_data" ]; then
-#   printError "No DVL position connection found."
+#   printFailure "No DVL position connection found."
 # else
 #   if [ $dvl_position_data -eq 0 ]; then
 #     printSuccess "DVL position connected! (position: $dvl_position_data)"
