@@ -134,9 +134,9 @@ if [ -z "$dvl_position_data" ]; then
   printFailure "No DVL connection (position) found."
 else
   if [[ $(echo "$dvl_position_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "DVL (position) connected! (position: $dvl_position_data)"
+    printSuccess "DVL (position) connected! (x: $dvl_position_data)"
   else
-    printFailure "DVL (position) may not be working. (position: $dvl_position_data)"
+    printFailure "DVL (position) may not be working. (x: $dvl_position_data)"
   fi
 fi
 

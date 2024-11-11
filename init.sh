@@ -3,7 +3,7 @@
 #
 # Publishes an empty message to the <namespace>/init topic to initialize the vehicle
 
-source ~/config/bash_params.sh
+source ~/config/bash_vars.sh
 
 source ~/ros2_ws/install/setup.bash
 ros2 topic pub $NAMESPACE/init std_msgs/msg/Empty -1
