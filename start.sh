@@ -12,7 +12,7 @@ function printInfo {
 }
 
 function printWarning {
-  echo -e "\033[0m\033[33m[WARN] $1\033[0m"
+  echo -e "\033[0m\033[73m[WARNING] $1\033[0m"
 }
 
 function printError {
@@ -22,7 +22,7 @@ function printError {
 cleanup() {
     bash ~/gpio/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-    printInfo "Acoustics successfully disabled"
+    echo "[COMPLETE] Acoustics successfully disabled"
     exit 0
 }
 trap cleanup SIGINT
