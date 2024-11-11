@@ -92,7 +92,7 @@ else
   fi
 fi
 
-depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 pressure: | grep -oP '(?<=z: )\d+(\.\d+)?')
+depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 orientation: | grep -oP '(?<=z: )\d+(\.\d+)?')
 if [ -z "$depth_data" ]; then
   printError "No depth sensor connection found."
 else
