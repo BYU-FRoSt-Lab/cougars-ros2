@@ -69,7 +69,7 @@ def generate_launch_description():
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
                     namespace=namespace,
-                    parameters=[vehicle_config_params['coug0']['gpsd_client']['ros__parameters']]), # TODO: Figure out how to abstract this
+                    parameters=[vehicle_config_params['coug1']['gpsd_client']['ros__parameters']]), # TODO: Figure out how to abstract this
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
