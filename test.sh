@@ -52,10 +52,11 @@ leak_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/de
 if [ -z "$leak_data" ]; then
   printError "No leak sensor connection found."
 else
-  if [[ $(echo "$leak_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
+  if [[ $(echo "$leak_data" | awk '{if ($1 == false) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Leak sensor connected! (leak: $leak_data)"
   else
     printWarning "Leak sensor may not be working. (leak: $leak_data)"
+  fi
 fi
 
 battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+')
