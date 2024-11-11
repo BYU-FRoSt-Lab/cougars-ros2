@@ -30,12 +30,12 @@ def generate_launch_description():
             description='Unique vehicle namespace'
         ),
         # Start the control nodes
-        launch_ros.actions.Node(
-            package='cougars_control',
-            executable='coug_kinematics',
-            parameters=[ParameterFile(config_file, allow_substs=True)],
-            namespace=LaunchConfiguration('namespace'),
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_control',
+        #     executable='coug_kinematics',
+        #     parameters=[ParameterFile(config_file, allow_substs=True)],
+        #     namespace=LaunchConfiguration('namespace'),
+        # ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='moos_bridge_sim',
