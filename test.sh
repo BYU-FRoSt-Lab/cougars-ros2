@@ -11,27 +11,20 @@ function printInfo {
 }
 
 function printWarning {
-  echo -e "\033[0m\033[93m[WARNING] $1\033[0m"
+  echo -e "\033[0m\033[33m[WARN] $1\033[0m"
 }
 
 function printError {
-  echo -e "\033[0m\033[91m[NOT CONNECTED] $1\033[0m"
+  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
 }
 
 function printSuccess {
-  echo -e "\033[0m\033[92m[CONNECTED] $1\033[0m"
+  echo -e "\033[0m\033[92m[SUCCESS] $1\033[0m"
 }
 
-# brighter colors
-
-# function printInfo {
-#   echo -e "\033[0m\033[96m[INFO] $1\033[0m"
-# }
-
-# function printWarning {
-#   echo -e "\033[0m\033[93m[WARN] $1\033[0m"
-# }
-
+function printFailure {
+  echo -e "\033[0m\033[91m[FAIL] $1\033[0m"
+}
 
 source ~/ros2_ws/install/setup.bash
 
@@ -66,7 +59,7 @@ else
   if [[ $(echo "$leak_data" | awk '{if ($1 == false) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Leak sensor connected! (leak: $leak_data)"
   else
-    printWarning "Leak sensor may not be working. (leak: $leak_data)"
+    printFailure "Leak sensor may not be working. (leak: $leak_data)"
   fi
 fi
 
@@ -77,7 +70,7 @@ else
   if [[ $(echo "$battery_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Battery monitor connected! (voltage: $battery_data)"
   else
-    printWarning "Battery monitor may not be working. (voltage: $battery_data)"
+    printFailure "Battery monitor may not be working. (voltage: $battery_data)"
   fi
 fi
 
@@ -88,7 +81,7 @@ else
   if [[ $(echo "$pressure_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Pressure sensor connected! (fluid_pressure: $pressure_data)"
   else
-    printWarning "Pressure sensor may not be working. (fluid_pressure: $pressure_data)"
+    printFailure "Pressure sensor may not be working. (fluid_pressure: $pressure_data)"
   fi
 fi
 
@@ -99,7 +92,7 @@ else
   if [[ $(echo "$depth_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
     printSuccess "Depth sensor connected! (z: $depth_data)"
   else
-    printWarning "Depth sensor may not be working. (z: $depth_data)"
+    printFailure "Depth sensor may not be working. (z: $depth_data)"
   fi
 fi
 
@@ -110,7 +103,7 @@ fi
 #   if [ $modem_imu_data -eq 0 ]; then
 #     printSuccess "Modem IMU connected! (orientation: $modem_imu_data)"
 #   else
-#     printWarning "Modem IMU may not be working. (orientation: $modem_imu_data)"
+#     printFailure "Modem IMU may not be working. (orientation: $modem_imu_data)"
 #   fi
 # fi
 
@@ -121,7 +114,7 @@ fi
 #   if [ $fix_data -eq 0 ]; then
 #     printSuccess "GPS fix connected! (latitude: $fix_data)"
 #   else
-#     printWarning "GPS fix may not be working. (latitude: $fix_data)"
+#     printFailure "GPS fix may not be working. (latitude: $fix_data)"
 #   fi
 # fi
 
@@ -132,7 +125,7 @@ fi
 #   if [ $gps_odom_data -eq 0 ]; then
 #     printSuccess "GPS odom connected! (latitude: $gps_odom_data)"
 #   else
-#     printWarning "GPS odom may not be working. (latitude: $gps_odom_data)"
+#     printFailure "GPS odom may not be working. (latitude: $gps_odom_data)"
 #   fi
 # fi
 
@@ -143,7 +136,7 @@ fi
 #   if [ $dvl_data -eq 0 ]; then
 #     printSuccess "DVL data connected! (velocity: $dvl_data)"
 #   else
-#     printWarning "DVL data may not be working. (velocity: $dvl_data)"
+#     printFailure "DVL data may not be working. (velocity: $dvl_data)"
 #   fi
 # fi
 
@@ -154,7 +147,7 @@ fi
 #   if [ $dvl_position_data -eq 0 ]; then
 #     printSuccess "DVL position connected! (position: $dvl_position_data)"
 #   else
-#     printWarning "DVL position may not be working. (position: $dvl_position_data)"
+#     printFailure "DVL position may not be working. (position: $dvl_position_data)"
 #   fi
 # fi
 
