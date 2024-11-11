@@ -82,7 +82,7 @@ else
   fi
 fi
 
-depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep 'position:' | grep -oP '(?<=z: )\d+(\.\d+)?')
+depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | sed -n '/position:/ { n; s/.* //; p }')
 if [ -z "$depth_data" ]; then
   printError "No depth sensor connection found."
 else
