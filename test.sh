@@ -75,7 +75,7 @@ pressure_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/pressure/da
 if [ -z "$pressure_data" ]; then
   printError "No pressure sensor connection found."
 else
-  if [ $pressure_data -eq 0 ]; then
+  if [ $pressure_data -eq 0.0 ]; then
     printSuccess "Pressure sensor connected! (fluid_pressure: $pressure_data)"
   else
     printWarning "Pressure sensor may not be working. (fluid_pressure: $pressure_data)"
