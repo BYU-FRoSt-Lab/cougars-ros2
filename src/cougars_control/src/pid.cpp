@@ -63,7 +63,7 @@ public:
    * @param actual The actual value.
    * @return The output value.
    */
-  int compute(float desired, float actual) {
+  float compute(float desired, float actual) {
 
     // PROPORTIONAL CALCULATIONS
     error = desired - actual;
@@ -89,7 +89,7 @@ public:
     } else if (output < min_output) {
       output = min_output;
     }
-    return (int)output;
+    return (float)output;
   }
 
 private:

@@ -103,6 +103,7 @@ public:
     // i*(w + xi + yj + zk)*i
     // = i*(wi - x - yk + zj)
     // = -w - xi + yj + zk
+    // DVL EULER ANGLE SEQUENCE IS ZYX Intrinsic rotations
     Eigen::Matrix3f R;
     R = Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ()) *
         Eigen::AngleAxisf(pitch_rad, Eigen::Vector3f::UnitY()) *
