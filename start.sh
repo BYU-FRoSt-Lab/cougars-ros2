@@ -8,7 +8,7 @@
 source ~/config/bash_params.sh
 
 function printInfo {
-  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
+  echo -e "\033[0m\033[96m[INFO] $1\033[0m"
 }
 
 function printWarning {
@@ -16,7 +16,7 @@ function printWarning {
 }
 
 function printError {
-  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
+  echo -e "\033[0m\033[91m[ERROR] $1\033[0m"
 }
 
 cleanup() {
