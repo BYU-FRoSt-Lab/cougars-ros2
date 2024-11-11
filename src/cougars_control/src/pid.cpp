@@ -1,8 +1,6 @@
-#define INTEGRAL_ARRAY_SIZE 20 // memory size of integral term
-
 /**
  * @brief A simple PID controller class.
- * @author Nelson Durrant
+ * @author Nelson Durrant, Braden Meyers
  * @date September 2024
  *
  * This class is a simple implementation of a PID controller. It is designed to
@@ -11,28 +9,15 @@
  * the PID controller is called, and the bias value. The PID controller can then
  * be used to compute the output value based on the desired and actual values.
  */
+#define INTEGRAL_ARRAY_SIZE 20 // memory size of integral term
+
 class PID {
 
 public:
-  /**
-   * Creates a new PID controller.
-   */
   PID() {};
 
-  /**
-   * This method calibrates the PID controller with the specified PID constants,
-   * output limits, interval, and bias value.
-   *
-   * @param p The proportional constant.
-   * @param i The integral constant.
-   * @param d The derivative constant.
-   * @param min The minimum output value.
-   * @param max The maximum output value.
-   * @param timer_interval The interval at which the PID controller is called.
-   * @param adjust The bias value.
-   */
   void calibrate(float p, float i, float d, int min, int max,
-                 float timer_interval, int adjust) {
+                 float timer_interval, int adjust, float integral_threshold = 0.0, float integral_time = 0.0) {
     kp = p;
     ki = i;
     kd = d;
@@ -41,73 +26,96 @@ public:
     interval = timer_interval;
     bias = adjust;
 
-    error = 0;
+    // Reset error and integral terms
+    reset();
+
+    // Integral threshold parameters
+    integral_threshold_ = integral_threshold;
+    integral_time_ = integral_time;
+    integral_time_count_ = 0;
+  }
+
+  // Main compute method
+  float compute(float desired, float actual) {
+    float error = desired - actual;
+    updateIntegral(error);
+    float derivative = computeDerivative(error);
+
+    // Compute output and apply saturation
+    float output = saturate(error * kp + integral * ki - derivative * kd + bias);
+    error_prior = error;
+    return output;
+  }
+
+  // Overloaded compute method using externally provided derivative
+  float compute(float desired, float actual, float measured_derivative) {
+    float error = desired - actual;
+    updateIntegral(error);
+
+    // Compute output and apply saturation
+    float output = saturate(error * kp + integral * ki - measured_derivative * kd + bias);
+    error_prior = error;
+    return output;
+  }
+
+  // Resets the controller state
+  void reset() {
     error_prior = 0;
     integral = 0;
     integral_prior = 0;
-    derivative = 0;
-
     integral_index = 0;
-    // initialize the integral array with zeros
+    integral_time_count_ = 0;
+
     for (int i = 0; i < INTEGRAL_ARRAY_SIZE; i++) {
       integralArray[i] = 0;
     }
   }
 
-  /**
-   * This method computes the output value based on the desired and actual
-   * values. The output value is computed using the PID constants, output
-   * limits, interval, and bias value that were previously set.
-   *
-   * @param desired The desired value.
-   * @param actual The actual value.
-   * @return The output value.
-   */
-  float compute(float desired, float actual) {
-
-    // PROPORTIONAL CALCULATIONS
-    error = desired - actual;
-
-    // INTEGRAL CALCULATIONS
-    // add the new error to the integral sum and subtract the oldest
-    integral =
-        integral_prior + (error * interval) - integralArray[integral_index];
-    integralArray[integral_index] = error;
-    integral_index = (integral_index + 1) % INTEGRAL_ARRAY_SIZE;
-    integral_prior = integral;
-
-    // DERIVATIVE CALCULATIONS
-    derivative = (error - error_prior) / interval;
-    error_prior = error;
-
-    // SUM IT ALL TOGETHER
-    float output = error * kp + integral * ki - derivative * kd + bias;
-
-    // clamp the output so we don't exceed the limit
-    if (output > max_output) {
-      output = max_output;
-    } else if (output < min_output) {
-      output = min_output;
-    }
-    return (float)output;
-  }
-
 private:
-  
   float kp;
   float ki;
   float kd;
   int min_output;
   int max_output;
-
   float interval;
   int bias;
   float integral;
   float integral_prior;
-  float error;
   float error_prior;
-  float derivative;
 
   int integral_index;
   float integralArray[INTEGRAL_ARRAY_SIZE];
+
+  // Integral threshold parameters
+  float integral_threshold_;
+  float integral_time_;
+  float integral_time_count_;
+
+  // Limits the output within the specified min and max
+  float saturate(float value) const {
+    if (value > max_output) return max_output;
+    if (value < min_output) return min_output;
+    return value;
+  }
+
+  // Updates the integral only if the error is within the threshold for the specified time
+  void updateIntegral(float error) {
+    if (std::abs(error) < integral_threshold_) {
+      integral_time_count_ += interval;
+      if (integral_time_count_ >= integral_time_) {
+        // Update integral using a moving window of errors
+        integral = integral_prior + (error * interval) - integralArray[integral_index];
+        integralArray[integral_index] = error;
+        integral_index = (integral_index + 1) % INTEGRAL_ARRAY_SIZE;
+        integral_prior = integral;
+      }
+    } else {
+      integral_time_count_ = 0;  // Reset count if error goes out of threshold
+    }
+  }
+
+  // Computes the derivative term
+  float computeDerivative(float error) const {
+    return (error - error_prior) / interval;
+  }
 };
