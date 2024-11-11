@@ -143,19 +143,19 @@ void PublishDesiredValue(double value, std::string key) {
     auto message = frost_interfaces::msg::DesiredSpeed();
     message.desired_speed = value;
     desired_speed_publisher_->publish(message);
-    RCLCPP_INFO(this->get_logger(), "[INFO] Desired Speed %f", value);
+    std::cout << "[INFO] Desired speed" << message.desired_speed << std::endl;
   } else if (key == "DESIRED_HEADING") {
     auto message = frost_interfaces::msg::DesiredHeading();
     message.desired_heading = 90 - value;
     if (message.desired_heading < -180.0) {
       message.desired_heading = message.desired_heading + 360;
     desired_heading_publisher_->publish(message);
-    RCLCPP_INFO(this->get_logger(), "[INFO] Desired heading %f", message.desired_heading);
+    std::cout << "[INFO] Desired heading" << message.desired_heading << std::endl;
   } else if (key == "DESIRED_DEPTH") {
     auto message = frost_interfaces::msg::DesiredDepth();
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
-    RCLCPP_INFO(this->get_logger(), "[INFO] Desired heading %f", message.desired_depth);
+    std::cout << "[INFO] Desired depth" << message.desired_depth << std::endl;
   }
   }
 }
