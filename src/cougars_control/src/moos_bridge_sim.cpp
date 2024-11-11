@@ -48,7 +48,7 @@ rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr
 
 class MOOSBridge : public rclcpp::Node {
 public:
-  MOOSBridge() : Node("moos_bridge") {
+  MOOSBridge() : Node("moos_bridge_sim") {
 
 
     // vehicle status listener from the factor graph filter
@@ -86,7 +86,7 @@ private:
     // nav_depth = msg.pose.pose.position.z;
     // nav_speed = msg.coug_odom.twist.twist.linear.x;
 
-    
+    RCLCPP_INFO(this->get_logger(), "[INFO] Nav x recieved %f, y: %f", nav_x, nav_y)
 
     // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
@@ -143,16 +143,19 @@ void PublishDesiredValue(double value, std::string key) {
     auto message = frost_interfaces::msg::DesiredSpeed();
     message.desired_speed = value;
     desired_speed_publisher_->publish(message);
+    RCLCPP_INFO(this->get_logger(), "[INFO] Desired Speed %f", value)
   } else if (key == "DESIRED_HEADING") {
     auto message = frost_interfaces::msg::DesiredHeading();
     message.desired_heading = 90 - value;
     if (message.desired_heading < -180.0) {
       message.desired_heading = message.desired_heading + 360;
     desired_heading_publisher_->publish(message);
+    RCLCPP_INFO(this->get_logger(), "[INFO] Desired heading %f", message.desired_heading)
   } else if (key == "DESIRED_DEPTH") {
     auto message = frost_interfaces::msg::DesiredDepth();
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
+    RCLCPP_INFO(this->get_logger(), "[INFO] Desired heading %f", message.desired_depth)
   }
   }
 }
