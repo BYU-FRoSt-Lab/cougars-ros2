@@ -81,7 +81,7 @@ depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/
 if [ -z "$depth_data" ]; then
   printError "No depth sensor connection found."
 else
-  if [ $pressure_data == "0.0" ]; then
+  if [[ $(echo "$depth_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 1 ]]; then
     printSuccess "Depth sensor connected! (z: $depth_data)"
   else
     printWarning "Depth sensor may not be working. (z: $depth_data)"
