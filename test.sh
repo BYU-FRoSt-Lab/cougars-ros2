@@ -48,24 +48,18 @@ source ~/ros2_ws/install/setup.bash
 echo ""
 printInfo "Testing vehicle sensors..."
 
-# get leak as a bool from the output of the topic echo
 leak_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
 if [ -z "$leak_data" ]; then
   printError "No leak sensor connection found."
 else
-# check if "false" is returned from the topic echo
-  if [ $leak_data == "false" ]; then
-    printSuccess "Leak sensor connected! (leak: $leak_data)"
-  else
-    printWarning "Leak sensor may not be working. (leak: $leak_data)"
-  fi
+  printSuccess "Leak sensor connected! (leak: $leak_data)"
 fi
 
 battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+')
 if [ -z "$battery_data" ]; then
   printError "No battery monitor connection found."
 else
-  if [ $battery_data != "0.0" ]; then
+  if [ $battery_data -eq 0 ]; then
     printSuccess "Battery monitor connected! (voltage: $battery_data)"
   else
     printWarning "Battery monitor may not be working. (voltage: $battery_data)"
@@ -76,18 +70,18 @@ pressure_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/pressure/da
 if [ -z "$pressure_data" ]; then
   printError "No pressure sensor connection found."
 else
-  if [ $pressure_data != "0.0" ]; then
+  if [ $(bc <<< "$pressure_data != 0.0") ]; then
     printSuccess "Pressure sensor connected! (fluid_pressure: $pressure_data)"
   else
     printWarning "Pressure sensor may not be working. (fluid_pressure: $pressure_data)"
   fi
 fi
 
-depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 orientation: | grep -oP '(?<=z: )\d+(\.\d+)?')
+depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 position: | grep -oP '(?<=z: )\d+(\.\d+)?')
 if [ -z "$depth_data" ]; then
   printError "No depth sensor connection found."
 else
-  if [ depth_data != "0.0" ]; then
+  if [ $(bc <<< "$depth_data != 0.0") ]; then
     printSuccess "Depth sensor connected! (z: $depth_data)"
   else
     printWarning "Depth sensor may not be working. (z: $depth_data)"
