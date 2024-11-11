@@ -11,16 +11,27 @@ function printInfo {
 }
 
 function printWarning {
-  echo -e "\033[0m\033[33m[WARN] $1\033[0m"
+  echo -e "\033[0m\033[93m[WARNING] $1\033[0m"
 }
 
 function printError {
-  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
+  echo -e "\033[0m\033[91m[NOT CONNECTED] $1\033[0m"
 }
 
 function printSuccess {
-  echo -e "\033[0m\033[32m[SUCCESS] $1\033[0m"
+  echo -e "\033[0m\033[92m[CONNECTED] $1\033[0m"
 }
+
+# brighter colors
+
+# function printInfo {
+#   echo -e "\033[0m\033[96m[INFO] $1\033[0m"
+# }
+
+# function printWarning {
+#   echo -e "\033[0m\033[93m[WARN] $1\033[0m"
+# }
+
 
 source ~/ros2_ws/install/setup.bash
 
@@ -81,7 +92,7 @@ else
   fi
 fi
 
-depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 orientation: | grep -oP '(?<=z: )\d+(\.\d+)?')
+depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 pressure: | grep -oP '(?<=z: )\d+(\.\d+)?')
 if [ -z "$depth_data" ]; then
   printError "No depth sensor connection found."
 else
