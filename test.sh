@@ -96,60 +96,64 @@ else
   fi
 fi
 
-# modem_imu_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
-# if [ -z "$modem_imu_data" ]; then
-#   printFailure "No modem IMU connection found."
-# else
-#   if [ $modem_imu_data -eq 0 ]; then
-#     printSuccess "Modem IMU connected! (orientation: $modem_imu_data)"
-#   else
-#     printFailure "Modem IMU may not be working. (orientation: $modem_imu_data)"
-#   fi
-# fi
+modem_imu_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
+if [ -z "$modem_imu_data" ]; then
+  printFailure "No modem IMU connection found."
+else
+  if [[ $(echo "$modem_imu_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
+    printSuccess "Modem IMU connected! (orientation: $modem_imu_data)"
+  else
+    printFailure "Modem IMU may not be working. (orientation: $modem_imu_data)"
+  fi
+fi
 
-# fix_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+')
-# if [ -z "$fix_data" ]; then
-#   printFailure "No GPS fix connection found."
-# else
-#   if [ $fix_data -eq 0 ]; then
-#     printSuccess "GPS fix connected! (latitude: $fix_data)"
-#   else
-#     printFailure "GPS fix may not be working. (latitude: $fix_data)"
-#   fi
-# fi
+fix_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+')
+if [ -z "$fix_data" ]; then
+  printFailure "No GPS fix connection found."
+else
+  if [[ $(echo "$fix_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
+    printSuccess "GPS fix connected! (latitude: $fix_data)"
+  else
+    printFailure "GPS fix may not be working. (latitude: $fix_data)"
+  fi
+fi
+  
 
-# gps_odom_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/gps_odom 2>/dev/null | grep -oP '(?<=latitude: )\d+')
-# if [ -z "$gps_odom_data" ]; then
-#   printFailure "No GPS odom connection found."
-# else
-#   if [ $gps_odom_data -eq 0 ]; then
-#     printSuccess "GPS odom connected! (latitude: $gps_odom_data)"
-#   else
-#     printFailure "GPS odom may not be working. (latitude: $gps_odom_data)"
-#   fi
-# fi
+gps_odom_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/gps_odom 2>/dev/null | grep -oP '(?<=latitude: )\d+')
+if [ -z "$gps_odom_data" ]; then
+  printFailure "No GPS odom connection found."
+else
+  if [[ $(echo "$gps_odom_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
+    printSuccess "GPS odom connected! (latitude: $gps_odom_data)"
+  else
+    printFailure "GPS odom may not be working. (latitude: $gps_odom_data)"
+  fi
+fi
+  
 
-# dvl_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=velocity: \[)\d+')
-# if [ -z "$dvl_data" ]; then
-#   printFailure "No DVL data connection found."
-# else
-#   if [ $dvl_data -eq 0 ]; then
-#     printSuccess "DVL data connected! (velocity: $dvl_data)"
-#   else
-#     printFailure "DVL data may not be working. (velocity: $dvl_data)"
-#   fi
-# fi
+dvl_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=velocity: \[)\d+')
+if [ -z "$dvl_data" ]; then
+  printFailure "No DVL data connection found."
+else
+  if [[ $(echo "$dvl_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
+    printSuccess "DVL data connected! (velocity: $dvl_data)"
+  else
+    printFailure "DVL data may not be working. (velocity: $dvl_data)"
+  fi
+fi
+  
 
-# dvl_position_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -oP '(?<=position: \[)\d+')
-# if [ -z "$dvl_position_data" ]; then
-#   printFailure "No DVL position connection found."
-# else
-#   if [ $dvl_position_data -eq 0 ]; then
-#     printSuccess "DVL position connected! (position: $dvl_position_data)"
-#   else
-#     printFailure "DVL position may not be working. (position: $dvl_position_data)"
-#   fi
-# fi
+dvl_position_data=$(timeout 3 ros2 topic echo --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -oP '(?<=position: \[)\d+')
+if [ -z "$dvl_position_data" ]; then
+  printFailure "No DVL position connection found."
+else
+  if [[ $(echo "$dvl_position_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
+    printSuccess "DVL position connected! (position: $dvl_position_data)"
+  else
+    printFailure "DVL position may not be working. (position: $dvl_position_data)"
+  fi
+fi
+  
 
 echo ""
 
