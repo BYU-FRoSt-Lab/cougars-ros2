@@ -1,8 +1,8 @@
 #!/bin/bash
 # Created by Nelson Durrant, Sep 2024
 #
-# Enables acoustics and tests vehicle sensors
-# - Run this after running the 'start.sh' script
+# Tests vehicle sensors and actuators
+# - Run this after running the 'launch.sh' script
 
 source ~/config/bash_vars.sh
 
