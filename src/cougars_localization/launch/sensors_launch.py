@@ -1,3 +1,5 @@
+import sys
+
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
@@ -15,28 +17,17 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = LaunchConfiguration('config_file')
-    namespace = LaunchConfiguration('namespace')
+    for arg in sys.argv:
+        if arg.startswith('namespace:='):
+            namespace = arg.split(':=')[1]
+        if arg.startswith('param_file:='):
+            param_file = arg.split(':=')[1]
 
-    config_file_path = '/home/frostlab/config/vehicle_params.yaml'
-
-    with open(config_file_path, 'r') as f:
-        vehicle_config_params = yaml.safe_load(f)
+    with open(param_file, 'r') as f:
+        vehicle_params = yaml.safe_load(f)
     
     return launch.LaunchDescription([
         
-        # Define the namespace parameter
-        launch.actions.DeclareLaunchArgument(
-            'namespace',
-            default_value='',
-            description='Unique vehicle namespace'
-        ),
-        # Define the config file parameter
-        launch.actions.DeclareLaunchArgument(
-            'config_file',
-            default_value='',
-            description='Path to the vehicle config file'
-        ),
         # Launch microROS
         launch_ros.actions.Node(
             package='micro_ros_agent',
@@ -53,7 +44,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         # Setup the GPS
@@ -68,7 +59,7 @@ def generate_launch_description():
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
                     namespace=namespace,
-                    parameters=[vehicle_config_params[namespace]['gpsd_client']['ros__parameters']]),
+                    parameters=[vehicle_params[namespace]['gpsd_client']['ros__parameters']]),
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
@@ -80,25 +71,25 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='depth_convertor',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='dvl_convertor',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='seatrac_ahrs_convertor',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='gps_odom.py',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
     ])
