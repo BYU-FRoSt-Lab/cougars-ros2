@@ -1,3 +1,5 @@
+import sys
+
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
@@ -18,8 +20,11 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = LaunchConfiguration('config_file')
-    namespace = LaunchConfiguration('namespace')
+    for arg in sys.argv:
+        if arg.startswith('namespace:='):
+            namespace = arg.split(':=')[1]
+        if arg.startswith('param_file:='):
+            param_file = arg.split(':=')[1]
 
     # Get the directory of the launch files
     package_dir = os.path.join(
@@ -28,18 +33,6 @@ def generate_launch_description():
     
     return launch.LaunchDescription([
         
-        # Define the namespace parameter
-        launch.actions.DeclareLaunchArgument(
-            'namespace',
-            default_value='',
-            description='Unique vehicle namespace'
-        ),
-        # Define the config file parameter
-        launch.actions.DeclareLaunchArgument(
-            'config_file',
-            default_value='',
-            description='Path to the vehicle config file'
-        ),
         # Include additional launch files
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
@@ -48,33 +41,33 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='moos_bridge',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
             output='screen',
         ),
         # Start the EmergencyStop checks
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='leak_sub.py',
-        #     parameters=[config_file],
-        #     namespace=namespace,
-        # ),
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='battery_sub.py',
-        #     parameters=[config_file],
-        #     namespace=namespace,
-        # ),
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='leak_sub.py',
+            parameters=[param_file],
+            namespace=namespace,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='battery_sub.py',
+            parameters=[param_file],
+            namespace=namespace,
+        ),
     ])
