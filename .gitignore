@@ -5,3 +5,6 @@
 **/test
 **/__pycache__
 **/.vscode
+**/cross_reference
+**/docs_build
+**/docs_output
