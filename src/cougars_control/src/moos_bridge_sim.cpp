@@ -81,8 +81,8 @@ private:
 
     double nav_x, nav_y, nav_depth, nav_speed;
 
-    nav_x = msg.pose.pose.position.x;
-    nav_y = msg.pose.pose.position.y;
+    nav_x = -msg.pose.pose.position.y;
+    nav_y = msg.pose.pose.position.x;
     // nav_depth = msg.pose.pose.position.z;
     nav_speed = 800.0;
 
