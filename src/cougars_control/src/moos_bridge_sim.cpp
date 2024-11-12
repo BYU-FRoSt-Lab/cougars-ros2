@@ -108,7 +108,7 @@ private:
 
     double nav_heading;
     
-    std::cout << "[INFO] Nav heading (from Holoocean): " << nav_heading;
+    std::cout << "[INFO] Nav heading (from Holoocean): " << msg.vector.z;
     if (msg.vector.z < 0.0) {
       nav_heading = 360.0 + (msg.vector.z);
     } else {
