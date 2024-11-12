@@ -3,7 +3,6 @@ import sys
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
-from launch.substitutions import LaunchConfiguration
 
 import yaml
 
