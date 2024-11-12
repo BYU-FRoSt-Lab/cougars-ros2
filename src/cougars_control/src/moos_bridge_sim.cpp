@@ -114,6 +114,7 @@ private:
     } else {
       nav_heading = (msg.vector.z);
     }
+    nav_heading = 360 - nav_heading;
     Comms.Notify("NAV_HEADING", nav_heading);
     std::cout << "[INFO] Nav heading (to MOOS): " << nav_heading << std::endl;
   }
@@ -151,9 +152,9 @@ void PublishDesiredValue(double value, std::string key) {
     auto message = frost_interfaces::msg::DesiredHeading();
 
 
-    message.desired_heading = 90 - value;
-    if (message.desired_heading < -180.0) {
-      message.desired_heading = message.desired_heading + 360;
+    message.desired_heading = 360 - value;
+    if (message.desired_heading > 180.0) {
+      message.desired_heading = message.desired_heading - 360;
     } 
     std::cout << "[INFO] Desired heading (from MOOS): " << value;
     std::cout << "[INFO] Desired heading (back to Holocean): " << message.desired_heading << std::endl;
