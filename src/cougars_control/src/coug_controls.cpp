@@ -468,45 +468,50 @@ private:
    * publishes the control commands to the controls/command topic.
    */
   void timer_callback() {
-      auto message = frost_interfaces::msg::UCommand();
-      message.header.stamp = this->now();
+    auto message = frost_interfaces::msg::UCommand();
+    message.header.stamp = this->now();
 
-      if (this->init_flag) {
+    if (this->init_flag) {
+        // Calculate the desired pitch angle
+        float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
+// RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth));
 
+        // Step 1: Create the target quaternion from desired pitch and heading
+        Eigen::Quaterniond target_quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX()) *
+                                         Eigen::AngleAxisd(theta_desired * M_PI / 180.0, Eigen::Vector3d::UnitY()) *
+                                         Eigen::AngleAxisd(this->desired_heading * M_PI / 180.0, Eigen::Vector3d::UnitZ());
 
-          // Calculate the desired pitch angle
-          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
-          // RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth));
+        // Step 2: Compute the quaternion error directly
+        Eigen::Quaterniond q_err = target_quat * this->current_quat.inverse();
 
-          // Step 1: Create the target quaternion from desired pitch and heading
-          Eigen::Quaterniond target_quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX()) *
-                                          Eigen::AngleAxisd(theta_desired * M_PI / 180.0, Eigen::Vector3d::UnitY()) *
-                                          Eigen::AngleAxisd(this->desired_heading * M_PI / 180.0, Eigen::Vector3d::UnitZ());
+        // Step 3: Extract the angle and axis from the quaternion error
+        Eigen::AngleAxisd angle_axis(q_err);
+        double angle = angle_axis.angle();
+        Eigen::Vector3d axis = angle_axis.axis();
 
-          // Step 2: Compute the quaternion error directly
-          Eigen::Quaterniond q_err = target_quat * this->current_quat.inverse();
+        // Ensure the angle is in the range [-pi, pi]
+        if (angle > M_PI) {
+            angle -= 2 * M_PI;
+        } else if (angle < -M_PI) {
+            angle += 2 * M_PI;
+        }
 
-          // Step 3: Extract pitch and yaw error directly from the quaternion error vector part
-          Eigen::Vector3d error_vec = q_err.vec();
+        // Step 4: Project the error onto pitch and yaw axes
+        double pitch_err = angle * axis.y() * 180.0 / M_PI;
+        double yaw_err = angle * axis.z() * 180.0 / M_PI;
 
-          // Convert the error vector’s Y and Z components to pitch and yaw errors (proportional to pitch and yaw deviations)
-          double pitch_err = 2.0 * error_vec.y() * 180.0 / M_PI;  // Scaled by 2 and converted to degrees
-          double yaw_err = 2.0 * error_vec.z() * 180.0 / M_PI;
+        // Step 5: Apply PID control to pitch and heading errors directly
+        int depth_pos = (int)myPitchPID.compute(0, pitch_err);
+        int heading_pos = (int)myHeadingPID.compute(0, yaw_err);
 
-          // RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
+        // Step 6: Set fin positions and publish the command
+        message.fin[0] = heading_pos;    // top fin
+        message.fin[1] = depth_pos;      // right fin
+        message.fin[2] = depth_pos;      // left fin
+        message.thruster = this->desired_speed;
 
-          // Step 4: Apply PID control to pitch and heading errors directly
-          int depth_pos = (int)myPitchPID.compute(0, pitch_err);  // No additional scaling needed
-          int heading_pos = (int)myHeadingPID.compute(0, yaw_err);
-
-          // Step 5: Set fin positions and publish the command
-          message.fin[0] = heading_pos;    // top fin
-          message.fin[1] = depth_pos;      // right fin
-          message.fin[2] = depth_pos;      // left fin
-          message.thruster = this->desired_speed;
-
-          u_command_publisher_->publish(message);
-      }
+        u_command_publisher_->publish(message);
+    }
   }
 
 
