@@ -108,7 +108,7 @@ private:
 
     double nav_heading;
     
-    std::cout << "[INFO] Nav heading (from Holoocean): " << msg.vector.z;
+    // std::cout << "[INFO] Nav heading (from Holoocean): " << msg.vector.z;
     if (msg.vector.z < 0.0) {
       nav_heading = 360.0 + (msg.vector.z);
     } else {
@@ -116,7 +116,7 @@ private:
     }
     nav_heading = 360 - nav_heading;
     Comms.Notify("NAV_HEADING", nav_heading);
-    std::cout << "[INFO] Nav heading (to MOOS): " << nav_heading << std::endl;
+    // std::cout << "[INFO] Nav heading (to MOOS): " << nav_heading << std::endl;
   }
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_vehicle_status_;
@@ -156,8 +156,8 @@ void PublishDesiredValue(double value, std::string key) {
     if (message.desired_heading > 180.0) {
       message.desired_heading = message.desired_heading - 360;
     } 
-    std::cout << "[INFO] Desired heading (from MOOS): " << value;
-    std::cout << "[INFO] Desired heading (back to Holocean): " << message.desired_heading << std::endl;
+    // std::cout << "[INFO] Desired heading (from MOOS): " << value;
+    // std::cout << "[INFO] Desired heading (back to Holocean): " << message.desired_heading << std::endl;
     desired_heading_publisher_->publish(message);
   }
   else if (key == "DESIRED_DEPTH") {
