@@ -230,7 +230,7 @@ class ManualMission(Node):
 
         # Publish the values if they change
         if depth_msg.desired_depth != self.last_depth or heading_msg.desired_heading != self.last_heading or speed_msg.desired_speed != self.last_speed:
-            self.get_logger().info("2Depth: %f, Heading: %f, Speed: %f" % (
+            self.get_logger().info("Depth: %f, Heading: %f, Speed: %f" % (
                 depth_msg.desired_depth,
                 heading_msg.desired_heading,
                 speed_msg.desired_speed,
