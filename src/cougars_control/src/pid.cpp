@@ -2,7 +2,8 @@
  * @author Nelson Durrant
  * @date September 2024
  *
- * This class is a simple implementation of a PID controller based on the BYU ECEn 483 approach.
+ * This class is a simple implementation of a PID controller based on the BYU
+ * ECEn 483 approach.
  */
 class PID {
 
@@ -10,7 +11,7 @@ public:
   /**
    * Creates a new PID controller.
    */
-  PID() {};
+  PID(){};
 
   /**
    * This method initializes the PID controller with the given constants.
@@ -22,7 +23,8 @@ public:
    * @param max The maximum output value.
    * @param interval The interval at which the PID controller is called.
    */
-  void initialize(float p, float i, float d, float min, float max, float interval) {
+  void initialize(float p, float i, float d, float min, float max,
+                  float interval) {
     kp = p;
     ki = i;
     kd = d;
@@ -30,13 +32,13 @@ public:
     max_output = max;
     interval = interval;
 
-    x_dot = 0.0;  // estimated derivative of x
-    x_d1 = 0.0;  // x delayed by one sample
-    error_d1 = 0.0;  // error delayed by one sample
+    x_dot = 0.0;      // estimated derivative of x
+    x_d1 = 0.0;       // x delayed by one sample
+    error_d1 = 0.0;   // error delayed by one sample
     integrator = 0.0; // integrator
 
     float sigma = 0.05; // cutoff freq for dirty derivative
-    beta = (2 * sigma - interval) / (2 * sigma + interval);  
+    beta = (2 * sigma - interval) / (2 * sigma + interval);
   }
 
   /**
@@ -82,7 +84,6 @@ public:
   }
 
 private:
-  
   float kp;
   float ki;
   float kd;
