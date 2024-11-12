@@ -95,6 +95,7 @@ else
   fi
 fi
 
+# TODO: Update this with the right values
 modem_imu_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
 if [ -z "$modem_imu_data" ]; then
   printFailure "No modem IMU connection found."
@@ -117,6 +118,7 @@ else
   fi
 fi
 
+# TODO: Update this with the right values
 dvl_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=velocity: \[)\d+')
 if [ -z "$dvl_data" ]; then
   printFailure "No DVL connection (data) found."
