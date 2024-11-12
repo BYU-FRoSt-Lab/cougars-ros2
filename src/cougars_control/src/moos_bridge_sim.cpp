@@ -86,13 +86,15 @@ private:
     // nav_depth = msg.pose.pose.position.z;
     nav_speed = 800.0;
 
-    RCLCPP_INFO(this->get_logger(), "[INFO] Nav x recieved %f, y: %f", nav_x, nav_y);
+    // RCLCPP_INFO(this->get_logger(), "[INFO] Nav x recieved %f, y: %f", nav_x, nav_y);
 
     // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     // Comms.Notify("NAV_DEPTH", nav_depth);
     Comms.Notify("NAV_SPEED", nav_speed);
+
+    std::cout << "Nav X: " << nav_x << "Nav Y: " << nav_y << std::endl;
     
   }
 
@@ -111,7 +113,7 @@ private:
     } else {
       nav_heading = (msg.vector.z);
     }
-
+    std::cout << "[INFO] Nav heading: " << nav_heading << std::endl;
     Comms.Notify("NAV_HEADING", nav_heading);
   }
 
@@ -143,21 +145,21 @@ void PublishDesiredValue(double value, std::string key) {
     auto message = frost_interfaces::msg::DesiredSpeed();
     message.desired_speed = value;
     desired_speed_publisher_->publish(message);
-    // std::cout << "[INFO] Desired speed: " << message.desired_speed << std::endl;
+    std::cout << "[INFO] Desired speed: " << message.desired_speed << std::endl;
   } else if (key == "DESIRED_HEADING") {
     auto message = frost_interfaces::msg::DesiredHeading();
     message.desired_heading = 90 - value;
     if (message.desired_heading < -180.0) {
       message.desired_heading = message.desired_heading + 360;
     } 
-    // std::cout << "[INFO] Desired heading: " << message.desired_heading << std::endl;
+    std::cout << "[INFO] Desired heading: " << message.desired_heading << std::endl;
     desired_heading_publisher_->publish(message);
   }
   else if (key == "DESIRED_DEPTH") {
     auto message = frost_interfaces::msg::DesiredDepth();
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
-    // std::cout << "[INFO] Desired depth: " << message.desired_depth << std::endl;
+    std::cout << "[INFO] Desired depth: " << message.desired_depth << std::endl;
   }
 }
 
@@ -172,7 +174,7 @@ bool OnMail(void *pParam) {
     std::string key = msg.GetKey();
     double value = msg.GetDouble();
     PublishDesiredValue(value, key);
-    std::cout << key << ": " << value << std::endl;
+    // std::cout << key << ": " << value << std::endl;v
 
     // if you want to print all the values registered for, then uncomment this
     // q->Trace();
