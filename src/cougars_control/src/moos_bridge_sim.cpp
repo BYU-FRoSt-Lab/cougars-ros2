@@ -84,7 +84,7 @@ private:
     nav_x = msg.pose.pose.position.x;
     nav_y = msg.pose.pose.position.y;
     // nav_depth = msg.pose.pose.position.z;
-    nav_speed = msg.coug_odom.twist.twist.linear.x;
+    nav_speed = 800.0;
 
     RCLCPP_INFO(this->get_logger(), "[INFO] Nav x recieved %f, y: %f", nav_x, nav_y);
 
