@@ -90,7 +90,7 @@ public:
      * The minimum output value for the depth PID controller. The default value
      * is 0.
      */
-    this->declare_parameter("depth_min_output", 0);
+    this->declare_parameter("depth_min_output", 0.0);
 
     /**
      * @param depth_max_output
@@ -98,14 +98,7 @@ public:
      * The maximum output value for the depth PID controller. The default value
      * is 0.
      */
-    this->declare_parameter("depth_max_output", 0);
-
-    /**
-     * @param depth_bias
-     *
-     * The bias value for the depth PID controller. The default value is 0.
-     */
-    this->declare_parameter("depth_bias", 0);
+    this->declare_parameter("depth_max_output", 0.0);
 
     /**
      * @param pitch_kp
@@ -137,7 +130,7 @@ public:
      * The minimum output value for the pitch PID controller. The default value
      * is 0.
      */
-    this->declare_parameter("pitch_min_output", 0);
+    this->declare_parameter("pitch_min_output", 0.0);
 
     /**
      * @param pitch_max_output
@@ -145,14 +138,7 @@ public:
      * The maximum output value for the pitch PID controller. The default value
      * is 0.
      */
-    this->declare_parameter("pitch_max_output", 0);
-
-    /**
-     * @param pitch_bias
-     *
-     * The bias value for the pitch PID controller. The default value is 0.
-     */
-    this->declare_parameter("pitch_bias", 0);
+    this->declare_parameter("pitch_max_output", 0.0);
 
     /**
      * @param heading_kp
@@ -184,7 +170,7 @@ public:
      * The minimum output value for the heading PID controller. The default
      * value is 0.
      */
-    this->declare_parameter("heading_min_output", 0);
+    this->declare_parameter("heading_min_output", 0.0);
 
     /**
      * @param heading_max_output
@@ -192,15 +178,7 @@ public:
      * The maximum output value for the heading PID controller. The default
      * value is 0.
      */
-    this->declare_parameter("heading_max_output", 0);
-
-    /**
-     * @param heading_bias
-     *
-     * The bias value for the heading PID controller. The default value is 0.
-     */
-    this->declare_parameter("heading_bias", 0);
-
+    this->declare_parameter("heading_max_output", 0.0);
 
     /**
      * @param magnetic_declination
@@ -212,29 +190,26 @@ public:
     this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
 
     // calibrate PID controllers
-    myDepthPID.calibrate(this->get_parameter("depth_kp").as_double(),
+    myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
                          this->get_parameter("depth_ki").as_double(),
                          this->get_parameter("depth_kd").as_double(),
-                         this->get_parameter("depth_min_output").as_int(),
-                         this->get_parameter("depth_max_output").as_int(),
-                         this->get_parameter("timer_period").as_int(),
-                         this->get_parameter("depth_bias").as_int());
+                         this->get_parameter("depth_min_output").as_double(),
+                         this->get_parameter("depth_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int()); 
 
-    myPitchPID.calibrate(this->get_parameter("pitch_kp").as_double(),
+    myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
                          this->get_parameter("pitch_ki").as_double(),
                          this->get_parameter("pitch_kd").as_double(),
-                         this->get_parameter("pitch_min_output").as_int(),
-                         this->get_parameter("pitch_max_output").as_int(),
-                         this->get_parameter("timer_period").as_int(),
-                         this->get_parameter("pitch_bias").as_int());
+                         this->get_parameter("pitch_min_output").as_double(),
+                         this->get_parameter("pitch_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int());
 
-    myHeadingPID.calibrate(this->get_parameter("heading_kp").as_double(),
+    myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
                            this->get_parameter("heading_ki").as_double(),
                            this->get_parameter("heading_kd").as_double(),
-                           this->get_parameter("heading_min_output").as_int(),
-                           this->get_parameter("heading_max_output").as_int(),
-                           this->get_parameter("timer_period").as_int(),
-                           this->get_parameter("heading_bias").as_int());
+                           this->get_parameter("heading_min_output").as_double(),
+                           this->get_parameter("heading_max_output").as_double(),
+                           (float)this->get_parameter("timer_period").as_int());
 
     /**
      * @brief Control command publisher.
@@ -496,8 +471,8 @@ private:
           // RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
 
           // Step 4: Apply PID control to pitch and heading errors directly
-          int depth_pos = (int)myPitchPID.compute(0, pitch_err);  // No additional scaling needed
-          int heading_pos = (int)myHeadingPID.compute(0, yaw_err);
+          int depth_pos = (int)myPitchPID.compute(0.0, pitch_err);  // No additional scaling needed
+          int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
 
           // Step 5: Set fin positions and publish the command
           message.fin[0] = heading_pos;    // top fin
