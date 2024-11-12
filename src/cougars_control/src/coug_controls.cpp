@@ -437,6 +437,8 @@ private:
 
     // Store heading, pitch, and roll
     this->actual_heading = yaw;
+
+    std::cout << "actual heading: " << this->actual_heading << std::endl;
     // this->actual_pitch = pitch;
     // this->actual_roll = roll;
 
