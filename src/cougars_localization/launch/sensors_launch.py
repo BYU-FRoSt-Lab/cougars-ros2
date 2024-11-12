@@ -18,7 +18,6 @@ def generate_launch_description():
     config_file = LaunchConfiguration('config_file')
     namespace = LaunchConfiguration('namespace')
 
-    # TODO: Figure out how to abstract this
     config_file_path = '/home/frostlab/config/vehicle_params.yaml'
 
     with open(config_file_path, 'r') as f:
