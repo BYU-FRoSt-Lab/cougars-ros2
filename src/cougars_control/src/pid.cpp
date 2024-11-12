@@ -17,21 +17,21 @@ public:
   PID() {};
 
   void calibrate(float p, float i, float d, int min, int max,
-                 float timer_interval, int adjust, float integral_threshold = 0.0, float integral_time = 0.0) {
+                 float timer_interval, int adjust, float integral_threshold = 5.0, float integral_time = 3.0) {
     kp = p;
     ki = i;
     kd = d;
     min_output = min;
     max_output = max;
-    interval = timer_interval;
+    interval = timer_interval * 0.001;
     bias = adjust;
 
     // Reset error and integral terms
     reset();
 
     // Integral threshold parameters
-    integral_threshold_ = integral_threshold;
-    integral_time_ = integral_time;
+    integral_threshold_ = integral_threshold; //Error threshold value where integrator is added
+    integral_time_ = integral_time;  //Time in seconds that error is below threshold to start adding
     integral_time_count_ = 0;
   }
 
