@@ -164,7 +164,7 @@ void PublishDesiredValue(double value, std::string key) {
       message.desired_heading = message.desired_heading - 360;
     } 
     // std::cout << "[INFO] Desired heading (from MOOS): " << value;
-    std::cout << "[INFO] Desired heading (back to Holocean): " << message.desired_heading << std::endl;
+    std::cout << "[INFO] Desired heading (back to ENU): " << message.desired_heading << std::endl;
     desired_heading_publisher_->publish(message);
   }
   else if (key == "DESIRED_DEPTH") {
