@@ -84,7 +84,7 @@ private:
     nav_x = msg.pose.pose.position.x;
     nav_y = msg.pose.pose.position.y;
     // nav_depth = msg.pose.pose.position.z;
-    // nav_speed = msg.coug_odom.twist.twist.linear.x;
+    nav_speed = msg.coug_odom.twist.twist.linear.x;
 
     RCLCPP_INFO(this->get_logger(), "[INFO] Nav x recieved %f, y: %f", nav_x, nav_y);
 
@@ -92,7 +92,7 @@ private:
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     // Comms.Notify("NAV_DEPTH", nav_depth);
-    // Comms.Notify("NAV_SPEED", nav_speed);
+    Comms.Notify("NAV_SPEED", nav_speed);
     
   }
 
@@ -112,7 +112,7 @@ private:
       nav_heading = (msg.vector.z);
     }
 
-    // Comms.Notify("NAV_HEADING", nav_heading);
+    Comms.Notify("NAV_HEADING", nav_heading);
   }
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_vehicle_status_;
@@ -143,21 +143,21 @@ void PublishDesiredValue(double value, std::string key) {
     auto message = frost_interfaces::msg::DesiredSpeed();
     message.desired_speed = value;
     desired_speed_publisher_->publish(message);
-    std::cout << "[INFO] Desired speed: " << message.desired_speed << std::endl;
+    // std::cout << "[INFO] Desired speed: " << message.desired_speed << std::endl;
   } else if (key == "DESIRED_HEADING") {
     auto message = frost_interfaces::msg::DesiredHeading();
     message.desired_heading = 90 - value;
     if (message.desired_heading < -180.0) {
       message.desired_heading = message.desired_heading + 360;
     } 
-    std::cout << "[INFO] Desired heading: " << message.desired_heading << std::endl;
+    // std::cout << "[INFO] Desired heading: " << message.desired_heading << std::endl;
     desired_heading_publisher_->publish(message);
   }
   else if (key == "DESIRED_DEPTH") {
     auto message = frost_interfaces::msg::DesiredDepth();
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
-    std::cout << "[INFO] Desired depth: " << message.desired_depth << std::endl;
+    // std::cout << "[INFO] Desired depth: " << message.desired_depth << std::endl;
   }
 }
 
