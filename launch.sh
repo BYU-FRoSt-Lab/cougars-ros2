@@ -2,8 +2,7 @@
 # Created by Nelson Durrant, Sep 2024
 #
 # Starts the micro-ROS agent and ROS 2 launch files
-# - Specify a start configuration using 'bash start.sh 
-#   <launch>' (ex. 'bash start.sh moos')
+# - Specify a start configuration using 'bash start.sh <launch>' (ex. 'bash start.sh moos')
 
 source ~/config/bash_params.sh
 
