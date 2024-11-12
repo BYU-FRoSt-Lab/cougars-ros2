@@ -3,7 +3,6 @@ import sys
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
-from launch.substitutions import LaunchConfiguration
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
@@ -30,7 +29,6 @@ def generate_launch_description():
     package_dir = os.path.join(
         get_package_share_directory('cougars_control'), 'launch')
 
-    
     return launch.LaunchDescription([
         
         # Include additional launch files
