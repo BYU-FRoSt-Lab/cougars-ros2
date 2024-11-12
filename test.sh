@@ -84,17 +84,6 @@ else
   fi
 fi
 
-depth_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/depth_data 2>/dev/null | grep -A 3 position: | grep -oP '(?<=z: )\d+(\.\d+)?')
-if [ -z "$depth_data" ]; then
-  printFailure "No depth sensor connection found."
-else
-  if [[ $(echo "$depth_data" | awk '{if ($1 == 0.0) print 1; else print 0}') -eq 0 ]]; then
-    printSuccess "Depth sensor connected! (z: $depth_data)"
-  else
-    printFailure "Depth sensor may not be working. (z: $depth_data)"
-  fi
-fi
-
 # TODO: Update this with the right values
 modem_imu_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/modem_imu 2>/dev/null | grep -oP '(?<=orientation: \[)\d+')
 if [ -z "$modem_imu_data" ]; then
