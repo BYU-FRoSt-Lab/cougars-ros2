@@ -80,9 +80,6 @@ public:
       force_sat = force_unsat;
     }
 
-    std::cout << "force_unsat " << force_unsat << std::endl;
-    std::cout << "force_sat " << force_sat << std::endl;
-
     // update delayed variables
     this->error_d1 = error;
     this->x_d1 = x;
