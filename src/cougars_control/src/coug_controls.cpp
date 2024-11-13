@@ -500,17 +500,17 @@ private:
 
           // if they are both negative or they are both positive than just take the difference
           
-          if (this->desired_heading * this->actual_heading >= 0){
-            yaw_err = this->desired_heading - this->actual_heading;
-          }
-          else{
-            if(this->desired_heading < 0){
-              yaw_err = (this->desired_heading + 360.0) - this->actual_heading;
-            }
-            else{
-              yaw_err = (this->desired_heading) - (this->actual_heading + 360);
-            }
-          } 
+          // if (this->desired_heading * this->actual_heading >= 0){
+          //   yaw_err = this->desired_heading - this->actual_heading;
+          // }
+          // else{
+          //   if(this->desired_heading < 0){
+          //     yaw_err = (this->desired_heading + 360.0) - this->actual_heading;
+          //   }
+          //   else{
+          //     yaw_err = (this->desired_heading) - (this->actual_heading + 360);
+          //   }
+          // } 
           
           // RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
 
