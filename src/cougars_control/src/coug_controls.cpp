@@ -494,7 +494,21 @@ private:
           
           
           double yaw_err = 2.0 * error_vec.z() * 180.0 / M_PI;
-          double yaw_err = this->desired_heading - this->actual_heading
+
+
+          // Handling roll over when taking the error difference
+
+          // if they are both negative or they are both positive than just take the difference
+          yaw_err = this->desired_heading - this->actual_heading;
+          
+          if (this->desired_heading * this->actual_heading < 0){
+            yaw_err += 360;
+          }
+          
+
+
+
+          
           // RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch Error: %f", yaw_err, pitch_err);
 
 
@@ -551,7 +565,7 @@ private:
   Eigen::Quaterniond current_quat;
   // float actual_pitch = 0.0;
   // float actual_roll = 0.0;
-  // float actual_heading = 0.0;
+  float actual_heading = 0.0;
 };
 
 int main(int argc, char *argv[]) {
