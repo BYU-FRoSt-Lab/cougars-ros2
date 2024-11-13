@@ -394,7 +394,7 @@ private:
     //Negate the z value in ENU to get postive depth value
   }
 
-    void normalizeAngles(double& yaw, double& pitch, double& roll) {
+  void normalizeAngles(double& yaw, double& pitch, double& roll) {
     // Normalize yaw to [-180, 180]
     yaw = fmod(yaw + 180.0, 360.0) - 180.0;
 
@@ -457,7 +457,7 @@ private:
 
     // Store heading, pitch, and roll
     this->actual_heading = yaw;
-    std::cout << "actual heading: " << this->actual_heading << std::endl;
+    // std::cout << "actual heading: " << this->actual_heading << std::endl;
     this->actual_pitch = pitch;
     this->actual_roll = roll;
 
@@ -500,6 +500,7 @@ private:
           // Handling roll over when taking the error difference
           // given desired heading and actual heading from -180 to 180
           // if they are both negative or they are both positive than just take the difference
+          float yaw_err;
           if (this->desired_heading * this->actual_heading >= 0){
             yaw_err = this->desired_heading - this->actual_heading;
           }
@@ -565,8 +566,8 @@ private:
   // node actual values
   float actual_depth = 0.0;
   Eigen::Quaterniond current_quat;
-  // float actual_pitch = 0.0;
-  // float actual_roll = 0.0;
+  float actual_pitch = 0.0;
+  float actual_roll = 0.0;
   float actual_heading = 0.0;
 };
 
