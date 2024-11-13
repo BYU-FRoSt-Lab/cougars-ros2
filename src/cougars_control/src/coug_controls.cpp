@@ -52,6 +52,8 @@ public:
    */
   CougControls() : Node("coug_controls") {
 
+    this->count = 0;
+
     /**
      * @param timer_period
      *
@@ -495,6 +497,7 @@ private:
       if (this->init_flag) {
           // Calculate the desired pitch angle
           float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
+          this->count++;
           // RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth))
 
           // Handling roll over when taking the error difference
@@ -516,7 +519,10 @@ private:
                 yaw_err, this->actual_pitch, theta_desired);
           
           // Step 4: Apply PID control to pitch and heading errors directly
-          int depth_pos = (int)myPitchPID.compute(theta_desired, this->actual_ptich);  // No additional scaling needed
+          if  (this->count > 5) {
+            int depth_pos = (int)myPitchPID.compute(theta_desired, this->actual_ptich);  // No additional scaling needed
+            this->count = 0;
+          }
           int heading_pos = (int)myHeadingPID.compute(0, yaw_err);
 
           // Step 5: Set fin positions and publish the command
@@ -553,6 +559,8 @@ private:
   PID myHeadingPID;
   PID myDepthPID;
   PID myPitchPID;
+
+  int count;
 
   // magnetic declination parameter
   double magnetic_declination;
