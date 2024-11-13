@@ -52,11 +52,6 @@ public:
 
 
     // vehicle status listener from the factor graph filter
-    // subscription_vehicle_status_ =
-    //     this->create_subscription<nav_msgs::msg::Odometry>(
-    //         "smoothed_output", 10,
-    //         std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
-    // TODO: this comment above is changing the factor graph to the gps directly
     subscription_vehicle_status_ =
         this->create_subscription<nav_msgs::msg::Odometry>(
             "gps_odom", 10,
@@ -86,10 +81,10 @@ private:
 
     double nav_x, nav_y, nav_depth, nav_speed;
 
-    nav_x = -msg.pose.pose.position.y;
-    nav_y = msg.pose.pose.position.x;
+    nav_x = msg.pose.pose.position.x;
+    nav_y = msg.pose.pose.position.y;
     // nav_depth = msg.pose.pose.position.z;
-    nav_speed = 800.0;
+    nav_speed = 0;
 
     // RCLCPP_INFO(this->get_logger(), "[INFO] Nav x recieved %f, y: %f", nav_x, nav_y);
 
@@ -99,9 +94,7 @@ private:
     // Comms.Notify("NAV_DEPTH", nav_depth);
     Comms.Notify("NAV_SPEED", nav_speed);
 
-    std::cout << "(MOOS) Nav X: " << nav_x << "Nav Y: " << nav_y;
-    std::cout << " --- (HOLOOCEAN) Nav X: " << msg.pose.pose.position.x << "Nav Y: " << msg.pose.pose.position.y << std::endl;
-
+    std::cout << "Nav X: " << nav_x << "Nav Y: " << nav_y << std::endl;
     
   }
 
@@ -115,7 +108,7 @@ private:
 
     double nav_heading;
     
-    std::cout << "[INFO] Nav heading (from Holoocean): " << msg.vector.z  << std::endl;
+    // std::cout << "[INFO] Nav heading (from Holoocean): " << msg.vector.z;
     if (msg.vector.z < 0.0) {
       nav_heading = 360.0 + (msg.vector.z);
     } else {
@@ -164,7 +157,7 @@ void PublishDesiredValue(double value, std::string key) {
       message.desired_heading = message.desired_heading - 360;
     } 
     // std::cout << "[INFO] Desired heading (from MOOS): " << value;
-    std::cout << "[INFO] Desired heading (back to ENU): " << message.desired_heading << std::endl;
+    std::cout << "[INFO] Desired heading (back to Holocean): " << message.desired_heading << std::endl;
     desired_heading_publisher_->publish(message);
   }
   else if (key == "DESIRED_DEPTH") {
