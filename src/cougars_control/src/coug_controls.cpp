@@ -394,6 +394,28 @@ private:
     //Negate the z value in ENU to get postive depth value
   }
 
+    void normalizeAngles(double& yaw, double& pitch, double& roll) {
+    // Normalize yaw to [-180, 180]
+    yaw = fmod(yaw + 180.0, 360.0) - 180.0;
+
+    // Limit pitch to [-90, 90]
+    if (pitch > 90.0) {
+        pitch = 180.0 - pitch;
+        yaw += 180.0;
+        roll += 180.0;
+    } else if (pitch < -90.0) {
+        pitch = -180.0 - pitch;
+        yaw += 180.0;
+        roll += 180.0;
+    }
+
+    // Normalize roll to [-180, 180]
+    roll = fmod(roll + 180.0, 360.0) - 180.0;
+
+    // Ensure yaw is still in [-180, 180] after adjustments
+    yaw = fmod(yaw + 180.0, 360.0) - 180.0;
+  }
+
   /**
    * @brief Callback function for the orientation subscription.
    *
@@ -422,23 +444,21 @@ private:
 
     // Convert radians to degrees and center angles around 0
     double yaw = euler_angles[0] * (180.0 / M_PI);
-    // double pitch = euler_angles[1] * (180.0 / M_PI);
-    // double roll = euler_angles[2] * (180.0 / M_PI);
+    double pitch = euler_angles[1] * (180.0 / M_PI);
+    double roll = euler_angles[2] * (180.0 / M_PI);
 
-    // Normalize yaw, pitch, and roll to be within -180 to 180 degrees
-    if (yaw > 180.0) yaw -= 360.0;
-    else if (yaw < -180.0) yaw += 360.0;
+    std::cout << "Before normalization:" << std::endl;
+    std::cout << "Yaw: " << yaw << ", Pitch: " << pitch << ", Roll: " << roll << std::endl;
 
-    // if (pitch > 180.0) pitch -= 360.0;
-    // else if (pitch < -180.0) pitch += 360.0;
+    normalizeAngles(yaw, pitch, roll);
 
-    // if (roll > 180.0) roll -= 360.0;
-    // else if (roll < -180.0) roll += 360.0;
+    std::cout << "After normalization:" << std::endl;
+    std::cout << "Yaw: " << yaw << ", Pitch: " << pitch << ", Roll: " << roll << std::endl;
 
     // Store heading, pitch, and roll
     this->actual_heading = yaw;
 
-    std::cout << "actual heading: " << this->actual_heading << std::endl;
+    // std::cout << "actual heading: " << this->actual_heading << std::endl;
     // this->actual_pitch = pitch;
     // this->actual_roll = roll;
 
@@ -481,7 +501,7 @@ private:
           // Step 1: Create the target quaternion from desired pitch and heading
           Eigen::Quaterniond target_quat = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX()) *
                                           Eigen::AngleAxisd(theta_desired * M_PI / 180.0, Eigen::Vector3d::UnitY()) *
-                                          Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ());
+                                          Eigen::AngleAxisd(this->desired_heading * M_PI / 180.0, Eigen::Vector3d::UnitZ());
 
           // Step 2: Compute the quaternion error directly
           Eigen::Quaterniond q_err = target_quat * this->current_quat.inverse();
