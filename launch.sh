@@ -28,9 +28,9 @@ cleanup() {
 trap cleanup SIGINT
 
 echo ""
-echo "######################################################################"
-echo "# BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS #"
-echo "######################################################################"
+echo -e "\033[0m\033[36m######################################################################\033[0m"
+echo -e "\033[0m\033[36m#\033[0m BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP OF AUTONOMOUS ROBOTS \033[0m\033[36m#\033[0m"
+echo -e "\033[0m\033[36m######################################################################\033[0m"
 echo ""
 
 # Quick fix for daemon error (TODO: find a better solution)
