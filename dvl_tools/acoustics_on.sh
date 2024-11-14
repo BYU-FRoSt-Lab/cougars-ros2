@@ -43,14 +43,14 @@ IPADDRESS=192.168.194.95
 # Function to send set_config request
 send_set_config() {
     JSON_STRING='{"command":"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}}'
-    echo -n "$JSON_STRING" | nc -w 5 -q 0 $IPADDRESS 16171
+    echo -n "$JSON_STRING" | nc -w 3 -q 0 $IPADDRESS 16171
     # Add a small delay to allow the change to take effect
     sleep 1
 }
 
 # Function to send get_config request and check response
 check_config() {
-    response=$(echo -n '{"command": "get_config"}' | nc -w 5 -q 0 $IPADDRESS 16171)
+    response=$(echo -n '{"command": "get_config"}' | nc -w 3 -q 0 $IPADDRESS 16171)
 
     if [ -z "$response" ]; then
         printError "No response received from DVL."
@@ -87,8 +87,7 @@ while [ $attempt -le $MAX_ATTEMPTS ] && [ "$success" = false ]; do
     else
         if [ $attempt -lt $MAX_ATTEMPTS ]; then
             printInfo "Attempt $attempt of $MAX_ATTEMPTS"
-            printWarning "DVL config attempt failed. Retrying in 5 seconds..."
-            sleep 5
+            printWarning "DVL config attempt failed. Retrying ..."
         fi
     fi
     
