@@ -32,9 +32,9 @@ def generate_launch_description():
     return launch.LaunchDescription([
         
         # Include additional launch files
-        # launch.actions.IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
-        # ),
+        launch.actions.IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(package_dir, 'sensors_launch.py'))
+        ),
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_control',
