@@ -84,13 +84,15 @@ private:
     // nav_depth = msg.pose.pose.position.z;
     // nav_speed = msg.coug_odom.twist.twist.linear.x;
 
+    nav_speed = 20.0;
+
     
 
     // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     // Comms.Notify("NAV_DEPTH", nav_depth);
-    // Comms.Notify("NAV_SPEED", nav_speed);
+    Comms.Notify("NAV_SPEED", nav_speed);
     
   }
 
@@ -166,7 +168,7 @@ bool OnMail(void *pParam) {
     std::string key = msg.GetKey();
     double value = msg.GetDouble();
     PublishDesiredValue(value, key);
-    std::cout << "DESIRED_" << key << ": " << value << std::endl;
+    std::cout << key << ": " << value << std::endl;
 
     // if you want to print all the values registered for, then uncomment this
     // q->Trace();
