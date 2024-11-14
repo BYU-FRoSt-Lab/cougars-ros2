@@ -52,15 +52,15 @@ public:
 
 
     // vehicle status listener from the factor graph filter
-    // subscription_vehicle_status_ =
-    //     this->create_subscription<nav_msgs::msg::Odometry>(
-    //         "smoothed_output", 10,
-    //         std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
-    // TODO: this comment above is changing the factor graph to the gps directly
     subscription_vehicle_status_ =
         this->create_subscription<nav_msgs::msg::Odometry>(
-            "gps_odom", 10,
+            "smoothed_output", 10,
             std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
+    // TODO: this comment above is changing the factor graph to the gps directly
+    // subscription_vehicle_status_ =
+    //     this->create_subscription<nav_msgs::msg::Odometry>(
+    //         "gps_odom", 10,
+    //         std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
     // just grab the heading straight from the modem for now
     sim_heading_subscription_ =
         this->create_subscription<geometry_msgs::msg::Vector3Stamped>(
