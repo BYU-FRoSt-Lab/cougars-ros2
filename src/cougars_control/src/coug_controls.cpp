@@ -456,6 +456,18 @@ private:
 
     return theta_desired;
   }
+  float calculateYawError(float desired_heading, float actual_heading) {
+    float yaw_err = desired_heading - actual_heading;
+    
+    // Normalize the error to the range [-180, 180]
+    if (yaw_err > 180.0f) {
+        yaw_err -= 360.0f;
+    } else if (yaw_err < -180.0f) {
+        yaw_err += 360.0f;
+    }
+    
+    return yaw_err;
+  }
 
   /**
    * @brief Callback function for the PID control timer.
@@ -469,7 +481,7 @@ private:
 
       if (this->init_flag) {
           // Calculate the desired pitch angle
-          float depth_error = this->desired_depth - this->actual_depth;
+          float depth_err = this->desired_depth - this->actual_depth;
           RCLCPP_INFO(this->get_logger(), "Depth Error: %f", depth_err);
           float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
           // RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth))
@@ -477,24 +489,13 @@ private:
           // Handling roll over when taking the error difference
           // given desired heading and actual heading from -180 to 180
           // if they are both negative or they are both positive than just take the difference
-          float yaw_err;
-          if (this->desired_heading * this->actual_heading >= 0){
-            yaw_err = this->desired_heading - this->actual_heading;
-          }
-          else{
-            if(this->desired_heading < 0){
-              yaw_err = (this->desired_heading + 360.0) - this->actual_heading;
-            }
-            else{
-              yaw_err = (this->desired_heading) - (this->actual_heading + 360);
-            }
-          } 
+          float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
           // // Log the information
           RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch: %f, Desired Pitch: %f",
                 yaw_err, this->actual_pitch, theta_desired);
           
           // Step 4: Apply PID control to pitch and heading errors directly
-          int depth_pos = (int)myPitchPID.compute(theta_desired, this->actual_ptich);  // No additional scaling needed
+          int depth_pos = (int)myPitchPID.compute(theta_desired, this->actual_pitch);  // No additional scaling needed
           int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
 
           // Step 5: Set fin positions and publish the command
