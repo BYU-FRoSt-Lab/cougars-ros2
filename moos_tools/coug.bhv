@@ -40,7 +40,7 @@ Behavior = BHV_Waypoint
       capture_radius = 15.0
          slip_radius = 25.0
 	efficiency_measure = all
-	           polygon = 100,100:150,300:0,600:0,0 // set the waypoints here
+	           polygon = 40,40:20,-40:0,-150 // set the waypoints here
 
                order = normal
              repeat  = 0
