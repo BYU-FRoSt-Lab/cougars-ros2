@@ -78,13 +78,13 @@ attempt=1
 success=false
 
 while [ $attempt -le $MAX_ATTEMPTS ] && [ "$success" = false ]; do
-    printInfo "Attempt $attempt of $MAX_ATTEMPTS"
     
     send_set_config
     if check_config; then
         success=true
     else
         if [ $attempt -lt $MAX_ATTEMPTS ]; then
+            printInfo "Attempt $attempt of $MAX_ATTEMPTS"
             printWarning "Attempt failed. Retrying in 5 seconds..."
             sleep 5
         fi
@@ -96,6 +96,4 @@ done
 if [ "$success" = false ]; then
     printFailure "Failed to set and verify acoustic_enabled after $MAX_ATTEMPTS attempts."
     exit 1
-else
-    printSuccess "Operation completed successfully."
 fi
