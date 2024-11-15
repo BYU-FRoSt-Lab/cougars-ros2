@@ -34,7 +34,7 @@ ACOUSTIC_ENABLED=$1
 
 # Validate the input to ensure it's either "true" or "false"
 if [[ "$ACOUSTIC_ENABLED" != "true" && "$ACOUSTIC_ENABLED" != "false" ]]; then
-  printError "Argument must be 'true' or 'false'."
+  printError "DVL acoustics argument must be 'true' or 'false'."
   exit 1
 fi
 
@@ -53,7 +53,7 @@ check_config() {
     response=$(echo -n '{"command": "get_config"}' | nc -w 5 -q 0 $IPADDRESS 16171)
 
     if [ -z "$response" ]; then
-        printError "No response received."
+        printError "No response received from DVL."
         return 1
     fi
 
@@ -64,11 +64,11 @@ check_config() {
         printSuccess "Acoustic_enabled is set to $ACOUSTIC_ENABLED as requested."
         return 0
     elif [ "$success" -eq 1 ]; then
-        printError "Request was successful, but acoustic_enabled value doesn't match the requested value."
+        printError "DVL Request was successful, but acoustic_enabled value doesn't match the requested value."
         echo "Response: $response"
         return 1
     else
-        printError "Failed to retrieve configuration."
+        printError "Failed to retrieve DVL configuration."
         echo "Response: $response"
         return 1
     fi
@@ -87,7 +87,7 @@ while [ $attempt -le $MAX_ATTEMPTS ] && [ "$success" = false ]; do
     else
         if [ $attempt -lt $MAX_ATTEMPTS ]; then
             printInfo "Attempt $attempt of $MAX_ATTEMPTS"
-            printWarning "Attempt failed. Retrying in 5 seconds..."
+            printWarning "DVL config attempt failed. Retrying in 5 seconds..."
             sleep 5
         fi
     fi
