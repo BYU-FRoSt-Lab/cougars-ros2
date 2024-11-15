@@ -127,7 +127,7 @@ class NavSatFixToOdom(Node):
         self.last_msg = odom
         self.publisher.publish(odom)
 
-    def CalculateHaversine(refLat, refLong, pointLat, pointLong):
+    def CalculateHaversine(self, refLat, refLong, pointLat, pointLong):
         # convert GPS coordinates to radians
         ref_lat_rad     = math.radians(refLat)
         ref_long_rad    = math.radians(refLong)

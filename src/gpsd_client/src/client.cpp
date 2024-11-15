@@ -25,7 +25,7 @@ namespace gpsd_client
     {
       start();
       timer_ = create_wall_timer(publish_period_ms, std::bind(&GPSDClientComponent::step, this));
-      RCLCPP_INFO(this->get_logger(), "Instantiated.");
+      // RCLCPP_INFO(this->get_logger(), "Instantiated.");
     }
 
     bool start()
@@ -76,7 +76,7 @@ namespace gpsd_client
         return false;
       }
 
-      RCLCPP_INFO(this->get_logger(), "GPSd opened");
+      // RCLCPP_INFO(this->get_logger(), "GPSd opened");
       return true;
     }
 

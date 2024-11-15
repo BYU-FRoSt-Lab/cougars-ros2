@@ -84,13 +84,14 @@ private:
     // nav_depth = msg.pose.pose.position.z;
     // nav_speed = msg.coug_odom.twist.twist.linear.x;
 
+    nav_speed = 20.0;
     
 
     // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     // Comms.Notify("NAV_DEPTH", nav_depth);
-    // Comms.Notify("NAV_SPEED", nav_speed);
+    Comms.Notify("NAV_SPEED", nav_speed);
     
   }
 
@@ -146,14 +147,16 @@ void PublishDesiredValue(double value, std::string key) {
     message.desired_heading = 90 - value;
     if (message.desired_heading < -180.0) {
       message.desired_heading = message.desired_heading + 360;
+    }
     desired_heading_publisher_->publish(message);
+    std::cout << message.desired_heading << std::endl;
   } else if (key == "DESIRED_DEPTH") {
     auto message = frost_interfaces::msg::DesiredDepth();
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
   }
-  }
 }
+
 
 // Receives the moos stuff
 bool OnMail(void *pParam) {
@@ -166,7 +169,7 @@ bool OnMail(void *pParam) {
     std::string key = msg.GetKey();
     double value = msg.GetDouble();
     PublishDesiredValue(value, key);
-    std::cout << "DESIRED_" << key << ": " << value << std::endl;
+    std::cout << key << ": " << value << std::endl;
 
     // if you want to print all the values registered for, then uncomment this
     // q->Trace();

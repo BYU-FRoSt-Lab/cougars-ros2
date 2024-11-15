@@ -148,14 +148,15 @@ void PublishDesiredValue(double value, std::string key) {
     message.desired_heading = 90 - value;
     if (message.desired_heading < -180.0) {
       message.desired_heading = message.desired_heading + 360;
+    }
     desired_heading_publisher_->publish(message);
   } else if (key == "DESIRED_DEPTH") {
     auto message = frost_interfaces::msg::DesiredDepth();
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
   }
-  }
 }
+
 
 // Receives the moos stuff
 bool OnMail(void *pParam) {
