@@ -36,7 +36,7 @@ ProcessConfig = pHelmIvP
 
   behaviors  = coug.bhv
   domain     = course:0:359:360
-  domain     = speed:0:1500:100
+  domain     = speed:0:1500:1000
 }
 
 
