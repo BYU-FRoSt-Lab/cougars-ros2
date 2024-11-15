@@ -60,12 +60,12 @@ public:
       this->integrator = this->integrator + (this->pid_interval / 2.0) * (error + this->error_d1);
     }
 
-    std::cout << "integrator " << this->integrator << std::endl;
+    // std::cout << "integrator " << this->integrator << std::endl;
 
     // differentiate x
     this->x_dot = this->beta * this->x_dot + (1.0 - this->beta) * ((x - this->x_d1) / this->pid_interval);
 
-    std::cout << "x_dot " << this->x_dot << std::endl;
+    // std::cout << "x_dot " << this->x_dot << std::endl;
 
     // calculate the force
     float force_unsat = this->kp * error + this->ki * this->integrator - this->kd * this->x_dot;

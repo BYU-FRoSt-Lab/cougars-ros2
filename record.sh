@@ -10,5 +10,10 @@ echo "Enter a descriptive folder name for the rosbag: "
 read FOLDER
 echo ""
 
+bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
+sleep 5
+bash ~/ros2_ws/init.sh
+bash ~/ros2_ws/dvl_tools/reset_dr.sh
+
 FOLDER=$FOLDER-$(date +"%Y-%m-%d-%H-%M-%S")
-ros2 bag record -o ~/bag/$FOLDER -s mcap -a
+ros2 bag record -o ~/bag/$FOLDER -a
