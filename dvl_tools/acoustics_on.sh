@@ -34,24 +34,26 @@ ACOUSTIC_ENABLED=$1
 
 # Validate the input to ensure it's either "true" or "false"
 if [[ "$ACOUSTIC_ENABLED" != "true" && "$ACOUSTIC_ENABLED" != "false" ]]; then
-  printError "Error: Argument must be 'true' or 'false'."
+  printError "Argument must be 'true' or 'false'."
   exit 1
 fi
+
+IPADDRESS=192.168.194.95
 
 # Function to send set_config request
 send_set_config() {
     JSON_STRING='{"command":"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}}'
-    echo -n "$JSON_STRING" | nc -w 5 -q 0 192.168.194.95 16171
+    echo -n "$JSON_STRING" | nc -w 5 -q 0 $IPADDRESS 16171
     # Add a small delay to allow the change to take effect
     sleep 1
 }
 
 # Function to send get_config request and check response
 check_config() {
-    response=$(echo -n '{"command": "get_config"}' | nc -w 5 -q 0 192.168.194.95 16171)
+    response=$(echo -n '{"command": "get_config"}' | nc -w 5 -q 0 $IPADDRESS 16171)
 
     if [ -z "$response" ]; then
-        printError "Error: No response received."
+        printError "No response received."
         return 1
     fi
 
@@ -59,14 +61,14 @@ check_config() {
     acoustic_status=$(echo "$response" | grep -o '"acoustic_enabled":'"$ACOUSTIC_ENABLED" | wc -l)
 
     if [ "$success" -eq 1 ] && [ "$acoustic_status" -eq 1 ]; then
-        printSuccess "Success: acoustic_enabled is set to $ACOUSTIC_ENABLED as requested."
+        printSuccess "Acoustic_enabled is set to $ACOUSTIC_ENABLED as requested."
         return 0
     elif [ "$success" -eq 1 ]; then
-        printError "Error: Request was successful, but acoustic_enabled value doesn't match the requested value."
+        printError "Request was successful, but acoustic_enabled value doesn't match the requested value."
         echo "Response: $response"
         return 1
     else
-        printError "Error: Failed to retrieve configuration."
+        printError "Failed to retrieve configuration."
         echo "Response: $response"
         return 1
     fi
