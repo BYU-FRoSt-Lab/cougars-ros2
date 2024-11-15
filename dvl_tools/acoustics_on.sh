@@ -18,9 +18,37 @@ if [[ "$ACOUSTIC_ENABLED" != "true" && "$ACOUSTIC_ENABLED" != "false" ]]; then
   exit 1
 fi
 
-# Build the JSON string
-JSON_STRING='{"command":"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}}'
+# Function to send set_config request
+send_set_config() {
+    JSON_STRING='{"command":"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}}'
+    echo -n "$JSON_STRING" | nc -w 5 -q 0 192.168.194.95 16171
+    # Add a small delay to allow the change to take effect
+    sleep 1
+}
 
-# Send the JSON string to the specified IP and port using netcat
-echo -n "$JSON_STRING" | nc -q 0 192.168.194.95 16171
+# Function to send get_config request and check response
+check_config() {
+    response=$(echo -n '{"command": "get_config"}' | nc -w 5 -q 0 192.168.194.95 16171)
 
+    if [ -z "$response" ]; then
+        echo "Error: No response received."
+        exit 1
+    fi
+
+    success=$(echo "$response" | grep -o '"success":true' | wc -l)
+    acoustic_status=$(echo "$response" | grep -o '"acoustic_enabled":'"$ACOUSTIC_ENABLED" | wc -l)
+
+    if [ "$success" -eq 1 ] && [ "$acoustic_status" -eq 1 ]; then
+        echo "Success: acoustic_enabled is set to $ACOUSTIC_ENABLED as requested."
+    elif [ "$success" -eq 1 ]; then
+        echo "Error: Request was successful, but acoustic_enabled value doesn't match the requested value."
+        echo "Response: $response"
+    else
+        echo "Error: Failed to retrieve configuration."
+        echo "Response: $response"
+    fi
+}
+
+# Main execution
+send_set_config
+check_config
