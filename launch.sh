@@ -22,7 +22,6 @@ cleanup() {
   echo ""
   bash ~/gpio/strobe.sh off
   bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-  echo "[COMPLETE] Acoustics successfully disabled" # TODO: Add this to the acoustics_on script to make sure it worked
   exit 0
 }
 trap cleanup SIGINT
@@ -37,7 +36,7 @@ echo ""
 source ~/ros2_ws/install/setup.bash
 ros2 daemon stop
 ros2 daemon start
-sleep 5
+sleep 3
 
 echo ""
 
@@ -62,6 +61,9 @@ case $1 in
         ;;
     "moos")
         ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+        ;;
+    "moos_gps")
+        ros2 launch cougars_control moos_gps_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE 
         ;;
     "sensors")
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE

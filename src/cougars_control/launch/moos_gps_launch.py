@@ -45,7 +45,7 @@ def generate_launch_description():
             executable='moos_bridge_gps',
             parameters=[param_file],
             namespace=namespace,
-            output='screen',
+            output='log',
         ),
         # Launch microROS
         launch_ros.actions.Node(
@@ -78,20 +78,31 @@ def generate_launch_description():
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
                     namespace=namespace,
-                    parameters=[vehicle_config_params[namespace]['gpsd_client']['ros__parameters']]),
+                    parameters=[
+                        vehicle_config_params[namespace]['gpsd_client']['ros__parameters'],
+                        {'log_level': 'warn'}  # Add log level here
+                    ],
+                    extra_arguments=[{'use_intra_process_comms': True}]
+                ),
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
                     namespace=namespace,
-                    name='utm_gpsfix_to_odometry_node'),
+                    name='utm_gpsfix_to_odometry_node',
+                    parameters=[
+                        {'log_level': 'warn'}  # Add log level here
+                    ],
+                ),
             ],
+            output='log',
+            arguments=['--ros-args', '--log-level', 'WARN'],
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
             parameters=[ParameterFile(param_file, allow_substs=True)],
             namespace=LaunchConfiguration('namespace'),
-            output='screen',
+            output='log',
         ),
         launch_ros.actions.Node(
             package='cougars_localization',

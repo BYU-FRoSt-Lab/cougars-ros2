@@ -55,7 +55,7 @@ public:
         fix.header.frame_id = odom->header.frame_id.substr(0, pos);
       }
 
-      RCLCPP_INFO(this->get_logger(), "zone: %s", zone.c_str());
+      // RCLCPP_INFO(this->get_logger(), "zone: %s", zone.c_str());
 
       fix.header.stamp = odom->header.stamp;
 

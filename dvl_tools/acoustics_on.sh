@@ -75,7 +75,7 @@ check_config() {
 }
 
 # Main execution with retry logic
-MAX_ATTEMPTS=5
+MAX_ATTEMPTS=3
 attempt=1
 success=false
 
