@@ -18,10 +18,12 @@ class ManualMission(Node):
 
     Subscribes:
         - init (std_msgs/msg/Empty)
+
     Publishes:
         - desired_depth (frost_interfaces/msg/DesiredDepth)
         - desired_heading (frost_interfaces/msg/DesiredHeading)
         - desired_speed (frost_interfaces/msg/DesiredSpeed)
+        
     Services:
         - emergency_stop (frost_interfaces/srv/EmergencyStop)
     '''
@@ -133,7 +135,7 @@ class ManualMission(Node):
         # Create the subscriptions
         self.subscription = self.create_subscription(
             Empty, 
-            "/init", 
+            "init", 
             self.listener_callback, 
             qos_profile_system_default
         )
@@ -163,6 +165,10 @@ class ManualMission(Node):
 
         self.counter = 0
         self.stopped = True
+
+        self.last_depth = -1.0
+        self.last_heading = -1.0
+        self.last_speed = -1.0
 
     def listener_callback(self, msg):
         '''
@@ -222,11 +228,19 @@ class ManualMission(Node):
         self.heading_publisher.publish(heading_msg)
         self.speed_publisher.publish(speed_msg)
 
-        self.get_logger().info("Depth: %f, Heading: %f, Speed: %f" % (
-            depth_msg.desired_depth,
-            heading_msg.desired_heading,
-            speed_msg.desired_speed,
-        ))
+        # Publish the values if they change
+        if depth_msg.desired_depth != self.last_depth or heading_msg.desired_heading != self.last_heading or speed_msg.desired_speed != self.last_speed:
+            self.get_logger().info("Depth: %f, Heading: %f, Speed: %f" % (
+                depth_msg.desired_depth,
+                heading_msg.desired_heading,
+                speed_msg.desired_speed,
+            )
+        )
+            
+        # Save last values
+        self.last_depth = depth_msg.desired_depth
+        self.last_heading = heading_msg.desired_heading
+        self.last_speed = speed_msg.desired_speed
 
     # Logs when EmergencyStop is requested
     def emergency_stop_callback(self, request, response):

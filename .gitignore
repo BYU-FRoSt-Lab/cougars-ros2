@@ -1,10 +1,10 @@
 **/build
 **/install
 **/log
-**/bag
 **/test
 **/__pycache__
 **/.vscode
-**/docs/cross_reference
-**/docs/docs_build
-**/docs/docs_output
+**/cross_reference
+**/docs_build
+**/docs_output
+core

@@ -52,7 +52,7 @@ public:
     // vehicle status listener from the factor graph filter
     subscription_vehicle_status_ =
         this->create_subscription<nav_msgs::msg::Odometry>(
-            "smoothed_output", 10,
+            "gps_odom", 10,
             std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
     // just grab the heading straight from the modem for now
     actual_heading_subscription_ =
@@ -84,15 +84,13 @@ private:
     // nav_depth = msg.pose.pose.position.z;
     // nav_speed = msg.coug_odom.twist.twist.linear.x;
 
-    nav_speed = 20.0;
-
     
 
     // publish to MOOS-IvP
     Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     // Comms.Notify("NAV_DEPTH", nav_depth);
-    Comms.Notify("NAV_SPEED", nav_speed);
+    // Comms.Notify("NAV_SPEED", nav_speed);
     
   }
 
@@ -168,7 +166,7 @@ bool OnMail(void *pParam) {
     std::string key = msg.GetKey();
     double value = msg.GetDouble();
     PublishDesiredValue(value, key);
-    std::cout << key << ": " << value << std::endl;
+    std::cout << "DESIRED_" << key << ": " << value << std::endl;
 
     // if you want to print all the values registered for, then uncomment this
     // q->Trace();

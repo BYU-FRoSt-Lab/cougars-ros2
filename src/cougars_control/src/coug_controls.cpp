@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <Eigen/Geometry>
+#include <Eigen/Dense>
 #include <cmath>  // For atan2, M_PI, fmin, fmax
 
 #include "pid.cpp"
@@ -39,15 +40,15 @@ auto qos = rclcpp::QoS(
  * - desired_speed (frost_interfaces/msg/DesiredSpeed)
  * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
  * - modem_status (seatrac_interfaces/msg/ModemStatus)
+ * 
  * Publishes:
  * - controls/command (frost_interfaces/msg/UCommand)
  */
 class CougControls : public rclcpp::Node {
 public:
+
   /**
-   * @brief Creates a new controls node.
-   *
-   * This constructor creates a new controls node with default values.
+   * Creates a new controls node.
    */
   CougControls() : Node("coug_controls") {
 
@@ -89,7 +90,7 @@ public:
      * The minimum output value for the depth PID controller. The default value
      * is 0.
      */
-    this->declare_parameter("depth_min_output", 0);
+    this->declare_parameter("depth_min_output", 0.0);
 
     /**
      * @param depth_max_output
@@ -97,28 +98,47 @@ public:
      * The maximum output value for the depth PID controller. The default value
      * is 0.
      */
-    this->declare_parameter("depth_max_output", 0);
+    this->declare_parameter("depth_max_output", 0.0);
 
     /**
-     * @param depth_bias
+     * @param pitch_kp
      *
-     * The bias value for the depth PID controller. The default value is 0.
+     * The proportional constant for the pitch PID controller. The default value
+     * is 0.0.
      */
-    this->declare_parameter("depth_bias", 0);
+    this->declare_parameter("pitch_kp", 0.0);
 
     /**
-     * @param look_ahead_distance
+     * @param pitch_ki
      *
-     * The bias value for the depth PID controller. The default value is 0.
+     * The integral constant for the pitch PID controller. The default value is
+     * 0.0.
      */
-    this->declare_parameter("look_ahead", 5.0);
+    this->declare_parameter("pitch_ki", 0.0);
 
     /**
-     * @param theta_max
+     * @param pitch_kd
      *
-     * The bias value for the depth PID controller. The default value is 0.
+     * The derivative constant for the pitch PID controller. The default value
+     * is 0.0.
      */
-    this->declare_parameter("theta_max", 25.0);
+    this->declare_parameter("pitch_kd", 0.0);
+
+    /**
+     * @param pitch_min_output
+     *
+     * The minimum output value for the pitch PID controller. The default value
+     * is 0.
+     */
+    this->declare_parameter("pitch_min_output", 0.0);
+
+    /**
+     * @param pitch_max_output
+     *
+     * The maximum output value for the pitch PID controller. The default value
+     * is 0.
+     */
+    this->declare_parameter("pitch_max_output", 0.0);
 
     /**
      * @param heading_kp
@@ -150,7 +170,7 @@ public:
      * The minimum output value for the heading PID controller. The default
      * value is 0.
      */
-    this->declare_parameter("heading_min_output", 0);
+    this->declare_parameter("heading_min_output", 0.0);
 
     /**
      * @param heading_max_output
@@ -158,15 +178,7 @@ public:
      * The maximum output value for the heading PID controller. The default
      * value is 0.
      */
-    this->declare_parameter("heading_max_output", 0);
-
-    /**
-     * @param heading_bias
-     *
-     * The bias value for the heading PID controller. The default value is 0.
-     */
-    this->declare_parameter("heading_bias", 0);
-
+    this->declare_parameter("heading_max_output", 0.0);
 
     /**
      * @param magnetic_declination
@@ -178,21 +190,26 @@ public:
     this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
 
     // calibrate PID controllers
-    myDepthPID.calibrate(this->get_parameter("depth_kp").as_double(),
+    myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
                          this->get_parameter("depth_ki").as_double(),
                          this->get_parameter("depth_kd").as_double(),
-                         this->get_parameter("depth_min_output").as_int(),
-                         this->get_parameter("depth_max_output").as_int(),
-                         this->get_parameter("timer_period").as_int(),
-                         this->get_parameter("depth_bias").as_int());
+                         this->get_parameter("depth_min_output").as_double(),
+                         this->get_parameter("depth_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int()); 
 
-    myHeadingPID.calibrate(this->get_parameter("heading_kp").as_double(),
+    myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
+                         this->get_parameter("pitch_ki").as_double(),
+                         this->get_parameter("pitch_kd").as_double(),
+                         this->get_parameter("pitch_min_output").as_double(),
+                         this->get_parameter("pitch_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int());
+
+    myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
                            this->get_parameter("heading_ki").as_double(),
                            this->get_parameter("heading_kd").as_double(),
-                           this->get_parameter("heading_min_output").as_int(),
-                           this->get_parameter("heading_max_output").as_int(),
-                           this->get_parameter("timer_period").as_int(),
-                           this->get_parameter("heading_bias").as_int());
+                           this->get_parameter("heading_min_output").as_double(),
+                           this->get_parameter("heading_max_output").as_double(),
+                           (float)this->get_parameter("timer_period").as_int());
 
     /**
      * @brief Control command publisher.
@@ -352,6 +369,28 @@ private:
     //Negate the z value in ENU to get postive depth value
   }
 
+  void normalizeAngles(double& yaw, double& pitch, double& roll) {
+    // Normalize yaw to [-180, 180]
+    yaw = fmod(yaw + 180.0, 360.0) - 180.0;
+
+    // Limit pitch to [-90, 90]
+    if (pitch > 90.0) {
+        pitch = 180.0 - pitch;
+        yaw += 180.0;
+        roll += 180.0;
+    } else if (pitch < -90.0) {
+        pitch = -180.0 - pitch;
+        yaw += 180.0;
+        roll += 180.0;
+    }
+
+    // Normalize roll to [-180, 180]
+    roll = fmod(roll + 180.0, 360.0) - 180.0;
+
+    // Ensure yaw is still in [-180, 180] after adjustments
+    yaw = fmod(yaw + 180.0, 360.0) - 180.0;
+  }
+
   /**
    * @brief Callback function for the orientation subscription.
    *
@@ -361,45 +400,46 @@ private:
    * @param orientation_msg The Imu message recieved from the modem_imu topic.
    */
   void actual_orientation_callback(const sensor_msgs::msg::Imu &orientation_msg) {
-    // Extract quaternion from the IMU message
+    // Normalize and extract quaternion from the IMU message
     Eigen::Quaterniond q(
         orientation_msg.orientation.w,
         orientation_msg.orientation.x,
         orientation_msg.orientation.y,
         orientation_msg.orientation.z
     );
+    q.normalize();
+    
+    this->current_quat = q;
 
     // Convert quaternion to a 3x3 rotation matrix
     Eigen::Matrix3d rotation_matrix = q.toRotationMatrix();
 
-    // Extract Euler angles (roll, pitch, yaw) from the rotation matrix
-    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);  // ZYX order: yaw (Z), pitch (Y), roll (X)
+    // Extract Euler angles using ZYX order: yaw (Z), pitch (Y), roll (X)
+    Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);  // ZYX order
 
-    // Yaw (heading), Pitch
-    double yaw = euler_angles[0];   // Yaw (rotation around Z-axis)
-    double pitch = euler_angles[1]; // Pitch (rotation around Y-axis)
+    // Convert radians to degrees and center angles around 0
+    double yaw = euler_angles[0] * (180.0 / M_PI);
+    double pitch = euler_angles[1] * (180.0 / M_PI);
+    double roll = euler_angles[2] * (180.0 / M_PI);
 
-    // Convert yaw from radians to degrees, and adjust for range -180 to 180 degrees
-    double heading = yaw * (180.0 / M_PI); // Convert from radians to degrees
-    if (heading > 180.0) {
-        heading -= 360.0;
-    }
+    // std::cout << "Before normalization:" << std::endl;
+    // std::cout << "Yaw: " << yaw << ", Pitch: " << pitch << ", Roll: " << roll << std::endl;
 
-    // Store heading and pitch
-    this->actual_heading = heading;
-    this->actual_pitch = pitch * (180.0 / M_PI); // Convert pitch to degrees for consistency
+    normalizeAngles(yaw, pitch, roll);
 
-    // Log the information
-    RCLCPP_INFO(this->get_logger(), "Yaw Info Received: %f, Pitch Info Received: %f",
-                this->actual_heading, this->actual_pitch);
+    // std::cout << "After normalization:" << std::endl;
+    // std::cout << "Yaw: " << yaw << ", Pitch: " << pitch << ", Roll: " << roll << std::endl;
+
+    // Store heading, pitch, and roll
+    this->actual_heading = yaw;
+    // std::cout << "actual heading: " << this->actual_heading << std::endl;
+    this->actual_pitch = pitch;
+    this->actual_roll = roll;
+
+    // // // Log the information
+    // RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
+    //             this->actual_heading, this->actual_pitch, this->actual_roll);
   }
-
-  /**
-   * @brief Callback function for the PID control timer.
-   *
-   * This method computes the control commands using the PID controllers and
-   * publishes the control commands to the controls/command topic.
-   */
 
   double look_ahead_theta(double distance, double actual, double desired, double theta_max) {
     // Find the depth error
@@ -409,38 +449,65 @@ private:
     double theta_desired = atan2(depth_error, distance); // atan2(y, x)
 
     // Convert theta_desired from radians to degrees (optional, depending on your needs)
-    // theta_desired *= 180.0 / M_PI; // Uncomment if you want degrees instead of radians
+    theta_desired *= 180.0 / M_PI; // Uncomment if you want degrees instead of radians
 
     // Cap the desired theta within the range [-theta_max, theta_max]
     theta_desired = std::fmax(-theta_max, std::fmin(theta_desired, theta_max));
 
     return theta_desired;
-}
-
-  void timer_callback() {
-    auto message = frost_interfaces::msg::UCommand();
-    message.header.stamp = this->now();
-
-    if (this->init_flag) {
-      
-      double look_ahead = this->get_parameter("look_ahead").as_double();
-      double theta_max = this->get_parameter("theta_max").as_double();
-      
-        
-      double theta_desired = look_ahead_theta(look_ahead, this->actual_depth, this->desired_depth, theta_max);
-
-      int depth_pos =
-          myDepthPID.compute(theta_desired, this->actual_pitch);
-      int heading_pos = myHeadingPID.compute(this->desired_heading, this->actual_heading);
-
-      message.fin[0] = heading_pos;    // top fin
-      message.fin[1] = -1 * depth_pos; // right fin (from the front)
-      message.fin[2] = depth_pos;      // left fin (from the front)
-      message.thruster = this->desired_speed;
-
-      u_command_publisher_->publish(message);
-    }
   }
+  float calculateYawError(float desired_heading, float actual_heading) {
+    float yaw_err = desired_heading - actual_heading;
+    
+    // Normalize the error to the range [-180, 180]
+    if (yaw_err > 180.0f) {
+        yaw_err -= 360.0f;
+    } else if (yaw_err < -180.0f) {
+        yaw_err += 360.0f;
+    }
+    
+    return yaw_err;
+  }
+
+  /**
+   * @brief Callback function for the PID control timer.
+   *
+   * This method computes the control commands using the PID controllers and
+   * publishes the control commands to the controls/command topic.
+   */
+  void timer_callback() {
+      auto message = frost_interfaces::msg::UCommand();
+      message.header.stamp = this->now();
+
+      if (this->init_flag) {
+          // Calculate the desired pitch angle
+          float depth_err = this->desired_depth - this->actual_depth;
+          RCLCPP_INFO(this->get_logger(), "Depth Error: %f", depth_err);
+          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
+          // RCLCPP_INFO(this->get_logger(), "[INFO] theta desired: %f, Actual Depth: %f, Desired Depth: %f", float(theta_desired), float(this->actual_depth), float(this->desired_depth))
+
+          // Handling roll over when taking the error difference
+          // given desired heading and actual heading from -180 to 180
+          // if they are both negative or they are both positive than just take the difference
+          float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
+          // // Log the information
+          RCLCPP_INFO(this->get_logger(), "Yaw Error: %f, Pitch: %f, Desired Pitch: %f",
+                yaw_err, this->actual_pitch, theta_desired);
+          
+          // Step 4: Apply PID control to pitch and heading errors directly
+          int depth_pos = (int)myPitchPID.compute(theta_desired, this->actual_pitch);  // No additional scaling needed
+          int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
+
+          // Step 5: Set fin positions and publish the command
+          message.fin[0] = heading_pos;    // top fin
+          message.fin[1] = depth_pos;      // right fin
+          message.fin[2] = depth_pos;      // left fin
+          message.thruster = this->desired_speed;
+
+          u_command_publisher_->publish(message);
+      }
+  }
+
 
   // micro-ROS objects
   rclcpp::TimerBase::SharedPtr controls_timer_;
@@ -464,6 +531,7 @@ private:
   // control objects
   PID myHeadingPID;
   PID myDepthPID;
+  PID myPitchPID;
 
   // magnetic declination parameter
   double magnetic_declination;
@@ -475,7 +543,9 @@ private:
 
   // node actual values
   float actual_depth = 0.0;
+  Eigen::Quaterniond current_quat;
   float actual_pitch = 0.0;
+  float actual_roll = 0.0;
   float actual_heading = 0.0;
 };
 
