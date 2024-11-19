@@ -29,12 +29,11 @@ add_executable(modem_pinger src/modem_pinger.cpp)
 ament_target_dependencies(modem_pinger rclcpp std_msgs seatrac_interfaces)
 target_link_libraries(modem_pinger seatrac_driver)
 
-add_executable(calibrate_modem src/calibrate_modem.cpp)
-target_link_libraries(calibrate_modem
-seatrac_driver
-)
-add_executable(setup_seatrac_beacon src/seatrac_beacon_setup_tool.cpp)
-target_link_libraries(setup_seatrac_beacon seatrac_driver)
+add_executable(calibration_and_settings src/seatrac_calibration_and_settings.cpp)
+target_link_libraries(calibration_and_settings seatrac_driver)
+
+add_executable(calibrate src/calibrate_modem.cpp)
+target_link_libraries(calibrate seatrac_driver)
 
 install(TARGETS
   modem

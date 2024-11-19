@@ -9,12 +9,17 @@ using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
 /**
- * @brief ADD HERE
+ * @brief A C++ terminal application for calibrating the Seatrac x150 beacon
  * @author Clayton Smith
  * @date September 2024
  * 
- * ADD HERE
+ * After building the seatrac package, run `ros2 run seatrac calibrate`
+ * Follow the terminal instructions to complete calibration and/or settings modification
+ * 
+ * Please note that as of right now, this tool gives you access to settings that are
+ * automatically reset when modem_ros_node is started. It is advised to 
  */
+
 class MyDriver : public SeatracDriver
 {
     public:

@@ -4,7 +4,7 @@
   <name>seatrac</name>
   <version>1.0.0</version>
   <description>
-    A ROS2 node that interfaces with the seatrac x150 beacon
+    A ROS2 package that interfaces with the seatrac x150 beacon.
   </description>
   <maintainer email="cas314@byu.edu">Clayton Smith</maintainer>
   <license>Apache License 2.0</license>
