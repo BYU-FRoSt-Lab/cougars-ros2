@@ -2,7 +2,7 @@
 # Created by Nelson Durrant, Sep 2024
 #
 # Starts the micro-ROS agent and ROS 2 launch files
-# - Specify a start configuration using 'bash start.sh <launch>' (ex. 'bash start.sh moos')
+# - Specify a launch configuration using 'bash launch.sh <launch>' (ex. 'bash launch.sh moos')
 
 source ~/config/bash_vars.sh
 
@@ -68,7 +68,7 @@ case $1 in
         ;;
     *)
         printError "No start configuration specified"
-        printError "Specify a start configuration using 'bash start.sh <config>' (ex. 'bash start.sh moos')"
+        printError "Specify a launch configuration using 'bash launch.sh <config>' (ex. 'bash launch.sh moos')"
         ;;
 esac
 

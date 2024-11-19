@@ -23,12 +23,13 @@ using namespace narval::seatrac;
  * 
  * The ping schedule is based on 3 parameters: ping_delay_seconds, number_of_vehicles, 
  * and vehicle_order, and uses the following formula:
- * ping_cycle_length = ping_delay_seconds * number_of_vehicles
- * seconds_into_cycle = seconds_since_midnight % ping_cycle_length
- * time_until_ping = (ping_delay_seconds * vehicle_order - seconds_into_cycle) % ping_cycle_length
+ * - ping_cycle_length = ping_delay_seconds * number_of_vehicles
+ * - seconds_into_cycle = seconds_since_midnight % ping_cycle_length
+ * - time_until_ping = (ping_delay_seconds * vehicle_order - seconds_into_cycle) % ping_cycle_length
  * 
- * WARNING: raspberry pi clocks should be synchonized between
+ * @warning raspberry pi clocks should be synchonized between
  * vehicles before using this node.
+ * 
  * 
  * Publishes:
  * - modem_send (seatrac_interfaces/msg/ModemSend)
