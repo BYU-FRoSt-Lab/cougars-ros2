@@ -7,6 +7,7 @@ from nav_msgs.msg import Odometry
 from pyproj import Proj, Transformer
 import math
 
+EARTH_RADIUS_METERS       = 6371000
 
 class NavSatFixToOdom(Node):
     '''
@@ -100,7 +101,10 @@ class NavSatFixToOdom(Node):
             return
         
         # Convert latitude/longitude to local Cartesian coordinates
-        x, y = self.inv_transformer.transform(msg.longitude, msg.latitude)
+        x, y = self.CalculateHaversine(self.get_parameter('origin.latitude').get_parameter_value().double_value,
+                                       self.get_parameter('origin.longitude').get_parameter_value().double_value,
+                                       msg.latitude,
+                                       msg.longitude)
         
         # Access the altitude (z) value from the NavSatFix message
         z = msg.altitude - self.get_parameter('origin.altitude').get_parameter_value().double_value
@@ -122,6 +126,26 @@ class NavSatFixToOdom(Node):
         # Publish the odometry message
         self.last_msg = odom
         self.publisher.publish(odom)
+
+    def CalculateHaversine(refLat, refLong, pointLat, pointLong):
+        # convert GPS coordinates to radians
+        ref_lat_rad     = math.radians(refLat)
+        ref_long_rad    = math.radians(refLong)
+        point_lat_rad   = math.radians(pointLat)
+        point_lon_rad   = math.radians(pointLong)
+
+        # calculate distance and direction from reference point to GPS coordinate
+        delta_lon = point_lon_rad - ref_long_rad
+        delta_lat = point_lat_rad - ref_lat_rad
+        a = math.sin(delta_lat/2)**2 + math.cos(ref_lat_rad) * math.cos(point_lat_rad) * math.sin(delta_lon/2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        d = EARTH_RADIUS_METERS * c
+        theta = math.atan2(math.sin(delta_lon) * math.cos(point_lat_rad), math.cos(ref_lat_rad) * math.sin(point_lat_rad) - math.sin(ref_lat_rad) * math.cos(point_lat_rad) * math.cos(delta_lon))
+
+        # convert distance and direction to xy coordinates in meters
+        y = d * math.cos(theta)
+        x = d * math.sin(theta)
+        return x, y
 
 def main(args=None):
     rclpy.init(args=args)
