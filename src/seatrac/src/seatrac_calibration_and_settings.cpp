@@ -52,14 +52,25 @@ void skip_cin_line() {
 }
 bool yn_answer() {
     while(true) {
-        char yorn;
-        if(scanf("%c", &yorn)) {
-            if(yorn == 'y') {skip_cin_line(); return true;}
-            if(yorn == 'n') {skip_cin_line(); return false;}
+        char y_or_n;
+        if(scanf("%c", &y_or_n)) {
+            if(y_or_n == 'y') {skip_cin_line(); return true;}
+            if(y_or_n == 'n') {skip_cin_line(); return false;}
         }
         skip_cin_line();
         std::cout << "Invalid response. Please enter 'y' or 'n': ";
         }
+}
+inline int get_int(char* param_name, int min, int max) {
+    int val;
+    while(true) {
+        std::cout << "Enter New "<<param_name<<" (integer between "<<min<<" and "<<max<<" inclusive): ";
+        if(scanf("%d", &val) && val<=max && val>=min) break;
+        skip_cin_line();
+        std::cout << "Invalid response. Try again";
+    }
+    skip_cin_line();
+    return val;
 }
 
 void manual_set_settings(CalibrationDriver& seatrac, SETTINGS_T& settings) {
@@ -67,14 +78,7 @@ void manual_set_settings(CalibrationDriver& seatrac, SETTINGS_T& settings) {
         std::cout << "Current Beacon Id: " << (int)settings.xcvrBeaconId << std::endl
                   << "Change Beacon Id (y/n)? ";
         if(yn_answer()) {
-            int bid;
-            while(true) {
-                std::cout << "Enter New Beacon Id (integer between 1 and 15 inclusive): ";
-                if(scanf("%d", &bid) && bid<=15 && bid>=1) break;
-                skip_cin_line();
-                std::cout << "Invalid Beacon Id. Id should be an integer between 1 and 15 inclusive." << std::endl;
-            }
-            skip_cin_line();
+            int bid = get_int("Beacon Id", 1, 16);
             std::cout << "Setting Beacon Id to " << bid << "... ";
             settings.xcvrBeaconId = (BID_E) bid;
             command::settings_set(seatrac, settings);
@@ -156,8 +160,30 @@ void manual_set_settings(CalibrationDriver& seatrac, SETTINGS_T& settings) {
             std::cout << "done" << std::endl;
         }
 
-        std::cout << "View and modify transciever and sensor settings (y/n)? ";
+        std::cout << "View and modify advanced transciever and sensor settings (y/n)? ";
         if(yn_answer()) {
+
+            std::cout   << "Current Transcever Response Time: "<<settings.xcvrRespTime<<" milliseconds"<<std::endl
+                        << "Change Transcever Response Time (y/n)? ";
+            if(yn_answer()) {
+                int val = get_int("Transcever Response Time", 10, 1000);
+                std::cout << "Setting Transcever Response Time to " << val << "... ";
+                settings.xcvrRespTime = (uint16_t)val;
+                command::settings_set(seatrac, settings);
+                std::cout << "done" << std::endl << std::endl;
+            }
+
+            std::cout   << "Current Range Timeout: "<<settings.xcvrRangeTmo<<" meters"<<std::endl
+                        << "Change Range Timeout (y/n)? ";
+            if(yn_answer()) {
+                int val = get_int("Range Timeout", 10, 1000);
+                std::cout << "Setting Range Timeout to " << val << "... ";
+                settings.xcvrRangeTmo = (uint16_t)val;
+                command::settings_set(seatrac, settings);
+                std::cout << "done" << std::endl << std::endl;
+            }
+
+
             std::cout << "Use position filter: " << ((settings.xcvrFlags & XCVR_POSFLT_ENABLE)? "true":"false") << std::endl
                       << "Use ahrs for usbl position: " << ((settings.xcvrFlags & USBL_USE_AHRS)? "true":"false") << std::endl
                       << "Automatic pressure offset calculation: " << ((settings.envFlags&AUTO_PRESSURE_OFS)? "true":"false") << std::endl
@@ -179,16 +205,11 @@ void manual_set_settings(CalibrationDriver& seatrac, SETTINGS_T& settings) {
             }
             std::cout << "Saving transciever and sensor settings... ";
             command::settings_set(seatrac, settings);
-            std::cout << "done" << std::endl << std::endl;   
+            std::cout << "done" << std::endl << std::endl;
         }
-
-        //TODO: these settings can be easy to mess up and really shouldn't change at all
-        // Not sure if I should give the user control over this section or not.         
-        settings.xcvrRangeTmo  = 1000;
-        settings.xcvrRespTime  = 10;
-        settings.xcvrPosfltVel = 3;
-        settings.xcvrPosfltAng = 10;
-        settings.xcvrPosfltTmo = 60;
+        // settings.xcvrPosfltVel = 3;
+        // settings.xcvrPosfltAng = 10;
+        // settings.xcvrPosfltTmo = 60;
 
         command::settings_set(seatrac, settings);
         std::cout << "Manual Settings upload complete." << std::endl << std::endl; 
@@ -196,7 +217,7 @@ void manual_set_settings(CalibrationDriver& seatrac, SETTINGS_T& settings) {
 
 int main(int argc, char *argv[]) {
 
-    std::cout << "=== Seatrac Beacon Setup Tool ==="    << std::endl << std::endl;
+    std::cout << "=== Seatrac x150 Calibration and Settings Tool ==="    << std::endl << std::endl;
 
     bool cont = true;
     while(cont) {
@@ -214,43 +235,35 @@ int main(int argc, char *argv[]) {
         command::status_config_set(seatrac, (STATUS_BITS_E)0x0); 
         std::cout << "Done" << std::endl;
 
-        std::cout << "View current settings (y/n)? ";
-        if(yn_answer()) std::cout << settings << std::endl << std::endl;
+        std::cout << "You may perform any number of actions with this beacon."<<std::endl;
+        int action=0;
+        while (action<4 && action>0) {
+            std::cout   << "Select action:" << std::endl
+                        << "\t1) Calibrate Magnetometer" << std::endl
+                        << "\t2) Calibrate Accelerometer" << std::endl
+                        << "\t3) View and Modify settings" << std::endl
+                        << "\t4) Finish actions" << std::endl
+                        << "Enter a number: ";
+            scanf("%d", &action);
 
-        std::cout << "What would you like to do?" << std::endl
-                  << "  's': change settings, 'c': calibration, 'b':both 'q':exit (s/c/b/q)? ";
-        
-        char ans;
-        while(true) {
-            if(scanf("%c", &ans)) {
-                if(ans == 's' || ans == 'b') {
-                    skip_cin_line();
+            switch(action) {
+                case 1: {
+                    calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, true);
+                } break;
+                case 2: {
+                    calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, true);
+                } break;
+                case 3: {
+                    std::cout << "Current Settings:\n" << settings << std::endl << std::endl;
                     manual_set_settings(seatrac, settings);
-                    break;
-                }
-                if(ans == 'c') {
-                    skip_cin_line();
-                    std::cout << "skipping to calibration" << std::endl;
-                    break;
-                }
-                if(ans == 'q') {
-                    std::cout << "exiting application" << std::endl;
-                    return 0;
-                }
-            }
-            skip_cin_line();
-            std::cout << "Invalid response. Please enter 'm', 'c', 's', or 'q': ";
-        }
-        if(ans=='b' || ans=='c') {
-            std::cout << "Calibrate Magnetometer (y/n)? ";
-            if(yn_answer()) {
-                calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, false);
-            }
-            std::cout << "Calibrate Accelerometer (y/n)? ";
-            if(yn_answer()) {
-                calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, false);
+                } break;
+                default: {
+                    std::cout << "Exiting Seatrac Modem Calibration" << std::endl;
+                } break;
             }
         }
+
+
         std::cout << "Beacon setup complete" << std::endl
                   << "Review changes to settings (y/n)? ";
         if(yn_answer()) {
