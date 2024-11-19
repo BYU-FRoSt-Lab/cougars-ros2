@@ -53,11 +53,23 @@ private:
     modem_imu->orientation.y = q_enu.y();
     modem_imu->orientation.z = q_enu.z();
     modem_imu->orientation.w = q_enu.w();
-    modem_imu->orientation_covariance = {
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 
-        0.0, 0.0, 1.0
-    };
+    // modem_imu->orientation_covariance = {
+    //     1.0, 0.0, 0.0,
+    //     0.0, 1.0, 0.0, 
+    //     0.0, 0.0, 1.0
+    // };
+
+
+    // no coordinate conversions needed because modem coordinate frame
+    // is the same as the regular coordinate frame
+    modem_imu->angular_velocity.x = msg->gyro_x;
+    modem_imu->angular_velocity.y = msg->gyro_y;
+    modem_imu->angular_velocity.z = msg->gyro_z;
+
+
+    modem_imu->linear_acceleration.x = msg->acc_x;
+    modem_imu->linear_acceleration.y = msg->acc_y;
+    modem_imu->linear_acceleration.z = msg->acc_z;
 
     // Publish the IMU message
     modem_imu_pub_->publish(*modem_imu);
