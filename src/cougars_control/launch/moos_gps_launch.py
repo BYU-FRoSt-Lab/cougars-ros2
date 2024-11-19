@@ -9,6 +9,7 @@ from ament_index_python.packages import get_package_share_directory
 
 import os
 import yaml
+import sys
 
 def generate_launch_description():
     '''
@@ -20,31 +21,29 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
-    namespace = LaunchConfiguration('namespace')
+    for arg in sys.argv:
+        if arg.startswith('namespace:='):
+            namespace = arg.split(':=')[1]
+        if arg.startswith('param_file:='):
+            param_file = arg.split(':=')[1]
 
-    with open(config_file, 'r') as f:
+    with open(param_file, 'r') as f:
         vehicle_config_params = yaml.safe_load(f)
     
     return launch.LaunchDescription([
         
         # Define the namespace parameter
-        launch.actions.DeclareLaunchArgument(
-            'namespace',
-            default_value='',
-            description='Unique vehicle namespace'
-        ),
         # Start the control nodes
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='coug_kinematics',
-        #     parameters=[ParameterFile(config_file, allow_substs=True)],
-        #     namespace=LaunchConfiguration('namespace'),
-        # ),
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='coug_kinematics',
+            parameters=[param_file],
+            namespace=LaunchConfiguration('namespace'),
+        ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='moos_bridge_gps',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
             output='screen',
         ),
@@ -57,14 +56,14 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='seatrac_ahrs_convertor',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
         # Setup the GPS
@@ -90,14 +89,15 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[ParameterFile(config_file, allow_substs=True)],
+            parameters=[ParameterFile(param_file, allow_substs=True)],
             namespace=LaunchConfiguration('namespace'),
             output='screen',
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='gps_odom.py',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
         ),
     ])
+
