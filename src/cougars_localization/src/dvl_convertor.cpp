@@ -26,6 +26,7 @@ auto qos = rclcpp::QoS(
 
 class DVLConvertor : public rclcpp::Node {
 public:
+
   DVLConvertor() : Node("dvl_convertor") {
     publisher_dvl_depth =
         this->create_publisher<std_msgs::msg::Float64>("dvl_dfb", 10);
@@ -36,10 +37,10 @@ public:
         this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "dvl_dead_reckoning", 10);
     subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
-        "/dvl/data", qos,
+        "dvl/data", qos,
         std::bind(&DVLConvertor::dvl_data_callback, this, _1));
     subscriber_dvl_position = this->create_subscription<dvl_msgs::msg::DVLDR>(
-        "/dvl/position", qos,
+        "dvl/position", qos,
         std::bind(&DVLConvertor::dvl_pos_callback, this, _1));
   }
 
@@ -102,6 +103,7 @@ public:
     // i*(w + xi + yj + zk)*i
     // = i*(wi - x - yk + zj)
     // = -w - xi + yj + zk
+    // DVL EULER ANGLE SEQUENCE IS ZYX Intrinsic rotations
     Eigen::Matrix3f R;
     R = Eigen::AngleAxisf(yaw_rad, Eigen::Vector3f::UnitZ()) *
         Eigen::AngleAxisf(pitch_rad, Eigen::Vector3f::UnitY()) *

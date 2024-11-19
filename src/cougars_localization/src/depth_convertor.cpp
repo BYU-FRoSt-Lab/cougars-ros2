@@ -33,10 +33,9 @@ auto qos = rclcpp::QoS(
  */
 class DepthConvertor : public rclcpp::Node {
 public:
+
   /**
-   * @brief Creates a new depth convertor node.
-   *
-   * This constructor creates a new depth convertor node with default values.
+   * Creates a new depth convertor node.
    */
   DepthConvertor() : Node("depth_convertor") {
 
@@ -59,7 +58,7 @@ public:
 
     /**
      * @brief Depth publisher.
-     *
+     * 
      * This publisher publishes the depth data to the "depth_data" topic. It
      * uses the PoseWithCovarianceStamped message type.
      */
@@ -69,7 +68,7 @@ public:
 
     /**
      * @brief Pressure subscriber.
-     *
+     * 
      * This subscriber subscribes to the "pressure/data" topic. It uses the
      * FluidPressure message type.
      */
@@ -80,9 +79,10 @@ public:
   }
 
 private:
+
   /**
-   * @brief Converts the pressure data to depth data.
-   *
+   * @brief Callback function for the pressure subscription.
+   * 
    * This method converts the pressure data to depth data using the formula:
    *
    * depth = (fluid_pressure_atm - pressure * 100) / (fluid_density +

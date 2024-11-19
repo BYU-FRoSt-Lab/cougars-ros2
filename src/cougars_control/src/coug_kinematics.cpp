@@ -25,15 +25,14 @@ auto qos = rclcpp::QoS(
  *
  * Subscribes:
  * - controls/command (frost_interfaces/msg/UCommand)
+ * 
  * Publishes:
  * - kinematics/command (frost_interfaces/msg/UCommand)
  */
 class CougKinematics : public rclcpp::Node {
 public:
   /**
-   * @brief Creates a new kinematics node.
-   *
-   * This constructor creates a new kinematics node with default values.
+   * Creates a new kinematics node.
    */
   CougKinematics() : Node("coug_kinematics") {
 
@@ -70,6 +69,14 @@ public:
     this->declare_parameter("left_fin_offset", 0.0);
 
     /**
+     * @param demo_mode
+     * 
+     * If true, the node will disable the thruster.
+     * The default value is false.
+     */
+    this->declare_parameter("demo_mode", false);
+
+    /**
      * @brief Kinematics command publisher.
      *
      * This publisher publishes the commands to the "kinematics/command" topic.
@@ -92,14 +99,15 @@ public:
   }
 
 private:
+
   /**
-   * @brief Callback function for the controls/command subscription.
-   *
+   * @brief Callback function for the controls command subscription.
+   * 
    * This method is called whenever a new controls command message is received.
    * It adds the declared offsets and trim ratio to the commands and publishes
    * the new modified commands.
    *
-   * @param
+   * @param msg The received UCommand message
    */
   void command_callback(const frost_interfaces::msg::UCommand &msg) {
 
@@ -108,13 +116,18 @@ private:
     command.fin[0] =
         msg.fin[0] + this->get_parameter("top_fin_offset").as_double() +
         this->get_parameter("trim_ratio").as_double() * msg.thruster;
-    command.fin[1] =
+    command.fin[1] = -1 *
         msg.fin[1] + this->get_parameter("right_fin_offset").as_double() +
         this->get_parameter("trim_ratio").as_double() * msg.thruster;
     command.fin[2] =
         msg.fin[2] + this->get_parameter("left_fin_offset").as_double() +
         this->get_parameter("trim_ratio").as_double() * msg.thruster;
-    command.thruster = msg.thruster;
+
+    if (this->get_parameter("demo_mode").as_bool()) {
+      command.thruster = 0;
+    } else {
+      command.thruster = msg.thruster;
+    }
 
     command_publisher_->publish(command);
   }

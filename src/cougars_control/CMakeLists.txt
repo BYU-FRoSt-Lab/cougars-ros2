@@ -35,16 +35,26 @@ ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces)
 add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces)
 
+add_executable(moos_bridge_sim src/moos_bridge_sim.cpp)
+ament_target_dependencies(moos_bridge_sim rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
+
+add_executable(moos_bridge_gps src/moos_bridge_gps.cpp)
+ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
+
 # Link libraries
 target_link_libraries(coug_controls)
 target_link_libraries(coug_kinematics)
 target_link_libraries(moos_bridge)
+target_link_libraries(moos_bridge_sim)
+target_link_libraries(moos_bridge_gps)
 
 # Install executables
 install(TARGETS
   coug_controls
   coug_kinematics
   moos_bridge
+  moos_bridge_sim
+  moos_bridge_gps
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules

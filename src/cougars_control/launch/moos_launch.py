@@ -1,3 +1,5 @@
+import sys
+
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
@@ -17,13 +19,16 @@ def generate_launch_description():
     :return: The launch description.
     '''
 
-    config_file = "/home/frostlab/config/vehicle_config.yaml"
+    for arg in sys.argv:
+        if arg.startswith('namespace:='):
+            namespace = arg.split(':=')[1]
+        if arg.startswith('param_file:='):
+            param_file = arg.split(':=')[1]
 
     # Get the directory of the launch files
     package_dir = os.path.join(
-        get_package_share_directory('cougars_control'), 'launch')
+        get_package_share_directory('cougars_localization'), 'launch')
 
-    
     return launch.LaunchDescription([
         
         # Include additional launch files
@@ -34,27 +39,40 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[config_file],
+            parameters=[param_file],
+            namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[config_file],
+            parameters=[param_file],
+            namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='moos_bridge',
-            parameters=[config_file],
+            parameters=[param_file],
+            namespace=namespace,
+            output='screen',
+        ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='factor_graph.py',
+            parameters=[param_file],
+            namespace=namespace,
             output='screen',
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='leak_sub.py',
+        #     parameters=[param_file],
+        #     namespace=namespace,
         # ),
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='battery_sub.py',
-        #     parameters=[config_file],
+        #     parameters=[param_file],
+        #     namespace=namespace,
         # ),
     ])
