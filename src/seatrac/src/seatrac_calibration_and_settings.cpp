@@ -9,17 +9,22 @@ using namespace std::chrono_literals;
 using namespace narval::seatrac;
 
 /**
- * @brief ADD HERE
+ * @brief A C++ terminal application for calibrating and modifying advanced setting on the Seatrac x150 beacon
  * @author Clayton Smith
  * @date September 2024
  * 
- * ADD HERE
+ * After building the seatrac package, run `ros2 run seatrac calibration_and_settings`
+ * Follow the terminal instructions to complete calibration and/or settings modification
+ * 
+ * Please note that as of right now, this tool gives you access to settings that are
+ * automatically reset when modem_ros_node is started.
  */
-class MyDriver : public SeatracDriver
+
+class CalibrationDriver : public SeatracDriver
 {
     public:
 
-    MyDriver(const std::string& serialPort = "/dev/ttyUSB0") :
+    CalibrationDriver(const std::string& serialPort = "/dev/ttyUSB0") :
         SeatracDriver(serialPort)
     {}
 
@@ -57,7 +62,7 @@ bool yn_answer() {
         }
 }
 
-void manual_set_settings(MyDriver& seatrac, SETTINGS_T& settings) {
+void manual_set_settings(CalibrationDriver& seatrac, SETTINGS_T& settings) {
             // Change beacon id
         std::cout << "Current Beacon Id: " << (int)settings.xcvrBeaconId << std::endl
                   << "Change Beacon Id (y/n)? ";
@@ -203,7 +208,7 @@ int main(int argc, char *argv[]) {
 
         {
         std::cout << "Connecting to Beacon... ";
-        MyDriver seatrac(serial_port);
+        CalibrationDriver seatrac(serial_port);
         SETTINGS_T origional_settings = command::settings_get(seatrac).settings;
         SETTINGS_T settings = origional_settings;
         command::status_config_set(seatrac, (STATUS_BITS_E)0x0); 
