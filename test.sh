@@ -32,11 +32,13 @@ case $1 in
   "on")
     echo ""
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
-    echo "[COMPLETE] Acoustics enabled" # TODO: Add this to the acoustics_on script to make sure it worked
+    # Printing should happen in the acoustics on script
+    # echo "[COMPLETE] Acoustics enabled" # TODO: Add this to the acoustics_on script to make sure it worked
     ;;
   "off")
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-    printInfo "[COMPLETE] Acoustics disabled"
+    # Printing should happen in the acoustics on script
+    # printInfo "[COMPLETE] Acoustics disabled"
     ;;
   *)
     printError "No state specified for DVL acoustics"

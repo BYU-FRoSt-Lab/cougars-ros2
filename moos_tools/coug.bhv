@@ -35,12 +35,12 @@ Behavior = BHV_Waypoint
                 lead = 8
          lead_damper = 1
        lead_to_start = true
-               speed = 20   // between 0 and 100, test
+               speed = 0   // for sim rpm  //speed = 20   // between 0 and 100, test
         capture_line = true
       capture_radius = 7.0
          slip_radius = 10.0
 	efficiency_measure = all
-	           polygon = 10,25:25,25:25,-10 // set the waypoints here
+	           points = 0,0:1,-58:-26,-57:-30,-71:-31,-94:-39,-93:-39,-55:-39,-22:-3,-21
 
                order = normal
              repeat  = 0
