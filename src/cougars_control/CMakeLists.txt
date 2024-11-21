@@ -14,6 +14,7 @@ find_package(rclpy REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -30,7 +31,7 @@ add_executable(coug_controls src/coug_controls.cpp src/pid.cpp)
 ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces sensor_msgs geometry_msgs)
 
 add_executable(coug_kinematics src/coug_kinematics.cpp)
-ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces)
+ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces std_srvs)
 
 add_executable(moos_bridge src/moos_bridge.cpp)
 ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces)
