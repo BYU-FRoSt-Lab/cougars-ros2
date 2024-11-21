@@ -2,6 +2,7 @@
 # Created by Nelson Durrant, Sep 2024
 #
 # Tests vehicle sensors and actuators
+# - Specify a DVL acoustics power state using 'bash test.sh <state>' (ex. 'bash test.sh off')
 # - Run this after running the 'launch.sh' script
 
 source ~/config/bash_vars.sh
@@ -30,7 +31,6 @@ source ~/ros2_ws/install/setup.bash
 
 case $1 in
   "on")
-    echo ""
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
     ;;
   "off")
