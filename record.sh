@@ -2,12 +2,12 @@
 # Created by Nelson Durrant, Sep 2024
 #
 # Starts a ROS2 bag recording with a custom name
-# - Run this after running the 'launch.sh', 'test.sh', and 'init.sh' scripts
+# - Specify a DVL acoustics power state using 'bash record.sh <state>' (ex. 'bash record.sh off')
+# - Run this after running the 'launch.sh', 'test.sh' scripts
 # - Log files are saved in 'CoUGARs/bag' on the host machine running the docker container
 
 case $1 in
   "on")
-    echo ""
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
     ;;
   "off")
@@ -15,23 +15,23 @@ case $1 in
     ;;
   *)
     printError "No state specified for DVL acoustics"
-    printError "Specify a state using either 'bash test.sh on' or 'bash test.sh off'"
+    printError "Specify a state using either 'bash record.sh on' or 'bash record.sh off'"
     exit 1
     ;;
 esac
 
 echo ""
-echo "IMPORTANT! Name the rosbag with the testing location combined with the test number (ex. 'lake1.0')"
-echo "-> If the mission fails, keep the same name and increment the second number for reruns (ex. 'lake1.1')"
-echo "-> If the mission is successful, increment the first number to indicate a new mission (ex. 'lake2.0')"
+echo "IMPORTANT! Name the rosbag with the testing location combined with the test number (ex. 'utah_lake1.0')"
+echo "-> If the mission fails, keep the same name and increment the second number for reruns (ex. 'utah_lake1.1')"
+echo "-> If the mission is successful, increment the first number to indicate a new mission (ex. 'utah_lake2.0')"
 echo ""
 echo "Enter a folder name for the rosbag: "
-read FOLDER
+read folder
 echo ""
 
 sleep 5
 bash ~/ros2_ws/init.sh
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
 
-FOLDER=$FOLDER-$(date +"%Y-%m-%d-%H-%M-%S")
-ros2 bag record -o ~/bag/$FOLDER -a
+folder=$folder-$(date +"%Y-%m-%d-%H-%M-%S")
+ros2 bag record -o ~/bag/$folder -a
