@@ -62,6 +62,13 @@ def generate_launch_description():
             namespace=namespace,
             output='screen',
         ),
+        launch_ros.actions.Node(
+            package='seatrac',
+            executable='modem_pinger',
+            parameters=[param_file],
+            namespace=namespace,
+            output='screen'
+        )
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',

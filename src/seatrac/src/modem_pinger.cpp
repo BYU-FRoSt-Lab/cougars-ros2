@@ -1,6 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include "seatrac_interfaces/msg/modem_send.hpp"
 #include <seatrac_driver/SeatracEnums.h>
+#include "std_msgs/msg/empty.hpp"
 #include <chrono>
 #include <thread>
 
@@ -8,6 +9,7 @@ using namespace std::chrono_literals;
 using seatrac_interfaces::msg::ModemSend;
 using namespace narval::seatrac;
 
+using std::placeholders::_1;
 
 
 /**
@@ -118,7 +120,11 @@ public:
 
         modem_publisher_ = this->create_publisher<ModemSend>("modem_send", 10);
 
-        std::thread(&SeatracPinger::repeat_call_ping, this).detach();
+
+        init_subscription_ = this->create_subscription<std_msgs::msg::Empty>(
+            "init", 10, std::bind(&SeatracPinger::repeat_call_ping, this, _1));
+
+        // std::thread(&SeatracPinger::repeat_call_ping, this).detach();
     }
 
 private:
@@ -127,12 +133,17 @@ private:
     int vehicle_order_;
     int target_id_;
     bool request_response_;
+    rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr init_subscription_;
     rclcpp::Publisher<ModemSend>::SharedPtr modem_publisher_;
+    bool init_flag = false;
 
-    void repeat_call_ping()
+    void repeat_call_ping(const std_msgs::msg::Empty::SharedPtr msg)
     {
+        if(init_flag) return;
+        init_flag = true;
         int total_seconds_per_round = ping_delay_ * n_vehicles_;
         int my_ping_second = ping_delay_ * (vehicle_order_ - 1);
+
 
         while (rclcpp::ok())
         {
