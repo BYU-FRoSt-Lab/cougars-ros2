@@ -5,7 +5,7 @@
  * This class is a simple implementation of a PID controller based on the BYU
  * ECEn 483 approach.
  * 
- * It uses the integrator on/off anti-windup strategy.
+ * It uses the integrator saturation anti-windup strategy.
  */
 
 #include <iostream>
@@ -57,30 +57,46 @@ public:
 
     float error = x_r - x;
 
-    // integrate error in x with anti-windup
-    if (std::abs(this->x_dot) < 0.08) {
-      this->integrator = this->integrator + (this->pid_interval / 2.0) * (error + this->error_d1);
-    }
-
-    // std::cout << "integrator " << this->integrator << std::endl;
-
     // differentiate x
     this->x_dot = this->beta * this->x_dot + (1.0 - this->beta) * ((x - this->x_d1) / this->pid_interval);
 
     // std::cout << "x_dot " << this->x_dot << std::endl;
 
-    // calculate the force
-    float force_unsat = this->kp * error + this->ki * this->integrator - this->kd * this->x_dot;
+    float pd = this->kp * error - this->kd * this->x_dot;
 
-    // saturate the force
+    // integrate error in x
+    this->integrator = this->integrator + error;
+
+    // std::cout << "integrator " << this->integrator << std::endl;
+    
+    // calculate the force
+    float force_unsat = pd + this->ki * this->integrator;
+
+    // saturate the force and integrator error in x
     float force_sat;
+
     if (force_unsat > this->max_output) {
       force_sat = this->max_output;
+      if (pd > this->max_output){
+        this->integrator = 0.0;
+      } else {
+        this->integrator = (this->max_output - pd)/this->ki;
+      }
     } else if (force_unsat < this->min_output) {
       force_sat = this->min_output;
+      if (pd < this->min_output){
+        this->integrator = 0.0;
+      } else {
+        this->integrator = this->max_output - pd;
+      }
     } else {
       force_sat = force_unsat;
     }
+    
+    // calculate the adjusted force
+    float pid = pd + this->ki * this->integrator;
+    // calculate the force
+    // std::cout << "PD: " << pd << "PID: " << pid << std::endl;
 
     // update delayed variables
     this->error_d1 = error;

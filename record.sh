@@ -36,3 +36,7 @@ bash ~/ros2_ws/init.sh
 
 folder=$folder-$(date +"%Y-%m-%d-%H-%M-%S")
 ros2 bag record -o ~/bag/$folder -a
+
+#Copy moos behavior file
+cp ~/ros2_ws/moos_tools/coug.bhv ~/bag/$folder/
+cp ~/config/vehicle_params.yaml ~/bag/$folder/
