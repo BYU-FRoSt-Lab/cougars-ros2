@@ -30,8 +30,9 @@ read folder
 echo ""
 
 sleep 5
-bash ~/ros2_ws/init.sh
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
+# The dead reckoning should be reset before we call init on the factor graph
+bash ~/ros2_ws/init.sh
 
 folder=$folder-$(date +"%Y-%m-%d-%H-%M-%S")
 ros2 bag record -o ~/bag/$folder -a

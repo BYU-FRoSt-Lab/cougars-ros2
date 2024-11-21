@@ -44,8 +44,6 @@ IPADDRESS=192.168.194.95
 send_set_config() {
     JSON_STRING='{"command":"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}}'
     echo -n "$JSON_STRING" | nc -w 3 -q 0 $IPADDRESS 16171
-    # Add a small delay to allow the change to take effect
-    sleep 1
 }
 
 # Function to send get_config request and check response
