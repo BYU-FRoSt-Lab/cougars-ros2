@@ -32,13 +32,9 @@ case $1 in
   "on")
     echo ""
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
-    # Printing should happen in the acoustics on script
-    # echo "[COMPLETE] Acoustics enabled" # TODO: Add this to the acoustics_on script to make sure it worked
     ;;
   "off")
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-    # Printing should happen in the acoustics on script
-    # printInfo "[COMPLETE] Acoustics disabled"
     ;;
   *)
     printError "No state specified for DVL acoustics"
@@ -89,6 +85,7 @@ else
   fi
 fi
 
+# TODO: This is broken
 modem_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/modem_status 2>/dev/null | grep -oP '(?<=attitude_yaw: \[)\d+(\.\d+)?')
 if [ -z "$modem_data" ]; then
   printFailure "No USBL modem connection found."
@@ -127,7 +124,8 @@ else
     echo "  altitude: $dvl_data"
   fi
 fi
-  
+
+# TODO: This is broken
 dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -A 3 position: | grep -oP '(?<=x: )\d+(\.\d+)?')
 if [ -z "$dvl_position_data" ]; then
   printFailure "No DVL connection (position) found."

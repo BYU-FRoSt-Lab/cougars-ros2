@@ -21,7 +21,11 @@ case $1 in
 esac
 
 echo ""
-echo "Enter a descriptive folder name for the rosbag: "
+echo "IMPORTANT! Name the rosbag with the testing location combined with the test number (ex. 'lake1.0')"
+echo "-> If the mission fails, keep the same name and increment the second number for reruns (ex. 'lake1.1')"
+echo "-> If the mission is successful, increment the first number to indicate a new mission (ex. 'lake2.0')"
+echo ""
+echo "Enter a folder name for the rosbag: "
 read FOLDER
 echo ""
 
