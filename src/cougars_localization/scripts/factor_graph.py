@@ -374,8 +374,8 @@ class FactorGraphNode(Node):
     ##################################################################
 
     def init_callback(self, msg: Empty):
-
-        if self.dvl_received and self.gps_received and self.depth_received and self.imu_received:
+        #TODO: Change this to a service so we can confirm recieved
+        if self.dvl_received and self.gps_received and self.depth_received and self.imu_received and not self.deployed:
             # Store current state as the initial state
             self.init_state = {
                 'position': self.position.copy(),
