@@ -12,6 +12,9 @@ from functools import partial
 import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
+
+from geometry_msgs.msg import TransformStamped
+from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 # from factor_plot import Plotter
 # from factor_class_plot import Plotter as Plot
 # from factor_class_plot import Series
@@ -120,6 +123,9 @@ class FactorGraphNode(Node):
         
         # Timer for adding state estimate/factors
         self.timer = self.create_timer(self.dvl_time_interval, self.factor_graph_timer)
+        
+        # Initialize the transform broadcaster
+        self.tf_broadcaster = StaticTransformBroadcaster(self)
     
 
     # error functions for unary factors
@@ -367,6 +373,7 @@ class FactorGraphNode(Node):
         # self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.dvl_quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
         self.dvl_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        self.dvl_stamp = msg.header.stamp
     
 
     ##################################################################
@@ -375,6 +382,7 @@ class FactorGraphNode(Node):
 
     def init_callback(self, msg: Empty):
         #TODO: Change this to a service so we can confirm recieved
+        # TODO: Handle a reset of the factor graph
         if self.dvl_received and self.gps_received and self.depth_received and self.imu_received and not self.deployed:
             # Store current state as the initial state
             self.init_state = {
@@ -424,7 +432,7 @@ class FactorGraphNode(Node):
             self.dvl_orientation_matrix = r.as_matrix()
             self.dvl_position_last = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix , dvl_position))
         
-            # self.get_logger().info("Initial state has been set.")
+            self.get_logger().info("Factor Graph: Initial state has been set.")
 
             # Plot
             # self.x_dvl.add_measurement(self.position[0], self.dvl_time)
@@ -435,10 +443,39 @@ class FactorGraphNode(Node):
             self.publish_vehicle_status()
 
             self.deployed = True
+
+
+            # TODO: Create a warning if DVL values are higher than a threshold 
+            # We would know that the DVL was not reset recently
+            threshold = 0.1
+            if any(value > threshold for value in dvl_position):
+                self.get_logger().info("Initial DVL Position is higher than threshold. Was DR reset?")
+
+            t = TransformStamped()
+            # Read message content and assign it to
+            # corresponding tf variables
+            t.header.stamp = self.dvl_stamp
+            print("stamp added", self.dvl_stamp.sec, self.dvl_stamp.nanosec)
+            t.header.frame_id = 'world'
+            t.child_frame_id = 'odom'
+            # DVL needs to be reset DR shortly before this happens 
+            t.transform.translation.x = self.init_state['position'][0] 
+            t.transform.translation.y = self.init_state['position'][1] 
+            t.transform.translation.z = self.init_state['position'][2] 
+
+            # We need to know the global orientation when this was started so DVL DR should have been reset recently
+            q = R.from_matrix(self.init_state['orientation_matrix']).as_quat()
+            t.transform.rotation.x = q[0]
+            t.transform.rotation.y = q[1]
+            t.transform.rotation.z = q[2]
+            t.transform.rotation.w = q[3]
+
+            self.tf_broadcaster.sendTransform(t)
+
         else:
             dummy = 1
-            # self.get_logger().info("Have not received all necessary sensor inputs to begin")
-            # self.get_logger().info(f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}")
+            self.get_logger().info("Have not received all necessary sensor inputs to begin")
+            self.get_logger().info(f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}")
 
 
     

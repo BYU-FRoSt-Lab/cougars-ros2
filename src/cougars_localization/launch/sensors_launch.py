@@ -81,6 +81,12 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
+            executable='dvl_global',
+            parameters=[param_file],
+            namespace=namespace,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
             executable='seatrac_ahrs_convertor',
             parameters=[param_file],
             namespace=namespace,
