@@ -4,6 +4,7 @@
 #include <string>
 
 #include "frost_interfaces/msg/u_command.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
@@ -77,6 +78,17 @@ public:
     this->declare_parameter("demo_mode", false);
 
     /**
+     * @brief Kinematics thruster arm service.
+     *
+     * This service recieves requests on the "/arm_thruster" service.
+     * It uses the std_srvs/srv/SetBool service type.
+     * False will unarm the thruster and true will arm the thruster
+     */
+    arm_service_ = this->create_service<std_srvs::srv::SetBool>(
+            "arm_thruster", 
+            std::bind(&CougKinematics::arm_thruster, this, std::placeholders::_1, std::placeholders::_2));
+
+    /**
      * @brief Kinematics command publisher.
      *
      * This publisher publishes the commands to the "kinematics/command" topic.
@@ -125,6 +137,8 @@ private:
 
     if (this->get_parameter("demo_mode").as_bool()) {
       command.thruster = 0;
+    } else if (!arm_thruster_){
+      command.thruster = 0;
     } else {
       command.thruster = msg.thruster;
     }
@@ -132,11 +146,24 @@ private:
     command_publisher_->publish(command);
   }
 
-  // micro-ROS objects
+  void arm_thruster(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+                        std::shared_ptr<std_srvs::srv::SetBool::Response> response)
+  {
+    // Set the boolean to the requested value
+    arm_thruster_ = request->data;
+    response->success = true;
+    response->message = arm_thruster_ ? "Thruster armed!" : "Thruster unarmed!";
+    RCLCPP_INFO(this->get_logger(), response->message.c_str());
+  }
+
+  bool arm_thruster_ = false;
+
+  // ROS objects
   rclcpp::Publisher<frost_interfaces::msg::UCommand>::SharedPtr
       command_publisher_;
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr
       command_subscription_;
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr arm_service_;
 };
 
 int main(int argc, char *argv[]) {
