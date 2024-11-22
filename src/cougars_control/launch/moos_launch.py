@@ -60,7 +60,7 @@ def generate_launch_description():
             executable='factor_graph.py',
             parameters=[param_file],
             namespace=namespace,
-            output='screen',
+            output='log',
         ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
