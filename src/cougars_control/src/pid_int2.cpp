@@ -92,7 +92,7 @@ public:
     
     float pid = pd + this->ki * this->integrator;
     // calculate the force
-    std::cout << "PD: " << pd << "PID: " << pid << std::endl;
+    // std::cout << "PD: " << pd << "PID: " << pid << std::endl;
 
     // update delayed variables
     this->error_d1 = error;
