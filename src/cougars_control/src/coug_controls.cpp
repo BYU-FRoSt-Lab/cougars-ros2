@@ -15,7 +15,7 @@
 #include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/empty.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -34,8 +34,10 @@ auto qos = rclcpp::QoS(
  * depth and heading topics. It then computes the control commands using various
  * controllers and publishes the control commands to a control command topic.
  *
+ * Service:
+ * - init_controls (std_srvs/srv/SetBool) 
+ *
  * Subscribes:
- * - init (std_msgs/msg/Empty)
  * - desired_depth (frost_interfaces/msg/DesiredDepth)
  * - desired_heading (frost_interfaces/msg/DesiredHeading)
  * - desired_speed (frost_interfaces/msg/DesiredSpeed)
@@ -223,13 +225,14 @@ public:
             "controls/command", 10);
 
     /**
-     * @brief Initialization subscriber.
+     * @brief Initialization Service.
      *
-     * This subscriber subscribes to the "init" topic. It uses the Empty message
+     * This service "init_controls" topic. It uses the SetBool service
      * type.
      */
-    init_subscription_ = this->create_subscription<std_msgs::msg::Empty>(
-        "init", 10, std::bind(&CougControls::init_callback, this, _1));
+    init_service_ = this->create_service<std_srvs::srv::SetBool>(
+            "init_controls",
+            std::bind(&CougControls::handle_service, this, std::placeholders::_1, std::placeholders::_2));
 
     /**
      * @brief Desired depth subscriber.
@@ -298,19 +301,25 @@ public:
 
 private:
   /**
-   * @brief Callback function for the init subscription.
+   * @brief Callback function for the initialization service.
    *
    * This method initializes the controls node by setting the init flag to
    * true.
-   *
-   * @param msg The Empty message recieved from the init topic.
    */
-  void init_callback(const std_msgs::msg::Empty::SharedPtr msg) {
+  void handle_service(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+                    std::shared_ptr<std_srvs::srv::SetBool::Response> response){
+    // Set the initialization flag based on the request
+    this->init_flag = request->data;
 
-    (void)msg; // supress unused variable warning
-
-    RCLCPP_INFO(this->get_logger(), "Init message recieved");
-    this->init_flag = true;
+    // Respond with success and an appropriate message
+    if (request->data) {
+        response->success = true;
+        response->message = "Controller Node initialized.";
+    } else {
+        response->success = false;
+        response->message = "Controller Node de-initialized.";
+    }
+    RCLCPP_INFO(this->get_logger(), "Init Service recieved");
   }
 
   /**
@@ -506,6 +515,14 @@ private:
 
           u_command_publisher_->publish(message);
       }
+      else{
+          message.fin[0] = 0;    // top fin
+          message.fin[1] = 0;      // right fin
+          message.fin[2] = 0;      // left fin
+          message.thruster = 0;
+
+          u_command_publisher_->publish(message);
+      }
   }
 
 
@@ -523,7 +540,8 @@ private:
       actual_depth_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
-  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr init_subscription_;
+
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 
   // node initialization flag
   bool init_flag = false;
