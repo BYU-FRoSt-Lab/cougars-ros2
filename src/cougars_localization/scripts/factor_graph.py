@@ -6,6 +6,7 @@ from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Empty
+from std_srvs.srv import SetBool
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 from functools import partial
@@ -113,9 +114,12 @@ class FactorGraphNode(Node):
         self.create_subscription(Odometry, 'gps_odom', self.gps_callback, 10) # for unary factor
         self.create_subscription(PoseWithCovarianceStamped, 'dvl_dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
         # signal to add prior (should be sent after DVL-lock and ref. gps/ heading is stored and DVL is restarted)
-        self.create_subscription(Empty, 'init', self.init_callback, 10)
 
         # Publisher
+
+        # Service
+        # self.create_subscription(Empty, 'init', self.init_callback, 10)
+        self.create_service(SetBool, 'init_factor_graph', self.init_callback)
 
         # publishes the LATEST output of the smoothing and mapping (most importantly gps x,y), although remember the whole path is being smoothed
         self.vehicle_status_pub = self.create_publisher(Odometry, 'smoothed_output', 10)
@@ -380,9 +384,10 @@ class FactorGraphNode(Node):
     ######################## SIGNAL TO BEGIN #########################
     ##################################################################
 
-    def init_callback(self, msg: Empty):
-        #TODO: Change this to a service so we can confirm recieved
-        # TODO: Handle a reset of the factor graph
+    def init_callback(self, request, response):
+        bool_value = request.data
+        #TODO: Handle a false value that can reset of the factor graph
+
         if self.dvl_received and self.gps_received and self.depth_received and self.imu_received and not self.deployed:
             # Store current state as the initial state
             self.init_state = {
@@ -472,10 +477,17 @@ class FactorGraphNode(Node):
 
             self.tf_broadcaster.sendTransform(t)
 
+            response.success = True
+            response.message = "Factor Graph Prior Set"
+
         else:
             dummy = 1
             self.get_logger().info("Have not received all necessary sensor inputs to begin")
             self.get_logger().info(f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}")
+            response.success = False
+            response.message = f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}"
+        
+        return response
 
 
     

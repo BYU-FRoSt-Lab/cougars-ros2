@@ -12,3 +12,4 @@ source ~/ros2_ws/install/setup.bash
 ros2 topic pub $NAMESPACE/init std_msgs/msg/Empty -1
 
 ros2 service call $NAMESPACE/arm_thruster std_srvs/srv/SetBool data:\ true\ 
+ros2 service call $NAMESPACE/init_factor_graph std_srvs/srv/SetBool data:\ true\ 
