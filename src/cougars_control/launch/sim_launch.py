@@ -33,7 +33,7 @@ def generate_launch_description():
             executable='coug_controls',
             parameters=[param_file],
             namespace=namespace,
-            output='screen',
+            output='log',
         ),
         launch_ros.actions.Node(
             package='cougars_localization',
