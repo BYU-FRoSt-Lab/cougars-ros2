@@ -42,6 +42,13 @@ def generate_launch_description():
             namespace=namespace,
         ),
         launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='factor_graph.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output='log',
+        ),
+        launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
             parameters=[param_file],
