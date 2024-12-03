@@ -14,10 +14,14 @@ enum COUG_MSG_ID : uint8_t {
     CONFIRM_EMERGENCY_KILL = 0xCF
 };
 
-struct EmergencyKill{
+struct EmergencyKill {
     COUG_MSG_ID msg_id = EMERGENCY_KILL;
 }__attribute__((packed));
 
+struct ConfirmEmergencyKill {
+    COUG_MSG_ID msg_id = CONFIRM_EMERGENCY_KILL;
+    bool success;
+}__attribute__((packed));
 
 }
 
