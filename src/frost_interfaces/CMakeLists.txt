@@ -22,7 +22,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DesiredSpeed.msg"
   "msg/LeakStatus.msg"
   "msg/UCommand.msg"
-  "msg/VehicleStatus.msg"
   "srv/EmergencyStop.srv"
   DEPENDENCIES std_msgs
   DEPENDENCIES nav_msgs
