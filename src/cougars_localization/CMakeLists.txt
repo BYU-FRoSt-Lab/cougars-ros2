@@ -21,12 +21,13 @@ find_package(frost_interfaces REQUIRED)
 find_package(seatrac_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
-find_package(MOOS 10 REQUIRED)
+#find_package(MOOS 10 REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
 include_directories(include/${PROJECT_NAME})
+
 
 add_executable(depth_convertor src/depth_convertor.cpp)
 ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs)
@@ -37,21 +38,21 @@ ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometr
 add_executable(seatrac_ahrs_convertor src/seatrac_ahrs_convertor.cpp)
 ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs seatrac_interfaces geometry_msgs sensor_msgs Eigen3)
 
-add_executable(dvl_global src/dvl_global.cpp)
-ament_target_dependencies(dvl_global rclcpp std_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
+#add_executable(dvl_global src/dvl_global.cpp)
+#ament_target_dependencies(dvl_global rclcpp std_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
 
 # Link libraries
 target_link_libraries(depth_convertor)
 target_link_libraries(dvl_convertor)
 target_link_libraries(seatrac_ahrs_convertor)
-target_link_libraries(dvl_global)
+#target_link_libraries(dvl_global)
 
 # Install executables
 install(TARGETS
   depth_convertor
   dvl_convertor
   seatrac_ahrs_convertor
-  dvl_global
+  #dvl_global
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules
@@ -60,6 +61,8 @@ install(TARGETS
 # Install Python executables
 install(PROGRAMS
   scripts/factor_graph.py
+  scripts/new_factor_graph.py
+  scripts/kalliyan_plotter.py
   scripts/gps_odom.py
   DESTINATION lib/${PROJECT_NAME}
 )
