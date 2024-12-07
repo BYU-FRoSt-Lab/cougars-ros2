@@ -4,6 +4,8 @@
  *
  * This class is a simple implementation of a PID controller based on the BYU
  * ECEn 483 approach.
+ * 
+ * It uses the integrator saturation anti-windup strategy.
  */
 
 #include <iostream>
@@ -62,16 +64,17 @@ public:
 
     float pd = this->kp * error - this->kd * this->x_dot;
 
-    // Itegrator term
+    // integrate error in x
     this->integrator = this->integrator + error;
+
     // std::cout << "integrator " << this->integrator << std::endl;
     
     // calculate the force
     float force_unsat = pd + this->ki * this->integrator;
 
-    // Saturate integrator error in x with anti-windup strategy 2
-    // saturate the force
+    // saturate the force and integrator error in x
     float force_sat;
+
     if (force_unsat > this->max_output) {
       force_sat = this->max_output;
       if (pd > this->max_output){
@@ -90,9 +93,10 @@ public:
       force_sat = force_unsat;
     }
     
+    // calculate the adjusted force
     float pid = pd + this->ki * this->integrator;
-    // calculate the force
-    std::cout << 'PD: ' << pd << 'PID: ' << pid << std::endl;
+
+    // std::cout << 'PD: ' << pd << ' PID: ' << pid << std::endl;
 
     // update delayed variables
     this->error_d1 = error;
