@@ -3,8 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
-from frost_interfaces.srv import EmergencyStop
-from std_msgs.msg import Empty
+from std_srvs.srv import SetBool
 from rclpy.qos import qos_profile_system_default
 
 
@@ -16,16 +15,13 @@ class ManualMission(Node):
     A simple ROS2 node that publishes desired depth, heading, and speed values to control the vehicle.
     The desired values are set based on a simple state machine that transitions between three states.
 
-    Subscribes:
-        - init (std_msgs/msg/Empty)
-
     Publishes:
         - desired_depth (frost_interfaces/msg/DesiredDepth)
         - desired_heading (frost_interfaces/msg/DesiredHeading)
         - desired_speed (frost_interfaces/msg/DesiredSpeed)
         
     Services:
-        - emergency_stop (frost_interfaces/srv/EmergencyStop)
+        - init (std_srvs/srv/Empty) 
     '''
     def __init__(self):
         '''
@@ -132,18 +128,6 @@ class ManualMission(Node):
         Publisher for the "desired_speed" topic with the message type DesiredSpeed.
         '''
 
-        # Create the subscriptions
-        self.subscription = self.create_subscription(
-            Empty, 
-            "init", 
-            self.listener_callback, 
-            qos_profile_system_default
-        )
-        '''
-        Subscription to the "init" topic with the message type Empty.
-        '''
-        self.subscription  # prevent unused variable warning
-
         # Create the timers
         self.timer = self.create_timer(
             self.get_parameter("command_timer_period").get_parameter_value().double_value,
@@ -155,30 +139,45 @@ class ManualMission(Node):
 
         # Create the services
         self.srv = self.create_service(
-            EmergencyStop,
-            "emergency_stop",
-            self.emergency_stop_callback
+            SetBool,
+            "init_manual",
+            self.listener_callback
         )
         '''
-        Service for the "emergency_stop" service with the service type EmergencyStop.
+        Service for the "init_manual" topic with the service type SetBool.
         '''
 
         self.counter = 0
-        self.stopped = True
+        self.started = False
 
         self.last_depth = -1.0
         self.last_heading = -1.0
         self.last_speed = -1.0
 
-    def listener_callback(self, msg):
+    def listener_callback(self, request, response):
         '''
-        Callback function for the init subscription.
-        Sets the stopped flag to False when the init message is received.
+        Callback function for the init service.
+        Sets the started flag to False when the init request is true.
 
-        :param msg: The Empty message received from the init topic.
+        Sets the started flag to True and resets the counter when request is false
+
         '''
-        self.get_logger().info("Init message received")
-        self.stopped = False
+        init_bool = request.data
+        if init_bool:
+            if self.started:
+                response.success = False
+                response.message = 'Manual Mission has already been started. Needs to be reset before initialization'
+            else:
+                self.started = request.data
+                response.success = True
+                response.message = 'Manual Mission Started'
+        else:
+            self.started = False
+            self.counter = 0
+            response.success = True
+            response.message = 'Manual Mission Restarted'
+
+        return response
 
 
     def timer_callback(self):
@@ -193,21 +192,21 @@ class ManualMission(Node):
         speed_msg = DesiredSpeed()
 
         # TODO: Adjust this simple state machine
-        if not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value:
+        if self.started and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value:
             depth_msg.desired_depth = self.get_parameter("state_1_depth").get_parameter_value().double_value
             heading_msg.desired_heading = self.get_parameter("state_1_heading").get_parameter_value().double_value
             speed_msg.desired_speed = self.get_parameter("state_1_speed").get_parameter_value().double_value
 
             self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
 
-        elif not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value:
+        elif self.started and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value:
             depth_msg.desired_depth = self.get_parameter("state_2_depth").get_parameter_value().double_value
             heading_msg.desired_heading = self.get_parameter("state_2_heading").get_parameter_value().double_value
             speed_msg.desired_speed = self.get_parameter("state_2_speed").get_parameter_value().double_value
 
             self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
 
-        elif not self.stopped and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value + self.get_parameter("state_3_count").get_parameter_value().integer_value:
+        elif self.started and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value + self.get_parameter("state_3_count").get_parameter_value().integer_value:
             depth_msg.desired_depth = self.get_parameter("state_3_depth").get_parameter_value().double_value
             heading_msg.desired_heading = self.get_parameter("state_3_heading").get_parameter_value().double_value
             speed_msg.desired_speed = self.get_parameter("state_3_speed").get_parameter_value().double_value
@@ -241,22 +240,6 @@ class ManualMission(Node):
         self.last_depth = depth_msg.desired_depth
         self.last_heading = heading_msg.desired_heading
         self.last_speed = speed_msg.desired_speed
-
-    # Logs when EmergencyStop is requested
-    def emergency_stop_callback(self, request, response):
-        '''
-        Callback function for the emergency_stop service.
-        Logs the error message and sets the stopped flag to True.
-        
-        :param request: The EmergencyStop request message from the client.
-        :param response: The EmergencyStop response message.
-        '''
-
-        self.get_logger().error("EMERGENCY STOP EXECUTED")
-        self.get_logger().error(request.error)
-        self.stopped = True
-        response.stopped = True
-        return response
 
 
 def main(args=None):

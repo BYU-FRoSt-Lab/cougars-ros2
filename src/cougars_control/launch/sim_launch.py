@@ -17,28 +17,41 @@ def generate_launch_description():
         if arg.startswith('namespace:='):
             namespace = arg.split(':=')[1]
 
-    config_file = "/home/frostlab/config/sim_params.yaml"
+    param_file = "/home/frostlab/config/sim_params.yaml"
 
     return launch.LaunchDescription([
         # Start the control nodes
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
             output='screen',
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
-            output='screen',
+            output='log',
+        ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='dvl_global',
+            parameters=[param_file],
+            namespace=namespace,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='factor_graph.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output='log',
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
-            parameters=[config_file],
+            parameters=[param_file],
             namespace=namespace,
             output='screen',
         ),
