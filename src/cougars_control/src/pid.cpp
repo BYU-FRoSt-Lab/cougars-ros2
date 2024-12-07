@@ -4,6 +4,8 @@
  *
  * This class is a simple implementation of a PID controller based on the BYU
  * ECEn 483 approach.
+ * 
+ * It uses the integrator on/off anti-windup strategy.
  */
 
 #include <iostream>
