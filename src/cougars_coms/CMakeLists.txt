@@ -8,11 +8,16 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(seatrac_interfaces REQUIRED)
 
+include_directories(include)
 
 add_executable(cougars_coms src/cougars_coms.cpp)
-ament_target_dependencies(cougars_coms rclcpp std_msgs seatrac_interfaces)
+ament_target_dependencies(cougars_coms rclcpp std_srvs seatrac_interfaces)
+
+install(DIRECTORY include/
+        DESTINATION include/${PROJECT_NAME})
 
 install(TARGETS
   cougars_coms

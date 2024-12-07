@@ -46,11 +46,6 @@ using namespace narval::seatrac;
 class ModemRosNode : public rclcpp::Node, public SeatracDriver {
 public:
 
-  std::string get_serial_port() {
-    this->declare_parameter("seatrac_serial_port", "/dev/ttyUSB0");
-    return this->get_parameter("seatrac_serial_port").as_string();
-  }
-
   ModemRosNode()
       : Node("modem_ros_node"), SeatracDriver(this->get_serial_port()), count_(0) {
     RCLCPP_INFO(this->get_logger(), "Starting seatrac modem Node");
@@ -380,6 +375,11 @@ private:
   size_t count_;
 
   bool beacon_connected = false;
+
+  std::string get_serial_port() {
+    this->declare_parameter("seatrac_serial_port", "/dev/ttyUSB0");
+    return this->get_parameter("seatrac_serial_port").as_string();
+  }
 
   // recieves command to modem from the ModemRec topic and sends the command
   // to the modem
