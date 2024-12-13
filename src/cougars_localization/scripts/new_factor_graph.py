@@ -66,7 +66,7 @@ class TimeSync:
                 
                 newer_key_time = poseKey_to_time[int(new_id)] 
                 # print("newer key time: %d\n"%newer_key_time)
-                print("New id:", int(new_id - 1))
+                print("Timesync new id:", int(new_id - 1))
                 older_key_time = poseKey_to_time[int(new_id - 1)]
                 # print("older key time: %d\n"% older_key_time)
                 time_to_current = abs(newer_key_time - oldest_measurement_time) 
@@ -77,6 +77,7 @@ class TimeSync:
                 if(time_to_current > time_to_previous):
                     # Meas in queue better suited to previous key, keep working on prev key
                     print('time to current is longer than time to prev')
+                    print('new', new_id, ' prev', self.last_pose_key, ' init', init_new_id)
                     new_id -= 1
                     if(new_id == self.last_pose_key):
                         print('pop')
@@ -138,14 +139,7 @@ class FactorGraphNode(Node):
 
         # map of poseKeys to time stamps
         self.poseKey_to_time = {}
-        
-        # 'pointer' to mark the oldest pose that we shouldn't worry about adding a unary factor to
-        # for example, if we add a gps unary factor to the second pose, than the gps_last_pose_key 
-        # will point to the second pose. Or if gps goes out for a bit, this should point to the oldest
-        # pose that we will not consider adding a unary factor to
-        self.gps_last_pose_key = None       
-        self.depth_last_pose_key = None
-        self.imu_last_pose_key = None   
+    
 
         # gtsam stuff
 
@@ -494,9 +488,14 @@ class FactorGraphNode(Node):
 
 
             self.poseKey_to_time[self.agent.poseKey] = self.dvl_time
-            self.gps_last_pose_key = self.agent.poseKey
-            self.depth_last_pose_key = self.agent.poseKey
-            self.imu_last_pose_key = self.agent.poseKey
+
+            # 'pointer' to mark the oldest pose that we shouldn't worry about adding a unary factor to
+            # for example, if we add a gps unary factor to the second pose, than the gps_last_pose_key 
+            # will point to the second pose. Or if gps goes out for a bit, this should point to the oldest
+            # pose that we will not consider adding a unary factor to
+            self.q_gps.last_pose_key = self.agent.poseKey
+            self.q_depth.last_pose_key = self.agent.poseKey
+            self.q_imu.last_pose_key = self.agent.poseKey
 
 
             # self.dvl_position_last = self.agent.pose_world
@@ -600,13 +599,14 @@ class FactorGraphNode(Node):
             # self.prev_x = delta_x
 
             # NEW adding measurements:
-            # print("\nCurr pose key:", int(self.agent.poseKey))
+            print("\nCurr pose key:", int(self.agent.poseKey))
             # print("Posekey to time:", self.poseKey_to_time)
 
             if self.agent.poseKey > 2:
                 # IMU unary factor
+                print("\nIMU Timesync")
                 poseKey_to_add_to, msg_to_add = self.q_imu.get_factor_info(int(self.agent.poseKey), self.poseKey_to_time)
-                print("IMU", poseKey_to_add_to, msg_to_add)
+                print("\nIMU Timesync", poseKey_to_add_to, msg_to_add)
                 if poseKey_to_add_to is not None and msg_to_add is not None:
                     quat = [msg_to_add.orientation.x, msg_to_add.orientation.y, msg_to_add.orientation.z, msg_to_add.orientation.w]
                     r = R.from_quat(quat)
@@ -616,14 +616,16 @@ class FactorGraphNode(Node):
                     self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [poseKey_to_add_to], partial(self.error_unary_heading, [orientation_meas])))
 
                 # Depth unary factor
+                print("\nDepth Timesync")
                 poseKey_to_add_to, msg_to_add = self.q_depth.get_factor_info(int(self.agent.poseKey), self.poseKey_to_time)
-                print("Depth", poseKey_to_add_to, msg_to_add)
+                print("\nDepth Timesync", poseKey_to_add_to, msg_to_add)
                 if poseKey_to_add_to is not None and msg_to_add is not None:
                     self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [poseKey_to_add_to], partial(self.error_depth, [np.array([msg_to_add.pose.pose.position.z])])))
 
                 # GPS unary factor
+                print("\nGPS Timesync")
                 poseKey_to_add_to, msg_to_add = self.q_gps.get_factor_info(int(self.agent.poseKey), self.poseKey_to_time)
-                print("GPS", poseKey_to_add_to, msg_to_add)
+                print("\nGPS Timesync", poseKey_to_add_to, msg_to_add)
                 if poseKey_to_add_to is not None and msg_to_add is not None:
                     gps_meas = gtsam.Point3(msg_to_add.pose.pose.position.x, msg_to_add.pose.pose.position.y, msg_to_add.pose.pose.position.z)
                     if(self.position[2] > DEPTH_THRESHOLD):
