@@ -7,7 +7,7 @@
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
-#include "frost_interfaces/msg/vehicle_status.hpp"
+// #include "frost_interfaces/msg/vehicle_status.hpp"
 // #include "seatrac_interfaces/msg/modem_status.hpp"
 #include "geometry_msgs/msg/vector3_stamped.hpp"
 

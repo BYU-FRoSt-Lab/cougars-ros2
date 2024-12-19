@@ -68,6 +68,9 @@ case $1 in
     "sensors")
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
         ;;
+    "sim")
+        ros2 launch cougars_control sim_launch.py namespace:=$NAMESPACE 
+        ;;
     *)
         printError "No start configuration specified"
         printError "Specify a launch configuration using 'bash launch.sh <config>' (ex. 'bash launch.sh moos')"
