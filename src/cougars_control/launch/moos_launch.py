@@ -68,14 +68,14 @@ def generate_launch_description():
             parameters=[param_file],
             namespace=namespace,
             output='screen'
-        )
+        ),
         launch_ros.actions.Node(
             package='cougars_coms',
             executable='cougars_coms',
             parameters=[param_file],
             namespace=namespace,
             output='screen'
-        )
+        ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
