@@ -93,11 +93,11 @@ class NavSatFixToOdom(Node):
         '''
         # Filter out bad readings based on the number of satellites (if available)
         if msg.status.satellites_used < self.min_sats or msg.latitude < 0.1:
-            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}")
+            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}", throttle_duration_sec=10)
             return
         
         if math.isnan(msg.latitude) or math.isnan(msg.longitude) or math.isnan(msg.altitude):
-            self.get_logger().warn("NaN detected in GPS position, skipping this reading")
+            self.get_logger().warn("NaN detected in GPS position, skipping this reading", throttle_duration_sec=10)
             return
         
         # Convert latitude/longitude to local Cartesian coordinates
