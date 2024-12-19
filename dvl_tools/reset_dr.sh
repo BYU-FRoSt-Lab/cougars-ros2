@@ -27,7 +27,7 @@ IPADDRESS=192.168.194.95
 # Function to send set_config request
 send_set_config() {
     JSON_STRING='{"command": "reset_dead_reckoning"}'
-    response=$(echo -n "$JSON_STRING" | nc -w 3 $IPADDRESS 16171)
+    response=$(echo -n "$JSON_STRING" | nc -w 3 -q 0 $IPADDRESS 16171)
 
     if [ -z "$response" ]; then
         printError "No response received from DVL."
@@ -52,10 +52,12 @@ attempt=1
 success=false
 
 while [ $attempt -le $MAX_ATTEMPTS ] && [ "$success" = false ]; do
-    
+    printInfo "On attempt $attempt."
     if send_set_config; then
+        printSuccess "Config set correctly"
         success=true
     else
+        printInfo "Did not connect on this attempt"
         if [ $attempt -lt $MAX_ATTEMPTS ]; then
             printInfo "Attempt $attempt of $MAX_ATTEMPTS"
             printWarning "DVL config attempt failed. Retrying ..."
