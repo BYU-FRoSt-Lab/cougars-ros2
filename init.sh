@@ -24,7 +24,7 @@ source ~/ros2_ws/install/setup.bash
 # Function to handle service call responses
 function handleServiceCall {
   local service_output
-  service_output=$(ros2 service call "$1" "$2" "$3" 2>&1)
+  service_output=$(timeout 5s ros2 service call "$1" "$2" "$3" 2>&1)
 
   if echo "$service_output" | grep -q "success=True"; then
     local message
