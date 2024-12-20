@@ -46,7 +46,7 @@ esac
 echo ""
 
 # TODO: Test this implementation with a string
-leak_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
+leak_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
 if [ -z "$leak_data" ]; then
   printFailure "No leak sensor connection found."
 else
@@ -59,7 +59,7 @@ else
   fi
 fi
 
-battery_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+(\.\d+)?')
+battery_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/battery/data 2>/dev/null | grep -oP '(?<=voltage: )\d+(\.\d+)?')
 if [ -z "$battery_data" ]; then
   printFailure "No battery monitor connection found."
 else
@@ -72,7 +72,7 @@ else
   fi
 fi
 
-pressure_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/pressure/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+(\.\d+)?')
+pressure_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/pressure/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+(\.\d+)?')
 if [ -z "$pressure_data" ]; then
   printFailure "No pressure sensor connection found."
 else
@@ -86,7 +86,7 @@ else
 fi
 
 # TODO: This is broken
-modem_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/modem_status 2>/dev/null | grep -oP '(?<=attitude_yaw: \[)\d+(\.\d+)?')
+modem_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/modem_status 2>/dev/null | grep -oP '(?<=attitude_yaw: \[)\d+(\.\d+)?')
 if [ -z "$modem_data" ]; then
   printFailure "No USBL modem connection found."
 else
@@ -99,7 +99,7 @@ else
   fi
 fi
 
-gps_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
+gps_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
 if [ -z "$gps_data" ]; then
   printFailure "No GPS connection found."
 else
@@ -112,7 +112,7 @@ else
   fi
 fi
 
-dvl_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=altitude: \[)\d+(\.\d+)?')
+dvl_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/dvl/data 2>/dev/null | grep -oP '(?<=altitude: \[)\d+(\.\d+)?')
 if [ -z "$dvl_data" ]; then
   printFailure "No DVL connection (data) found."
 else
@@ -126,7 +126,7 @@ else
 fi
 
 # TODO: This is broken
-dvl_position_data=$(timeout 3 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -A 3 position: | grep -oP '(?<=x: )\d+(\.\d+)?')
+dvl_position_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/dvl/position 2>/dev/null | grep -A 3 position: | grep -oP '(?<=x: )\d+(\.\d+)?')
 if [ -z "$dvl_position_data" ]; then
   printFailure "No DVL connection (position) found."
 else

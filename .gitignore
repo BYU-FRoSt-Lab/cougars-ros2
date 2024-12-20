@@ -8,3 +8,4 @@
 **/docs_build
 **/docs_output
 core
+*.bhv
