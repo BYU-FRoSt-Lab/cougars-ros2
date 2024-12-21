@@ -51,7 +51,8 @@ private:
         ss << "$CONTR," << msg->fin[0] << "," << msg->fin[1] << "," << msg->fin[2] << "," << msg->thruster << "\n";
         std::string command = ss.str();
         sp_nonblocking_write(serial_port_, command.c_str(), command.size());
-        RCLCPP_INFO(this->get_logger(), "Sent command: %s", command.c_str());
+        // RCLCPP_INFO(this->get_logger(), "Sent command: %s", command.c_str());
+        std::cout << "Sent command: " << command.c_str() << std::endl;
     }
 
     void readSerialData() {
@@ -60,7 +61,8 @@ private:
         if (bytes_read > 0) {
             buffer[bytes_read] = '\0'; // Null terminate the buffer
             std::string line(buffer);
-            RCLCPP_INFO(this->get_logger(), "Received: %s", line.c_str());
+            // RCLCPP_INFO(this->get_logger(), "Received: %s", line.c_str());
+            std::cout << "Received: " << line.c_str() << std::endl;
 
             if (line.rfind("$DEPTH", 0) == 0) {
                 double pressure, temperature;
@@ -72,7 +74,6 @@ private:
                     pressure_msg.variance = 0.0;  // Variance can be set if known
                     
                     pressure_pub_->publish(pressure_msg);
-                    RCLCPP_INFO(this->get_logger(), "Published pressure: %lf, temperature: %lf", pressure, temperature);
                 }
             }
         }

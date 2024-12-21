@@ -39,6 +39,7 @@ def generate_launch_description():
             package='fin_sub_cpp', 
             executable='control_node', 
             namespace=namespace,
+            output='log',
         ),
         # Set up the DVL
         launch_ros.actions.Node(
