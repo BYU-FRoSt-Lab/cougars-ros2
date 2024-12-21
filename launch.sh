@@ -58,28 +58,47 @@ if [ "$(uname -m)" == "aarch64" ]; then
   echo ""
 fi
 
+# Parse options
+SIM_PARAM="false" # Default value for sim
+VERBOSE="false"
+GPS="false"
+while getopts "svg" opt; do
+  case $opt in
+    s)
+      SIM_PARAM="true"
+      ;;
+    v)
+      VERBOSE="true"
+      ;;
+    g)
+      GPS="true"
+      ;;
+    *)
+      printError "Invalid option"
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND - 1)) # Shift positional arguments
+#TODO demo option that launchs the teensy controller fins even with sim?
+#TODO just make a parameter in yaml for moos GPS Only
+
 # Start both workspaces
 source ~/microros_ws/install/setup.bash
 source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")
-        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE
         ;;
     "moos")
-        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
-        ;;
-    "moos_gps")
-        ros2 launch cougars_control moos_gps_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE 
+        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE GPS:=$GPS
         ;;
     "sensors")
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
         ;;
-    "demo")
-        ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
-        ;;
-    "sim")
-        ros2 launch cougars_control sim_launch.py namespace:=$NAMESPACE 
-        ;;
+    # "demo")
+    #     ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+    #     ;;
     *)
         printError "No start configuration specified"
         printError "Specify a launch configuration using 'bash launch.sh <config>' (ex. 'bash launch.sh moos')"
