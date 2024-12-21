@@ -12,7 +12,7 @@ public:
         // Initialize subscriber
         // TODO: Look at remappings for holoocean namespace??
         control_command_sub_ = this->create_subscription<frost_interfaces::msg::UCommand>(
-            "control_command", 10, std::bind(&ControlNode::controlCommandCallback, this, std::placeholders::_1));
+            "kinematics/command", 10, std::bind(&ControlNode::controlCommandCallback, this, std::placeholders::_1));
 
         // Initialize publisher
         pressure_pub_ = this->create_publisher<sensor_msgs::msg::FluidPressure>("pressure/data", 10);
