@@ -52,7 +52,7 @@ case $2 in
     ;;
   *)
     printInfo "Will not calibrate"
-    exit 1
+  
     ;;
 esac
 
