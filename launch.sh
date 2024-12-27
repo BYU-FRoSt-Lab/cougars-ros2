@@ -68,6 +68,9 @@ case $1 in
     "sensors")
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
         ;;
+    "demo")
+        ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+        ;;
     "sim")
         ros2 launch cougars_control sim_launch.py namespace:=$NAMESPACE 
         ;;
