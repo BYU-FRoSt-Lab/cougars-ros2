@@ -45,6 +45,19 @@ esac
 
 echo ""
 
+case $2 in
+  "calibrate")
+    printInfo "Calibrating"
+    bash ~/ros2_ws/calibrate.sh
+    ;;
+  *)
+    printInfo "Will not calibrate"
+    exit 1
+    ;;
+esac
+
+echo ""
+
 # TODO: Test this implementation with a string
 leak_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
 if [ -z "$leak_data" ]; then
