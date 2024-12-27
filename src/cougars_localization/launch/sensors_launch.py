@@ -58,13 +58,24 @@ def generate_launch_description():
                     plugin='gpsd_client::GPSDClientComponent',
                     name='gpsd_client',
                     namespace=namespace,
-                    parameters=[vehicle_params[namespace]['gpsd_client']['ros__parameters']]),
+                    parameters=[
+                        vehicle_params[namespace]['gpsd_client']['ros__parameters'],
+                        {'log_level': 'warn'}  # Add log level here
+                    ],
+                    extra_arguments=[{'use_intra_process_comms': True}]
+                ),
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
                     namespace=namespace,
-                    name='utm_gpsfix_to_odometry_node'),
+                    name='utm_gpsfix_to_odometry_node',
+                    parameters=[
+                        {'log_level': 'warn'}  # Add log level here
+                    ],
+                ),
             ],
+            output='log',
+            arguments=['--ros-args', '--log-level', 'WARN'],
         ),
         # Start the data conversion nodes
         launch_ros.actions.Node(
