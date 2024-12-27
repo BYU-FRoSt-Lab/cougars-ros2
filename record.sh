@@ -18,6 +18,8 @@ function printError {
   echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
 }
 
+source ~/ros2_ws/install/setup.bash
+
 case $1 in
   "on")
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
@@ -40,6 +42,8 @@ echo ""
 echo "Enter a folder name for the rosbag: "
 read folder
 echo ""
+
+#TODO: save the folder name from the last time and suggest it without the decimal points?
 
 sleep 5
 bash ~/ros2_ws/dvl_tools/reset_dr.sh
