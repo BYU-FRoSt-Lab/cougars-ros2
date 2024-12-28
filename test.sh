@@ -29,19 +29,21 @@ function printFailure {
 
 source ~/ros2_ws/install/setup.bash
 
-case $1 in
-  "on")
-    bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
-    ;;
-  "off")
-    bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-    ;;
-  *)
-    printError "No state specified for DVL acoustics"
-    printError "Specify a state using either 'bash test.sh on' or 'bash test.sh off'"
-    exit 1
-    ;;
-esac
+if [ "$(uname -m)" == "aarch64" ]; then
+  case $1 in
+    "on")
+      bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
+      ;;
+    "off")
+      bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
+      ;;
+    *)
+      printError "No state specified for DVL acoustics"
+      printError "Specify a state using either 'bash test.sh on' or 'bash test.sh off'"
+      exit 1
+      ;;
+  esac
+fi
 
 echo ""
 
