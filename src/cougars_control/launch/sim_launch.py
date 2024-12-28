@@ -55,4 +55,16 @@ def generate_launch_description():
             namespace=namespace,
             output='screen',
         ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='depth_convertor',
+            parameters=[param_file],
+            namespace=namespace,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='gps_odom.py',
+            parameters=[param_file],
+            namespace=namespace,
+        ),
     ])
