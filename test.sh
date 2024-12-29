@@ -101,7 +101,7 @@ else
   fi
 fi
 
-gps_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
+gps_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/extended_fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
 if [ -z "$gps_data" ]; then
   printFailure "No GPS connection found."
 else
