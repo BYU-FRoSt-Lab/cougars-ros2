@@ -56,28 +56,61 @@ private:
     }
 
     void readSerialData() {
-        char buffer[100];
-        int bytes_read = sp_nonblocking_read(serial_port_, buffer, sizeof(buffer) - 1);
+        char temp_buffer[1024];
+        int bytes_read = sp_nonblocking_read(serial_port_, temp_buffer, sizeof(temp_buffer) - 1);
+        
         if (bytes_read > 0) {
-            buffer[bytes_read] = '\0'; // Null terminate the buffer
-            std::string line(buffer);
-            // RCLCPP_INFO(this->get_logger(), "Received: %s", line.c_str());
-            std::cout << "Received: " << line.c_str() << std::endl;
+            temp_buffer[bytes_read] = '\0';  // Null terminate the buffer
+            buffer_ += temp_buffer;  // Append to existing buffer
 
-            if (line.rfind("$DEPTH", 0) == 0) {
-                double pressure, temperature;
-                if (sscanf(line.c_str(), "$DEPTH,%lf,%lf", &pressure, &temperature) == 2) {
-                    sensor_msgs::msg::FluidPressure pressure_msg;
-                    pressure_msg.header.stamp = this->now();
-                    pressure_msg.fluid_pressure = pressure;
-                    
-                    pressure_msg.variance = 0.0;  // Variance can be set if known
-                    
-                    pressure_pub_->publish(pressure_msg);
-                }
+            std::cout << "Received: " << temp_buffer << std::endl;
+
+            std::vector<std::string> messages = splitMessages(buffer_);
+            
+            // Process complete messages
+            for (size_t i = 0; i < messages.size() - 1; ++i) {
+                processMessage(messages[i]);
             }
+            
+            // Keep the last (potentially incomplete) message in the buffer
+            buffer_ = messages.empty() ? "" : messages.back();
+        } else if (bytes_read < 0) {
+            RCLCPP_ERROR(this->get_logger(), "Error reading from serial port");
         }
     }
+
+    std::vector<std::string> splitMessages(const std::string& data) {
+        std::vector<std::string> messages;
+        std::istringstream stream(data);
+        std::string message;
+        while (std::getline(stream, message, delimiter_)) {
+            if (!message.empty()) {
+                messages.push_back(message);
+            }
+        }
+        return messages;
+    }
+
+    void processMessage(const std::string& message) {
+        if (message.rfind("$DEPTH", 0) == 0) {
+            double pressure, temperature;
+            if (sscanf(message.c_str(), "$DEPTH,%lf,%lf", &pressure, &temperature) == 2) {
+                sensor_msgs::msg::FluidPressure pressure_msg;
+                pressure_msg.header.stamp = this->now();
+                pressure_msg.fluid_pressure = pressure;
+                pressure_msg.variance = 0.0;  // Variance can be set if known
+                pressure_pub_->publish(pressure_msg);
+                
+                std::cout << "Published pressure: " << pressure << std::endl;
+                // RCLCPP_INFO(this->get_logger(), "Published depth: %f", pressure);
+            }
+        }
+        // Add processing for other message types (BATTE, LEAK) here if needed
+    }
+
+
+    std::string buffer_;
+    const char delimiter_ = '\n';
 
     rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr control_command_sub_;
     rclcpp::Publisher<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_pub_;
