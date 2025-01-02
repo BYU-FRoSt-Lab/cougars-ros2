@@ -4,7 +4,6 @@ import rclpy
 from rclpy.node import Node
 from gps_msgs.msg import GPSFix
 from nav_msgs.msg import Odometry
-from pyproj import Proj, Transformer
 import math
 
 EARTH_RADIUS_METERS       = 6371000
@@ -43,26 +42,6 @@ class NavSatFixToOdom(Node):
         '''
         :param origin.altitude: The altitude of the origin (datum) for the local Cartesian projection. The default value is 0.0.
         '''
-        
-        # Create local Cartesian projection with the origin
-        self.local_proj = Proj(proj='aeqd', lat_0=self.get_parameter('origin.latitude').get_parameter_value().double_value, 
-                               lon_0=self.get_parameter('origin.longitude').get_parameter_value().double_value, datum='WGS84')
-        
-        # Create geographic projection
-        self.geo_proj = Proj(proj='latlong', datum='WGS84')
-        
-        # Create transformers for conversion
-        self.transformer = Transformer.from_proj(
-            self.local_proj,
-            self.geo_proj,
-            always_xy=True
-        )
-        
-        self.inv_transformer = Transformer.from_proj(
-            self.geo_proj,
-            self.local_proj,
-            always_xy=True
-        )
         
         # Subscribe to NavSatFix
         self.subscriber = self.create_subscription(
