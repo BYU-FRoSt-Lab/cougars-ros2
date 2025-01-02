@@ -99,6 +99,23 @@ public:
             "surface", 
             std::bind(&CougKinematics::surface, this, std::placeholders::_1, std::placeholders::_2));
 
+
+    surface_command_ = frost_interfaces::msg::UCommand();
+    surface_command_.fin[0] = 0;
+    surface_command_.fin[1] = 30;
+    surface_command_.fin[2] = -30;
+    surface_command_.thruster = 0;
+
+    /**
+    * @brief Kinematics pitch up override service.
+    * 
+    * This timer will ensure if the controller is not publishing, the kinematics surface override will still publish.
+    * Period should be less than the teensy timeout 
+    */
+    backup_timer_ = this->create_wall_timer(
+        std::chrono::milliseconds(1000),
+        std::bind(&CougKinematics::timer_callback, this));
+
     /**
      * @brief Kinematics command publisher.
      *
@@ -148,17 +165,19 @@ private:
           msg.fin[2] + this->get_parameter("left_fin_offset").as_double() +
           this->get_parameter("trim_ratio").as_double() * msg.thruster;
     } else {
-      command.fin[0] = 0;
-      command.fin[1] = -25;  // TODO: make sure this pitches the vehicle up!!
-      command.fin[2] = 25;
+      command = surface_command_;
     }
 
     if (this->get_parameter("demo_mode").as_bool()) {
       command.thruster = 0;
+      surface_command_.thruster = 0;
     } else if (!arm_thruster_){
       command.thruster = 0;
+      surface_command_.thruster = 0;
     } else {
       command.thruster = msg.thruster;
+      surface_command_.thruster = msg.thruster;
+      // TODO: Should we save the last thruster command and use it in the timer callback?
     }
 
     command_publisher_->publish(command);
@@ -172,6 +191,10 @@ private:
     response->success = true;
     response->message = arm_thruster_ ? "Thruster armed!" : "Thruster unarmed!";
     RCLCPP_INFO(this->get_logger(), response->message.c_str());
+    
+    if(!arm_thruster_){
+      surface_command_.thruster = 0;
+    }
   }
 
   void surface(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
@@ -183,20 +206,23 @@ private:
     response->message = surface_override_ ? "Fin Override!" : "Fin actuation!";
     RCLCPP_INFO(this->get_logger(), response->message.c_str());
 
+    command_publisher_->publish(surface_command_);    
+  }
+
+  void timer_callback() {
     //Publish the fins up command
-    auto command = frost_interfaces::msg::UCommand();
-
-    command.fin[0] = 0;
-    command.fin[1] = -25;  // TODO: make sure this pitches the vehicle up!!
-    command.fin[2] = 25;
-
-    command_publisher_->publish(command);    
+    if(surface_override_){
+      command_publisher_->publish(surface_command_);
+    }
   }
 
   bool arm_thruster_ = false;
   bool surface_override_ = false;
 
+  frost_interfaces::msg::UCommand surface_command_;
+
   // ROS objects
+  rclcpp::TimerBase::SharedPtr backup_timer_;
   rclcpp::Publisher<frost_interfaces::msg::UCommand>::SharedPtr
       command_publisher_;
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr
