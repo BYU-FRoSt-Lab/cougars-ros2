@@ -33,6 +33,54 @@ function handleServiceCall {
 
 #TODO: Take the functions used in many scripts and put them into a utils script or something 
 
-handleServiceCall "$NAMESPACE/calibrate_depth" "std_srvs/srv/Trigger" "{}"
+# Depth Sensor calibration:
+echo "Calibrate depth sensor (y/n) - depth converter node needs to be running"
 
-bash ~/ros2_ws/dvl_tools/calibrate_gyro.sh
+read -r choice
+
+# If y then run this script:
+if [[ "$choice" =~ ^[Yy]$ ]]; then
+    handleServiceCall "$NAMESPACE/calibrate_depth" "std_srvs/srv/Trigger" "{}"
+fi
+
+
+#TEMP FIX - Only works inside the container
+cd ~/ros2_ws/dvl_tools
+
+# Calibrate Gyro:
+echo "Calibrate gyro for DVL (y/n)"
+
+read -r choice
+
+if [[ "$choice" =~ ^[Yy]$ ]]; then
+    bash ~/ros2_ws/dvl_tools/calibrate_gyro.sh
+fi
+
+
+echo "Set speed of sound for DVL (y/n)"
+# Read user input
+read -r choice
+
+# If choice is yes then ask for input of speed of sound, if no skip
+if [[ "$choice" =~ ^[Yy]$ ]]; then
+    while true; do
+        echo "Enter speed of sound (should be an int between 1400 and 1600):"
+        read -r SPEED
+        if [[ "$SPEED" =~ ^[0-9]+$ ]] && [ "$SPEED" -ge 1400 ] && [ "$SPEED" -le 1600 ]; then
+            bash ~/ros2_ws/dvl_tools/set_speed_sound.sh "$SPEED"
+            break
+        else
+            echo "Invalid input. Please enter an integer between 1400 and 1600."
+        fi
+    done
+fi
+
+# Set ntp server:
+echo "Set ntp server for DVL (y/n)"
+
+read -r choice
+
+# If y then run this script:
+if [[ "$choice" =~ ^[Yy]$ ]]; then
+    bash ~/ros2_ws/dvl_tools/set_ntp.sh
+fi
