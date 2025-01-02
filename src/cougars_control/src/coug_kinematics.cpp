@@ -202,6 +202,7 @@ private:
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr
       command_subscription_;
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr arm_service_;
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr surface_service_;
 };
 
 int main(int argc, char *argv[]) {
