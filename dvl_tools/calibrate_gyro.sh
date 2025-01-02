@@ -2,7 +2,7 @@
 # Created by Matthew McMurray, Sep 2024
 #
 
-source send_command.sh
+source ~/ros2_ws/dvl_tools/send_command.sh
 
 MAX_ATTEMPTS=3
 TIMEOUT=15

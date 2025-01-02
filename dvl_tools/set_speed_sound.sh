@@ -14,7 +14,7 @@ SPEED_OF_SOUND=$1
 # Build the JSON string
 JSON_STRING='"set_config","parameters":{"speed_of_sound":'"$SPEED_OF_SOUND"'}'
 
-source send_command.sh
+source ~/ros2_ws/dvl_tools/send_command.sh
 
 # Main execution
 MAX_ATTEMPTS=3

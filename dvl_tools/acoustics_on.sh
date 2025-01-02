@@ -21,7 +21,7 @@ fi
 # Build the JSON string
 JSON_STRING='"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}'
 
-source send_command.sh
+source ~/ros2_ws/dvl_tools/send_command.sh
 
 MAX_ATTEMPTS=3
 TIMEOUT=10
