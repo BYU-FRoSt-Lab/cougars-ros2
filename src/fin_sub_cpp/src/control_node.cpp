@@ -1,6 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <sensor_msgs/msg/fluid_pressure.hpp>
+#include <sensor_msgs/msg/battery_state.hpp>
 #include "frost_interfaces/msg/u_command.hpp"
 #include <libserialport.h>
 #include <string>
@@ -17,9 +18,12 @@ public:
         // Initialize publisher
         pressure_pub_ = this->create_publisher<sensor_msgs::msg::FluidPressure>("pressure/data", 10);
 
+        battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("battery/data", 10);
+
+        leak_pub_ = this->create_publisher<sensor_msgs::msg::FluidPressure>("leak/data", 10);
         // TODO: Make a new publisher that converts fluid pressure to depth with a pose with cov
 
-        sp_set_baudrate(serial_port_, 115200);
+        sp_set_baudrate(serial_port_, 9600);
         // Open the serial port
         if (sp_get_port_by_name("/dev/ttyACM0", &serial_port_) != SP_OK) {
             RCLCPP_ERROR(this->get_logger(), "Unable to find port");
@@ -105,6 +109,25 @@ private:
                 // RCLCPP_INFO(this->get_logger(), "Published depth: %f", pressure);
             }
         }
+        if (message.rfind("$BATTE", 0) == 0){
+            double voltage, current;
+            if(sscanf(message.c_str(), "$BATTE,%lf,%lf", &voltage, &current) == 2){
+                sensor_msgs::msg::BatteryState battery_msg;
+                battery_msg.voltage = voltage;
+                battery_msg.current = current;
+
+                battery_pub_->publish(battery_msg);
+            }
+        }
+        if (message.rfind("$LEAK", 0) == 0) {
+            int leak;
+            if (sscanf(message.c_str(), "$LEAK,%d", &leak) == 1) {
+                sensor_msgs::msg::FluidPressure leak_msg;
+                leak_msg.header.stamp = this->now();
+                leak_msg.fluid_pressure = leak;
+                leak_pub_->publish(leak_msg);
+            }
+        }
         // Add processing for other message types (BATTE, LEAK) here if needed
     }
 
@@ -114,6 +137,8 @@ private:
 
     rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr control_command_sub_;
     rclcpp::Publisher<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::FluidPressure>::SharedPtr leak_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
     struct sp_port *serial_port_;
 };
