@@ -7,14 +7,14 @@
 CONNECTION_NAME="eth0"
 
 # Deactivate the connection
-nmcli connection down "$CONNECTION_NAME"
+sudo nmcli connection down "$CONNECTION_NAME"
 echo "Deactivated $CONNECTION_NAME"
 
 # Wait for 5 seconds
 sleep 5
 
 # Reactivate the connection
-nmcli connection up "$CONNECTION_NAME"
+sudo nmcli connection up "$CONNECTION_NAME"
 
 # Check if the connection is successfully activated
 if [ $? -eq 0 ]; then
