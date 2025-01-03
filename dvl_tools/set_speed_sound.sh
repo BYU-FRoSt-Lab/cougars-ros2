@@ -3,6 +3,8 @@
 #
 
 # Check if the correct number of arguments is provided
+source ~/ros2_ws/dvl_tools/send_command.sh
+
 if [ "$#" -ne 1 ]; then
   echo "Usage: $0 <speed_of_sound>"
   exit 1
@@ -14,7 +16,6 @@ SPEED_OF_SOUND=$1
 # Build the JSON string
 JSON_STRING='"set_config","parameters":{"speed_of_sound":'"$SPEED_OF_SOUND"'}'
 
-source ~/ros2_ws/dvl_tools/send_command.sh
 
 # Main execution
 MAX_ATTEMPTS=3
