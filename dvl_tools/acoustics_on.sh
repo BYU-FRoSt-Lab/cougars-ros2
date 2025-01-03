@@ -4,6 +4,8 @@
 # Modified by AI Assistant, Nov 2024
 
 # Check if the correct number of arguments is provided
+source ~/ros2_ws/dvl_tools/send_command.sh
+
 if [ "$#" -ne 1 ]; then
   printError "Usage: $0 <true|false>"
   exit 1
@@ -21,7 +23,6 @@ fi
 # Build the JSON string
 JSON_STRING='"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}'
 
-source ~/ros2_ws/dvl_tools/send_command.sh
 
 MAX_ATTEMPTS=3
 TIMEOUT=10
