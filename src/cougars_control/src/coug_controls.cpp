@@ -6,14 +6,16 @@
 #include <Eigen/Dense>
 #include <cmath>  // For atan2, M_PI, fmin, fmax
 
-// #include "pid.cpp"
-#include "pid_int2.cpp"
+#include "pid.cpp"
+#include "actuator.cpp"
+// #include "pid_int2.cpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 
@@ -288,6 +290,16 @@ public:
         this->create_subscription<sensor_msgs::msg::Imu>(
             "modem_imu", 10,
             std::bind(&CougControls::actual_orientation_callback, this, _1));
+    
+    /**
+     * @brief Converted DVL velocity subscriber.
+     *
+     * This subscriber subscribes to the "dvl/velocity" topic. It uses the TwistWithCovarianceStamped
+     * message type.
+     */
+    actual_velocity_subscription_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+        "dvl/velocity", qos,
+        std::bind(&CougControls::dvl_velocity_callback, this, _1));
 
     /**
      * @brief Control timer.
@@ -333,7 +345,13 @@ private:
    */
   void
   desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
+    if (depth_msg.desired_depth == this->desired_depth){
+        return;
+    }
     this->desired_depth = depth_msg.desired_depth;
+
+    // When a new desired depth sent update the depth_ref to the actual depth
+    this->depth_ref = this->actual_depth;
   }
 
   /**
@@ -378,6 +396,27 @@ private:
     this->actual_depth = -depth_msg.pose.pose.position.z;
     //Negate the z value in ENU to get postive depth value
   }
+
+  /**
+   * @brief Callback function for the velocity subscription.
+   *
+   * This method sets the velocity value to the value received from the
+   * velocity message. 
+   *
+   * @param velocity The TwistWithCovarianceStamped message recieved from the
+   * dvl/velocity topic.
+   */
+  void dvl_velocity_callback(
+      const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
+    
+    //This is taking from the converted dvl velocity only when dvl velocity is valid.
+    // Velocity in x is expected to be 0.67 m/s at 20/100 thruster with velocity in y and z expected to be < 0.01
+    this->velocity[0] = velocity_msg.twist.twist.linear.x;
+    this->velocity[1] = velocity_msg.twist.twist.linear.y;
+    this->velocity[2] = velocity_msg.twist.twist.linear.z;
+
+  }
+
 
   void normalizeAngles(double& yaw, double& pitch, double& roll) {
     // Normalize yaw to [-180, 180]
@@ -446,26 +485,13 @@ private:
     this->actual_pitch = pitch;
     this->actual_roll = roll;
 
+    this->pitch_rate = orientation_msg.angular_velocity.y;
+
     // // // Log the information
     // RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
     //             this->actual_heading, this->actual_pitch, this->actual_roll);
   }
 
-  double look_ahead_theta(double distance, double actual, double desired, double theta_max) {
-    // Find the depth error
-    double depth_error = desired - actual;
-
-    // Calculate the angle using atan2 (rise over run: depth_error / distance)
-    double theta_desired = atan2(depth_error, distance); // atan2(y, x)
-
-    // Convert theta_desired from radians to degrees (optional, depending on your needs)
-    theta_desired *= 180.0 / M_PI; // Uncomment if you want degrees instead of radians
-
-    // Cap the desired theta within the range [-theta_max, theta_max]
-    theta_desired = std::fmax(-theta_max, std::fmin(theta_desired, theta_max));
-
-    return theta_desired;
-  }
   float calculateYawError(float desired_heading, float actual_heading) {
     float yaw_err = desired_heading - actual_heading;
     
@@ -479,6 +505,71 @@ private:
     return yaw_err;
   }
 
+  double calculate_deflection(float torque, float velocity[3], float x_fin) {
+    double deltaMax = this->get_parameter("pitch_max_output").as_double();
+    float rho = 997.0;
+    float area = 0.00665;
+    float CL = 0.7;
+    
+    float velocity_x = velocity[0] * velocity[0];
+    float velocity_y = velocity[1] * velocity[1];
+    float velocity_z = velocity[2] * velocity[2];
+    float avg_velocity = std::sqrt(velocity_x + velocity_y + velocity_z);
+
+    float force = torque / (x_fin * std::cos(30 * M_PI / 180.0));
+
+    double den = 0.5 * rho * area * CL * avg_velocity * avg_velocity;
+    double required_deflection = (den != 0) ? force / den : 0;
+
+    return std::clamp(required_deflection, -deltaMax, deltaMax);
+  }
+  
+  int depth_autopilot(float depth, float depth_d){
+    float surge = this->velocity[0];
+    float surge_threshold = 0.4;
+    float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
+    double theta_max = this->get_parameter("pitch_max_output").as_double();
+    float kp_z = myDepthPID.getKp();
+    float wn_d_z = 0.05; //TODO this is an important parameter - See how z tracks z ref
+
+    if(surge < surge_threshold){
+        this->theta_ref = this->actual_pitch;   
+        return 0;
+    }
+    // Low Pass filter for depth reference
+    this->depth_ref = std::exp(-timer_period * wn_d_z) * this->depth_ref
+                + (1 - std::exp(-timer_period * wn_d_z)) * depth_d;
+
+    const double threshold = 4.0; // WHAT THRESHOLD WOULD MAKE theta_d saturate
+    double wn_d_theta = 0.25;
+    double saturated = (theta_max / -kp_z) * std::copysign(1.0, depth - depth_d);  //CHECK THE SIGN ON THIS
+    
+    if (std::abs(depth_d - depth) > threshold) {
+        // saturate theta_d
+        float theta_d = theta_max * std::copysign(1.0, depth - depth_d);
+        this->theta_ref = std::exp(-timer_period * wn_d_theta) * this->theta_ref
+                        + (1 - std::exp(-timer_period * wn_d_theta)) * theta_d;
+
+        this->depth_ref = depth + saturated; // Override low pass filter input
+    } else {
+        this->theta_ref = myDepthPID.compute(this->depth_ref, this->actual_depth, this->velocity[2]);
+    }
+
+
+    // Calculate the desired pitch angle
+    std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << this->desired_depth << std::endl;
+
+    // Apply PID control to pitch and heading errors directly
+    std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
+    float torque_s = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate);  // No additional scaling needed
+
+
+    // Add torque equilibruim?
+    int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43);
+
+    return depth_pos;
+  }
+
   /**
    * @brief Callback function for the PID control timer.
    *
@@ -490,19 +581,13 @@ private:
       message.header.stamp = this->now();
 
       if (this->init_flag) {
-          // Calculate the desired pitch angle
-          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
-          std::cout <<  "Depth: " << this->actual_depth << "Desired Depth: " << this->desired_depth << std::endl;
-
+          int depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
+          
           // Handling roll over when taking the error difference
           // given desired heading and actual heading from -180 to 180
           // if they are both negative or they are both positive than just take the difference
           float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
           // // Log the information
-          
-          // Step 4: Apply PID control to pitch and heading errors directly
-          std::cout <<  "Pitch: " << this->actual_pitch << "Desired Pitch: " << theta_desired << std::endl;
-          int depth_pos = (int)myPitchPID.compute(theta_desired, this->actual_pitch);  // No additional scaling needed
           
           int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
           std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
@@ -512,7 +597,7 @@ private:
           message.fin[1] = depth_pos;      // right fin
           message.fin[2] = depth_pos;      // left fin
           message.thruster = this->desired_speed;
-
+        
           u_command_publisher_->publish(message);
       }
       else{
@@ -538,6 +623,8 @@ private:
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       actual_depth_subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr
+      actual_velocity_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
 
@@ -559,12 +646,18 @@ private:
   float desired_heading = 0.0;
   float desired_speed = 0.0;
 
+  float depth_ref;
+  float theta_ref;
+
   // node actual values
   float actual_depth = 0.0;
   Eigen::Quaterniond current_quat;
   float actual_pitch = 0.0;
   float actual_roll = 0.0;
   float actual_heading = 0.0;
+
+  float pitch_rate;
+  float velocity[3];
 };
 
 int main(int argc, char *argv[]) {
