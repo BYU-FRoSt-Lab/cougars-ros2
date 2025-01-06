@@ -46,6 +46,8 @@ public:
     this->beta = (2.0 * sigma - interval) / (2.0 * sigma + interval);
   }
 
+  float getKp() const { return kp; }
+
   /**
    * Simple PID control, based on the approach in BYU ECEn 483.
    *
@@ -85,6 +87,34 @@ public:
     // update delayed variables
     this->error_d1 = error;
     this->x_d1 = x;
+
+    return force_sat;
+  }
+  float compute(float x_r, float x, float x_dot) {
+    
+    float error = x_r - x;
+
+    this->integrator = this->integrator + (this->pid_interval / 2.0) * (error + this->error_d1);
+
+    // std::cout << "integrator " << this->integrator << std::endl;
+
+    // std::cout << "x_dot " << this->x_dot << std::endl;
+
+    // calculate the force
+    float force_unsat = this->kp * error + this->ki * this->integrator - this->kd * x_dot;
+
+    // saturate the force
+    float force_sat;
+    if (force_unsat > this->max_output) {
+      force_sat = this->max_output;
+    } else if (force_unsat < this->min_output) {
+      force_sat = this->min_output;
+    } else {
+      force_sat = force_unsat;
+    }
+
+    // update delayed variables
+    this->error_d1 = error;
 
     return force_sat;
   }
