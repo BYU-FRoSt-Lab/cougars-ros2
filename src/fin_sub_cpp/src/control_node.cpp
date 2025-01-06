@@ -30,8 +30,7 @@ public:
         // Open the serial port
 
 
-        // Added this code so that we can use symlink path
-
+        //Added this code so that we can use udev symlink path
         //This function finds the real path within the udev rule so that it can use the real path with the libserialport library
         //libserial port library cannot use udev paths
         char resolved_path[PATH_MAX];
