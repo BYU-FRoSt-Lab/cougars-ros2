@@ -66,6 +66,8 @@ while getopts "svg" opt; do
   case $opt in
     s)
       SIM_PARAM="true"
+      VEHICLE_PARAMS_FILE=/home/frostlab/config/sim_params.yaml
+      echo "Using param file $VEHICLE_PARAMS_FILE"
       ;;
     v)
       VERBOSE="true"
