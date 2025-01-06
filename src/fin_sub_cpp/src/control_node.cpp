@@ -6,6 +6,9 @@
 #include <libserialport.h>
 #include <string>
 #include <sstream>
+// Added these libraries for the real path resolution
+#include <stdlib.h>
+#include <limits.h>
 
 class ControlNode : public rclcpp::Node {
 public:
@@ -25,7 +28,20 @@ public:
 
         sp_set_baudrate(serial_port_, 9600);
         // Open the serial port
-        if (sp_get_port_by_name("/dev/ttyACM0", &serial_port_) != SP_OK) {
+
+
+        // Added this code so that we can use symlink path
+
+        //This function finds the real path within the udev rule so that it can use the real path with the libserialport library
+        //libserial port library cannot use udev paths
+        char resolved_path[PATH_MAX];
+        if (realpath("/dev/frost/teensy", resolved_path) != NULL) {
+            std::cout << "Real path: " << resolved_path << std::endl;
+        } else {
+            std::cerr << "Error resolving path" << std::endl;
+        }
+        
+        if (sp_get_port_by_name(resolved_path, &serial_port_) != SP_OK) {
             RCLCPP_ERROR(this->get_logger(), "Unable to find port");
             rclcpp::shutdown();
         }
