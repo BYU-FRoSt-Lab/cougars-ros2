@@ -40,35 +40,39 @@ public:
             default: break;
             case EMPTY: break;
             case EMERGENCY_KILL: {
-                bool success = kill_thruster();
-                ConfirmEmergencyKill response;
-                response.success = success;
-                send_acoustic_message(base_station_beacon_id_, 1, (uint8_t*)&response);
+                kill_thruster();
             } break;
         }
     }
 
-    bool kill_thruster() {
+    void kill_thruster() {
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
-        request->data = true;
+        request->data = false;
         while (!this->thruster_client_->wait_for_service(1s)) {
             if (!rclcpp::ok()) {
                 RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), 
                     "Interrupted while waiting for the arm_thruster service. Exiting.");
-                return false;
             }
             RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "arm_thruster service not available, waiting again...");
         }
-        auto result = this->thruster_client_->async_send_request(request);
-        if (rclcpp::spin_until_future_complete(shared_from_this(), result) ==
-            rclcpp::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "thruster has been deactivated.");
-            return true;
-        } else {
-            RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service arm_thruster");
-            return false;
-        }
+
+        auto result_future = this->thruster_client_->async_send_request(request,
+            [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response_future) {
+                try {
+                    auto response = response_future.get();
+                    if (response->success) {
+                        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Thruster has been deactivated.");
+                    } else {
+                        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to deactivate thruster.");
+                    }
+                    ConfirmEmergencyKill msg;
+                    msg.success = response->success;
+                    this->send_acoustic_message(base_station_beacon_id_, 1, (uint8_t*)&msg);
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "Error while trying to deactivate thruster: %s", e.what());
+                }
+            }
+        );
     }
 
     void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
