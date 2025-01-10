@@ -29,19 +29,21 @@ function printFailure {
 
 source ~/ros2_ws/install/setup.bash
 
-case $1 in
-  "on")
-    bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
-    ;;
-  "off")
-    bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-    ;;
-  *)
-    printError "No state specified for DVL acoustics"
-    printError "Specify a state using either 'bash test.sh on' or 'bash test.sh off'"
-    exit 1
-    ;;
-esac
+if [ "$(uname -m)" == "aarch64" ]; then
+  case $1 in
+    "on")
+      bash ~/ros2_ws/dvl_tools/acoustics_on.sh true
+      ;;
+    "off")
+      bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
+      ;;
+    *)
+      printError "No state specified for DVL acoustics"
+      printError "Specify a state using either 'bash test.sh on' or 'bash test.sh off'"
+      exit 1
+      ;;
+  esac
+fi
 
 echo ""
 
@@ -112,7 +114,7 @@ else
   fi
 fi
 
-gps_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
+gps_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/extended_fix 2>/dev/null | grep -oP '(?<=latitude: )\d+(\.\d+)?')
 if [ -z "$gps_data" ]; then
   printFailure "No GPS connection found."
 else
