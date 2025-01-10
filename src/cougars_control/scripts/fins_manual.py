@@ -10,7 +10,7 @@ from rclpy.qos import qos_profile_system_default
 
 class FinsManual(Node):
     '''
-    :author: Braden Meyers
+    :author: Braden Meyers, Nelson Durrant
     :date: January 2025
 
     A ROS2 node that publishes to controls/command for control surface commands manual defined from parameters
@@ -35,7 +35,7 @@ class FinsManual(Node):
 
         self.declare_parameter("commands", "[]")
         '''
-        :param TODO
+        :param commands: a string of commands that has lists of length 5 [count, fin1, fin2, fin3, thruster] ie. commands: "[10, 15, 15, 15, 0], [10, -15, -15, -15, 0], [10, 25, 25, 25, 0]"
         '''
         commands = self.get_parameter('commands').value
         self.commands = ast.literal_eval(commands)
@@ -50,7 +50,6 @@ class FinsManual(Node):
         '''
         Timer that calls the timer_callback method at the specified period.
         '''
-
 
         # Create the publishers
         self.controls_publisher = self.create_publisher(
@@ -108,7 +107,7 @@ class FinsManual(Node):
     def timer_callback(self):
         '''
         Callback function for the timer.
-        Runs the state machine and high-level controller, and publishes the desired depth, heading, and speed values.
+        Publishes the commands in the variable self.commands. Publishes for number of iterations specified in count  
         For a faster update time, adjust the command_timer_period parameter.
         '''
 
