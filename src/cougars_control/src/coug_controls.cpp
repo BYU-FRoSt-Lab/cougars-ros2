@@ -506,7 +506,7 @@ private:
   }
 
   double calculate_deflection(float torque, float velocity[3], float x_fin) {
-    double deltaMax = this->get_parameter("pitch_max_output").as_double();
+    double deltaMax = 25.0;
     float rho = 997.0;
     float area = 0.00665;
     float CL = 0.7;
@@ -528,8 +528,8 @@ private:
     float surge = this->velocity[0];
     float surge_threshold = 0.4;
     float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
-    double theta_max = this->get_parameter("pitch_max_output").as_double();
-    float kp_z = myDepthPID.getKp();
+    float theta_max = 25.0;
+    // float kp_z = myDepthPID.getKp();
     float wn_d_z = 0.05; //TODO this is an important parameter - See how z tracks z ref
 
     if(surge < surge_threshold){
@@ -540,32 +540,37 @@ private:
     this->depth_ref = std::exp(-timer_period * wn_d_z) * this->depth_ref
                 + (1 - std::exp(-timer_period * wn_d_z)) * depth_d;
 
-    const double threshold = 4.0; // WHAT THRESHOLD WOULD MAKE theta_d saturate
+    const double threshold = 1.7; // WHAT THRESHOLD WOULD MAKE theta_d saturate
     double wn_d_theta = 0.25;
-    double saturated = (theta_max / -kp_z) * std::copysign(1.0, depth - depth_d);  //CHECK THE SIGN ON THIS
+    double saturated = 0.25 * std::copysign(1.0, depth_d - depth);  //CHECK THE SIGN ON THIS
     
     if (std::abs(depth_d - depth) > threshold) {
         // saturate theta_d
-        float theta_d = theta_max * std::copysign(1.0, depth - depth_d);
+        float theta_d = theta_max * std::copysign(1.0, depth_d - depth);
         this->theta_ref = std::exp(-timer_period * wn_d_theta) * this->theta_ref
                         + (1 - std::exp(-timer_period * wn_d_theta)) * theta_d;
 
-        this->depth_ref = depth + saturated; // Override low pass filter input
+        this->depth_ref = depth ;//+ saturated; // Override low pass filter input
+        std::cout <<  "Saturated Depth PID mode" << std::endl;
     } else {
         this->theta_ref = myDepthPID.compute(this->depth_ref, this->actual_depth, this->velocity[2]);
     }
 
+    std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
+
 
     // Calculate the desired pitch angle
-    std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << this->desired_depth << std::endl;
 
     // Apply PID control to pitch and heading errors directly
+    this->theta_ref = std::clamp(this->theta_ref, -theta_max, theta_max);
     std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
     float torque_s = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate);  // No additional scaling needed
 
 
     // Add torque equilibruim?
     int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43);
+
+    std::cout << "Torque: " << torque_s << " Fin: " << depth_pos << std::endl;
 
     return depth_pos;
   }
