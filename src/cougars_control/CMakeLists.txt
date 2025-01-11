@@ -67,8 +67,6 @@ install(PROGRAMS
   scripts/leak_sub.py
   scripts/manual_mission.py
   scripts/fins_manual.py
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

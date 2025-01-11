@@ -64,6 +64,7 @@ VERBOSE="false"
 GPS="false"
 FINS="false"
 while getopts "svgf" opt; do
+
   case $opt in
     s)
       SIM_PARAM="true"
@@ -79,6 +80,7 @@ while getopts "svgf" opt; do
     f)
       FINS="true"
       ;;
+
     *)
       printError "Invalid option"
       exit 1

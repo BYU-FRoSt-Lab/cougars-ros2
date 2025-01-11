@@ -108,8 +108,6 @@ def generate_launch_description():
         #     parameters=[param_file],
         #     namespace=namespace,
         # ),
-
-
     ])
 
     return launch.LaunchDescription(launch_actions)
