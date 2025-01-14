@@ -6,4 +6,4 @@
 #   file in the 'docs_output/seatrac' directory
 
 source ~/ros2_ws/install/setup.bash
-rosdoc2 build --package-path ~/ros2_ws/src/seatrac
+rosdoc2 build --package-path ~/ros2_ws/src/cougars_coms
