@@ -194,7 +194,10 @@ public:
     this->declare_parameter("magnetic_declination", 10.7);
     this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
 
-    this->declare_parameter("wn_d_z", 0.05);
+    this->declare_parameter("wn_d_z", 0.09);
+    this->declare_parameter("wn_d_theta", 0.25);
+    this->declare_parameter("outer_loop_threshold", 2.5);
+    this->declare_parameter("saturation_offset", 1.7);
 
     // calibrate PID controllers
     myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
@@ -516,10 +519,10 @@ private:
     float surge_threshold = 0.6;
     float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
     float theta_max = this->get_parameter("depth_max_output").as_double();  //FIGURE OUT THIS PARAM for the vehicle at full fin 
-    float wn_d_z = this->get_parameters("wn_d_z").as_double(); //TODO this is an important parameter - See how z tracks z ref
-    double wn_d_theta = this->get_parameters("wn_d_theta").as_double();
-    double outer_loop_threshold = this->get_parameters("outer_loop_threshold").as_double();
-    double saturation_offset = this->get_parameters("saturation_offset").as_double();
+    float wn_d_z = this->get_parameter("wn_d_z").as_double(); //TODO this is an important parameter - See how z tracks z ref
+    float wn_d_theta = this->get_parameter("wn_d_theta").as_double();
+    float outer_loop_threshold = this->get_parameter("outer_loop_threshold").as_double();
+    float saturation_offset = this->get_parameter("saturation_offset").as_double();
 
     if(surge < surge_threshold){
         this->theta_ref = this->actual_pitch;   
@@ -580,13 +583,12 @@ private:
           // // Log the information
           
           int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
-        //   std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
-          heading_pos = 0;
+          std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
 
           // Step 5: Set fin positions and publish the command
           message.fin[0] = heading_pos;    // top fin
-          message.fin[1] = depth_pos;      // right fin
-          message.fin[2] = depth_pos;      // left fin
+          message.fin[1] = -depth_pos;      // starboard side fin
+          message.fin[2] = depth_pos;      // port side fin
           message.thruster = this->desired_speed;
         
           u_command_publisher_->publish(message);
