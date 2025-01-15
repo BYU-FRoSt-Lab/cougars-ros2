@@ -62,7 +62,8 @@ fi
 SIM_PARAM="false" # Default value for sim
 VERBOSE="false"
 GPS="false"
-while getopts "svg" opt; do
+FINS="false"
+while getopts "svgf" opt; do
   case $opt in
     s)
       SIM_PARAM="true"
@@ -74,6 +75,9 @@ while getopts "svg" opt; do
       ;;
     g)
       GPS="true"
+      ;;
+    f)
+      FINS="true"
       ;;
     *)
       printError "Invalid option"
@@ -90,7 +94,7 @@ source ~/microros_ws/install/setup.bash
 source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")
-        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE
+        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
         ;;
     "moos")
         ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE GPS:=$GPS
