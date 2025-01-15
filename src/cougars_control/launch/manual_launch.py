@@ -26,6 +26,7 @@ def generate_launch_description():
 
     sim = "false"  # Default to 'false'
     verbose = "false"  # Default to 'false'
+    fins = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
 
     for arg in sys.argv:
@@ -37,6 +38,8 @@ def generate_launch_description():
             sim = arg.split(":=")[1].lower()
         if arg.startswith("verbose:="):
             verbose = arg.split(":=")[1].lower()
+        if arg.startswith("fins:="):
+            fins = arg.split(":=")[1].lower()
     
     if verbose == "true":
         output = 'screen'
@@ -50,6 +53,34 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(os.path.join(package_dir, "sensors_launch.py"))
         )
         launch_actions.append(sensors)
+
+    if fins == "true":
+        fins_manual = launch_ros.actions.Node(
+            package='cougars_control',
+            executable='fins_manual.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+            emulate_tty=True,
+        )
+        launch_actions.append(fins_manual)
+    else:
+        manual_mission = launch_ros.actions.Node(
+            package='cougars_control',
+            executable='manual_mission.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        )
+        controls = launch_ros.actions.Node(
+            package='cougars_control',
+            executable='coug_controls',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        )
+        launch_actions.append(manual_mission)
+        launch_actions.append(controls)
     
     
     launch_actions.extend([
@@ -62,19 +93,7 @@ def generate_launch_description():
             executable='coug_kinematics',
             parameters=[param_file],
             namespace=namespace,
-        ),
-        launch_ros.actions.Node(
-            package='cougars_control',
-            executable='coug_controls',
-            parameters=[param_file],
             output=output,
-            namespace=namespace,
-        ),
-        launch_ros.actions.Node(
-            package='cougars_control',
-            executable='manual_mission.py',
-            parameters=[param_file],
-            namespace=namespace,
         ),
         launch_ros.actions.Node(
             package='cougars_coms',
@@ -96,6 +115,8 @@ def generate_launch_description():
         #     parameters=[param_file],
         #     namespace=namespace,
         # ),
+
+
     ])
 
     return launch.LaunchDescription(launch_actions)
