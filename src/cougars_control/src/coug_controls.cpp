@@ -194,20 +194,26 @@ public:
     this->declare_parameter("magnetic_declination", 10.7);
     this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
 
+    this->declare_parameter("wn_d_z", 0.05);
+
     // calibrate PID controllers
     myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
                          this->get_parameter("depth_ki").as_double(),
                          this->get_parameter("depth_kd").as_double(),
-                         this->get_parameter("depth_min_output").as_double(),
+                         this->get_parameter("depth_min_output").as_double(),         
                          this->get_parameter("depth_max_output").as_double(),
                          (float)this->get_parameter("timer_period").as_int()); 
+
+    // TODO parameterize this if it works
+    float scalar = 0.5 * 997 * 0.00665 * 0.5 * -0.43 * std::cos(30 * (M_PI / 180.0));
 
     myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
                          this->get_parameter("pitch_ki").as_double(),
                          this->get_parameter("pitch_kd").as_double(),
-                         this->get_parameter("pitch_min_output").as_double(),
+                         this->get_parameter("pitch_min_output").as_double(),       //THIS is the fin min and max
                          this->get_parameter("pitch_max_output").as_double(),
-                         (float)this->get_parameter("timer_period").as_int());
+                         (float)this->get_parameter("timer_period").as_int(),
+                         scalar);
 
     myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
                            this->get_parameter("heading_ki").as_double(),
@@ -504,33 +510,16 @@ private:
     
     return yaw_err;
   }
-
-  double calculate_deflection(float torque, float velocity[3], float x_fin) {
-    double deltaMax = 25.0;
-    float rho = 997.0;
-    float area = 0.00665;
-    float CL = 0.7;
-    
-    float velocity_x = velocity[0] * velocity[0];
-    float velocity_y = velocity[1] * velocity[1];
-    float velocity_z = velocity[2] * velocity[2];
-    float avg_velocity = std::sqrt(velocity_x + velocity_y + velocity_z);
-
-    float force = torque / (x_fin * std::cos(30 * M_PI / 180.0));
-
-    double den = 0.5 * rho * area * CL * avg_velocity * avg_velocity;
-    double required_deflection = (den != 0) ? force / den : 0;
-
-    return std::clamp(required_deflection, -deltaMax, deltaMax);
-  }
   
   int depth_autopilot(float depth, float depth_d){
     float surge = this->velocity[0];
-    float surge_threshold = 0.4;
+    float surge_threshold = 0.6;
     float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
-    float theta_max = 25.0;
-    // float kp_z = myDepthPID.getKp();
-    float wn_d_z = 0.05; //TODO this is an important parameter - See how z tracks z ref
+    float theta_max = this->get_parameter("depth_max_output").as_double();  //FIGURE OUT THIS PARAM for the vehicle at full fin 
+    float wn_d_z = this->get_parameters("wn_d_z").as_double(); //TODO this is an important parameter - See how z tracks z ref
+    double wn_d_theta = this->get_parameters("wn_d_theta").as_double();
+    double outer_loop_threshold = this->get_parameters("outer_loop_threshold").as_double();
+    double saturation_offset = this->get_parameters("saturation_offset").as_double();
 
     if(surge < surge_threshold){
         this->theta_ref = this->actual_pitch;   
@@ -540,18 +529,17 @@ private:
     this->depth_ref = std::exp(-timer_period * wn_d_z) * this->depth_ref
                 + (1 - std::exp(-timer_period * wn_d_z)) * depth_d;
 
-    const double threshold = 1.7; // WHAT THRESHOLD WOULD MAKE theta_d saturate
-    double wn_d_theta = 0.25;
-    double saturated = 0.25 * std::copysign(1.0, depth_d - depth);  //CHECK THE SIGN ON THIS
+    double saturated = saturation_offset * std::copysign(1.0, depth_d - depth);  //CHECK THE SIGN ON THIS
     
-    if (std::abs(depth_d - depth) > threshold) {
+    if (std::abs(depth_d - depth) > outer_loop_threshold) {
         // saturate theta_d
         float theta_d = theta_max * std::copysign(1.0, depth_d - depth);
         this->theta_ref = std::exp(-timer_period * wn_d_theta) * this->theta_ref
-                        + (1 - std::exp(-timer_period * wn_d_theta)) * theta_d;
+                        + (1.0 - std::exp(-timer_period * wn_d_theta)) * theta_d;
 
-        this->depth_ref = depth ;//+ saturated; // Override low pass filter input
+        this->depth_ref = depth + saturated; // Override low pass filter input
         std::cout <<  "Saturated Depth PID mode" << std::endl;
+        myDepthPID.reset_int();
     } else {
         this->theta_ref = myDepthPID.compute(this->depth_ref, this->actual_depth, this->velocity[2]);
     }
@@ -559,18 +547,15 @@ private:
     std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
 
 
-    // Calculate the desired pitch angle
-
-    // Apply PID control to pitch and heading errors directly
-    this->theta_ref = std::clamp(this->theta_ref, -theta_max, theta_max);
     std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
-    float torque_s = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate);  // No additional scaling needed
+    int depth_pos = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate, this->velocity[0]);  
 
 
     // Add torque equilibruim?
-    int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43);
+    // int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43, deltaMax);
+    //TODO calculate beforehand what torque creates a max deflection.
 
-    std::cout << "Torque: " << torque_s << " Fin: " << depth_pos << std::endl;
+    std::cout << " Fin: " << depth_pos << std::endl;
 
     return depth_pos;
   }
@@ -595,7 +580,8 @@ private:
           // // Log the information
           
           int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
-          std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
+        //   std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
+          heading_pos = 0;
 
           // Step 5: Set fin positions and publish the command
           message.fin[0] = heading_pos;    // top fin
