@@ -10,6 +10,7 @@
 #include "actuator.cpp"
 // #include "pid_int2.cpp"
 #include "dvl_msgs/msg/dvl.hpp"
+#include "dvl_msgs/msg/dvl.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
@@ -192,6 +193,8 @@ public:
     this->declare_parameter("saturation_offset", 1.7);
     this->declare_parameter("depth_from_bottom", false);
     this->dfb = this->get_parameter("depth_from_bottom").as_bool();
+    this->declare_parameter("depth_from_bottom", false);
+    this->dfb = this->get_parameter("depth_from_bottom").as_bool();
 
     // calibrate PID controllers
     myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
@@ -291,6 +294,16 @@ public:
         geometry_msgs::msg::PoseWithCovarianceStamped>(
         "depth_data", 10,
         std::bind(&CougControls::actual_depth_callback, this, _1));
+
+    /**
+     * @brief Altitude subscriber.
+     *
+     * This subscriber subscribes to the "dvl/data" topic. It uses the
+     *  message type. Expects data in ENU with the z value being more negative with increasing depth
+     */
+    subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
+        "dvl/data", qos,
+        std::bind(&CougControls::dvl_data_callback, this, _1));
 
     /**
      * @brief Altitude subscriber.
@@ -525,6 +538,11 @@ private:
 
   }
 
+  void dvl_data_callback(const dvl_msgs::msg::DVL::SharedPtr msg) {
+    this->altitude = msg->altitude;
+
+  }
+
   /**
    * @brief Callback function for the velocity subscription.
    *
@@ -641,6 +659,7 @@ private:
   }
   
   int depth_autopilot(float depth, float depth_d, int altitude_hold=1){
+  int depth_autopilot(float depth, float depth_d, int altitude_hold=1){
     float surge = this->velocity[0];
     float surge_threshold = this->get_parameter("surge_threshold").as_double();
     float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
@@ -663,6 +682,7 @@ private:
     if (std::abs(depth_d - depth) > outer_loop_threshold) {
         // saturate theta_d
         float theta_d = theta_max * std::copysign(1.0, depth_d - depth) * altitude_hold;
+        float theta_d = theta_max * std::copysign(1.0, depth_d - depth) * altitude_hold;
         this->theta_ref = std::exp(-timer_period * wn_d_theta) * this->theta_ref
                         + (1.0 - std::exp(-timer_period * wn_d_theta)) * theta_d;
 
@@ -671,8 +691,10 @@ private:
         myDepthPID.reset_int();
     } else {
         this->theta_ref = myDepthPID.compute(this->depth_ref, depth, this->velocity[2]) * altitude_hold;
+        this->theta_ref = myDepthPID.compute(this->depth_ref, depth, this->velocity[2]) * altitude_hold;
     }
 
+    std::cout <<  "Depth: " << depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
     std::cout <<  "Depth: " << depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
 
 
@@ -697,16 +719,15 @@ private:
       message.header.stamp = this->now();
 
       int depth_pos;
+      int depth_pos;
       if (this->init_flag) {
-        float depth_trackpoint;
-        if (dfb){
-          depth_trackpoint = this->altitude;
-          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth, -1);
-        }
-        else{
-          depth_trackpoint = this->actual_depth;
-          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth);
-        }
+          if (dfb){
+            depth_pos = depth_autopilot(this->altitude, this->desired_depth, -1);
+          }
+          else{
+            depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
+          }
+          std::cout << " Fin: " << depth_pos << std::endl;
           
         // Handling roll over when taking the error difference
         // given desired heading and actual heading from -180 to 180
@@ -788,7 +809,6 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
-  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 
@@ -818,6 +838,9 @@ private:
   float pitch_rate;
   float yaw_rate;
   float velocity[3];
+
+  bool dfb;
+  float altitude;
 
   bool dfb;
   float altitude;
