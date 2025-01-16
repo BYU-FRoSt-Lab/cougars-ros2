@@ -1,12 +1,15 @@
 import argparse
-import yaml
+from ruamel.yaml import YAML
 
 def update_yaml(file_path, param_name, param_value):
-    """Updates or adds a parameter value in the YAML file."""
+    """Updates or adds a parameter value in the YAML file, preserving formatting."""
+    yaml = YAML()
+    yaml.preserve_quotes = True
+
     try:
         # Load the YAML file
         with open(file_path, 'r') as file:
-            data = yaml.safe_load(file) or {}
+            data = yaml.load(file) or {}
 
         # Update the parameter value
         node_name = next(iter(data), None)  # Assumes a single top-level node
@@ -20,7 +23,7 @@ def update_yaml(file_path, param_name, param_value):
 
         # Save the updated YAML file
         with open(file_path, 'w') as file:
-            yaml.safe_dump(data, file)
+            yaml.dump(data, file)
 
         print(f"Parameter '{param_name}' updated to '{param_value}' in '{file_path}'.")
 
