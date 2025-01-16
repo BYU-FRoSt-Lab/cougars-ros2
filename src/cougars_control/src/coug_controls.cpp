@@ -193,7 +193,7 @@ public:
      */
     this->declare_parameter("magnetic_declination", 10.7);
     this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
-
+    this->declare_parameter("surge_threshold", -1.0);
     this->declare_parameter("wn_d_z", 0.09);
     this->declare_parameter("wn_d_theta", 0.25);
     this->declare_parameter("outer_loop_threshold", 2.5);
@@ -516,7 +516,7 @@ private:
   
   int depth_autopilot(float depth, float depth_d){
     float surge = this->velocity[0];
-    float surge_threshold = 0.6;
+    float surge_threshold = this->get_parameter("surge_threshold").as_double();
     float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
     float theta_max = this->get_parameter("depth_max_output").as_double();  //FIGURE OUT THIS PARAM for the vehicle at full fin 
     float wn_d_z = this->get_parameter("wn_d_z").as_double(); //TODO this is an important parameter - See how z tracks z ref
