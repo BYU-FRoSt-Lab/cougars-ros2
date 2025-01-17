@@ -37,8 +37,6 @@ typedef std::vector<MOOS::ClientCommsStatus> CommsStatusVector;
 
 // global for moos and ros to be able to use
 
-bool gps = true
-bool sim = true
 
 rclcpp::Publisher<frost_interfaces::msg::DesiredDepth>::SharedPtr
     desired_depth_publisher_;
@@ -53,15 +51,7 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-    this->declare_parameter<std::string>("gps", "default_value");
-
-
-    std::string gps = this->get_parameter("gps").as_string();
-    std::string sim = this->get_parameter("sim").as_string();
-
-
-
-    if (gps == "true"){
+    if (this->get_parameter("gps").as_string() == "true"){
       subscription_vehicle_status_ =
           this->create_subscription<nav_msgs::msg::Odometry>(
               "gps_odom", 10,
@@ -100,7 +90,7 @@ private:
     double nav_x, nav_y, nav_depth, nav_speed;
 
 
-    if(sim == "true"){
+    if(this->get_parameter("sim").as_string() == "true"){
 
       nav_x = -msg.pose.pose.position.y;
       nav_y = msg.pose.pose.position.x;
@@ -186,6 +176,8 @@ void PublishDesiredValue(double value, std::string key) {
     message.desired_depth = value;
     desired_depth_publisher_->publish(message);
   }
+
+  
 }
 
 
