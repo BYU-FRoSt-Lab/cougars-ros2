@@ -97,13 +97,13 @@ if [[ "$choice" =~ ^[Yy]$ ]]; then
 
   # Variables
   FILE_PATH="$HOME/config/vehicle_params.yaml"
-  NODE_NAME="$NAMESPACE/depth_convertor"
+  NODE_NAME="depth_convertor"
   ROS_PARAM_NAME="fluid_pressure_atm"
   PYTHON_SCRIPT="$HOME/ros2_ws/update_yaml.py"
 
-  echo $NODE_NAME
+  echo "$NAMESPACE"/"$NODE_NAME"
   # Fetch the ROS parameter value
-  PARAM_VALUE=$(ros2 param get /${NODE_NAME} "${ROS_PARAM_NAME}")
+  PARAM_VALUE=$(ros2 param get /"$NAMESPACE"/"$NODE_NAME" "${ROS_PARAM_NAME}")
 
   PARAM_VALUE=$(echo "$PARAM_VALUE" | grep -oE '[0-9.]+')
 
@@ -117,9 +117,9 @@ if [[ "$choice" =~ ^[Yy]$ ]]; then
   fi
 
   # Call the Python script to update the YAML file
-  python3 "$PYTHON_SCRIPT" --file "$FILE_PATH" --param "$ROS_PARAM_NAME" --value "$PARAM_VALUE"
+  python3 "$PYTHON_SCRIPT" --file "$FILE_PATH" --param "$ROS_PARAM_NAME" --value "$PARAM_VALUE" --node "$NODE_NAME" --namespace "$NAMESPACE"
 
-  echo "YAML file updated successfully with parameter '${ROS_PARAM_NAME}' value '${PARAM_VALUE}'."
+  # echo "YAML file updated successfully with parameter '${ROS_PARAM_NAME}' value '${PARAM_VALUE}'."
 
 
 fi
