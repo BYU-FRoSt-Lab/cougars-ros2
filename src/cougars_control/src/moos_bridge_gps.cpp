@@ -2,7 +2,6 @@
 #include <Eigen/Geometry>
 #include <functional>
 #include <memory>
-#include <string>
 
 // ros2 stuff
 #include "frost_interfaces/msg/desired_depth.hpp"
