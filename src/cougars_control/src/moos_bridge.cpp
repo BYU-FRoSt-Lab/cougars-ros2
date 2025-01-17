@@ -35,6 +35,9 @@ typedef std::vector<MOOS::ClientCommsStatus> CommsStatusVector;
 
 // global for moos and ros to be able to use
 
+bool gps = true
+bool sim = true
+
 rclcpp::Publisher<frost_interfaces::msg::DesiredDepth>::SharedPtr
     desired_depth_publisher_;
 rclcpp::Publisher<frost_interfaces::msg::DesiredHeading>::SharedPtr
@@ -48,13 +51,28 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
+    this->declare_parameter<std::string>("gps", "default_value");
 
-    // vehicle status listener from the factor graph filter
-    subscription_vehicle_status_ =
-        this->create_subscription<nav_msgs::msg::Odometry>(
-            "smoothed_output", 10,
-            std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
-    // just grab the heading straight from the modem for now
+
+    std::string gps = this->get_parameter("gps").as_string();
+    std::string sim = this->get_parameter("sim").as_string();
+
+
+
+    if (gps == "true"){
+      subscription_vehicle_status_ =
+          this->create_subscription<nav_msgs::msg::Odometry>(
+              "gps_odom", 10,
+              std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
+    }
+    else{
+      // vehicle status listener from the factor graph filter
+      subscription_vehicle_status_ =
+      this->create_subscription<nav_msgs::msg::Odometry>(
+          "smoothed_output", 10,
+          std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
+      }
+    // just grab the heading straight from the modem for now, there is a converter in cougars_sim
     actual_heading_subscription_ =
         this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
             "modem_status", 10,
@@ -79,8 +97,19 @@ private:
 
     double nav_x, nav_y, nav_depth, nav_speed;
 
-    nav_x = msg.pose.pose.position.x;
-    nav_y = msg.pose.pose.position.y;
+
+    if(sim == "true"){
+
+      nav_x = -msg.pose.pose.position.y;
+      nav_y = msg.pose.pose.position.x;
+
+    }
+    else{
+
+      nav_x = msg.pose.pose.position.x;
+      nav_y = msg.pose.pose.position.y;
+
+    }
     // nav_depth = msg.pose.pose.position.z;
     // nav_speed = msg.coug_odom.twist.twist.linear.x;
 
