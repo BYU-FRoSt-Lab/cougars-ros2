@@ -38,6 +38,7 @@ def generate_launch_description():
             package='fin_sub_cpp', 
             executable='control_node', 
             namespace=namespace,
+            parameters=[param_file],
             output='log',
         ),
         # Start the control nodes
