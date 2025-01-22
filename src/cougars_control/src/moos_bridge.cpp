@@ -51,7 +51,12 @@ class MOOSBridge : public rclcpp::Node {
 public:
   MOOSBridge() : Node("moos_bridge") {
 
-    if (this->get_parameter("gps").as_string() == "true"){
+   
+
+    this->declare_parameter("gps", "false");
+    this->declare_parameter("sim", "false");
+
+    if (this->get_parameter("gps").as_string() == "true" && this->get_parameter("sim").as_string() == "true"){
       subscription_vehicle_status_ =
           this->create_subscription<nav_msgs::msg::Odometry>(
               "gps_odom", 10,
