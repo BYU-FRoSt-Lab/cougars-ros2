@@ -14,6 +14,7 @@ find_package(rclpy REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -29,7 +30,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 include_directories(include/${PROJECT_NAME})
 
 add_executable(depth_convertor src/depth_convertor.cpp)
-ament_target_dependencies(depth_convertor rclcpp std_msgs frost_interfaces geometry_msgs sensor_msgs)
+ament_target_dependencies(depth_convertor rclcpp std_msgs std_srvs frost_interfaces geometry_msgs sensor_msgs)
 
 add_executable(dvl_convertor src/dvl_convertor.cpp)
 ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)

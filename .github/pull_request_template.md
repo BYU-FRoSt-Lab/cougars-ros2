@@ -7,6 +7,7 @@
 - [ ] I have updated the documentation as needed.
 - [ ] I have performed a self-review of my code.
 - [ ] I have resolved any merge conflicts before submission.
+- [ ] Node Parameters updated and working on Template and Vehicles (if applicable)
 
 ### Tests:
 - [ ] Bench Test

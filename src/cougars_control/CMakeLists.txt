@@ -66,6 +66,7 @@ install(PROGRAMS
   scripts/battery_sub.py
   scripts/leak_sub.py
   scripts/manual_mission.py
+  scripts/fins_manual.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

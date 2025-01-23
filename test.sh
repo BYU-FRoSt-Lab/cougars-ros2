@@ -47,12 +47,25 @@ fi
 
 echo ""
 
+case $2 in
+  "calibrate")
+    printInfo "Calibrating"
+    bash ~/ros2_ws/calibrate.sh
+    ;;
+  *)
+    printInfo "Will not calibrate"
+  
+    ;;
+esac
+
+echo ""
+
 # TODO: Test this implementation with a string
-leak_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=leak: )\d+')
+leak_data=$(timeout 5 ros2 topic echo --once --no-arr $NAMESPACE/leak/data 2>/dev/null | grep -oP '(?<=fluid_pressure: )\d+(\.\d+)?')
 if [ -z "$leak_data" ]; then
   printFailure "No leak sensor connection found."
 else
-  if [[ $(echo "$leak_data" | awk '{if ($1 == false) print 1; else print 0}') -eq 0 ]]; then
+  if awk "BEGIN {exit !($leak_data == 0.0)}"; then
     printSuccess "Leak sensor connected!"
     echo "  leak: $leak_data"
   else
