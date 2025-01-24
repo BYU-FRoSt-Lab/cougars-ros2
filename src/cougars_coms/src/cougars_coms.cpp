@@ -6,6 +6,7 @@
 #include "seatrac_interfaces/msg/modem_send.hpp"
 
 #include "cougars_coms/coms_protocol.hpp"
+#include "cougars_coms/seatrac_enums.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -14,6 +15,7 @@
 using namespace std::literals::chrono_literals;
 using std::placeholders::_1;
 using namespace cougars_coms;
+using namespace narval::seatrac;
 
 class ComsNode : public rclcpp::Node {
 public:
@@ -77,9 +79,9 @@ public:
 
     void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
         auto request = seatrac_interfaces::msg::ModemSend();
-        request.msg_id = 0x60; //CID_DAT_SEND
+        request.msg_id = CID_DAT_SEND;
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = 0x0; //MSG_OWAY, data sent one way without response or position data
+        request.msg_type = MSG_OWAY;
         request.packet_len = (uint8_t)std::min(message_len, 31);
         std::memcpy(&request.packet_data, message, request.packet_len);
         
