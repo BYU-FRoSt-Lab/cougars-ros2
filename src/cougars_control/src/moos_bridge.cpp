@@ -5,7 +5,9 @@
 #include <string>
 #include <chrono>
 #include <sstream>
-
+#include <exception>
+#include <cstdlib>
+#include <iostream>
 
 // ros2 stuff
 #include "frost_interfaces/msg/desired_depth.hpp"
@@ -14,8 +16,6 @@
 #include "frost_interfaces/msg/vehicle_status.hpp"
 #include "seatrac_interfaces/msg/modem_status.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-
-
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -26,20 +26,38 @@
 #include "MOOS/libMOOS/Comms/MOOSCommClient.h"
 #include "MOOS/libMOOS/Comms/MOOSMsg.h"
 #include "MOOS/libMOOS/Utils/CommandLineParser.h"
-#include <exception>
-
-#include <cstdlib>
-#include <iostream>
-
-#define MOOS_MISSION_DIR "/home/frostlab/ros2_ws/moos_tools/"
 
 using std::placeholders::_1;
 using namespace std::chrono_literals;
 
 
-// status variables
+/**
+ * @brief A Bridge between the MOOS-IvP network and the ROS2 network
+ * @author Matthew McMurray
+ * @date January 2025
+ *
+ * Given our estimate of x,y,depth, and heading, the MOOS-IvP gives some 
+ * desired values for the low level controller. For more moos-ivp related information,
+ * go to 
+ *  - https://oceanai.mit.edu/moos-ivp/pmwiki/pmwiki.php
+ *  - https://gobysoft.org/doc/moos/class_c_m_o_o_s_msg.html
+ *
+ *
+ * Subscribes:
+ * - subscription_smoothed_output_
+ * - actual_heading_subscription_
+ * - actual_depth_subscription_
+ * 
+ * Publishes:
+    - desired_depth_publisher_
+    - desired_heading_publisher_
+ *  - desired_speed_publisher_
+    - vehicle_status_publisher_
+
+ */
 
 
+// mission vehicle status 
 struct status {
     // state estimate of x,y
     double x_ = 0.0;
@@ -54,9 +72,9 @@ struct status {
     int error_ = 0;
     // amount of waypoints hit (if you are not on a waypoint behavior, then this will read -1)
     int waypoint_number_ = 0;
-
+    // for example "alpha" in s1_alpha
     std::string vname_ = "";
-
+    // whatever you name your behavior in the .bhv file
     std::string curr_behavior_ = "";
 
     int dist_ = 0;
@@ -91,34 +109,70 @@ rclcpp::Publisher<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_statu
 
 class MOOSBridge : public rclcpp::Node {
 public:
+/**
+   * Creates a new MOOSBridge node.
+   */
   MOOSBridge() : Node("moos_bridge") {
 
    
 
+    /**
+     * @param gps
+     * flag for if we are just using GPS for x,y location (no factor graph)
+     */
+
     this->declare_parameter("gps", "false");
+
+    /**
+     * @param sim
+     * flag indicating we are in sim or not
+     */
+
     this->declare_parameter("sim", "false");
 
 
     // subscriptions -- depending on if in sim or in real life
 
+
+
     if (this->get_parameter("gps").as_string() == "true" && this->get_parameter("sim").as_string() == "true"){
+
+    /**
+     * @brief Subscribes X,Y without factor graph and just GPS 
+     * Subscribes to output of gps odom
+     */
       subscription_smoothed_output_ =
           this->create_subscription<nav_msgs::msg::Odometry>(
               "gps_odom", 10,
               std::bind(&MOOSBridge::ros_smoothed_output_listener, this, _1));
     }
     else{
-      // vehicle status listener from the factor graph filter
+      /**
+     * @brief Subscribes to X,Y With factor graph
+     * Subscribes to output of gps odom
+     */
       subscription_smoothed_output_ =
       this->create_subscription<nav_msgs::msg::Odometry>(
           "smoothed_output", 10,
           std::bind(&MOOSBridge::ros_smoothed_output_listener, this, _1));
       }
-    // just grab the heading straight from the modem for now, there is a converter in cougars_sim
+
+     /**
+     * @brief Heading subscriber
+     * From seatrac acoustic modem
+     */
+
     actual_heading_subscription_ =
         this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
             "modem_status", 10,
             std::bind(&MOOSBridge::actual_heading_callback, this, _1));
+
+
+
+      /**
+     * @brief Depth subscriber
+     * From depth sensor
+     */
 
     actual_depth_subscription_ = this->create_subscription<
         geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -128,24 +182,57 @@ public:
 
   
     // publishers
+
+     /**
+     * @brief Desired Depth publisher
+     * Value given from high level MOOS controller
+     */
     desired_depth_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredDepth>(
             "desired_depth", 10);
+
+    /**
+     * @brief Desired Heading publisher
+     * Value given from high level MOOS controller
+     */
     desired_heading_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredHeading>(
             "desired_heading", 10);
+
+    /**
+     * @brief Desired Speed publisher
+     * Value given from high level MOOS controller
+     */
     desired_speed_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredSpeed>(
             "desired_speed", 10);
+
+    /**
+     * @brief Vehicle Mission status publisher
+     * publishes a custom ros message VehicleStatus with members that 
+     * come from parsing the information the waypoint behavior publishes
+     * see: https://oceanai.mit.edu/ivpman/pmwiki/pmwiki.php?n=Helm.HelmAsMOOS
+
+     @param VehicleStatus the custom message type that is filled out for vehicle mission status
+     * TODO: parse information from other behaviors that publish like depth behavior
+     */
     vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>(
             "vehicle_status", 10);
 
+
+    /**
+     * @brief Status Update Publisher
+     * Publishes every second
+     */
     timer_ = this->create_wall_timer(
       1000ms, std::bind(&MOOSBridge::status_update_callback, this));
   }
 
 private:
-
+    /**
+     * @brief Call back function for listening to depth sensor
+     * Value given from high level MOOS controller
+     */
 
   void actual_depth_callback(
     const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
@@ -153,6 +240,11 @@ private:
     //Negate the z value in ENU to get postive depth value
   }
 
+
+  /**
+     * @brief Print status helper function
+     * Displays parsed MOOS info being publishes to ROS2 network
+     */
   void PrintStatusUpdate(){
 
     std::cout << "========================================\n";
@@ -177,7 +269,10 @@ private:
 
 
 
-
+  /**
+     * @brief Status Publisher
+     * Value given from high level MOOS controller
+     */
   void status_update_callback()
       {
         auto message = frost_interfaces::msg::VehicleStatus();
@@ -191,8 +286,14 @@ private:
 
         
   }
-  // needs to listen to (x,y), depth, speed,
-  // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
+  
+  /**
+     * @brief Smoothed output listener (For x,y estimate)
+     * Value given from high level MOOS controller
+     * needs to listen to (x,y), depth, speed,
+     * heading (NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH)
+     * handles the cases of : real mission, simulation, gps (out of water)
+     */
   void
   ros_smoothed_output_listener(const nav_msgs::msg::Odometry &msg) {
 
@@ -222,12 +323,19 @@ private:
 
 
     // publish to MOOS-IvP
-    Comms.Notify("NAV_X", nav_x);
+    // Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     // Comms.Notify("NAV_DEPTH", nav_depth);
     Comms.Notify("NAV_SPEED", nav_speed);
     
   }
+
+
+  /**
+     * @brief Heading listener
+     * listens to acoustic modem heading
+     * if in sim
+     */
 
 
   void
@@ -274,9 +382,6 @@ bool OnConnect(void *pParam) {
   pC->Register("WPT_STAT",0.0);
   //NOTE: WPT_INDEX seems to not be working, so I hand to parse WPT_STAT string
   // pC->Register("WPT_INDEX",0.0);
-  // std::string command = "uPokeDB " + MOOS_MISSION_DIR + "coug.moos" + " " +
-  // variable + "=" + value " , MOOS_MANUAL_OVERIDE=false"; int result =
-  // system(command.c_str());
   return 0;
 }
 
@@ -368,7 +473,7 @@ void ParseETA(std::string waypoint_status){
 
     std::stringstream ss;
     ss << dist;
-    ss >> vehicle_status.eta;
+    ss >> vehicle_status.eta_;
 }
 
 void CompleteMission(bool completed){
