@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <chrono>
 
 
 // ros2 stuff
@@ -31,6 +32,28 @@
 
 using std::placeholders::_1;
 
+
+// status variables
+
+// state estimate of x,y
+static float x_;
+static float y_;
+
+// depth sensor
+static float depth_;
+// modem heading
+static float heading_;
+// error code (0 is no error)
+// non zero will signify error
+// TODO: define what kind of errors, if we want to define any of that
+static int error_;
+// which behavior you are on (if you are doing sequence of behaviors)
+// for example, you complete a waypoint behavior mission and then move on to a gotodepth behavior, while you are 
+// going to a depth it this will be a 2 because you are on the second behavior
+static int behavior_number_;
+// amount of waypoints hit (if you are not on a waypoint behavior, then this will read -1)
+static int waypoint_number_;
+
 MOOS::MOOSAsyncCommClient Comms;
 typedef std::vector<CMOOSMsg> MsgVector;
 typedef std::vector<MOOS::ClientCommsStatus> CommsStatusVector;
@@ -44,6 +67,7 @@ rclcpp::Publisher<frost_interfaces::msg::DesiredHeading>::SharedPtr
     desired_heading_publisher_;
 rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr
     desired_speed_publisher_;
+rclcpp::Publisher<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_publisher_;
 
 // MOOS functions
 
@@ -56,24 +80,30 @@ public:
     this->declare_parameter("gps", "false");
     this->declare_parameter("sim", "false");
 
+
+    // subscriptions
+
     if (this->get_parameter("gps").as_string() == "true" && this->get_parameter("sim").as_string() == "true"){
-      subscription_vehicle_status_ =
+      subscription_smoothed_output_ =
           this->create_subscription<nav_msgs::msg::Odometry>(
               "gps_odom", 10,
-              std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
+              std::bind(&MOOSBridge::ros_smoothed_output_listener, this, _1));
     }
     else{
       // vehicle status listener from the factor graph filter
-      subscription_vehicle_status_ =
+      subscription_smoothed_output_ =
       this->create_subscription<nav_msgs::msg::Odometry>(
           "smoothed_output", 10,
-          std::bind(&MOOSBridge::ros_vehicle_status_listener, this, _1));
+          std::bind(&MOOSBridge::ros_smoothed_output_listener, this, _1));
       }
     // just grab the heading straight from the modem for now, there is a converter in cougars_sim
     actual_heading_subscription_ =
         this->create_subscription<seatrac_interfaces::msg::ModemStatus>(
             "modem_status", 10,
             std::bind(&MOOSBridge::actual_heading_callback, this, _1));
+
+
+  
     // publishers
     desired_depth_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredDepth>(
@@ -84,13 +114,31 @@ public:
     desired_speed_publisher_ =
         this->create_publisher<frost_interfaces::msg::DesiredSpeed>(
             "desired_speed", 10);
+    vehicle_status_publisher_ = this->create_publisher<frost_interfaces::msg::VehicleStatus>(
+            "vehicle_status", 10);
+
+    timer_ = this->create_wall_timer(
+      1000ms, std::bind(&MOOSBridge::status_update_callback, this));
   }
 
 private:
+
+
+  void status_update_callback()
+      {
+        auto message = frost_interfaces::msg::VehicleStatus();
+        message.x = x_;
+        message.y = y_;
+        message.depth = depth_;
+        message.heading = heading_;
+        message.error = error_;
+        vehicle_status_publisher_->publish(message);
+
+      }
   // needs to listen to (x,y), depth, speed,
   // heading -->  NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, NAV_DEPTH
   void
-  ros_vehicle_status_listener(const nav_msgs::msg::Odometry &msg) {
+  ros_smoothed_output_listener(const nav_msgs::msg::Odometry &msg) {
 
     double nav_x, nav_y, nav_depth, nav_speed;
 
@@ -141,8 +189,11 @@ private:
     Comms.Notify("NAV_HEADING", nav_heading);
   }
 
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_vehicle_status_;
+  rclcpp::TimerBase::SharedPtr timer_;
+
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_smoothed_output_;
   rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr actual_heading_subscription_;
+  
 };
 
 
