@@ -367,8 +367,8 @@ void ParseETA(std::string waypoint_status){
     std::string eta = waypoint_status.substr(idx1 + str1.length(), idx2 - (str1.length() + idx1));
 
     std::stringstream ss;
-    ss << eta;
-    ss >> vehicle_status.eta_;
+    ss << dist;
+    ss >> vehicle_status.eta;
 }
 
 void CompleteMission(bool completed){
