@@ -1,4 +1,8 @@
 
+#include <iostream>
+#include <chrono>
+#include <memory>
+#include <stdexcept>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
@@ -7,10 +11,6 @@
 
 #include "cougars_coms/coms_protocol.hpp"
 #include "cougars_coms/seatrac_enums.hpp"
-
-#include <iostream>
-#include <chrono>
-#include <memory>
 
 using namespace std::literals::chrono_literals;
 using std::placeholders::_1;
@@ -34,6 +34,8 @@ public:
         this->thruster_client_ = this->create_client<std_srvs::srv::SetBool>(
             "arm_thruster"
         );
+
+        // this->vehicle_status_subscriber_ = this->create_subscription<seatrac
     }
 
     void listen_to_modem(seatrac_interfaces::msg::ModemRec msg) {
@@ -41,11 +43,40 @@ public:
         switch(id) {
             default: break;
             case EMPTY: break;
+
             case EMERGENCY_KILL: {
                 kill_thruster();
             } break;
+            
+            case VERIFY_LAUNCH:  {
+                verify_launch();
+            } break;
+
+            case START_MISSION:  {
+                start_mission();
+            }
+            
+            case REQUEST_STATUS:  {
+                send_vehicle_status();
+            }
         }
     }
+
+
+    void verify_launch() {
+        RCLCPP_ERROR(this->get_logger(), "verify_launch not implemented");
+    }
+
+
+    void start_mission() {
+        RCLCPP_ERROR(this->get_logger(), "start_mission not implemented");
+    }
+
+
+    void send_vehicle_status(){
+        RCLCPP_ERROR(this->get_logger(), "vehicle_status not implemented");
+    }
+
 
     void kill_thruster() {
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
@@ -77,11 +108,12 @@ public:
         );
     }
 
-    void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
+    void send_acoustic_message(int target_id, int message_len, uint8_t* message,
+                                AMSGTYPE_E msg_type=MSG_OWAY) {
         auto request = seatrac_interfaces::msg::ModemSend();
         request.msg_id = CID_DAT_SEND;
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = MSG_OWAY;
+        request.msg_type = msg_type;
         request.packet_len = (uint8_t)std::min(message_len, 31);
         std::memcpy(&request.packet_data, message, request.packet_len);
         
@@ -94,6 +126,7 @@ private:
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
+    // rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_subscriber;
 
     int base_station_beacon_id_;
 
