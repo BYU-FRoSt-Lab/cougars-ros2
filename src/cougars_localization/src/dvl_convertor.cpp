@@ -28,14 +28,14 @@ class DVLConvertor : public rclcpp::Node {
 public:
 
   DVLConvertor() : Node("dvl_convertor") {
-    publisher_dvl_depth =
-        this->create_publisher<std_msgs::msg::Float64>("dvl_dfb", 10);
+    // publisher_dvl_depth =
+    //     this->create_publisher<std_msgs::msg::Float64>("dvl_dfb", 10);
     publisher_dvl_velocity =
         this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
-            "dvl_velocity", 10);
+            "dvl/velocity", 10);
     publisher_dvl_dead_reckoning =
         this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
-            "dvl_dead_reckoning", 10);
+            "dvl/dead_reckoning", 10);
     subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
         "dvl/data", qos,
         std::bind(&DVLConvertor::dvl_data_callback, this, _1));
@@ -46,7 +46,7 @@ public:
 
   void dvl_data_callback(const dvl_msgs::msg::DVL::SharedPtr msg) {
 
-    geometry_msgs::msg::TwistWithCovarianceStamped stamped_msg;
+        geometry_msgs::msg::TwistWithCovarianceStamped stamped_msg;
     stamped_msg.header.stamp = msg->header.stamp;
 
     // double msg_time = msg->time TODO: Figure how to use the NTP time from
@@ -55,22 +55,30 @@ public:
     // stamped_msg.header.stamp
 
     // filling in the upper left corner of the 6X6 covariance matrix
-    int index = 0;
+    // HANDLE CASE WHEN COVARIANCE IS EMPTY?
+        int index = 0;
     double defaultValue = 0;
     for (int i = 0; i < 36; i++) {
-      if (i % 6 < 3 && i < 15) {
+            if (i % 6 < 3 && i < 15) {
         stamped_msg.twist.covariance[i] = msg->covariance[index];
         index++;
       } else {
         stamped_msg.twist.covariance[i] = defaultValue;
       }
     }
-
+    
     stamped_msg.twist.twist.linear.x = msg->velocity.x;
     // negate z and y -- will this mess with covariance?
     stamped_msg.twist.twist.linear.y = -1.0 * msg->velocity.y;
     stamped_msg.twist.twist.linear.z = -1.0 * msg->velocity.z;
-    publisher_dvl_velocity->publish(stamped_msg);
+
+    // Publish the velocity only if the velocity is reported to be valid.
+    if(msg->velocity_valid){
+      publisher_dvl_velocity->publish(stamped_msg);
+    }
+    else{
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 4000, "Velocity not valid!");
+    }
   }
 
   float degreesToRadians(float degrees) {
@@ -156,7 +164,7 @@ private:
       publisher_dvl_velocity;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       publisher_dvl_dead_reckoning;
-  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr publisher_dvl_depth;
+  // rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr publisher_dvl_depth;
 
   // subscribers - listening to dvl driver
   rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;

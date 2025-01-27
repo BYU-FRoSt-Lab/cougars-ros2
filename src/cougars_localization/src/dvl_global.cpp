@@ -12,7 +12,7 @@ public:
 
         // Subscriber for the input data
         sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-            "dvl_dead_reckoning", 10,
+            "dvl/dead_reckoning", 10,
             std::bind(&DvlTransformNode::poseCallback, this, std::placeholders::_1));
     }
 
