@@ -246,7 +246,6 @@ private:
      * Displays parsed MOOS info being publishes to ROS2 network
      */
   void PrintStatusUpdate(){
-
     std::cout << "========================================\n";
     std::cout << "Vehicle Status Published to ROS2 network:\n\n";
     std::cout << "Waypoints Reached (WPT_IDX): " << vehicle_status.waypoint_number_ << "\n\n";
@@ -260,10 +259,7 @@ private:
     std::cout << "Distance to next WPT: " << vehicle_status.dist_ << "\n";
     std::cout << "ETA: " << vehicle_status.eta_ << "\n";
     std::cout << "Name: " << vehicle_status.vname_ << "\n";
-
     std::cout << "========================================\n\n";
-
-
   }
 
 
@@ -319,11 +315,22 @@ private:
 
 
 
-    nav_speed = 20.0;
+    if(this->get_parameter("sim").as_string() == "true"){
+
+      nav_speed = 600.0;
+
+    }
+    else{
+
+      nav_speed = 20.0;
+
+    }
+
+    
 
 
     // publish to MOOS-IvP
-    // Comms.Notify("NAV_X", nav_x);
+    Comms.Notify("NAV_X", nav_x);
     Comms.Notify("NAV_Y", nav_y);
     // Comms.Notify("NAV_DEPTH", nav_depth);
     Comms.Notify("NAV_SPEED", nav_speed);
@@ -380,6 +387,8 @@ bool OnConnect(void *pParam) {
   pC->Register("NAV_DEPTH", 0.0);
   pC->Register("IVPHELM_SUMMARY", 0.0);
   pC->Register("WPT_STAT",0.0);
+  pC->Register("BHV_ERROR",0.0);
+
   //NOTE: WPT_INDEX seems to not be working, so I hand to parse WPT_STAT string
   // pC->Register("WPT_INDEX",0.0);
   return 0;
@@ -448,6 +457,18 @@ void ParseWaypointCurrentBehavior(std::string waypoint_status){
   vehicle_status.curr_behavior_ = current_behavior;
 
 }
+
+void ParseErrorMsg(std::string error_msg){
+
+  if(error_msg.length() > 0){
+
+    vehicle_status.error_ = 1;
+
+  }
+
+}
+
+
 void ParseDistanceToNextWaypoint(std::string waypoint_status){
 
   std::string str1 = "dist=";
@@ -472,12 +493,19 @@ void ParseETA(std::string waypoint_status){
     std::string eta = waypoint_status.substr(idx1 + str1.length(), idx2 - (str1.length() + idx1));
 
     std::stringstream ss;
-    ss << dist;
+    ss << eta;
     ss >> vehicle_status.eta_;
 }
 
 void CompleteMission(bool completed){
   vehicle_status.completed_ = completed;
+}
+
+void SetError(int error){
+
+  vehicle_status.error_ = error;
+
+
 }
 
 
@@ -511,11 +539,19 @@ bool OnMail(void *pParam) {
   for (q = M.begin(); q != M.end(); q++) {
     CMOOSMsg &msg = *q;
     std::string key = msg.GetKey();
-    // std::cout << key << std::endl;
+    std::cout << key << std::endl;
     if (key == "WPT_STAT"){
       std::string status = msg.GetString();
       // std::cout<<status<<std::endl;
       ParseWaypointStatus(status);
+    }
+    else if (key == "BHV_ERROR"){
+
+      std::string error_msg = msg.GetString();
+      vehicle_status.error_ = 1;
+      std::cout<< error_msg <<std::endl;
+      
+
     }
     else{
 
