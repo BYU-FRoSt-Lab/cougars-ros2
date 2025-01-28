@@ -1,9 +1,11 @@
+#include <thread>
 #include <chrono>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <sstream>
+#include <queue>
 
 #include <seatrac_driver/SeatracDriver.h>
 #include <seatrac_driver/commands.h>
@@ -148,6 +150,8 @@ public:
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
         cmd_update_pub_->publish(msg);
+
+        validate_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       case CID_ECHO_RESP: {
@@ -198,6 +202,8 @@ public:
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
         cmd_update_pub_->publish(msg);
+
+        validate_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       case CID_PING_RESP: {
@@ -247,6 +253,8 @@ public:
         msg.command_status_code = report.statusCode;
         msg.target_id = report.target;
         cmd_update_pub_->publish(msg);
+
+        validate_modem_send(msgId, report.statusCode, report.target);
       } break;
 
       case CID_NAV_QUERY_RESP: {
@@ -313,6 +321,8 @@ public:
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
         cmd_update_pub_->publish(msg);
+
+        validate_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       // Fields don't match the ros message types provided.
@@ -372,6 +382,9 @@ private:
   rclcpp::Publisher<seatrac_interfaces::msg::ModemCmdUpdate>::SharedPtr cmd_update_pub_;
   rclcpp::Subscription<seatrac_interfaces::msg::ModemSend>::SharedPtr subscriber_;
 
+  std::queue<seatrac_interfaces::msg::ModemSend::SharedPtr> modem_send_queue_;
+  std::mutex modem_send_queue_mutex_;
+
   size_t count_;
 
   bool beacon_connected = false;
@@ -384,6 +397,12 @@ private:
   // recieves command to modem from the ModemRec topic and sends the command
   // to the modem
   void modem_send_callback(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
+    std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  //locks mutex until method exits
+    modem_send_queue_.push(rosmsg);
+    send_acoustic_message(rosmsg);
+  }
+
+  void send_acoustic_message(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     if(!beacon_connected) return;
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
     switch(msgId) {
@@ -446,7 +465,6 @@ private:
         RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
       }
-      
     }
   }
 
@@ -495,6 +513,29 @@ private:
     RCLCPP_INFO(this->get_logger(), ss.str().c_str());
 
   }
+
+  inline void validate_modem_send(CID_E msg_id, CST_E status_code, BID_E target_id) {
+    switch(status_code) {
+      
+      case CST_OK: {
+        std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  
+        modem_send_queue_.pop();
+      } break;
+
+      case CST_XCVR_BUSY: {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
+        send_acoustic_message(modem_send_queue_.front());
+      }
+
+      default: {
+        std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  
+        modem_send_queue_.pop();
+      }
+    }
+  }
+
+
 };
 
 int main(int argc, char *argv[]) {
