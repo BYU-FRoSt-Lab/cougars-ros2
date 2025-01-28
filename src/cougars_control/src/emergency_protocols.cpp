@@ -2,8 +2,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-
-// #include "pid.cpp"
+#include "frost_interfaces/msg/leak_status.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 
@@ -24,22 +23,52 @@ auto qos = rclcpp::QoS(
 class EmergencyProtocols : public rclcpp::Node {
 public:
 
+
   /**
-   * Creates a new controls node.
+   * Creates a new emergency protocols node.
    */
   EmergencyProtocols() : Node("emergency_protocols") {
 
-  
+
+
+    // Emergencies below
+
+
+    // leak
+    leak_status_subscription_ =
+        this->create_subscription<frost_interfaces::msg::LeakStatus>(
+            "leak/data", 10,
+            std::bind(&EmergencyProtocols::leak_callback, this, _1));
+
   }
 
 private:
+
+
+
+//
+
+ void
+  leak_callback(const frost_interfaces::msg::LeakStatus &leak_msg) {
+
+
+    
+  }
+
+
+
+
+
+
+// add subscribers here
+
+
+
+
+
+  rclcpp::Subscription<frost_interfaces::msg::LeakStatus>::SharedPtr
+      leak_status_subscription_;
   
-
-  
-  
-
-
-
 };
 
 int main(int argc, char *argv[]) {
