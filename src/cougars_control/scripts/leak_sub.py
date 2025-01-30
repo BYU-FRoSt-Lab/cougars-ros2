@@ -2,67 +2,81 @@
 
 import rclpy
 from rclpy.node import Node
-from frost_interfaces.srv import EmergencyStop
+# from frost_interfaces.srv import EmergencyStop
 from frost_interfaces.msg import LeakStatus
 from rclpy.qos import qos_profile_sensor_data
+from rcl_interfaces.srv import SetParameters
+from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
+
+
 
 
 class LeakSubscriber(Node):
     '''
     :author: Nelson Durrant
-    :date: September 2024
-
-    A simple ROS2 node that subscribes to the leak/data topic and listens for the leak status.
-    If a leak is detected, it sends a request to the emergency_stop service to stop the robot.
+    :date: Revised Jan 2025
+    
+    Revised to just change the leak_detection parameter (Jan 2025)
     
     Subscribes:
         - leak/data (frost_interfaces/msg/LeakStatus)
-    Clients:
-        - emergency_stop (frost_interfaces/srv/EmergencyStop)
+ 
     '''
     def __init__(self):
+
         '''
         Creates a new LeakSubscriber node.
         '''
         super().__init__("leak_subscriber")
 
-        self.subscription = self.create_subscription(
-            LeakStatus, "leak/data", self.listener_callback, qos_profile_sensor_data
-        )
         '''
         Subscription to the "leak/data" topic with the message type LeakStatus.
         '''
-        self.subscription  # prevent unused variable warning
+
+        self.subscription = self.create_subscription(
+            LeakStatus, "leak/data", self.listener_callback, qos_profile_sensor_data
+        )
         
-        self.cli = self.create_client(EmergencyStop, "emergency_stop")
-        '''
-        Client for the "emergency_stop" service with the service type EmergencyStop.
-        '''
+        # self.subscription  # prevent unused variable warning
+        
+        self.cli = self.create_client(SetParameters, 'emergency_protocols/set_parameters')  
+
         while not self.cli.wait_for_service(timeout_sec=1):
-            self.get_logger().warn("EmergencyStop service not available, waiting...")
-        self.req = EmergencyStop.Request()
+            self.get_logger().warn("Setting leak parameter service not available, waiting...")
+        self.req = SetParameters.Request()
 
-    def send_request(self, err):
-        '''
-        Sends a request to the emergency_stop service to stop the robot.
+        
+    
 
-        :param err: The error message to send.
-        '''
-        self.req.error = err
-        self.future = self.cli.call_async(self.req)
-        rclpy.spin_until_future_complete(self, self.future)
-        return self.future.result()
+
+        
+        
+        
 
     def listener_callback(self, msg):
         '''
-        Callback function for the leak/data subscription.
-        If a leak is detected, this method sends a request to the emergency_stop service to stop the robot.
-
-        :param msg: The LeakStatus message received from the leak/data topic.
+        sets the leak_detected param
         '''
+
         if msg.leak:
-            error = "[ERROR] Leak Detected"
-            self.send_request(error)
+            leak_param = Parameter()
+            leak_param.name = 'leak_detected'
+            leak_param.value.type = ParameterType.PARAMETER_BOOL
+            leak_param.value.bool_value = True
+            self.req.parameters.append(leak_param)
+            self.future = self.cli.call_async(self.req)
+            rclpy.spin_until_future_complete(self, self.future)
+            self.get_logger().info("here")
+
+            self.get_logger().info("%s" % (self.future.result()))
+            if self.future.result() == False:
+                self.get_logger().error("Failed to notify of leak, emergency leak_param not changed")
+
+            
+
+            
+
+
 
 
 def main(args=None):

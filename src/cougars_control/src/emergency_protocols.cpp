@@ -1,12 +1,22 @@
 #include <memory>
-
+#include <chrono>
+#include <cstdlib>
 #include "rclcpp/rclcpp.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
-class EmergencyParameterHandler : public rclcpp::Node
+
+
+using namespace std::chrono_literals;
+
+
+class EmergencyProtocols : public rclcpp::Node
 {
+
 public:
-  EmergencyParameterHandler()
-  : Node("emergency_parameter_handler")
+
+  // constructor 
+  EmergencyProtocols()
+  : Node("emergency_protocols")
   {
      // problems that could be detected
     this->declare_parameter("leak_detected", false);
@@ -21,20 +31,36 @@ public:
     this->declare_parameter("mission_timeout_detected", false);
     this->declare_parameter("unable_to_dive_detected", false);
 
+
+    // emergency requests TODO: Put more requests
+    disarm_request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    disarm_request->data = false; // to disarm thruster
+    while (!disarm_thruster_client->wait_for_service(1s)) {
+      if (!rclcpp::ok()) {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+        break;
+      }
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+    }
+
+
     // Create a parameter subscriber that can be used to monitor parameter changes
-    // (for this node's parameters as well as other nodes' parameters)
     param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
 
+    // handles each emergency case
     auto handle_problem_callback = [this](const rclcpp::Parameter & p) {
 
-        // display emergency 
+      RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "ALERT");
 
+
+        std::cout << "in problem handler\n";
+        // if the emergency flag is raised to true, then carry out the service
         if (p.as_bool() == true){
 
           std::string parameter = p.get_name().c_str();
 
-          RCLCPP_INFO(
-            this->get_logger(), "\nPROBLEM DETECTED: Parameter \"%s\" = \"%s\"",
+          RCLCPP_WARN(
+            this->get_logger(), "\nPROBLEM DETECTED: Parameter \"%s\" = %s",
             p.get_name().c_str(),
             p.as_bool() ? "true" : "false");
 
@@ -49,10 +75,12 @@ public:
             // TODO: Implement service to deal with emergency
           }
           else if (parameter == "leak_detected"){
-            // TODO: Implement service to deal with emergency
+            // Thruster disarm service client and request
+            send_disarm_req(disarm_request);
+            
           }
           else if (parameter == "low_battery_detected"){
-            // TODO: Implement service to deal with emergency
+            send_disarm_req(disarm_request);
           }
           else if (parameter == "mission_timeout_detected"){
             // TODO: Implement service to deal with emergency
@@ -72,6 +100,7 @@ public:
           else if (parameter == "unable_to_dive_detected"){
             // TODO: Implement service to deal with emergency
           }
+        
         } 
       };
 
@@ -101,8 +130,40 @@ public:
 
   }
 
+  
+  // request functions
+
+  // thruster disarm request send 
+  void send_disarm_req(std::shared_ptr<std_srvs::srv::SetBool::Request> request){
+    if (disarm_thruster_client->service_is_ready()){
+      auto  result = disarm_thruster_client->async_send_request(request,
+      [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future) {
+            try {
+                auto response = future.get();
+                RCLCPP_INFO(this->get_logger(), "Service response: %s", response->message.c_str());
+            } catch (const std::exception &e) {
+                RCLCPP_ERROR(this->get_logger(), "Service call failed: %s", e.what());
+            }
+        }
+    );
+    }
+    else{
+      RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "service not ready");
+    }
+
+  }
+
  private:
+
+
+  // requests  TODO: put more requests here
+
+  std::shared_ptr<std_srvs::srv::SetBool::Request>  disarm_request;
+
+  // param subsciber
   std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
+
+  // callback handles
   std::shared_ptr<rclcpp::ParameterCallbackHandle> collision_detected_handle_;
   std::shared_ptr<rclcpp::ParameterCallbackHandle> controls_node_error_detected_handle_;
   std::shared_ptr<rclcpp::ParameterCallbackHandle> leak_detected_handle_;
@@ -114,14 +175,18 @@ public:
   std::shared_ptr<rclcpp::ParameterCallbackHandle> no_progress_waypoint_error_detected_handle_;
   std::shared_ptr<rclcpp::ParameterCallbackHandle> too_deep_detected_handle_;
   std::shared_ptr<rclcpp::ParameterCallbackHandle> unable_to_dive_detected_handle_;
- 
+
+
+  // emergency service slients, TODO: add more service clients
+  rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr disarm_thruster_client = this->create_client<std_srvs::srv::SetBool>("arm_thruster");
+
 
 };
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<EmergencyParameterHandler>());
+  rclcpp::spin(std::make_shared<EmergencyProtocols>());
   rclcpp::shutdown();
 
   return 0;
