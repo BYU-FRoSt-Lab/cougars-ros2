@@ -136,6 +136,8 @@ public:
   // thruster disarm request send 
   void send_disarm_req(std::shared_ptr<std_srvs::srv::SetBool::Request> request){
     if (disarm_thruster_client->service_is_ready()){
+
+      // put in a callback function
       auto  result = disarm_thruster_client->async_send_request(request,
       [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future) {
             try {
