@@ -236,6 +236,15 @@ public:
             "controls/command", 10);
 
     /**
+     * @brief debug controller publisher.
+     *
+     * This publisher is used for debugging pitch and depth by publishing reference values.
+     */
+    debug_depth_pub_ =
+        this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+            "controls/debug", 10);
+
+    /**
      * @brief Initialization Service.
      *
      * This service "init_controls" topic. It uses the SetBool service
@@ -309,6 +318,10 @@ public:
     actual_velocity_subscription_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
         "dvl/velocity", qos,
         std::bind(&CougControls::dvl_velocity_callback, this, _1));
+
+        this->velocity[0] = 0.5;
+        this->velocity[1] = 0.0f;
+        this->velocity[2] = 0.0f;
 
     /**
      * @brief Control timer.
@@ -423,6 +436,12 @@ private:
     this->velocity[0] = velocity_msg.twist.twist.linear.x;
     this->velocity[1] = velocity_msg.twist.twist.linear.y;
     this->velocity[2] = velocity_msg.twist.twist.linear.z;
+
+
+    // OVERRIDE VELOCITY GIVEN WITH A CONSTANT VELOCITY OF 1 m/s
+    this->velocity[0] = 0.6;
+    this->velocity[1] = 0.0f;
+    this->velocity[2] = 0.0f;
 
   }
 
@@ -552,7 +571,17 @@ private:
 
     std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
     int depth_pos = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate, this->velocity[0]);  
+    
+    auto message = geometry_msgs::msg::PoseWithCovarianceStamped();
+    message.header.stamp = this->now();
+    message.pose.pose.position.x = this->pitch_rate;
+    message.pose.pose.position.y = this->actual_depth;
+    message.pose.pose.position.z = this->depth_ref;
 
+    message.pose.pose.orientation.x = this->actual_pitch;
+    message.pose.pose.orientation.y = this->theta_ref;
+
+    debug_depth_pub_->publish(message);
 
     // Add torque equilibruim?
     // int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43, deltaMax);
@@ -620,6 +649,8 @@ private:
       actual_velocity_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
+
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr debug_depth_pub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 
