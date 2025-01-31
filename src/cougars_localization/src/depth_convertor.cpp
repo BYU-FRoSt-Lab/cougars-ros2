@@ -14,6 +14,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/fluid_pressure.hpp"
 #include "std_srvs/srv/trigger.hpp"
+#include "rcl_interfaces/msg/parameter.hpp"
+#include "rcl_interfaces/msg/parameter_type.hpp"
+#include "rcl_interfaces/msg/parameter_value.hpp"
+#include "rcl_interfaces/srv/set_parameters.hpp"
+
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -22,7 +27,7 @@ rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 auto qos = rclcpp::QoS(
     rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
     qos_profile);
-
+  
 /**
  * @brief A simple depth convertor node.
  * @author Nelson Durrant and Braden Meyers
@@ -43,6 +48,17 @@ public:
    * Creates a new depth convertor node.
    */
   DepthConvertor() : Node("depth_convertor") {
+
+
+    /**
+     * @param max_safe_depth
+     *
+     * The maximum safe depth for the vehicle
+     */
+
+     this->declare_parameter("max_safe_depth", 10.0);
+
+     max_safe_depth_ = this->get_parameter("max_safe_depth").as_double();
 
     /**
      * @param water_salinity_ppt
@@ -98,6 +114,25 @@ public:
 
     calibration_timer_ = this->create_wall_timer(
         std::chrono::milliseconds(500), std::bind(&DepthConvertor::timer_calibration_callback, this));
+
+
+
+    /**
+     * @brief safety parameter change
+     *
+     * This service recieves requests on the "calibrate_depth" service.
+     * It uses the std_srvs/srv/Trigger service type.
+     * The service will return bool if successful and a string with the offset added
+     */
+    too_deep_param_request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
+    too_deep_param_client = this->create_client<rcl_interfaces::srv::SetParameters>("emergency_protocols/set_parameters");
+    while (!too_deep_param_client->wait_for_service(1s)) {
+      if (!rclcpp::ok()) {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+        break;
+      }
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+    }
   }
 
 private:
@@ -125,7 +160,38 @@ private:
     depth_msg.pose.pose.position.z =
         (average_pressure_ - pressure_msg->fluid_pressure) /
         (fluid_density * GRAVITY);
+
+    RCLCPP_INFO(this->get_logger(), "here");
+
     
+
+    RCLCPP_INFO(this->get_logger(), "Value %f", depth_msg.pose.pose.position.z);
+
+
+    if (depth_msg.pose.pose.position.z > max_safe_depth_){
+
+      rcl_interfaces::msg::Parameter param;
+      std::string param_name = "too_deep_detected";
+      param.name = param_name;
+      param.value.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+      param.value.bool_value = true;
+
+      too_deep_param_request->parameters.push_back(param);
+
+      auto result = too_deep_param_client->async_send_request(too_deep_param_request,
+      [this](rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedFuture future) {
+            try {
+                auto response = future.get();
+                RCLCPP_INFO(this->get_logger(), "Parameter changed");
+            } catch (const std::exception &e) {
+                RCLCPP_ERROR(this->get_logger(), "Service call failed: %s", e.what());
+            }
+        }
+      );
+
+
+    }
+
     depth_publisher_->publish(depth_msg);
 
     if (calibration_in_progress_ && pressure_readings_.size() < 20) {
@@ -222,7 +288,13 @@ private:
   std::vector<double> pressure_readings_;
   bool calibration_in_progress_;
   double average_pressure_;
+  double max_safe_depth_;
   rclcpp::Time start_time_;
+
+
+  // emergency parameter stuff
+  rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedPtr too_deep_param_client; 
+  std::shared_ptr<rcl_interfaces::srv::SetParameters::Request> too_deep_param_request;
 
 };
 

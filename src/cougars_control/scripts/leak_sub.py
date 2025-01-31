@@ -37,7 +37,7 @@ class LeakSubscriber(Node):
             LeakStatus, "leak/data", self.listener_callback, qos_profile_sensor_data
         )
         
-        # self.subscription  # prevent unused variable warning
+        self.subscription  # prevent unused variable warning
         
         self.cli = self.create_client(SetParameters, 'emergency_protocols/set_parameters')  
 
@@ -60,7 +60,6 @@ class LeakSubscriber(Node):
             self.req.parameters.append(leak_param)
             self.future = self.cli.call_async(self.req)
             rclpy.spin_until_future_complete(self, self.future)
-            self.get_logger().info("here")
 
             self.get_logger().info("%s" % (self.future.result()))
             if self.future.result() == False:

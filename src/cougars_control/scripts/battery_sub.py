@@ -5,6 +5,8 @@ from rclpy.node import Node
 from frost_interfaces.srv import EmergencyStop
 from frost_interfaces.msg import BatteryStatus
 from rclpy.qos import qos_profile_sensor_data
+from rcl_interfaces.srv import SetParameters
+from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 
 
 class BatterySubscriber(Node):
@@ -40,35 +42,35 @@ class BatterySubscriber(Node):
         '''
         self.subscription  # prevent unused variable warning
         
-        self.cli = self.create_client(EmergencyStop, "emergency_stop")
-        '''
-        Client for the "emergency_stop" service with the service type EmergencyStop.
-        '''
+        self.cli = self.create_client(SetParameters, 'emergency_protocols/set_parameters')  
+
         while not self.cli.wait_for_service(timeout_sec=1):
-            self.get_logger().warn("EmergencyStop service not available, waiting...")
-        self.req = EmergencyStop.Request()
+            self.get_logger().warn("Setting leak parameter service not available, waiting...")
+        self.req = SetParameters.Request()
 
-    def send_request(self, err):
-        '''
-        Sends a request to the emergency_stop service to stop the robot.
-
-        :param err: The error message to send.
-        '''
-        self.req.error = err
-        self.future = self.cli.call_async(self.req)
-        rclpy.spin_until_future_complete(self, self.future)
-        return self.future.result()
+   
 
     def listener_callback(self, msg):
         '''
         Callback function for the battery/data subscription.
-        If the voltage is below the critical threshold, this method sends a request to the emergency_stop service to stop the robot.
+        If the voltage is below the critical threshold, this method changes an emergency_protocol parameter to stop the robot.
 
         :param msg: The BatteryStatus message received from the battery/data topic.
         '''
         if msg.voltage < self.get_parameter("critical_voltage").get_parameter_value().double_value:
-            error = "[ERROR] Low Voltage (" + str(msg.voltage) + ")"
-            self.send_request(error)
+            low_batt_param = Parameter()
+            low_batt_param.name = 'low_battery_detected'
+            low_batt_param.value.type = ParameterType.PARAMETER_BOOL
+            low_batt_param.value.bool_value = True
+            self.req.parameters.append(low_batt_param)
+            self.future = self.cli.call_async(self.req)
+            rclpy.spin_until_future_complete(self, self.future)
+
+            self.get_logger().info("%s" % (self.future.result()))
+            if self.future.result() == False:
+                self.get_logger().error("Failed to notify of low battery, emergency low_batt_param not changed")
+
+            
 
 
 def main(args=None):

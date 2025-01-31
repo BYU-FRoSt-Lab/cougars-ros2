@@ -33,9 +33,25 @@ public:
 
 
     // emergency requests TODO: Put more requests
-    disarm_request = std::make_shared<std_srvs::srv::SetBool::Request>();
-    disarm_request->data = false; // to disarm thruster
-    while (!disarm_thruster_client->wait_for_service(1s)) {
+
+    // (dis)arm thruster request
+    arm_request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    arm_thruster_client = this->create_client<std_srvs::srv::SetBool>("arm_thruster");
+    arm_request->data = false; // to disarm thruster, set arm_request to false
+    while (!arm_thruster_client->wait_for_service(1s)) {
+      if (!rclcpp::ok()) {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+        break;
+      }
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+    }
+
+
+    // override fins to surface request
+    surface_fin_override_request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    surface_fin_override_client = this->create_client<std_srvs::srv::SetBool>("surface");
+    surface_fin_override_request->data = true; // to disarm thruster
+    while (!surface_fin_override_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
         break;
@@ -50,7 +66,7 @@ public:
     // handles each emergency case
     auto handle_problem_callback = [this](const rclcpp::Parameter & p) {
 
-      RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "ALERT");
+        RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "ALERT");
 
 
         std::cout << "in problem handler\n";
@@ -60,7 +76,7 @@ public:
           std::string parameter = p.get_name().c_str();
 
           RCLCPP_WARN(
-            this->get_logger(), "\nPROBLEM DETECTED: Parameter \"%s\" = %s",
+            this->get_logger(), "PROBLEM DETECTED: Parameter \"%s\" = %s",
             p.get_name().c_str(),
             p.as_bool() ? "true" : "false");
 
@@ -76,11 +92,11 @@ public:
           }
           else if (parameter == "leak_detected"){
             // Thruster disarm service client and request
-            send_disarm_req(disarm_request);
+            send_req(arm_request, arm_thruster_client);
             
           }
           else if (parameter == "low_battery_detected"){
-            send_disarm_req(disarm_request);
+            send_req(arm_request, arm_thruster_client);
           }
           else if (parameter == "mission_timeout_detected"){
             // TODO: Implement service to deal with emergency
@@ -96,6 +112,7 @@ public:
           }
           else if (parameter == "too_deep_detected"){
             // TODO: Implement service to deal with emergency
+            send_req(surface_fin_override_request, surface_fin_override_client);
           }
           else if (parameter == "unable_to_dive_detected"){
             // TODO: Implement service to deal with emergency
@@ -133,12 +150,16 @@ public:
   
   // request functions
 
-  // thruster disarm request send 
-  void send_disarm_req(std::shared_ptr<std_srvs::srv::SetBool::Request> request){
-    if (disarm_thruster_client->service_is_ready()){
+  
+
+ private:
+
+
+ void send_req(std::shared_ptr<std_srvs::srv::SetBool::Request> request, rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr client){
+    if (client->service_is_ready()){
 
       // put in a callback function
-      auto  result = disarm_thruster_client->async_send_request(request,
+      auto  result = client->async_send_request(request,
       [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future) {
             try {
                 auto response = future.get();
@@ -155,12 +176,11 @@ public:
 
   }
 
- private:
-
-
   // requests  TODO: put more requests here
 
-  std::shared_ptr<std_srvs::srv::SetBool::Request>  disarm_request;
+  std::shared_ptr<std_srvs::srv::SetBool::Request>  arm_request;
+  std::shared_ptr<std_srvs::srv::SetBool::Request>  surface_fin_override_request;
+
 
   // param subsciber
   std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
@@ -180,7 +200,9 @@ public:
 
 
   // emergency service slients, TODO: add more service clients
-  rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr disarm_thruster_client = this->create_client<std_srvs::srv::SetBool>("arm_thruster");
+  rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr arm_thruster_client; 
+  rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_fin_override_client;
+
 
 
 };
