@@ -390,7 +390,7 @@ private:
   bool beacon_connected = false;
 
   std::string get_serial_port() {
-    this->declare_parameter("seatrac_serial_port", "/dev/ttyUSB0");
+    this->declare_parameter("seatrac_serial_port", "/dev/frost/rs232_connector_seatrac");
     return this->get_parameter("seatrac_serial_port").as_string();
   }
 

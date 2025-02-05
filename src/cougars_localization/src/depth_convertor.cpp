@@ -201,6 +201,9 @@ private:
       // Calibration successful
       RCLCPP_INFO(this->get_logger(), "Calibration successful. Offset: %.2f Pa, Variance: %.2f Pa^2, Calibrated Pressure: %.2f Pa", 
                   offset, variance, average_pressure_);
+      
+      rclcpp::Parameter param("fluid_pressure_atm", average_pressure_);
+      this->set_parameters({param});
   }
 
   // TODO: Parameter for how many samples, timeout
