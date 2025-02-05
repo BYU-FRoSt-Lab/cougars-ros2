@@ -51,7 +51,12 @@ def generate_launch_description():
 
     launch_actions.extend([
         # Start the data conversion nodes
-        
+        launch_ros.actions.Node(
+            package='cougars_coms',
+            executable='cougars_coms',
+            parameters=[param_file],
+            namespace=namespace
+        ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='seatrac_ahrs_convertor',
