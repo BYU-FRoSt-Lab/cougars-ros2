@@ -151,7 +151,7 @@ public:
         msg.target_id = report.beaconId;
         cmd_update_pub_->publish(msg);
 
-        validate_modem_send(msgId, report.status, report.beaconId);
+        verify_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       case CID_ECHO_RESP: {
@@ -203,7 +203,7 @@ public:
         msg.target_id = report.beaconId;
         cmd_update_pub_->publish(msg);
 
-        validate_modem_send(msgId, report.status, report.beaconId);
+        verify_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       case CID_PING_RESP: {
@@ -254,7 +254,7 @@ public:
         msg.target_id = report.target;
         cmd_update_pub_->publish(msg);
 
-        validate_modem_send(msgId, report.statusCode, report.target);
+        verify_modem_send(msgId, report.statusCode, report.target);
       } break;
 
       case CID_NAV_QUERY_RESP: {
@@ -322,7 +322,7 @@ public:
         msg.target_id = report.beaconId;
         cmd_update_pub_->publish(msg);
 
-        validate_modem_send(msgId, report.status, report.beaconId);
+        verify_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       // Fields don't match the ros message types provided.
@@ -420,10 +420,6 @@ private:
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
 
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
-
-        std::ostringstream ss;
-        ss << "Transmitting Acoustic DATA Message. Target ID = " << req.destId;
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
 
       } break;
@@ -434,10 +430,6 @@ private:
         req.destId    = static_cast<BID_E>(rosmsg->dest_id);
         req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
-
-        std::ostringstream ss;
-        ss << "Transmitting Acoustic ECHO Message. Target ID = " << req.destId;
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
 
       } break;
@@ -446,10 +438,6 @@ private:
         messages::PingSend::Request req;
         req.target    = static_cast<BID_E>(rosmsg->dest_id);
         req.pingType  = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
-
-        std::ostringstream ss;
-        ss << "Transmitting Acoustic PING Message. Target ID = " << req.target;
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
       } break;
 
@@ -459,10 +447,6 @@ private:
         req.queryFlags = static_cast<NAV_QUERY_E>(rosmsg->nav_query_flags);
         req.packetLen  = rosmsg->packet_len;
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
-
-        std::ostringstream ss;
-        ss << "Transmitting Acoustic NAV Message. Target ID = " << req.destId;
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         this->send(sizeof(req), (const uint8_t*)&req);
       }
     }
@@ -514,24 +498,51 @@ private:
 
   }
 
-  inline void validate_modem_send(CID_E msg_id, CST_E status_code, BID_E target_id) {
+  inline void verify_modem_send(CID_E msg_id, CST_E status_code, BID_E target_id) {
     switch(status_code) {
       
       case CST_OK: {
-        std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  
+        std::ostringstream ss;
+        ss << "Transmitting "<<msg_id<<" message to target id "<<target_id;
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
         modem_send_queue_.pop();
       } break;
 
       case CST_XCVR_BUSY: {
+        std::ostringstream ss;
+        ss << "Seatrac Busy. "<<msg_id<<" message to "<<target_id
+           << " added to queue. Queue size: "<<modem_send_queue_.size();
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
         send_acoustic_message(modem_send_queue_.front());
-      }
+      } break;
 
-      default: {
+      case CST_CMD_PARAM_INVALID: {
         std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  
         modem_send_queue_.pop();
-      }
+        std::ostringstream ss;
+        ss << "Invalid Parameter. "<<msg_id<<" message to "<<target_id
+           << " removed from queue. Queue size: "<<modem_send_queue_.size();
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+      } break;
+
+      case CST_CMD_PARAM_MISSING: {
+        std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  
+        modem_send_queue_.pop();
+        std::ostringstream ss;
+        ss << "Parameter Missing. "<<msg_id<<" message to "<<target_id
+           << " removed from queue. Queue size: "<<modem_send_queue_.size();
+        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+      } break;
+
+      default: {
+        std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
+        modem_send_queue_.pop();
+        RCLCPP_ERROR(this->get_logger(), "An unknown error occured. Acoustic message removed from queue. Queue Size: %d", 
+                      static_cast<int>(modem_send_queue_.size()));
+      } break;
     }
   }
 
