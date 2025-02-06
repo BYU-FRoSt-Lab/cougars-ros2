@@ -17,8 +17,9 @@
 #include "seatrac_interfaces/msg/modem_cmd_update.hpp"
 #include "seatrac_interfaces/msg/modem_send.hpp"
 
-// Replace this with the serial port that your seatrac beacon is connected to.
-#define SEATRAC_SERIAL_PORT "/dev/ttyUSB0"
+
+#define QUEUE_WARN_SIZE 8
+
 
 using std::placeholders::_1;
 
@@ -51,6 +52,7 @@ public:
   ModemRosNode()
       : Node("modem_ros_node"), SeatracDriver(this->get_serial_port()), count_(0) {
     RCLCPP_INFO(this->get_logger(), "Starting seatrac modem Node");
+
     rec_pub_ =
         this->create_publisher<seatrac_interfaces::msg::ModemRec>("modem_rec", 10);
     status_pub_ =
@@ -61,6 +63,23 @@ public:
     subscriber_ = 
         this->create_subscription<seatrac_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
+
+
+    /**
+     * @param mission_start_time
+     * 
+     * A shared timestamp for all vehicles in a mission from which
+     * time in the mission is measured. The epoch should be the same
+     * time as the start of the mission and recording data.
+     * 
+     * Since acoustic modems can only send a limited number of bytes,
+     * having a shared epoch among all the vehicles reduces the number
+     * of bytes required to share a timestamp with sufficient precision.
+     * 
+     * This variable should also be saved, somehow, for reference in post
+     * processing.
+     */
+    this->declare_parameter<int>("mission_start_time");
 
     /**
      * @param vehicle_ID
@@ -79,6 +98,10 @@ public:
      * between beacons. 0 ppt for fresh water, 35 ppt for salt water.
      */
     this->declare_parameter("water_salinity_ppt", 0.0);
+
+
+    uint64_t start_time = (uint64_t)(this->get_parameter("mission_start_time").as_int());
+    mission_start_timestamp = rclcpp::Time(start_time, 0, RCL_SYSTEM_TIME);
 
     BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
     uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_double()*10);
@@ -385,8 +408,11 @@ private:
   std::queue<seatrac_interfaces::msg::ModemSend::SharedPtr> modem_send_queue_;
   std::mutex modem_send_queue_mutex_;
 
-  size_t count_;
+  rclcpp::Time mission_start_timestamp;
+  // rclcpp::Clock system_clock = rclcpp::Clock(RCL_SYSTEM_TIME);
 
+
+  size_t count_;
   bool beacon_connected = false;
 
   std::string get_serial_port() {
@@ -399,12 +425,24 @@ private:
   void modem_send_callback(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  //locks mutex until method exits
     modem_send_queue_.push(rosmsg);
+    if(modem_send_queue_.size()>=QUEUE_WARN_SIZE)
+      RCLCPP_WARN(this->get_logger(), "Acoustic Message Queue size of %d is larger than %d", 
+                    static_cast<int>(modem_send_queue_.size()), QUEUE_WARN_SIZE);
     send_acoustic_message(rosmsg);
+  }
+
+  //copies the current timestamp to 
+  inline void cpy_in_timestamp(uint8_t* packetData, uint8_t& packetLen) {
+      packetLen = (packetLen<5)? 5:packetLen;
+      rclcpp::Time now = rclcpp::Clock(RCL_SYSTEM_TIME).now();
+      uint32_t diff_ms = (uint32_t)((now - mission_start_timestamp).nanoseconds()/1000); //mocroseconds. Max time is 71 minutes ( (2^32)/(1E6*60) )
+      std::memcpy(packetData+1, (uint8_t*)&diff_ms, sizeof(diff_ms)); //4 bytes. Copied to 2nd through 5th bytes in message.
   }
 
   void send_acoustic_message(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     if(!beacon_connected) return;
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
+
     switch(msgId) {
       default: {
         std::ostringstream ss;
@@ -414,24 +452,21 @@ private:
       
       case CID_DAT_SEND: {
         messages::DataSend::Request req; //struct contains message to send to modem
-
         req.destId    = static_cast<BID_E>(rosmsg->dest_id);
         req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
-
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        if(rosmsg->insert_timestamp) cpy_in_timestamp(req.packetData, req.packetLen);
         this->send(sizeof(req), (const uint8_t*)&req);
-
       } break;
 
       case CID_ECHO_SEND: {
         messages::EchoSend::Request req; //struct contains message to send to modem
-
         req.destId    = static_cast<BID_E>(rosmsg->dest_id);
         req.msgType   = static_cast<AMSGTYPE_E>(rosmsg->msg_type);
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
+        if(rosmsg->insert_timestamp) cpy_in_timestamp(req.packetData, req.packetLen);
         this->send(sizeof(req), (const uint8_t*)&req);
-
       } break;
 
       case CID_PING_SEND: {
@@ -447,6 +482,7 @@ private:
         req.queryFlags = static_cast<NAV_QUERY_E>(rosmsg->nav_query_flags);
         req.packetLen  = rosmsg->packet_len;
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        if(rosmsg->insert_timestamp) cpy_in_timestamp(req.packetData, req.packetLen);
         this->send(sizeof(req), (const uint8_t*)&req);
       }
     }
