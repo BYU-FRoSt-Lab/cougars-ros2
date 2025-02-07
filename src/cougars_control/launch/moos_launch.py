@@ -54,25 +54,17 @@ def generate_launch_description():
         )
         launch_actions.append(sensors)
 
-    #TODO just make a parameter in yaml for moos GPS Only
-    if GPS == "true":
-        moos = launch_ros.actions.Node(
-            package='cougars_control',
-            executable='moos_bridge_gps',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        )
-        launch_actions.append(moos)
-    else:
-        moos = launch_ros.actions.Node(
-            package='cougars_control',
-            executable='moos_bridge',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        )
-        launch_actions.append(moos)
+
+    moos = launch_ros.actions.Node(
+        package='cougars_control',
+        executable='moos_bridge',
+        parameters=[param_file,
+                    {'gps': GPS},
+                    {'sim':sim}],
+        namespace=namespace,
+        output=output,
+    )
+    launch_actions.append(moos)
         
 
 
