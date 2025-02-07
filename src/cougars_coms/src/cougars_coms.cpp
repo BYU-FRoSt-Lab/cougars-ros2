@@ -74,7 +74,17 @@ public:
 
 
     void send_vehicle_status(){
-        RCLCPP_ERROR(this->get_logger(), "vehicle_status not implemented");
+        // RCLCPP_ERROR(this->get_logger(), "vehicle_status not implemented");
+        VehicleStatus status;
+        status.timestamp = 0; //Will be filled in by modem
+        status.moos_waypoint = 0;
+        status.moos_behavior_number = 0;
+        status.x = 0;
+        status.y = 0;
+        status.depth = 0;
+        status.heading = 0;
+        send_acoustic_message(base_station_beacon_id_, sizeof(status), 
+                              (uint8_t*)&status, true);
     }
 
 
@@ -109,14 +119,14 @@ public:
     }
 
     void send_acoustic_message(int target_id, int message_len, uint8_t* message,
-                                AMSGTYPE_E msg_type=MSG_OWAY) {
+                                AMSGTYPE_E msg_type=MSG_OWAY, bool insert_timestamp=true) {
         auto request = seatrac_interfaces::msg::ModemSend();
         request.msg_id = CID_DAT_SEND;
         request.dest_id = (uint8_t)target_id;
         request.msg_type = msg_type;
+        request.insert_timestamp = insert_timestamp;
         request.packet_len = (uint8_t)std::min(message_len, 31);
         std::memcpy(&request.packet_data, message, request.packet_len);
-        
         this->modem_publisher_->publish(request);
     }
 
