@@ -1,43 +1,134 @@
 #include <memory>
+#include <iostream>
 #include <chrono>
 #include <cstdlib>
+#include <numeric>
+#include <functional>
+#include <vector>
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
-
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "frost_interfaces/msg/battery_status.hpp"
+#include "frost_interfaces/msg/leak_status.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "frost_interfaces/msg/vehicle_status.hpp"
 
 
 using namespace std::chrono_literals;
+using std::placeholders::_1;
+
+
+rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+auto qos = rclcpp::QoS(
+    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+    qos_profile);
 
 
 class EmergencyProtocols : public rclcpp::Node
 {
 
 public:
-
-  // constructor 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////// CONSTRUCTOR ///////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   EmergencyProtocols()
   : Node("emergency_protocols")
   {
-     // problems that could be detected
-    this->declare_parameter("leak_detected", false);
-    this->declare_parameter("low_battery_detected", false);
-    this->declare_parameter("collision_detected", false);
-    this->declare_parameter("moos_error_detected", false);
-    this->declare_parameter("factor_graph_error_detected", false);
-    this->declare_parameter("controls_node_error_detected", false);
-    this->declare_parameter("no_heartbeat_error_detected", false);
-    this->declare_parameter("no_progress_waypoint_error_detected", false);
-    this->declare_parameter("too_deep_detected", false);
-    this->declare_parameter("mission_timeout_detected", false);
-    this->declare_parameter("unable_to_dive_detected", false);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// PARAMETERS /////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // set all parmeters in yaml file
+
+    // controlling what you want to monitor:
+    // if these flags are set to true, then emergency
+    // handling will occur in any relevant subscribers
+  
+    this->declare_parameter("monitor_leak", true);
+    this->declare_parameter("monitor_low_battery", true);
+    this->declare_parameter("monitor_moos", true);
+    this->declare_parameter("monitor_factor_graph", true);
+    this->declare_parameter("monitor_depth", true);
+    this->declare_parameter("monitor_controls", true);
+    this->declare_parameter("monitor_heartbeat", true);
+    this->declare_parameter("monitor_waypoint_progress", true);
+    this->declare_parameter("monitor_mission_timout", true);
+    this->declare_parameter("monitor_dive_ability", true);
+    this->declare_parameter("monitor_collision", true);
 
 
-    // emergency requests TODO: Put more requests
+    // safety parameters (voltage, current, depth, etc.)
+    this->declare_parameter("max_safe_depth", 10.0); // meters
+    this->declare_parameter("critical_voltage", 14.0); // volts
+    //  TODO: add more safety parameters as needed
 
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////// SUBSCRIPTIONS and Timers ///////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("depth/data", 
+            qos, std::bind(&EmergencyProtocols::depth_callback, this, _1));
+    leak_subscription_ = this->create_subscription<frost_interfaces::msg::LeakStatus>("leak/data", 
+            qos, std::bind(&EmergencyProtocols::leak_callback, this, _1));
+    battery_subscription_ = this->create_subscription<frost_interfaces::msg::BatteryStatus>("battery/data", 
+            qos, std::bind(&EmergencyProtocols::battery_callback, this, _1));
+    // smoothed_output_subscription_ =
+    //     this->create_subscription<nav_msgs::msg::Odometry>("smoothed_output", 
+    //         qos,std::bind(&EmergencyProtocols::factor_graph_callback, this, _1));
+    vehicle_status_moos_subscription_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>("vehicle_status", 
+            qos, std::bind(&EmergencyProtocols::moos_status_callback, this, _1));
+
+
+    // timers
+    monitor_timer_ = this->create_wall_timer(
+        std::chrono::milliseconds(5000),
+        std::bind(&EmergencyProtocols::monitor_timer_callback, this));
+    handle_factor_graph_ = this->create_wall_timer(
+        std::chrono::milliseconds(5000),
+        std::bind(&EmergencyProtocols::handle_factor_graph_callback, this));
+
+
+  
+    
+    /// init variables
+    counter = 0;
+
+    // vector to store important topics ahd whether they have publishers or not
+    topics_publishing.insert({{"smoothed_output", true}, 
+                            {"battery/data", true},
+                            {"leak/data", true}, 
+                            {"depth/data", true},
+                            {"modem_imu", true},
+                            {"desired_depth", true},
+                            {"desired_heading", true},
+                            {"desired_speed", true},
+                            {"vehicle_status", true},
+                            {"kinematics/command", true},
+                            {"controls/command", true},
+                            {"gps_odom", true},
+                            {"extended_fix", true},
+                            {"dvl_dead_reckoning", true}});
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////// INIT EMERGENCY REQUESTS ///////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    
+    ////////////////////////////
     // (dis)arm thruster request
+    ////////////////////////////
+    // in response to:
+    //      * leak 
+    //      * low battery
+    //      * TODO: add more as needed
     arm_request = std::make_shared<std_srvs::srv::SetBool::Request>();
     arm_thruster_client = this->create_client<std_srvs::srv::SetBool>("arm_thruster");
-    arm_request->data = false; // to disarm thruster, set arm_request to false
     while (!arm_thruster_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
@@ -46,11 +137,14 @@ public:
       RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
     }
 
-
+    ///////////////////////////////////
     // override fins to surface request
+    ///////////////////////////////////
+    // in response to:
+    //      * too deep  
+    //      * TODO: add more as needed
     surface_fin_override_request = std::make_shared<std_srvs::srv::SetBool::Request>();
     surface_fin_override_client = this->create_client<std_srvs::srv::SetBool>("surface");
-    surface_fin_override_request->data = true; // to disarm thruster
     while (!surface_fin_override_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
@@ -60,104 +154,221 @@ public:
     }
 
 
-    // Create a parameter subscriber that can be used to monitor parameter changes
-    param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
-
-    // handles each emergency case
-    auto handle_problem_callback = [this](const rclcpp::Parameter & p) {
-
-        RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "ALERT");
-
-
-        std::cout << "in problem handler\n";
-        // if the emergency flag is raised to true, then carry out the service
-        if (p.as_bool() == true){
-
-          std::string parameter = p.get_name().c_str();
-
-          RCLCPP_WARN(
-            this->get_logger(), "PROBLEM DETECTED: Parameter \"%s\" = %s",
-            p.get_name().c_str(),
-            p.as_bool() ? "true" : "false");
+    ///////////////////////////////////
+    // TODO: add other requests as necessary
+    ///////////////////////////////////
+    // in response to:
+    //      * TODO: add more 
+    //      * ...
 
 
-          if (parameter ==  "collision_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-          else if (parameter == "controls_node_error_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-          else if (parameter == "factor_graph_error_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-          else if (parameter == "leak_detected"){
-            // Thruster disarm service client and request
-            send_req(arm_request, arm_thruster_client);
-            
-          }
-          else if (parameter == "low_battery_detected"){
-            send_req(arm_request, arm_thruster_client);
-          }
-          else if (parameter == "mission_timeout_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-          else if (parameter == "moos_error_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-          else if (parameter == "no_heartbeat_error_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-          else if (parameter == "no_progress_waypoint_error_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-          else if (parameter == "too_deep_detected"){
-            // TODO: Implement service to deal with emergency
-            send_req(surface_fin_override_request, surface_fin_override_client);
-          }
-          else if (parameter == "unable_to_dive_detected"){
-            // TODO: Implement service to deal with emergency
-          }
-        
-        } 
-      };
 
-
-    // collision_detected
-    // controls_node_error_detected
-    // factor_graph_error_detected
-    // leak_detected
-    // low_battery_detected
-    // mission_timeout_detected
-    // moos_error_detected
-    // no_heartbeat_error_detected
-    // no_progress_waypoint_error_detected
-    // too_deep_detected
-    // unable_to_dive_detected
-    collision_detected_handle_ = param_subscriber_->add_parameter_callback("collision_detected", handle_problem_callback);
-    controls_node_error_detected_handle_ = param_subscriber_->add_parameter_callback("controls_node_error_detected", handle_problem_callback);
-    factor_graph_error_detected_handle_ = param_subscriber_->add_parameter_callback("factor_graph_error_detected", handle_problem_callback);
-    leak_detected_handle_ = param_subscriber_->add_parameter_callback("leak_detected", handle_problem_callback);
-    low_battery_detected_handle_ = param_subscriber_->add_parameter_callback("low_battery_detected", handle_problem_callback);
-    mission_timeout_detected_handle_ = param_subscriber_->add_parameter_callback("mission_timeout_detected", handle_problem_callback);
-    moos_error_detected_handle_ = param_subscriber_->add_parameter_callback("moos_error_detected", handle_problem_callback);
-    no_heartbeat_error_detected_handle = param_subscriber_->add_parameter_callback("no_heartbeat_error_detected", handle_problem_callback);
-    no_progress_waypoint_error_detected_handle_ = param_subscriber_->add_parameter_callback("no_progress_waypoint_error_detected", handle_problem_callback);
-    too_deep_detected_handle_ = param_subscriber_->add_parameter_callback("too_deep_detected", handle_problem_callback);
-    unable_to_dive_detected_handle_ = param_subscriber_->add_parameter_callback("unable_to_dive_detected", handle_problem_callback);
-
-  }
-
-  
-  // request functions
+  } // end constructor
 
   
 
  private:
+  
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////  CB's ////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 
- void send_req(std::shared_ptr<std_srvs::srv::SetBool::Request> request, rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr client){
+// monitor timer helpers
+
+
+void update_publishers(){
+
+  // look at all topics of interest
+  for (auto itr0 : topics_publishing){
+
+    bool topic_has_publishers = false;
+
+    // see if everything in topics_publishing is indeed being published to
+    for(auto itr : get_topic_names_and_types()){
+      if(itr.first.find(itr0.first) != std::string::npos){
+        if (count_publishers(itr.first) > 0){
+          topic_has_publishers = true;
+        }
+      }
+    }
+
+    topics_publishing[itr0.first.c_str()] = topic_has_publishers;
+    if (!topic_has_publishers){
+      RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "%s has no publishers!", itr0.first.c_str());
+    }
+  }
+  RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "\n");
+
+}
+
+
+////////////////////////////////////
+//  Monitoring Publishers 
+//  to important topics
+///////////////////////////////////
+
+  // this timer looks through all topics on the network and checks for crucial topics such as 
+  // smoothed_output, leak/data, etc. Key topics are in topics_publishing map
+  void monitor_timer_callback() {
+
+    if (counter < 1){
+      counter++;
+    }
+    else{
+      update_publishers();
+    }
+  }
+
+
+
+///////////////////////////////////
+//  Factor Graph Emergency
+///////////////////////////////////
+//  Requests to be sent:
+//      * surface_fin_override
+//      * return_to_home 
+
+
+  void handle_factor_graph_callback(){
+    if (this->get_parameter("monitor_factor_graph").as_bool()){
+      // handle factor graph emergencies here
+      // TODO: discuss how we handle this
+      // surface
+      // disarm thruster
+      // restart factor graph
+
+      if(!topics_publishing["smoothed_output"]){
+
+
+
+      }
+    }
+  }
+
+
+
+///////////////////////////////////
+//  Depth Emergency
+///////////////////////////////////
+//  Requests to be sent:
+//      * surface_fin_override 
+
+void depth_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &msg){
+  if (this->get_parameter("monitor_depth").as_bool()){
+    double curr_depth = msg.pose.pose.position.z;
+
+    // if the current depth is too deep, surface
+    if (curr_depth > this->get_parameter("max_safe_depth").as_double()){
+      surface_fin_override_request->data = true;
+      send_set_bool_req(surface_fin_override_request, surface_fin_override_client);
+    }
+
+    // TODO: put any other cases we may deduce from msg
+    // ... 
+    // ...
+  }
+}
+
+
+
+///////////////////////////////////
+// Battery Emergency
+///////////////////////////////////
+//  Requests to be sent:
+//      * disarm thruster 
+
+void battery_callback(const frost_interfaces::msg::BatteryStatus &msg){
+
+  if (this->get_parameter("monitor_low_battery").as_bool()){
+    double curr_volt = msg.voltage;
+    if (curr_volt < this->get_parameter("critical_voltage").as_double()){
+      arm_request->data = false; // make false to diarm the thruster
+      send_set_bool_req(arm_request, arm_thruster_client);
+    }
+
+    // TODO: put any other cases we may deduce from msg
+    // ... 
+    // ...
+  }
+}
+
+
+
+///////////////////////////////////
+// Leak Emergency
+///////////////////////////////////
+//  Requests to be sent:
+//      * disarm thruster 
+
+void leak_callback(const frost_interfaces::msg::LeakStatus &msg){
+
+  if (this->get_parameter("monitor_leak").as_bool()){
+    if (msg.leak){
+      arm_request->data = false; // make false to disarm the thruster
+      RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to leak");
+      send_set_bool_req(arm_request, arm_thruster_client);
+    }
+
+    // TODO: put any other cases we may deduce from msg
+    // ... 
+    // ...
+
+  }
+}
+
+///////////////////////////////////
+// MOOS Emergency
+///////////////////////////////////
+//
+// THIS IS WHAT IS PUBLISHED FROM MOOS BRIDGE:
+//
+//         message.x = vehicle_status.x_;
+//         message.y = vehicle_status.y_;
+//         message.depth = vehicle_status.depth_;
+//         message.heading = vehicle_status.heading_;
+//         message.error = vehicle_status.error_;
+//         vehicle_status_publisher_->publish(message);
+//
+//      # VehicleStatus message:
+
+        // # header
+        // std_msgs/Header header
+
+        // # status members
+        // float64 x
+        // float64 y
+        // float64 depth
+        // float64 heading
+        // int64 error
+        // int8 behavior_number
+        // int8 waypoints_reached
+        // bool mission_complete
+        // float64 dist_to_next_wpt
+//         
+//    if error is non zero, BHV_ERROR:
+//        * surface, return to home
+// 
+//    if dist_to_next_wpt is increasing for 
+//    a long time and never getting closer
+//        * surfac, return to home
+
+void moos_status_callback(const frost_interfaces::msg::VehicleStatus &msg){
+  if(this->get_parameter("monitor_moos").as_bool()){
+    // TODO: handle MOOS problems here
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////// SEND REQUEST HELPER //////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+// works just for SetBool requests
+ void send_set_bool_req(std::shared_ptr<std_srvs::srv::SetBool::Request> request, 
+                        rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr client){
     if (client->service_is_ready()){
-
       // put in a callback function
       auto  result = client->async_send_request(request,
       [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future) {
@@ -176,27 +387,17 @@ public:
 
   }
 
+ 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////// REQUESTS & CLIENTS ///////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
   // requests  TODO: put more requests here
 
   std::shared_ptr<std_srvs::srv::SetBool::Request>  arm_request;
   std::shared_ptr<std_srvs::srv::SetBool::Request>  surface_fin_override_request;
-
-
-  // param subsciber
-  std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
-
-  // callback handles
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> collision_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> controls_node_error_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> leak_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> factor_graph_error_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> low_battery_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> mission_timeout_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> moos_error_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> no_heartbeat_error_detected_handle;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> no_progress_waypoint_error_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> too_deep_detected_handle_;
-  std::shared_ptr<rclcpp::ParameterCallbackHandle> unable_to_dive_detected_handle_;
 
 
   // emergency service slients, TODO: add more service clients
@@ -205,6 +406,23 @@ public:
 
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// SUBSCRIPTION/TIMER DECLARATIONS //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::LeakStatus>::SharedPtr leak_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::BatteryStatus>::SharedPtr battery_subscription_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr smoothed_output_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
+
+  // timers 
+  rclcpp::TimerBase::SharedPtr monitor_timer_;
+  rclcpp::TimerBase::SharedPtr handle_factor_graph_;
+  int counter;
+
+   // topic name vector
+  std::map<std::string, bool> topics_publishing;
+  
 };
 
 int main(int argc, char ** argv)
