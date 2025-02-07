@@ -6,6 +6,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
+
+#include "frost_interfaces/msg/vehicle_status.hpp"
 #include "seatrac_interfaces/msg/modem_rec.hpp"
 #include "seatrac_interfaces/msg/modem_send.hpp"
 
@@ -38,8 +40,8 @@ public:
         // this->vehicle_status_subscriber_ = this->create_subscription<seatrac
     }
 
-    void listen_to_modem(seatrac_interfaces::msg::ModemRec msg) {
-        COUG_MSG_ID id = (COUG_MSG_ID)msg.packet_data[0];
+    void listen_to_modem(seatrac_interfaces::msg::ModemRec::SharedPtr msg) {
+        COUG_MSG_ID id = (COUG_MSG_ID)msg->packet_data[0];
         switch(id) {
             default: break;
             case EMPTY: break;
@@ -54,10 +56,10 @@ public:
 
             case START_MISSION:  {
                 start_mission();
-            }
+            } break;
             
             case REQUEST_STATUS:  {
-                send_vehicle_status();
+                status_requested = true;
             }
         }
     }
@@ -73,20 +75,24 @@ public:
     }
 
 
-    void send_vehicle_status(){
-        // RCLCPP_ERROR(this->get_logger(), "vehicle_status not implemented");
-        VehicleStatus status;
-        status.timestamp = 0; //Will be filled in by modem
-        status.moos_waypoint = 0;
-        status.moos_behavior_number = 0;
-        status.x = 0;
-        status.y = 0;
-        status.depth = 0;
-        status.heading = 0;
-        send_acoustic_message(base_station_beacon_id_, sizeof(status), 
-                              (uint8_t*)&status, true);
-    }
 
+    void vehicle_status_callback(frost_interfaces::msg::VehicleStatus::SharedPtr rosmsg) {
+        if (status_requested) {
+            VehicleStatus status;
+            status.timestamp = 0; //will be filled in by modem_ros_node
+            status.moos_waypoints_reached = (uint8_t)rosmsg->waypoints_reached;
+            status.moos_behavior_number   = (uint8_t)rosmsg->behavior_number;
+            status.moos_error_code        = (uint8_t)rosmsg->error;
+            status.x        = (uint16_t)(rosmsg->x / 100);  //local x position converted to centimeters
+            status.y        = (uint16_t)(rosmsg->y / 100);  //local y position converted to centimeters
+            status.depth    = (uint16_t)(rosmsg->depth / 100);  //local depth converted to centimeters
+            status.heading  = (uint16_t)(rosmsg->heading);  //heading in degrees
+            send_acoustic_message(base_station_beacon_id_, sizeof(status), 
+                                  (uint8_t*)&status, MSG_OWAYU, true);
+            status_requested = false;
+        }
+    }
+    
 
     void kill_thruster() {
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
@@ -139,6 +145,8 @@ private:
     // rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_subscriber;
 
     int base_station_beacon_id_;
+
+    bool status_requested = false;
 
 };
 

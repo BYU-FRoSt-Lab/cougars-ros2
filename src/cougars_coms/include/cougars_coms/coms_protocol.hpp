@@ -72,8 +72,9 @@ struct VehicleStatus {
 
     uint32_t timestamp;
 
-    uint8_t moos_waypoint;
-    uint8_t moos_behavior_number;
+    uint8_t moos_waypoints_reached; //last bit indicates that the waypoint is reached
+    uint8_t moos_behavior_number;   
+    uint8_t moos_error_code;
 
     int16_t x;
     int16_t y;

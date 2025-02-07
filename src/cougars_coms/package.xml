@@ -16,6 +16,9 @@
   <build_depend>seatrac_interfaces</build_depend>
   <exec_depend>seatrac_interfaces</exec_depend>
 
+  <build_depend>frost_interfaces</build_depend>
+  <exec_depend>frost_interfaces</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
