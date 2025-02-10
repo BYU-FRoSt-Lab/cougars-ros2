@@ -6,6 +6,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 
+#define SQRT_OF_2_OVER_2 0.70710678118
+
+
 class SeatracAHRSConverter : public rclcpp::Node {
 public:
   SeatracAHRSConverter() : Node("seatrac_ahrs_converter") {
@@ -60,16 +63,30 @@ private:
     // };
 
 
-    // no coordinate conversions needed because modem coordinate frame
-    // is the same as the regular coordinate frame
-    modem_imu->angular_velocity.x = msg->gyro_x;
-    modem_imu->angular_velocity.y = msg->gyro_y;
-    modem_imu->angular_velocity.z = msg->gyro_z;
 
+    // The gyroscope is mounted with a 45 degree offset from the modem frame
+    // So a linear transformation is needed. Determined experimentally.
+    modem_imu->angular_velocity.x = SQRT_OF_2_OVER_2*(msg->gyro_y - msg->gyro_x);
+    modem_imu->angular_velocity.y = SQRT_OF_2_OVER_2*(msg->gyro_x + msg->gyro_y);
+    modem_imu->angular_velocity.z = -msg->gyro_z;
 
-    modem_imu->linear_acceleration.x = msg->acc_x;
-    modem_imu->linear_acceleration.y = msg->acc_y;
-    modem_imu->linear_acceleration.z = msg->acc_z;
+    // RCLCPP_INFO(this->get_logger(), "\t%d\t%d\t%d", 
+    //   (int)(modem_imu->angular_velocity.x/250), 
+    //   (int)(modem_imu->angular_velocity.y/250),
+    //   (int)(modem_imu->angular_velocity.z/250)
+    // );
+
+    // The accelerometer is mounted with a 45 degree offset from the modem frame
+    // so a linear transformation is need. Determined experimentally.
+    modem_imu->linear_acceleration.x =  SQRT_OF_2_OVER_2*(msg->acc_x - msg->acc_y);
+    modem_imu->linear_acceleration.y = -SQRT_OF_2_OVER_2*(msg->acc_x + msg->acc_y);
+    modem_imu->linear_acceleration.z =  msg->acc_z;
+
+    // RCLCPP_INFO(this->get_logger(), "\t%d\t%d\t%d", 
+    //   (int)(modem_imu->linear_acceleration.x/25), 
+    //   (int)(modem_imu->linear_acceleration.y/25),
+    //   (int)(modem_imu->linear_acceleration.z/25)
+    // );
 
     // Publish the IMU message
     modem_imu_pub_->publish(*modem_imu);
