@@ -428,7 +428,7 @@ private:
     if(modem_send_queue_.size()>=QUEUE_WARN_SIZE)
       RCLCPP_WARN(this->get_logger(), "Acoustic Message Queue size of %d is larger than %d", 
                     static_cast<int>(modem_send_queue_.size()), QUEUE_WARN_SIZE);
-    send_acoustic_message(rosmsg);
+    if(modem_send_queue_.size()==1) send_acoustic_message(rosmsg); 
   }
 
   //copies the current timestamp to 
@@ -547,12 +547,11 @@ private:
 
       case CST_XCVR_BUSY: {
         std::ostringstream ss;
-        ss << "Seatrac Busy. "<<msg_id<<" message to "<<target_id
-           << " added to queue. Queue size: "<<modem_send_queue_.size();
+        ss << "Seatrac Busy. Could not send "<<msg_id<<" message to "
+           <<target_id<< ". Queue size: "<<modem_send_queue_.size();
         RCLCPP_INFO(this->get_logger(), ss.str().c_str());
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
-        send_acoustic_message(modem_send_queue_.front());
       } break;
 
       case CST_CMD_PARAM_INVALID: {
@@ -580,6 +579,9 @@ private:
                       static_cast<int>(modem_send_queue_.size()));
       } break;
     }
+  
+    if(modem_send_queue_.size()>=1) send_acoustic_message(modem_send_queue_.front());
+
   }
 
 
