@@ -100,6 +100,23 @@ public:
     this->declare_parameter("water_salinity_ppt", 0.0);
 
 
+    /**
+     * @param logging_verbosity
+     * 
+     * An integer between 0 - 4 indicating the vebosity of the logging output 
+     * 0 prints the least messages, and 4 prints the most.
+     * 
+     * Messages printed at each level:
+     *  0 - Initialization and connection to beacon
+     *  1 - Acoustic message syntax and queue size warnings 
+     *  2 - Acoustic transmission reception errors
+     *  3 - Acoustic reception and transmission updates
+     *  4 - Output queue updates and warnings
+     */
+    this->declare_parameter("logging_verbosity", 0);
+    logging_verbosity = this->get_parameter("logging_verbosity").as_int();
+
+
     uint64_t start_time = (uint64_t)(this->get_parameter("mission_start_time").as_int());
     mission_start_timestamp = rclcpp::Time(start_time, 0, RCL_SYSTEM_TIME);
 
@@ -161,7 +178,7 @@ public:
         cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic DATA Error. Status Code = " << report.status << ", Target ID = " << report.beaconId;
-        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=2) RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
 
       case CID_DAT_SEND: {
@@ -213,7 +230,7 @@ public:
         cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic ECHO Error. Status Code = " << report.status << ", Target ID = " << report.beaconId;
-        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=2) RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
 
       case CID_ECHO_SEND: {
@@ -264,7 +281,7 @@ public:
         cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic PING Error. Status Code = " << report.statusCode << ", Target ID = " << report.beaconId;
-        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=2) RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
 
       case CID_PING_SEND: {
@@ -332,7 +349,7 @@ public:
         cmd_update_pub_->publish(msg);
         std::ostringstream ss;
         ss << "Acoustic NAV Error. Status Code = " << report.statusCode << ", Target ID = " << report.beaconId;
-        RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=2) RCLCPP_ERROR(this->get_logger(), ss.str().c_str());
       } break;
 
       case CID_NAV_QUERY_SEND: {
@@ -411,9 +428,10 @@ private:
   rclcpp::Time mission_start_timestamp;
   // rclcpp::Clock system_clock = rclcpp::Clock(RCL_SYSTEM_TIME);
 
-
   size_t count_;
   bool beacon_connected = false;
+
+  int logging_verbosity = 0;
 
   std::string get_serial_port() {
     this->declare_parameter("seatrac_serial_port", "/dev/frost/rs232_connector_seatrac");
@@ -426,7 +444,7 @@ private:
     std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);  //locks mutex until method exits
     modem_send_queue_.push(rosmsg);
     if(modem_send_queue_.size()>=QUEUE_WARN_SIZE)
-      RCLCPP_WARN(this->get_logger(), "Acoustic Message Queue size of %d is larger than %d", 
+      if(logging_verbosity>=2) RCLCPP_WARN(this->get_logger(), "Acoustic Message Queue size of %d is larger than %d", 
                     static_cast<int>(modem_send_queue_.size()), QUEUE_WARN_SIZE);
     if(modem_send_queue_.size()==1) send_acoustic_message(rosmsg); 
   }
@@ -530,7 +548,7 @@ private:
 
     std::ostringstream ss;
     ss << "Received acoustic transmission from " << acoFix.srcId;
-    RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+    if(logging_verbosity>=3) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
 
   }
 
@@ -540,7 +558,7 @@ private:
       case CST_OK: {
         std::ostringstream ss;
         ss << "Transmitting "<<msg_id<<" message to target id "<<target_id;
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=3) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
         modem_send_queue_.pop();
       } break;
@@ -549,7 +567,7 @@ private:
         std::ostringstream ss;
         ss << "Seatrac Busy. Could not send "<<msg_id<<" message to "
            <<target_id<< ". Queue size: "<<modem_send_queue_.size();
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=4) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
       } break;
@@ -559,8 +577,9 @@ private:
         modem_send_queue_.pop();
         std::ostringstream ss;
         ss << "Invalid Parameter. "<<msg_id<<" message to "<<target_id
-           << " removed from queue. Queue size: "<<modem_send_queue_.size();
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+           << " could not be sent.";
+        if(logging_verbosity>=4) ss<<" Queue size: "<<modem_send_queue_.size();
+        if(logging_verbosity>=1) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
       } break;
 
       case CST_CMD_PARAM_MISSING: {
@@ -568,14 +587,16 @@ private:
         modem_send_queue_.pop();
         std::ostringstream ss;
         ss << "Parameter Missing. "<<msg_id<<" message to "<<target_id
-           << " removed from queue. Queue size: "<<modem_send_queue_.size();
-        RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+           << " could not be sent.";
+        if(logging_verbosity>=4) ss<<" Queue size: "<<modem_send_queue_.size();
+        if(logging_verbosity>=1) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
       } break;
 
       default: {
         std::lock_guard<std::mutex> lock(modem_send_queue_mutex_);
         modem_send_queue_.pop();
-        RCLCPP_ERROR(this->get_logger(), "An unknown error occured. Acoustic message removed from queue. Queue Size: %d", 
+        if(logging_verbosity>=1) 
+          RCLCPP_ERROR(this->get_logger(), "An unknown error occured. Acoustic message removed from queue. Queue Size: %d", 
                       static_cast<int>(modem_send_queue_.size()));
       } break;
     }
