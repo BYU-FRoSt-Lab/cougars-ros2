@@ -84,6 +84,14 @@ public:
     wait_for_alive(beaconId, salinity);
   }
 
+
+
+  void init_modem_ros_node()
+
+
+
+
+
   void wait_for_alive(BID_E beaconId, uint16_t salinity) {
     bool got_resp = false;
     while(!got_resp) {
@@ -373,6 +381,9 @@ private:
   rclcpp::Subscription<seatrac_interfaces::msg::ModemSend>::SharedPtr subscriber_;
 
   size_t count_;
+
+  bool node_active = false; //We're hoping to start ros when the vehicle boots up.  To do that, some nodes need to be started
+                            //but not activated.
 
   bool beacon_connected = false;
 
