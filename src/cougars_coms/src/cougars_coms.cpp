@@ -37,7 +37,8 @@ public:
             "arm_thruster"
         );
 
-        // this->vehicle_status_subscriber_ = this->create_subscription<seatrac
+        this->vehicle_status_subscriber_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>(
+            "vehicle_status", 10, std::bind(&ComsNode::vehicle_status_callback, this, _1));
     }
 
     void listen_to_modem(seatrac_interfaces::msg::ModemRec::SharedPtr msg) {
@@ -142,7 +143,7 @@ private:
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
-    // rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_subscriber;
+    rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_subscriber_;
 
     int base_station_beacon_id_;
 

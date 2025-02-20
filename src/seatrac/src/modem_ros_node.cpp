@@ -80,6 +80,7 @@ public:
 
     BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
     uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_double()*10);
+    RCLCPP_INFO(this->get_logger(), "Vehicle ID = %d", beaconId);
 
     wait_for_alive(beaconId, salinity);
   }
