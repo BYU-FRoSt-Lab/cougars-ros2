@@ -24,17 +24,12 @@ add_executable(modem src/modem_ros_node.cpp)
 ament_target_dependencies(modem rclcpp std_msgs seatrac_interfaces)
 target_link_libraries(modem seatrac_driver)
 
-add_executable(modem_pinger src/modem_pinger.cpp)
-ament_target_dependencies(modem_pinger rclcpp std_msgs seatrac_interfaces)
-target_link_libraries(modem_pinger seatrac_driver)
-
 add_executable(calibration_and_settings src/seatrac_calibration_and_settings.cpp)
 target_link_libraries(calibration_and_settings seatrac_driver)
 
 install(TARGETS
   modem
   calibration_and_settings
-  modem_pinger
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
