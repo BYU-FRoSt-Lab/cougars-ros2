@@ -135,7 +135,7 @@ public:
 
 
 
-    if (this->get_parameter("gps").as_string() == "true" && this->get_parameter("sim").as_string() == "true"){
+    if (this->get_parameter("gps").as_string() == "true"){
 
     /**
      * @brief Subscribes X,Y without factor graph and just GPS 
@@ -236,7 +236,11 @@ private:
 
   void actual_depth_callback(
     const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
-    vehicle_status.depth_ = -depth_msg.pose.pose.position.z;
+    // std::cout << "Received depth" << std::endl;
+    vehicle_status.depth_ = depth_msg.pose.pose.position.z;
+    double nav_depth = vehicle_status.depth_ ;
+    std::cout << nav_depth << std::endl;
+    Comms.Notify("NAV_DEPTH", vehicle_status.depth_ );
     //Negate the z value in ENU to get postive depth value
   }
 
@@ -246,20 +250,20 @@ private:
      * Displays parsed MOOS info being publishes to ROS2 network
      */
   void PrintStatusUpdate(){
-    std::cout << "========================================\n";
-    std::cout << "Vehicle Status Published to ROS2 network:\n\n";
-    std::cout << "Waypoints Reached (WPT_IDX): " << vehicle_status.waypoint_number_ << "\n\n";
-    std::cout << "Error update: " << vehicle_status.error_ << "\n";
-    std::cout << "Mission Complete: " << vehicle_status.completed_ << "\n";
-    std::cout << "Current Behavior (or last if completed): " << vehicle_status.curr_behavior_ << "\n";
-    std::cout << "X est: " << vehicle_status.x_ << "\n";
-    std::cout << "Y est: " << vehicle_status.y_ << "\n";
-    std::cout << "Depth: " << vehicle_status.depth_ << "\n";
-    std::cout << "Heading: " << vehicle_status.heading_ << "\n";
-    std::cout << "Distance to next WPT: " << vehicle_status.dist_ << "\n";
-    std::cout << "ETA: " << vehicle_status.eta_ << "\n";
-    std::cout << "Name: " << vehicle_status.vname_ << "\n";
-    std::cout << "========================================\n\n";
+    // std::cout << "========================================\n";
+    // std::cout << "Vehicle Status Published to ROS2 network:\n\n";
+    // std::cout << "Waypoints Reached (WPT_IDX): " << vehicle_status.waypoint_number_ << "\n\n";
+    // std::cout << "Error update: " << vehicle_status.error_ << "\n";
+    // std::cout << "Mission Complete: " << vehicle_status.completed_ << "\n";
+    // std::cout << "Current Behavior (or last if completed): " << vehicle_status.curr_behavior_ << "\n";
+    // std::cout << "X est: " << vehicle_status.x_ << "\n";
+    // std::cout << "Y est: " << vehicle_status.y_ << "\n";
+    // std::cout << "Depth: " << vehicle_status.depth_ << "\n";
+    // std::cout << "Heading: " << vehicle_status.heading_ << "\n";
+    // std::cout << "Distance to next WPT: " << vehicle_status.dist_ << "\n";
+    // std::cout << "ETA: " << vehicle_status.eta_ << "\n";
+    // std::cout << "Name: " << vehicle_status.vname_ << "\n";
+    // std::cout << "========================================\n\n";
   }
 
 
@@ -292,6 +296,7 @@ private:
      */
   void
   ros_smoothed_output_listener(const nav_msgs::msg::Odometry &msg) {
+    // std::cout << "Received smooth out" << std::endl;
 
     double nav_x, nav_y, nav_depth, nav_speed;
 
@@ -352,6 +357,10 @@ private:
       // (Note: MOOS defines yaw to be negative heading)
                   // yaw comes in -180 to 180 (degrees)
 
+    // std::cout << "Received heading" << std::endl;
+
+    
+
     double nav_heading;
     
     if (msg.attitude_yaw < 0.0) {
@@ -384,6 +393,8 @@ bool OnConnect(void *pParam) {
   pC->Register("DESIRED_DEPTH", 0.0);
   pC->Register("NAV_SPEED", 0.0);
   pC->Register("NAV_HEADING", 0.0);
+  pC->Register("NAV_X", 0.0);
+  pC->Register("NAV_Y", 0.0);
   pC->Register("NAV_DEPTH", 0.0);
   pC->Register("IVPHELM_SUMMARY", 0.0);
   pC->Register("WPT_STAT",0.0);
@@ -395,6 +406,8 @@ bool OnConnect(void *pParam) {
 }
 
 void PublishDesiredValue(double value, std::string key) {
+
+  
 
   if (key == "DESIRED_SPEED") {
     auto message = frost_interfaces::msg::DesiredSpeed();
@@ -539,26 +552,22 @@ bool OnMail(void *pParam) {
   for (q = M.begin(); q != M.end(); q++) {
     CMOOSMsg &msg = *q;
     std::string key = msg.GetKey();
-    std::cout << key << std::endl;
+    // std::cout << key <<  "here" <<std::endl;
     if (key == "WPT_STAT"){
       std::string status = msg.GetString();
       // std::cout<<status<<std::endl;
       ParseWaypointStatus(status);
     }
     else if (key == "BHV_ERROR"){
-
       std::string error_msg = msg.GetString();
       vehicle_status.error_ = 1;
       std::cout<< error_msg <<std::endl;
       
-
     }
     else{
-
       double value = msg.GetDouble();
       PublishDesiredValue(value, key);
       // std::cout << key << ": " << value << std::endl;
-
     }
 
     // if you want to print all the values registered for, then uncomment this
