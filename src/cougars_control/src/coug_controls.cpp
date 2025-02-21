@@ -367,9 +367,15 @@ private:
    */
   void
   desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
-    if (depth_msg.desired_depth == this->desired_depth){
+    constexpr double EPSILON = 1e-6; // Small tolerance value
+    // KEEP THIS OR BAD THINGS WILL HAPPEN - BRADEN MEYERS
+    // floating point precicision issue bug fix
+
+    if (std::abs(depth_msg.desired_depth - this->desired_depth) < EPSILON) {
+        // RCLCPP_INFO(this->get_logger(), "not a new desired depth");
         return;
     }
+    RCLCPP_INFO(this->get_logger(), "New Depth Desired: %f, Old desired depth %f", depth_msg.desired_depth, this->desired_depth);
     this->desired_depth = depth_msg.desired_depth;
 
     // When a new desired depth sent update the depth_ref to the actual depth
@@ -549,7 +555,7 @@ private:
     }
     // Low Pass filter for depth reference
     this->depth_ref = std::exp(-timer_period * wn_d_z) * this->depth_ref
-                + (1 - std::exp(-timer_period * wn_d_z)) * depth_d;
+    + (1 - std::exp(-timer_period * wn_d_z)) * depth_d;
 
     double saturated = saturation_offset * std::copysign(1.0, depth_d - depth);  //CHECK THE SIGN ON THIS
     
@@ -612,7 +618,7 @@ private:
           // // Log the information
           
           int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
-          std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
+        std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
 
           // Step 5: Set fin positions and publish the command
           message.fin[0] = heading_pos;    // top fin
