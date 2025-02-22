@@ -13,6 +13,14 @@
 #include "tf2_ros/transform_broadcaster.h"
 
 
+#define SQRT_OF_2_OVER_2 0.70710678118
+#define PI 3.14159265359 
+#define DEGREES_TO_RADIANS PI/180.0
+
+//From experimentation, 1 G, equivelant to 9.81 m/s^2, is about 250 in raw accelerometer units
+#define ACC_UNITS_TO_METERS_PER_SECOND_SQUARED 9.80665 / 250.0
+
+
 class SeatracAHRSConverter : public rclcpp::Node {
 public:
   SeatracAHRSConverter() : Node("seatrac_ahrs_converter") {
@@ -93,16 +101,18 @@ private:
     // }
 
 
-    // no coordinate conversions needed because modem coordinate frame
-    // is the same as the regular coordinate frame
-    modem_imu->angular_velocity.x = msg->gyro_x;
-    modem_imu->angular_velocity.y = msg->gyro_y;
-    modem_imu->angular_velocity.z = msg->gyro_z;
 
+    // The gyroscope is mounted with a 45 degree offset from the modem frame
+    // So a linear transformation is needed. Determined experimentally.
+    modem_imu->angular_velocity.x = DEGREES_TO_RADIANS*SQRT_OF_2_OVER_2*(msg->gyro_y - msg->gyro_x);
+    modem_imu->angular_velocity.y = DEGREES_TO_RADIANS*SQRT_OF_2_OVER_2*(msg->gyro_x + msg->gyro_y);
+    modem_imu->angular_velocity.z = -DEGREES_TO_RADIANS*msg->gyro_z;
 
-    modem_imu->linear_acceleration.x = msg->acc_x;
-    modem_imu->linear_acceleration.y = msg->acc_y;
-    modem_imu->linear_acceleration.z = msg->acc_z;
+    // The accelerometer is mounted with a 45 degree offset from the modem frame
+    // so a linear transformation is need. Determined experimentally.
+    modem_imu->linear_acceleration.x =  ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * SQRT_OF_2_OVER_2*(msg->acc_x - msg->acc_y);
+    modem_imu->linear_acceleration.y = -ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * SQRT_OF_2_OVER_2*(msg->acc_x + msg->acc_y);
+    modem_imu->linear_acceleration.z =  ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * msg->acc_z;
 
     // Publish the IMU message
     modem_imu_pub_->publish(*modem_imu);
