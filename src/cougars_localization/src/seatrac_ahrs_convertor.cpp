@@ -56,6 +56,11 @@ private:
     double pitch = (M_PI / 180.0) * 0.1 * msg->attitude_pitch;
     double roll  = (M_PI / 180.0) * 0.1 * msg->attitude_roll;
 
+    //==========================//
+    // tf transform message     //
+    //==========================//
+
+
     geometry_msgs::msg::TransformStamped t;
 
     tf2::Quaternion q;
@@ -74,19 +79,10 @@ private:
     tf_broadcaster_->sendTransform(t);
 
 
+    //==========================//
+    //   get tf enu to robot    //
+    //==========================//
 
-    // Read message content and assign it to
-    // corresponding tf variables
-    t.header.stamp = this->get_clock()->now();
-    t.header.frame_id = "enu";
-    t.child_frame_id = "modem_check";
-    t.transform.rotation.x = q_enu.x();
-    t.transform.rotation.y = q_enu.y();
-    t.transform.rotation.z = q_enu.z();
-    t.transform.rotation.w = q_enu.w();
-
-    // Send the transformation
-    tf_broadcaster_->sendTransform(t);
 
     geometry_msgs::msg::TransformStamped t_listen;
 
@@ -99,6 +95,15 @@ private:
     //     this->get_logger(), "Could not transform: %s", ex.what());
     //   return;
     // }
+
+
+    //==========================//
+    //   publish as modem_imu   //
+    //==========================//
+
+    frost_interfaces::msg::ModemImu::SharedPtr modem_imu;
+
+    modem_imu->
 
 
 
