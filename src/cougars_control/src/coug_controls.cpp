@@ -185,46 +185,13 @@ public:
      */
     this->declare_parameter("heading_max_output", 0.0);
 
-    /**
-     * @param magnetic_declination
-     * 
-     * determines the offset to apply to the imu output based on location in degrees. 
-     * The default is 10.7 degrees for Utah Lake
-     */
-    this->declare_parameter("magnetic_declination", 10.7);
-    this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
     this->declare_parameter("surge_threshold", -1.0);
     this->declare_parameter("wn_d_z", 0.09);
     this->declare_parameter("wn_d_theta", 0.25);
     this->declare_parameter("outer_loop_threshold", 2.5);
     this->declare_parameter("saturation_offset", 1.7);
 
-    // calibrate PID controllers
-    myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
-                         this->get_parameter("depth_ki").as_double(),
-                         this->get_parameter("depth_kd").as_double(),
-                         this->get_parameter("depth_min_output").as_double(),         
-                         this->get_parameter("depth_max_output").as_double(),
-                         (float)this->get_parameter("timer_period").as_int()); 
-
-    // TODO parameterize this if it works
-    float scalar = 0.5 * 997 * 0.00665 * 0.5 * -0.43 * std::cos(30 * (M_PI / 180.0));
-
-    myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
-                         this->get_parameter("pitch_ki").as_double(),
-                         this->get_parameter("pitch_kd").as_double(),
-                         this->get_parameter("pitch_min_output").as_double(),       //THIS is the fin min and max
-                         this->get_parameter("pitch_max_output").as_double(),
-                         (float)this->get_parameter("timer_period").as_int(),
-                         scalar);
-
-    myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
-                           this->get_parameter("heading_ki").as_double(),
-                           this->get_parameter("heading_kd").as_double(),
-                           this->get_parameter("heading_min_output").as_double(),
-                           this->get_parameter("heading_max_output").as_double(),
-                           (float)this->get_parameter("timer_period").as_int());
-
+    update_parameters();
     /**
      * @brief Control command publisher.
      *
@@ -335,6 +302,40 @@ public:
 
 private:
   /**
+   * @brief function for updating the service.
+   *
+   * This method updates all the parameters for the node
+   */
+  void update_parameters(){
+        // calibrate PID controllers
+    // TODO parameterize this if it works
+    float scalar = 0.5 * 997 * 0.00665 * 0.5 * -0.43 * std::cos(30 * (M_PI / 180.0));
+
+    myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
+                         this->get_parameter("depth_ki").as_double(),
+                         this->get_parameter("depth_kd").as_double(),
+                         this->get_parameter("depth_min_output").as_double(),         
+                         this->get_parameter("depth_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int()); 
+
+    myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
+                         this->get_parameter("pitch_ki").as_double(),
+                         this->get_parameter("pitch_kd").as_double(),
+                         this->get_parameter("pitch_min_output").as_double(),       //THIS is the fin min and max
+                         this->get_parameter("pitch_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int(),
+                         scalar);
+
+    myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
+                           this->get_parameter("heading_ki").as_double(),
+                           this->get_parameter("heading_kd").as_double(),
+                           this->get_parameter("heading_min_output").as_double(),
+                           this->get_parameter("heading_max_output").as_double(),
+                           (float)this->get_parameter("timer_period").as_int());
+  }
+  
+  
+  /**
    * @brief Callback function for the initialization service.
    *
    * This method initializes the controls node by setting the init flag to
@@ -349,6 +350,8 @@ private:
     if (request->data) {
         response->success = true;
         response->message = "Controller Node initialized.";
+
+        update_parameters();
     } else {
         response->success = false;
         response->message = "Controller Node de-initialized.";
@@ -667,9 +670,6 @@ private:
   PID myHeadingPID;
   PID myDepthPID;
   PID myPitchPID;
-
-  // magnetic declination parameter
-  double magnetic_declination;
 
   // node desired values
   float desired_depth = 0.0;
