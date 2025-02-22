@@ -69,6 +69,11 @@ def generate_launch_description():
             parameters=[param_file],
             namespace=namespace,
         ),
+
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable=''
+        )
     ])
 
     return launch.LaunchDescription(launch_actions)

@@ -1,3 +1,4 @@
+
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <cmath>
@@ -43,6 +44,8 @@ public:
 
 private:
   void modem_callback(const seatrac_interfaces::msg::ModemStatus::SharedPtr msg) {
+    auto modem_imu = std::make_shared<sensor_msgs::msg::Imu>();
+    modem_imu->header.stamp = msg->header.stamp;
 
     double yaw   = (M_PI / 180.0) * (0.1 * msg->attitude_yaw + magnetic_declination);
     double pitch = (M_PI / 180.0) * 0.1 * msg->attitude_pitch;
@@ -50,13 +53,22 @@ private:
 
     geometry_msgs::msg::TransformStamped t;
 
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-
+    // Read message content and assign it to
+    // corresponding tf variables
     t.header.stamp = this->get_clock()->now();
     t.header.frame_id = "ned";
     t.child_frame_id = "modem";
 
+    // coordinates from the message and set the z coordinate to 0
+    // t.transform.translation.x = 0.0;
+    // t.transform.translation.y = 0.0;
+    // t.transform.translation.z = 0.0;
+
+    // For the same reason, turtle can only rotate around one axis
+    // and this why we set rotation in x and y to 0 and obtain
+    // rotation in z axis from the message
+    tf2::Quaternion q;
+    q.setRPY(roll, pitch, yaw);
     t.transform.rotation.x = q.x();
     t.transform.rotation.y = q.y();
     t.transform.rotation.z = q.z();
@@ -65,6 +77,25 @@ private:
     // Send the transformation
     tf_broadcaster_->sendTransform(t);
 
+    // Create the NED quaternion using Eigen
+    Eigen::Matrix3d R_ned(Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
+                          Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+                          Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()));
+
+    // Define the NED to ENU conversion as a quaternion
+    Eigen::Matrix3d R_ned_enu;
+    R_ned_enu << 
+        0, -1,  0, 
+       -1,  0,  0, 
+        0,  0, -1;
+
+    // Convert to ENU coordinates by applying the NED-to-ENU rotation
+    Eigen::Quaterniond q_enu(R_ned_enu * R_ned);
+
+    modem_imu->orientation.x = q_enu.x();
+    modem_imu->orientation.y = q_enu.y();
+    modem_imu->orientation.z = q_enu.z();
+    modem_imu->orientation.w = q_enu.w();
 
 
     // Read message content and assign it to
@@ -91,6 +122,23 @@ private:
     //     this->get_logger(), "Could not transform: %s", ex.what());
     //   return;
     // }
+
+    t.header.stamp = this->get_clock()->now();
+    t.header.frame_id = "enu";
+    t.child_frame_id = "robot";
+    t.transform.rotation.x = t_listen.transform.rotation.x;
+    t.transform.rotation.y = t_listen.transform.rotation.y;
+    t.transform.rotation.z = t_listen.transform.rotation.z;
+    t.transform.rotation.w = t_listen.transform.rotation.w;
+
+    // Send the transformation
+    tf_broadcaster_->sendTransform(t);
+
+    // modem_imu->orientation_covariance = {
+    //     1.0, 0.0, 0.0,
+    //     0.0, 1.0, 0.0, 
+    //     0.0, 0.0, 1.0
+    // };
 
 
     // no coordinate conversions needed because modem coordinate frame
