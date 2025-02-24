@@ -86,41 +86,41 @@ private:
 
     geometry_msgs::msg::TransformStamped t_listen;
 
-    // try {
-    //   t_listen = tf_buffer_->lookupTransform(
-    //     "enu", "modem",
-    //     tf2::TimePointZero);
-    // } catch (const tf2::TransformException & ex) {
-    //   RCLCPP_INFO(
-    //     this->get_logger(), "Could not transform: %s", ex.what());
-    //   return;
-    // }
-
-
     //==========================//
     //   publish as modem_imu   //
     //==========================//
 
-    frost_interfaces::msg::ModemImu::SharedPtr modem_imu;
+    auto modem_imu = std::make_shared<sensor_msgs::msg::Imu>();
 
-    modem_imu->
+    // modem_imu.header.frame_id = "robot";
 
+    try {
+      geometry_msgs::msg::TransformStamped tf_enu_to_robot =
+          tf_buffer_->lookupTransform("enu", "robot_orientation", tf2::TimePointZero);
 
+      modem_imu->orientation.x = tf_enu_to_robot.transform.rotation.x;
+      modem_imu->orientation.y = tf_enu_to_robot.transform.rotation.y;
+      modem_imu->orientation.z = tf_enu_to_robot.transform.rotation.z;
+      modem_imu->orientation.w = tf_enu_to_robot.transform.rotation.w;
 
-    // The gyroscope is mounted with a 45 degree offset from the modem frame
-    // So a linear transformation is needed. Determined experimentally.
-    modem_imu->angular_velocity.x = DEGREES_TO_RADIANS*SQRT_OF_2_OVER_2*(msg->gyro_y - msg->gyro_x);
-    modem_imu->angular_velocity.y = DEGREES_TO_RADIANS*SQRT_OF_2_OVER_2*(msg->gyro_x + msg->gyro_y);
-    modem_imu->angular_velocity.z = -DEGREES_TO_RADIANS*msg->gyro_z;
+      // The gyroscope is mounted with a 45 degree offset from the modem frame
+      // So a linear transformation is needed. Determined experimentally.
+      modem_imu->angular_velocity.x = DEGREES_TO_RADIANS*SQRT_OF_2_OVER_2*(msg->gyro_y - msg->gyro_x);
+      modem_imu->angular_velocity.y = DEGREES_TO_RADIANS*SQRT_OF_2_OVER_2*(msg->gyro_x + msg->gyro_y);
+      modem_imu->angular_velocity.z = -DEGREES_TO_RADIANS*msg->gyro_z;
 
-    // The accelerometer is mounted with a 45 degree offset from the modem frame
-    // so a linear transformation is need. Determined experimentally.
-    modem_imu->linear_acceleration.x =  ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * SQRT_OF_2_OVER_2*(msg->acc_x - msg->acc_y);
-    modem_imu->linear_acceleration.y = -ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * SQRT_OF_2_OVER_2*(msg->acc_x + msg->acc_y);
-    modem_imu->linear_acceleration.z =  ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * msg->acc_z;
+      // The accelerometer is mounted with a 45 degree offset from the modem frame
+      // so a linear transformation is need. Determined experimentally.
+      modem_imu->linear_acceleration.x =  ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * SQRT_OF_2_OVER_2*(msg->acc_x - msg->acc_y);
+      modem_imu->linear_acceleration.y = -ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * SQRT_OF_2_OVER_2*(msg->acc_x + msg->acc_y);
+      modem_imu->linear_acceleration.z =  ACC_UNITS_TO_METERS_PER_SECOND_SQUARED * msg->acc_z;
 
-    // Publish the IMU message
-    modem_imu_pub_->publish(*modem_imu);
+      // Publish the IMU message
+      modem_imu_pub_->publish(*modem_imu);
+
+    } catch(const tf2::TransformException &ex) {
+      RCLCPP_WARN_ONCE(this->get_logger(), "Transform not available, Waiting for Transform: %s", ex.what());
+    }
 
   }
 
