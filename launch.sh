@@ -63,7 +63,7 @@ SIM_PARAM="false" # Default value for sim
 VERBOSE="false"
 GPS="false"
 FINS="false"
-while getopts "svgf" opt; do
+while getopts "svgfb" opt; do
   case $opt in
     s)
       SIM_PARAM="true"
@@ -101,6 +101,9 @@ case $1 in
         ;;
     "sensors")
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+        ;;
+    "bluerov")
+        ros2 launch cougars_control bluerov_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE BLUEROV:="true"
         ;;
     # "demo")
     #     ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE

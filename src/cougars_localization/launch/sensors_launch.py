@@ -19,6 +19,7 @@ def generate_launch_description():
     param_file = '/home/frostlab/config/vehicle_params.yaml'
     GPS = "false"  # Default to 'false'
     verbose = "false"
+    BLUEROV = "false"
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):
@@ -29,6 +30,8 @@ def generate_launch_description():
             verbose = arg.split(":=")[1].lower()
         if arg.startswith("GPS:="):
             GPS = arg.split(":=")[1].lower()
+        if arg.startswith("BLUEROV:="):
+            BLUEROV = arg.split(":=")[1].lower()
     
     if verbose == "true":
         output = 'screen'
@@ -45,6 +48,16 @@ def generate_launch_description():
         )
         launch_actions.append(dvl)
 
+    if BLUEROV == "false":
+        # Serial Teensy connection
+        launch_actions.append(
+            launch_ros.actions.Node(
+            package='fin_sub_cpp', 
+            executable='control_node', 
+            namespace=namespace,
+            output='log',
+        ))
+
 
     with open(param_file, 'r') as f:
         vehicle_params = yaml.safe_load(f)
@@ -57,14 +70,6 @@ def generate_launch_description():
         #     executable='micro_ros_agent',
         #     arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
         # ),
-
-        # Serial Teensy connection
-        launch_ros.actions.Node(
-            package='fin_sub_cpp', 
-            executable='control_node', 
-            namespace=namespace,
-            output='log',
-        ),
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
