@@ -20,7 +20,7 @@ function printFailure {
   echo -e "\033[0m\033[31m[FAIL] $1\033[0m"
 }
 
-IPADDRESS=192.168.194.95
+IPADDRESS=192.168.2.95
 
 # Function to send command and check for success
 send_command() {

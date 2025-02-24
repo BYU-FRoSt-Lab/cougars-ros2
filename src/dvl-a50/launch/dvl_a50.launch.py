@@ -5,8 +5,8 @@ import launch_ros.actions
 
 
 def generate_launch_description():
-    launch.actions.DeclareLaunchArgument('ip_address', default_value='192.168.194.95'),
-    ip_address = '192.168.194.95'
+    launch.actions.DeclareLaunchArgument('ip_address', default_value='192.168.2.95'),
+    ip_address = '192.168.2.95'
     dvl_a50 = launch_ros.actions.Node(
         package='dvl_a50', 
         executable='dvl_a50_sensor', 
@@ -15,13 +15,7 @@ def generate_launch_description():
 
 
     return launch.LaunchDescription([
-        dvl_a50,
-        launch_ros.actions.Node(
-            package='cougars_cpp',
-            executable='dvl_config',
-            output='screen',
-            emulate_tty=True
-        ),
+        dvl_a50
     ])
 
 
