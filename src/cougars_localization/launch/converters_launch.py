@@ -69,6 +69,13 @@ def generate_launch_description():
             parameters=[param_file],
             namespace=namespace,
         ),
+
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='static_tf_publisher',
+            parameters=[param_file],
+            namespace=namespace
+        )
     ])
 
     return launch.LaunchDescription(launch_actions)
