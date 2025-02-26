@@ -92,6 +92,13 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
+        launch_ros.actions.Node(
+            package='mavlink_bridge',
+            executable='mavlink_bridge',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
     ])
 
     return launch.LaunchDescription(launch_actions)

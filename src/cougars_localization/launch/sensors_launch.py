@@ -44,6 +44,7 @@ def generate_launch_description():
         dvl = launch_ros.actions.Node(
             package='dvl_a50', 
             executable='dvl_a50_sensor', 
+            parameters=[param_file],
             namespace=namespace,
         )
         launch_actions.append(dvl)
