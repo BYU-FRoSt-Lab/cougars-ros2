@@ -68,7 +68,7 @@ private:
 
     t.header.stamp = this->get_clock()->now();
     t.header.frame_id = "ned";
-    t.child_frame_id = "modem";
+    t.child_frame_id = std::string(this->get_namespace())+"modem";
 
     t.transform.rotation.x = q.x();
     t.transform.rotation.y = q.y();
@@ -96,7 +96,7 @@ private:
 
     try {
       geometry_msgs::msg::TransformStamped tf_enu_to_robot =
-          tf_buffer_->lookupTransform("enu", "robot_orientation", tf2::TimePointZero);
+          tf_buffer_->lookupTransform("enu", std::string(this->get_namespace())+".robot", tf2::TimePointZero);
 
       modem_imu->orientation.x = tf_enu_to_robot.transform.rotation.x;
       modem_imu->orientation.y = tf_enu_to_robot.transform.rotation.y;
