@@ -37,11 +37,9 @@ public:
 
     // The static transformation between robot and modem.
     // disregarding translation, the modem oriented in the same direction as the robot
-    set_static_transform(
-        "modem", "robot_orientation",
-        0, 0, 0,
-        0, 0, 0, 1
-    );
+
+    declare_static_tf_parameters("modem", "robot_orientation", {0.0,0.0,0.0}, {0.0,0.0,0.0,1.0});
+    set_static_transform_from_param("modem", "robot_orientation");
 
     set_static_transform(
         "enu", "ned",
@@ -57,17 +55,19 @@ public:
    * 
    * @param from_frame
    * 
+   * transformation is child frame wrt header frame
+   * 
    */
   void set_static_transform(
-    string const& from_frame, string const& to_frame,
+    string const& header_frame, string const& child_frame,
     float x,float y,float z,
     float qx, float qy, float qz, float qw
   ) {
     geometry_msgs::msg::TransformStamped transform;
     transform.header.stamp = this->now();
 
-    transform.header.frame_id = from_frame;  // Parent frame
-    transform.child_frame_id = to_frame;   // Child frame
+    transform.header.frame_id = header_frame;  // Parent frame
+    transform.child_frame_id = child_frame;   // Child frame
 
     transform.transform.translation.x = x;
     transform.transform.translation.y = y;
@@ -79,6 +79,33 @@ public:
     transform.transform.rotation.w = qw;
 
     broadcaster_->sendTransform(transform);
+  }
+
+  void declare_static_tf_parameters(
+    string const& header_frame, std::string const& child_frame
+  ) {
+    this->declare_parameter<std::vector<double>>(header_frame+"."+child_frame+".translation");
+    this->declare_parameter<std::vector<double>>(header_frame+"."+child_frame+".orientation");
+  }
+  void declare_static_tf_parameters(
+    string const& header_frame, std::string const& child_frame,
+    std::vector<double> const& default_translation, std::vector<double> const& default_orientation
+  ) {
+    this->declare_parameter<std::vector<double>>(header_frame+"."+child_frame+".translation", default_translation);
+    this->declare_parameter<std::vector<double>>(header_frame+"."+child_frame+".orientation", default_orientation);
+  }
+
+
+  void set_static_transform_from_param(string const& header_frame, std::string const& child_frame) {
+    std::vector<double> translation;
+    this->get_parameter(header_frame+"."+child_frame+".translation", translation);
+    std::vector<double> orientation;
+    this->get_parameter(header_frame+"."+child_frame+".orientation", orientation);
+    set_static_transform(
+      header_frame, child_frame,
+      translation[0], translation[1], translation[2],
+      orientation[0], orientation[1], orientation[2], orientation[3]
+    );
   }
 
 private:
