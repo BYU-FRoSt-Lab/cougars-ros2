@@ -36,10 +36,13 @@ add_executable(dvl_convertor src/dvl_convertor.cpp)
 ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
 
 add_executable(seatrac_ahrs_convertor src/seatrac_ahrs_convertor.cpp)
-ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs seatrac_interfaces geometry_msgs sensor_msgs Eigen3)
+ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs seatrac_interfaces geometry_msgs sensor_msgs Eigen3 tf2_ros tf2_geometry_msgs)
 
 add_executable(dvl_global src/dvl_global.cpp)
 ament_target_dependencies(dvl_global rclcpp std_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
+
+add_executable(static_tf_publisher src/static_tf_publisher.cpp)
+ament_target_dependencies(static_tf_publisher rclcpp std_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
 
 # Link libraries
 target_link_libraries(depth_convertor)
@@ -53,6 +56,7 @@ install(TARGETS
   dvl_convertor
   seatrac_ahrs_convertor
   dvl_global
+  static_tf_publisher
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules
