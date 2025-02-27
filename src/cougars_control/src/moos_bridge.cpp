@@ -128,7 +128,7 @@ public:
      * flag indicating we are in sim or not
      */
 
-    this->declare_parameter("sim", "false");
+    this->declare_parameter("sim", "true");
 
 
     // subscriptions -- depending on if in sim or in real life
@@ -239,7 +239,7 @@ private:
     // std::cout << "Received depth" << std::endl;
     vehicle_status.depth_ = depth_msg.pose.pose.position.z;
     double nav_depth = vehicle_status.depth_ ;
-    std::cout << nav_depth << std::endl;
+    // std::cout << nav_depth << std::endl;
     Comms.Notify("NAV_DEPTH", vehicle_status.depth_ );
     //Negate the z value in ENU to get postive depth value
   }
@@ -359,7 +359,7 @@ private:
 
     // std::cout << "Received heading" << std::endl;
 
-    
+  
 
     double nav_heading;
     
@@ -370,6 +370,8 @@ private:
     }
 
     // heading_ = nav_heading;
+
+    std::cout << "Received: " << msg.attitude_yaw << ", nav_heading final: " << nav_heading << std::endl;
 
     Comms.Notify("NAV_HEADING", nav_heading);
   }
