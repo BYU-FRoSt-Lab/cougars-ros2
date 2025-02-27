@@ -10,24 +10,23 @@
 using std::string;
 
 /**
- * TODO: finish documenting
- * 
  * @brief A ros node that publishes static transforms
  * 
  * StaticTransformPublisher
  * 
- * defines the static transformations between 
+ * defines the static transformations between different coodinate frames
  * 
  * Main Coordinate Frames:
  *  - robot: the coordinate frame at the center of the robot 
- *           x: forward, y: port, z: to top of vehicle
- * 
- *  - ENU: The coordinate frame of 
+ *           x: forward, y: portside, z: top of vehicle 
+ *  - enu: coordinate frame at the origin
+ *         x: east, y: north, z: up
+ *  - ned: coodinate frame at the origin
+ *         x: north, y: east, z: down
  * 
  * Sensor Coordinate Frames:
  *  - modem: the coordinate frame of the acoustic modem and its onboard imu
  *  - dvl: the coordinate frame of the dvl
- *  - 
  */
 class StaticTransformPublisher : public rclcpp::Node {
 public:
@@ -38,11 +37,16 @@ public:
     // The static transformation between robot and modem.
     // disregarding translation, the modem oriented in the same direction as the robot
 
+
+    /**
+     * @param modem.robot the transform from the modem to the robot position
+     * The default configuration on a CougUV has no rotation and does not need translation
+     */
     declare_static_tf_parameters("modem", "robot", {0.0,0.0,0.0}, {0.0,0.0,0.0,1.0});
-    set_static_transform_from_param("modem", "robot", true);
+    set_static_transform_from_param(with_ns("modem"), with_ns("robot"));
 
     set_static_transform(
-        "enu", "ned", false,
+        "enu", "ned",
         0, 0, 0,
         std::sqrt(2)/2, std::sqrt(2)/2, 0, 0
     );
@@ -51,24 +55,42 @@ public:
 
 
   /**
+   * @brief prefixes a coordinate frame with the vehicle namespace
    * 
+   * All transforms are published to the global /tf or /tf_static topics.
+   * To differentiate transforms between vehicles, we add the namespace to the
+   * coordinate frame under question.
    * 
-   * @param from_frame
+   * @param frame the coordinate frame to prefix the namespace to
+   * @return the coordinate frame with the prefixed namespace
+   */
+  inline string with_ns(string const& frame) {
+    return string(this->get_namespace())+"."+frame;
+  }
+
+  /**
+   * @brief broadcasts a tf2 static transform
    * 
-   * transformation is child frame wrt header frame
-   * 
+   * @param header_frame the frame the transform is from
+   * @param child_frame the coordinate frame the transform it to
+   * @param x translation in the x direction
+   * @param y translation in the y direction
+   * @param z translation in the z direction
+   * @param qx quaternion x value
+   * @param qy quaternion y value
+   * @param qz quaternion z value
+   * @param qw quaternion w value
    */
   void set_static_transform(
-    string const& header_frame, string const& child_frame, bool with_ns,
+    string const& header_frame, string const& child_frame,
     float x,float y,float z,
     float qx, float qy, float qz, float qw
   ) {
     geometry_msgs::msg::TransformStamped transform;
     transform.header.stamp = this->now();
 
-    std::string ns = with_ns? string(this->get_namespace())+".":""; 
-    transform.header.frame_id = ns+header_frame;  // Parent frame
-    transform.child_frame_id = ns+child_frame;   // Child frame
+    transform.header.frame_id = header_frame;  // Parent frame
+    transform.child_frame_id = child_frame;   // Child frame
 
     transform.transform.translation.x = x;
     transform.transform.translation.y = y;
@@ -82,12 +104,34 @@ public:
     broadcaster_->sendTransform(transform);
   }
 
+  /**
+   * @brief declares a static tf ros parameter
+   * 
+   * The format is <header_frame>.<child_frame>.translation for the translation component
+   * and <header_frame>.<child_frame>.orientation for the orientation component
+   * 
+   * @param header_frame the header frame of the transform 
+   * @param child_frame the child frame of the transform (transform is child_frame wrt header_frame)
+   * @param default_translation [Optional] default translation of transform
+   * @param default_orientation [Optional] default orientation of transform 
+   */
   void declare_static_tf_parameters(
     string const& header_frame, std::string const& child_frame
   ) {
     this->declare_parameter<std::vector<double>>(header_frame+"."+child_frame+".translation");
     this->declare_parameter<std::vector<double>>(header_frame+"."+child_frame+".orientation");
   }
+  /**
+   * @brief declares a static tf ros parameter
+   * 
+   * The format is <header_frame>.<child_frame>.translation for the translation component
+   * and <header_frame>.<child_frame>.orientation for the orientation component
+   * 
+   * @param header_frame the header frame of the transform 
+   * @param child_frame the child frame of the transform (transform is child_frame wrt header_frame)
+   * @param default_translation [Optional] default translation of transform
+   * @param default_orientation [Optional] default orientation of transform 
+   */
   void declare_static_tf_parameters(
     string const& header_frame, std::string const& child_frame,
     std::vector<double> const& default_translation, std::vector<double> const& default_orientation
@@ -96,16 +140,30 @@ public:
     this->declare_parameter<std::vector<double>>(header_frame+"."+child_frame+".orientation", default_orientation);
   }
 
-
+  /**
+   * @brief sets the static transform from a ros parameter
+   * 
+   * sets the static transform from a parameter file using the following format:
+   * ```
+   * <namespace>:
+   *   static_tf_publisher:
+   *     <header_frame>.<child_frame>.translation: [<x>, <y>, <z>]
+   *     <header_frame>.<child_frame>.orientation: [<qx>, <qy>, <qz>, <qw>]
+   * ```
+   * Where the translation is a vector and the orientation is a quaternion
+   * 
+   * @param header_frame the header frame of the transform 
+   * @param child_frame the child frame of the transform (transform is child_frame wrt header_frame)
+   */
   void set_static_transform_from_param(
-    string const& header_frame, std::string const& child_frame, bool with_ns
+    string const& header_frame, std::string const& child_frame
   ) {
     std::vector<double> translation;
     this->get_parameter(header_frame+"."+child_frame+".translation", translation);
     std::vector<double> orientation;
     this->get_parameter(header_frame+"."+child_frame+".orientation", orientation);
     set_static_transform(
-      header_frame, child_frame, with_ns,
+      header_frame, child_frame,
       translation[0], translation[1], translation[2],
       orientation[0], orientation[1], orientation[2], orientation[3]
     );

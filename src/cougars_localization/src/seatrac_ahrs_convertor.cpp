@@ -21,6 +21,20 @@
 #define ACC_UNITS_TO_METERS_PER_SECOND_SQUARED 9.80665 / 250.0
 
 
+/**
+ * @brief publishes an imu message using data from the seatrac modem
+ * @author Clayton Smith
+ * @date Febuary 2025
+ *
+ * This node converts imu data from the seatrac usbl beacon into
+ * an imu message in the coodinate frame of the vehicle.
+ *
+ * Subscribes:
+ * - modem_status (seatrac_interfaces/msg/ModemStatus)
+ * Publishes:
+ * - modem_imu (sensor_msgs::msg::Imu)
+ * - /tf <"ned"->"modem"> (geometry_msgs/msg/TransformStamped)
+ */
 class SeatracAHRSConverter : public rclcpp::Node {
 public:
   SeatracAHRSConverter() : Node("seatrac_ahrs_converter") {
@@ -50,6 +64,16 @@ public:
   }
 
 private:
+
+
+  /**
+   * @brief callback on modem status message
+   * 
+   * First, broadcasts the transform from ned to modem to /tf
+   * Second, uses that transform to make an Imu message in the robot's coordinate frame
+   *
+   * @param msg modem status ros message
+   */
   void modem_callback(const seatrac_interfaces::msg::ModemStatus::SharedPtr msg) {
 
     double yaw   = (M_PI / 180.0) * (0.1 * msg->attitude_yaw + magnetic_declination);
@@ -68,7 +92,7 @@ private:
 
     t.header.stamp = this->get_clock()->now();
     t.header.frame_id = "ned";
-    t.child_frame_id = std::string(this->get_namespace())+"modem";
+    t.child_frame_id = std::string(this->get_namespace())+".modem";
 
     t.transform.rotation.x = q.x();
     t.transform.rotation.y = q.y();
