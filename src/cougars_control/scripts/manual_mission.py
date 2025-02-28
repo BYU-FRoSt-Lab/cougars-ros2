@@ -154,6 +154,32 @@ class ManualMission(Node):
         self.last_heading = -1.0
         self.last_speed = -1.0
 
+        self.get_parameters()
+
+        
+
+    def get_parameters(self):
+        self.state_1_count = self.get_parameter("state_1_count").get_parameter_value().integer_value
+        self.state_1_depth = self.get_parameter("state_1_depth").get_parameter_value().double_value
+        self.state_1_heading = self.get_parameter("state_1_heading").get_parameter_value().double_value
+        self.state_1_speed = self.get_parameter("state_1_speed").get_parameter_value().double_value
+
+        self.state_2_count = self.get_parameter("state_2_count").get_parameter_value().integer_value + self.state_1_count
+        self.state_2_depth = self.get_parameter("state_2_depth").get_parameter_value().double_value
+        self.state_2_heading = self.get_parameter("state_2_heading").get_parameter_value().double_value
+        self.state_2_speed = self.get_parameter("state_2_speed").get_parameter_value().double_value
+
+        self.state_3_count = self.get_parameter("state_3_count").get_parameter_value().integer_value + self.state_2_count
+        self.state_3_depth = self.get_parameter("state_3_depth").get_parameter_value().double_value
+        self.state_3_heading = self.get_parameter("state_3_heading").get_parameter_value().double_value
+        self.state_3_speed = self.get_parameter("state_3_speed").get_parameter_value().double_value
+
+        self.destroy_timer(self.timer)
+
+        # Create a new timer with the updated period
+        self.timer = self.create_timer(self.get_parameter("command_timer_period").get_parameter_value().double_value, self.timer_callback)
+
+    
     def listener_callback(self, request, response):
         '''
         Callback function for the init service.
@@ -168,6 +194,7 @@ class ManualMission(Node):
                 response.success = False
                 response.message = 'Manual Mission has already been started. Needs to be reset before initialization'
             else:
+                self.get_parameters()
                 self.started = request.data
                 response.success = True
                 response.message = 'Manual Mission Started'
@@ -193,24 +220,24 @@ class ManualMission(Node):
         speed_msg = DesiredSpeed()
 
         # TODO: Adjust this simple state machine
-        if self.started and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value:
-            depth_msg.desired_depth = self.get_parameter("state_1_depth").get_parameter_value().double_value
-            heading_msg.desired_heading = self.get_parameter("state_1_heading").get_parameter_value().double_value
-            speed_msg.desired_speed = self.get_parameter("state_1_speed").get_parameter_value().double_value
+        if self.started and self.counter < self.state_1_count:
+            depth_msg.desired_depth = self.state_1_depth
+            heading_msg.desired_heading = self.state_1_heading
+            speed_msg.desired_speed = self.state_1_speed
 
             self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
 
-        elif self.started and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value:
-            depth_msg.desired_depth = self.get_parameter("state_2_depth").get_parameter_value().double_value
-            heading_msg.desired_heading = self.get_parameter("state_2_heading").get_parameter_value().double_value
-            speed_msg.desired_speed = self.get_parameter("state_2_speed").get_parameter_value().double_value
+        elif self.started and self.counter < self.state_2_count:
+            depth_msg.desired_depth = self.state_2_depth
+            heading_msg.desired_heading = self.state_2_heading
+            speed_msg.desired_speed = self.state_2_speed
 
             self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
 
-        elif self.started and self.counter < self.get_parameter("state_1_count").get_parameter_value().integer_value + self.get_parameter("state_2_count").get_parameter_value().integer_value + self.get_parameter("state_3_count").get_parameter_value().integer_value:
-            depth_msg.desired_depth = self.get_parameter("state_3_depth").get_parameter_value().double_value
-            heading_msg.desired_heading = self.get_parameter("state_3_heading").get_parameter_value().double_value
-            speed_msg.desired_speed = self.get_parameter("state_3_speed").get_parameter_value().double_value
+        elif self.started and self.counter < self.state_3_count:
+            depth_msg.desired_depth = self.state_3_depth
+            heading_msg.desired_heading = self.state_3_heading
+            speed_msg.desired_speed = self.state_3_speed
 
             self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
 
