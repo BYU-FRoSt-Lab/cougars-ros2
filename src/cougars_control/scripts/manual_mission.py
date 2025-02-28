@@ -171,6 +171,7 @@ class ManualMission(Node):
                 self.started = request.data
                 response.success = True
                 response.message = 'Manual Mission Started'
+                self.counter = 0
         else:
             self.started = False
             self.counter = 0

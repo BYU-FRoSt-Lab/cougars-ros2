@@ -332,6 +332,14 @@ private:
                            this->get_parameter("heading_min_output").as_double(),
                            this->get_parameter("heading_max_output").as_double(),
                            (float)this->get_parameter("timer_period").as_int());
+
+    std::cout << "Depth Controller Values -";
+    myDepthPID.print_values();
+    std::cout << "Pitch Controller Values -";
+    myPitchPID.print_values();
+    std::cout << "Heading Controller Values -";
+    myHeadingPID.print_values();
+
   }
   
   
@@ -352,11 +360,12 @@ private:
         response->message = "Controller Node initialized.";
 
         update_parameters();
+        RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
     } else {
         response->success = false;
         response->message = "Controller Node de-initialized.";
+        RCLCPP_INFO(this->get_logger(), "Controller Node de-initialized.");
     }
-    RCLCPP_INFO(this->get_logger(), "Init Service recieved");
   }
 
   /**
