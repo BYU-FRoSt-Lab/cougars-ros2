@@ -179,6 +179,8 @@ class ManualMission(Node):
         # Create a new timer with the updated period
         self.timer = self.create_timer(self.get_parameter("command_timer_period").get_parameter_value().double_value, self.timer_callback)
 
+        self.get_logger().info("Manual Mission Parameters Updated!")
+
     
     def listener_callback(self, request, response):
         '''
