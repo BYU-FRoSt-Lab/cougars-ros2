@@ -36,15 +36,25 @@ using std::string;
  * Publishes:
  * - modem_imu (sensor_msgs::msg::Imu)
  * - /tf <"ned"->"modem"> (geometry_msgs/msg/TransformStamped)
+ * - imu_accel_marker (visualization_msgs/msg/Marker)
+ * - imu_ang_vel_marker (visualization_msgs/msg/Marker)
  */
 class SeatracAHRSConverter : public rclcpp::Node {
 public:
   SeatracAHRSConverter() : Node("seatrac_ahrs_converter") {
-    // https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml?
+    /**
+     * @param magnetic_declination
+     * https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml?
+     */
     this->declare_parameter("magnetic_declination",
                             10.7); // 10.70° E for Utah Lake
     magnetic_declination = this->get_parameter("magnetic_declination").as_double();
 
+    /**
+     * @param publish_rviz_markers
+     * Publishes visual markers that rviz can use to show the acceleration and angular velocity
+     * output by the seatrac imu. Usefull for debugging.
+     */
     this->declare_parameter<bool>("publish_rviz_markers", false);
     publish_rviz_markers_ = this->get_parameter("publish_rviz_markers").as_bool();
 
@@ -185,7 +195,18 @@ private:
 
   }
 
-
+  /**
+   * @brief method to publish an rviz arrow marker
+   * 
+   * Used to visualize the acceleration and angular velocity vectors in rviz
+   * 
+   * @param vec the vector to publish
+   * @param name
+   * @param publisher the publisher to use (either accel_pub_ or ang_vel_pub_)
+   * @param r red color intensity
+   * @param g green color intensity
+   * @param b blue color intensity
+   */
   void publishVectorMarker(
     const geometry_msgs::msg::Vector3& vec,
     const std::string& name,
