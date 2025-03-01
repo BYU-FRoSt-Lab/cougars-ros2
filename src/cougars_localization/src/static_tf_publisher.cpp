@@ -43,7 +43,7 @@ public:
      * The default configuration on a CougUV has no rotation and does not need translation
      */
     declare_static_tf_parameters("modem", "robot", {0.0,0.0,0.0}, {0.0,0.0,0.0,1.0});
-    set_static_transform_from_param(with_ns("modem"), with_ns("robot"));
+    set_static_transform_from_param("modem", "robot", true, true);
 
     set_static_transform(
         "enu", "ned",
@@ -55,18 +55,19 @@ public:
 
 
   /**
-   * @brief prefixes a coordinate frame with the vehicle namespace
+   * @return namespace prefix for local coordinate frames
    * 
-   * All transforms are published to the global /tf or /tf_static topics.
-   * To differentiate transforms between vehicles, we add the namespace to the
-   * coordinate frame under question.
+   * All tf transformations are published to the global /tf topic
+   * To differentiate between coordinate frames of different vehicles
+   * we prefix the coordinate frame name with the namespace of the vehicle.
    * 
-   * @param frame the coordinate frame to prefix the namespace to
-   * @return the coordinate frame with the prefixed namespace
    */
-  inline string with_ns(string const& frame) {
-    return string(this->get_namespace())+"."+frame;
+  string ns_prefix() {
+    string ns = string(this->get_namespace());
+    if(ns.length() <= 1) return string("");
+    else return ns.substr(1)+".";
   }
+
 
   /**
    * @brief broadcasts a tf2 static transform
@@ -88,7 +89,6 @@ public:
   ) {
     geometry_msgs::msg::TransformStamped transform;
     transform.header.stamp = this->now();
-
     transform.header.frame_id = header_frame;  // Parent frame
     transform.child_frame_id = child_frame;   // Child frame
 
@@ -102,6 +102,9 @@ public:
     transform.transform.rotation.w = qw;
 
     broadcaster_->sendTransform(transform);
+
+    RCLCPP_INFO(this->get_logger(), "Defined Static Transform from %s to %s",
+         header_frame.c_str(), child_frame.c_str());
   }
 
   /**
@@ -154,18 +157,24 @@ public:
    * 
    * @param header_frame the header frame of the transform 
    * @param child_frame the child frame of the transform (transform is child_frame wrt header_frame)
+   * @param prefix_header_with_ns indicates whether or not to prefix the header with the namespace
+   * @param prefix_child_with_ns indicates whether or not to prefix the child frame with the namespace
    */
   void set_static_transform_from_param(
-    string const& header_frame, std::string const& child_frame
+    string const& header_frame, std::string const& child_frame,
+    bool prefix_header_with_ns = false, bool prefix_child_with_ns = false
   ) {
     std::vector<double> translation;
     this->get_parameter(header_frame+"."+child_frame+".translation", translation);
     std::vector<double> orientation;
     this->get_parameter(header_frame+"."+child_frame+".orientation", orientation);
+
+    string header_prefix = prefix_header_with_ns? ns_prefix(): string("");
+    string child_prefix = prefix_child_with_ns? ns_prefix() : string("");
     set_static_transform(
-      header_frame, child_frame,
-      translation[0], translation[1], translation[2],
-      orientation[0], orientation[1], orientation[2], orientation[3]
+      header_prefix+header_frame, child_prefix+child_frame,
+      translation.at(0), translation.at(1), translation.at(2),
+      orientation.at(0), orientation.at(1), orientation.at(2), orientation.at(3)
     );
   }
 

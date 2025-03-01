@@ -26,6 +26,7 @@ find_package(MOOS 10 REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 include_directories(include/${PROJECT_NAME})
 
@@ -36,7 +37,17 @@ add_executable(dvl_convertor src/dvl_convertor.cpp)
 ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
 
 add_executable(seatrac_ahrs_convertor src/seatrac_ahrs_convertor.cpp)
-ament_target_dependencies(seatrac_ahrs_convertor rclcpp std_msgs seatrac_interfaces geometry_msgs sensor_msgs Eigen3 tf2_ros tf2_geometry_msgs)
+ament_target_dependencies(
+  seatrac_ahrs_convertor 
+  rclcpp 
+  std_msgs 
+  seatrac_interfaces
+  geometry_msgs
+  sensor_msgs
+  tf2_ros
+  tf2_geometry_msgs
+  visualization_msgs
+)
 
 add_executable(dvl_global src/dvl_global.cpp)
 ament_target_dependencies(dvl_global rclcpp std_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
