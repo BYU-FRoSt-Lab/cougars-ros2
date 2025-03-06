@@ -128,7 +128,7 @@ public:
      * flag indicating we are in sim or not
      */
 
-    this->declare_parameter("sim", "true");
+    this->declare_parameter("sim", "false");
 
 
     // subscriptions -- depending on if in sim or in real life
@@ -250,20 +250,20 @@ private:
      * Displays parsed MOOS info being publishes to ROS2 network
      */
   void PrintStatusUpdate(){
-    // std::cout << "========================================\n";
-    // std::cout << "Vehicle Status Published to ROS2 network:\n\n";
-    // std::cout << "Waypoints Reached (WPT_IDX): " << vehicle_status.waypoint_number_ << "\n\n";
-    // std::cout << "Error update: " << vehicle_status.error_ << "\n";
-    // std::cout << "Mission Complete: " << vehicle_status.completed_ << "\n";
-    // std::cout << "Current Behavior (or last if completed): " << vehicle_status.curr_behavior_ << "\n";
-    // std::cout << "X est: " << vehicle_status.x_ << "\n";
-    // std::cout << "Y est: " << vehicle_status.y_ << "\n";
-    // std::cout << "Depth: " << vehicle_status.depth_ << "\n";
-    // std::cout << "Heading: " << vehicle_status.heading_ << "\n";
-    // std::cout << "Distance to next WPT: " << vehicle_status.dist_ << "\n";
-    // std::cout << "ETA: " << vehicle_status.eta_ << "\n";
-    // std::cout << "Name: " << vehicle_status.vname_ << "\n";
-    // std::cout << "========================================\n\n";
+    std::cout << "========================================\n";
+    std::cout << "Vehicle Status Published to ROS2 network:\n\n";
+    std::cout << "Waypoints Reached (WPT_IDX): " << vehicle_status.waypoint_number_ << "\n\n";
+    std::cout << "Error update: " << vehicle_status.error_ << "\n";
+    std::cout << "Mission Complete: " << vehicle_status.completed_ << "\n";
+    std::cout << "Current Behavior (or last if completed): " << vehicle_status.curr_behavior_ << "\n";
+    std::cout << "X est: " << vehicle_status.x_ << "\n";
+    std::cout << "Y est: " << vehicle_status.y_ << "\n";
+    std::cout << "Depth: " << vehicle_status.depth_ << "\n";
+    std::cout << "Heading: " << vehicle_status.heading_ << "\n";
+    std::cout << "Distance to next WPT: " << vehicle_status.dist_ << "\n";
+    std::cout << "ETA: " << vehicle_status.eta_ << "\n";
+    std::cout << "Name: " << vehicle_status.vname_ << "\n";
+    std::cout << "========================================\n\n";
   }
 
 
@@ -371,7 +371,7 @@ private:
 
     // heading_ = nav_heading;
 
-    std::cout << "Received: " << msg.attitude_yaw << ", nav_heading final: " << nav_heading << std::endl;
+    // std::cout << "Received: " << msg.attitude_yaw << ", nav_heading final: " << nav_heading << std::endl;
 
     Comms.Notify("NAV_HEADING", nav_heading);
   }
@@ -401,6 +401,7 @@ bool OnConnect(void *pParam) {
   pC->Register("IVPHELM_SUMMARY", 0.0);
   pC->Register("WPT_STAT",0.0);
   pC->Register("BHV_ERROR",0.0);
+  pC->Register("BHV_STATUS",0.0);
 
   //NOTE: WPT_INDEX seems to not be working, so I hand to parse WPT_STAT string
   // pC->Register("WPT_INDEX",0.0);
@@ -565,6 +566,11 @@ bool OnMail(void *pParam) {
       vehicle_status.error_ = 1;
       std::cout<< error_msg <<std::endl;
       
+    }
+    else if (key == "BHV_STATUS"){
+      std::string status_msg = msg.GetString();
+      std::cout<< status_msg <<std::endl;
+
     }
     else{
       double value = msg.GetDouble();
