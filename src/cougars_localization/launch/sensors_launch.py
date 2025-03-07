@@ -65,6 +65,13 @@ def generate_launch_description():
             namespace=namespace,
             output='log',
         ),
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='coug_kinematics',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',

@@ -88,13 +88,6 @@ def generate_launch_description():
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
         ),   
-        launch_ros.actions.Node(
-            package='cougars_control',
-            executable='coug_kinematics',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
