@@ -7,7 +7,7 @@ class MAVLinkBridge(Node):
     def __init__(self):
         super().__init__('mavlink_bridge')
         self.publisher = self.create_publisher(FluidPressure, 'pressure/data', 10)
-        self.mavlink_connection = mavutil.mavlink_connection('udpin:192.168.2.104:15550')
+        self.mavlink_connection = mavutil.mavlink_connection('udpin:192.168.2.103:15550')
         self.get_logger().info("Waiting for MAVLink messages...")
         self.mavlink_connection.wait_heartbeat()
         self.timer = self.create_timer(0.1, self.publish_pressure)
