@@ -18,6 +18,8 @@
 #include "seatrac_interfaces/msg/modem_send.hpp"
 
 
+#define DEFAULT_SERIAL_PORT "/dev/frost/rs232_connector_seatrac"
+
 #define QUEUE_WARN_SIZE 8
 
 
@@ -68,7 +70,7 @@ public:
     /**
      * @param mission_start_time
      * 
-     * A shared timestamp for all vehicles in a mission from which
+     * A shared timestamp in seconds for all vehicles in a mission from which
      * time in the mission is measured. The epoch should be the same
      * time as the start of the mission and recording data.
      * 
@@ -79,7 +81,7 @@ public:
      * This variable should also be saved, somehow, for reference in post
      * processing.
      */
-    this->declare_parameter<int>("mission_start_time");
+    this->declare_parameter<int>("mission_start_time", (this->get_clock()->now()).seconds());
 
     /**
      * @param vehicle_ID
@@ -109,11 +111,11 @@ public:
      * Messages printed at each level:
      *  0 - Initialization and connection to beacon
      *  1 - Acoustic message syntax and queue size warnings 
-     *  2 - Acoustic transmission reception errors
+     *  2 - Acoustic transmission reception errors and values of initialization parameters
      *  3 - Acoustic reception and transmission updates
      *  4 - Output queue updates and warnings
      */
-    this->declare_parameter("logging_verbosity", 0);
+    this->declare_parameter("logging_verbosity", 2);
     logging_verbosity = this->get_parameter("logging_verbosity").as_int();
 
 
@@ -122,6 +124,12 @@ public:
 
     BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
     uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_double()*10);
+
+    if(logging_verbosity >= 2) {
+      RCLCPP_INFO(this->get_logger(), "Beacon ID: %d", beaconId);
+      RCLCPP_INFO(this->get_logger(), "Mission Start Time: %ld s", start_time);
+      RCLCPP_INFO(this->get_logger(), "Salinity: %d ppt", salinity);
+    }
 
     wait_for_alive(beaconId, salinity);
   }
@@ -434,7 +442,7 @@ private:
   int logging_verbosity = 0;
 
   std::string get_serial_port() {
-    this->declare_parameter("seatrac_serial_port", "/dev/frost/rs232_connector_seatrac");
+    this->declare_parameter("seatrac_serial_port", DEFAULT_SERIAL_PORT);
     return this->get_parameter("seatrac_serial_port").as_string();
   }
 
