@@ -52,6 +52,10 @@ public:
     this->integrator = 0.0;
   }
 
+  void print_values(){
+    std::cout << " Kp: " << kp << " Ki: " << ki << " Kd: " << kd << std::endl;
+  }
+
   /**
    * Simple PID control, based on the approach in BYU ECEn 483.
    *
