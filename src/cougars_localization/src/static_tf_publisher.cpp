@@ -42,11 +42,17 @@ public:
      * @param modem.robot the transform from the modem to the robot position
      * The default configuration on a CougUV has no rotation and does not need translation
      */
-    declare_static_tf_parameters("modem", "robot", {0.0,0.0,0.0}, {0.0,0.0,0.0,1.0});
-    set_static_transform_from_param("modem", "robot", true, true);
+    declare_static_tf_parameters("base_link", "modem_link", {0.0,0.0,0.0}, {0.0,0.0,0.0,1.0});
+    set_static_transform_from_param("base_link", "modem_link", true, true);
+
+    declare_static_tf_parameters("base_link", "dvl_link", {0.0,0.0,0.0}, {1.0,0.0,0.0,0.0});
+    set_static_transform_from_param("base_link", "dvl_link", true, true);
+
+    declare_static_tf_parameters("base_link", "gps_link", {0.0,0.0,0.0}, {0.0,0.0,0.0,1.0});
+    set_static_transform_from_param("base_link", "gps_link", true, true);
 
     set_static_transform(
-        "enu", "ned",
+        "modem_odom_ned", "modem_odom_enu",
         0, 0, 0,
         std::sqrt(2)/2, std::sqrt(2)/2, 0, 0
     );
