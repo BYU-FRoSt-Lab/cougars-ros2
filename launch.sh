@@ -102,12 +102,15 @@ case $1 in
     "sensors")
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
         ;;
+
+    "demo")
+        ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+        ;;
+
     "bluerov")
         ros2 launch cougars_control bluerov_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE BLUEROV:="true"
         ;;
-    # "demo")
-    #     ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
-    #     ;;
+
     *)
         printError "No start configuration specified"
         printError "Specify a launch configuration using 'bash launch.sh <config>' (ex. 'bash launch.sh moos')"

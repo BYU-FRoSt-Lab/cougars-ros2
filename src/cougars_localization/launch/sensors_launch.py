@@ -71,6 +71,23 @@ def generate_launch_description():
         #     executable='micro_ros_agent',
         #     arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
         # ),
+
+
+        # Serial Teensy connection
+        launch_ros.actions.Node(
+            package='fin_sub_cpp', 
+            executable='control_node', 
+            namespace=namespace,
+            output='log',
+        ),
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='coug_kinematics',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
+
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
