@@ -22,7 +22,7 @@ cleanup() {
   echo ""
   
   if [ "$(uname -m)" == "aarch64" ]; then
-    bash ~/gpio/strobe.sh off
+    # bash ~/gpio/strobe.sh off
     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
   fi
   
@@ -44,26 +44,26 @@ sleep 3
 
 echo ""
 
-if [ "$(uname -m)" == "aarch64" ]; then
-  # Start the strobe light and Teensy board
-  bash ~/gpio/strobe.sh on
-  bash ~/gpio/power.sh on
+# if [ "$(uname -m)" == "aarch64" ]; then
+#   # Start the strobe light and Teensy board
+#   bash ~/gpio/strobe.sh on
+#   bash ~/gpio/power.sh on
 
-  # Test for Teensy board connection
-  if [ -z "$(tycmd list | grep Teensy)" ]; then
-      printError "No Teensy boards avaliable to connect to"
-      exit 1
-  fi
+#   # Test for Teensy board connection
+#   if [ -z "$(tycmd list | grep Teensy)" ]; then
+#       printError "No Teensy boards avaliable to connect to"
+#       exit 1
+#   fi
 
-  echo ""
-fi
+#   echo ""
+# fi
 
 # Parse options
 SIM_PARAM="false" # Default value for sim
 VERBOSE="false"
 GPS="false"
 FINS="false"
-while getopts "svgf" opt; do
+while getopts "svgfb" opt; do
   case $opt in
     s)
       SIM_PARAM="true"
@@ -102,9 +102,15 @@ case $1 in
     "sensors")
         ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
         ;;
+
     "demo")
         ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
         ;;
+
+    "bluerov")
+        ros2 launch cougars_control bluerov_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE BLUEROV:="true"
+        ;;
+
     *)
         printError "No start configuration specified"
         printError "Specify a launch configuration using 'bash launch.sh <config>' (ex. 'bash launch.sh moos')"
