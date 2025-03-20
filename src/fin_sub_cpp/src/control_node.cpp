@@ -24,7 +24,8 @@ public:
         battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("battery/data", 10);
 
         leak_pub_ = this->create_publisher<sensor_msgs::msg::FluidPressure>("leak/data", 10);
-        // TODO: Make a new publisher that converts fluid pressure to depth with a pose with cov
+
+        this->declare_parameter("demo_mode", false);
 
         sp_set_baudrate(serial_port_, 9600);
         // Open the serial port
@@ -118,9 +119,12 @@ private:
                 pressure_msg.header.stamp = this->now();
                 pressure_msg.fluid_pressure = pressure;
                 pressure_msg.variance = 0.0;  // Variance can be set if known
-                pressure_pub_->publish(pressure_msg);
+
+                if (!this->get_parameter("demo_mode").as_bool()){
+                    pressure_pub_->publish(pressure_msg);
+                    std::cout << "Published pressure: " << pressure << std::endl;
+                }
                 
-                std::cout << "Published pressure: " << pressure << std::endl;
                 // RCLCPP_INFO(this->get_logger(), "Published depth: %f", pressure);
             }
         }
