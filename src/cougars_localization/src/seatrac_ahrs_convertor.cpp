@@ -112,8 +112,8 @@ private:
     q.setRPY(roll, pitch, yaw);
 
     t.header.stamp = this->get_clock()->now();
-    t.header.frame_id = "ned";
-    t.child_frame_id = ns_prefix()+"modem";
+    t.header.frame_id = "modem_odom_ned";
+    t.child_frame_id = ns_prefix()+"modem_link";
 
     t.transform.rotation.x = q.x();
     t.transform.rotation.y = q.y();
@@ -133,7 +133,7 @@ private:
 
     try {
       geometry_msgs::msg::TransformStamped tf_enu_to_robot =
-          tf_buffer_->lookupTransform("enu", ns_prefix()+"robot", tf2::TimePointZero);
+          tf_buffer_->lookupTransform("modem_odom_enu", ns_prefix()+"base_link", tf2::TimePointZero);
 
       modem_imu->orientation.x = tf_enu_to_robot.transform.rotation.x;
       modem_imu->orientation.y = tf_enu_to_robot.transform.rotation.y;
@@ -157,7 +157,7 @@ private:
       );
 
       geometry_msgs::msg::TransformStamped tf_modem_to_robot =
-          tf_buffer_->lookupTransform(ns_prefix()+"modem", ns_prefix()+"robot", tf2::TimePointZero);
+          tf_buffer_->lookupTransform(ns_prefix()+"modem_link", ns_prefix()+"base_link", tf2::TimePointZero);
 
       // Extract rotation
       tf2::Quaternion rotation(
@@ -214,7 +214,7 @@ private:
     float r, float g, float b) 
   {
     auto marker = visualization_msgs::msg::Marker();
-    marker.header.frame_id = ns_prefix()+"robot"; // Change if necessary
+    marker.header.frame_id = ns_prefix()+"base_link";
     marker.header.stamp = this->now();
     marker.ns = name;
     marker.id = 0;
