@@ -16,6 +16,7 @@
 #include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "frost_interfaces/msg/controls_debug.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 
@@ -207,8 +208,8 @@ public:
      *
      * This publisher is used for debugging pitch and depth by publishing reference values.
      */
-    debug_depth_pub_ =
-        this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+    debug_controls_pub_ =
+        this->create_publisher<frost_interfaces::msg::ControlsDebug>(
             "controls/debug", 10);
 
     /**
@@ -286,9 +287,9 @@ public:
         "dvl/velocity", qos,
         std::bind(&CougControls::dvl_velocity_callback, this, _1));
 
-        this->velocity[0] = 0.5;
-        this->velocity[1] = 0.0f;
-        this->velocity[2] = 0.0f;
+    this->velocity[0] = 0.6f;
+    this->velocity[1] = 0.0f;
+    this->velocity[2] = 0.0f;
 
     /**
      * @brief Control timer.
@@ -457,7 +458,7 @@ private:
 
 
     // OVERRIDE VELOCITY GIVEN WITH A CONSTANT VELOCITY OF 1 m/s
-    this->velocity[0] = 0.6;
+    this->velocity[0] = 0.6f;
     this->velocity[1] = 0.0f;
     this->velocity[2] = 0.0f;
 
@@ -532,6 +533,7 @@ private:
     this->actual_roll = roll;
 
     this->pitch_rate = orientation_msg.angular_velocity.y;
+    this->yaw_rate = orientation_msg.angular_velocity.z;
 
     // // // Log the information
     // RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
@@ -584,28 +586,15 @@ private:
         this->theta_ref = myDepthPID.compute(this->depth_ref, this->actual_depth, this->velocity[2]);
     }
 
-    std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
-
-
-    std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
     int depth_pos = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate, this->velocity[0]);  
     
-    auto message = geometry_msgs::msg::PoseWithCovarianceStamped();
-    message.header.stamp = this->now();
-    message.pose.pose.position.x = this->pitch_rate;
-    message.pose.pose.position.y = this->actual_depth;
-    message.pose.pose.position.z = this->depth_ref;
-
-    message.pose.pose.orientation.x = this->actual_pitch;
-    message.pose.pose.orientation.y = this->theta_ref;
-
-    debug_depth_pub_->publish(message);
-
     // Add torque equilibruim?
     // int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43, deltaMax);
     //TODO calculate beforehand what torque creates a max deflection.
-
-    std::cout << " Fin: " << depth_pos << std::endl;
+    
+    // std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
+    // std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
+    // std::cout << " Fin: " << depth_pos << std::endl;
 
     return depth_pos;
   }
@@ -621,32 +610,68 @@ private:
       message.header.stamp = this->now();
 
       if (this->init_flag) {
-          int depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
-          
-          // Handling roll over when taking the error difference
-          // given desired heading and actual heading from -180 to 180
-          // if they are both negative or they are both positive than just take the difference
-          float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
-          // // Log the information
-          
-          int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
-        std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
-
-          // Step 5: Set fin positions and publish the command
-          message.fin[0] = heading_pos;    // top fin
-          message.fin[1] = -depth_pos;      // starboard side fin
-          message.fin[2] = depth_pos;      // port side fin
-          message.thruster = this->desired_speed;
+        int depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
         
-          u_command_publisher_->publish(message);
+        // Handling roll over when taking the error difference
+        // given desired heading and actual heading from -180 to 180
+        // if they are both negative or they are both positive than just take the difference
+        float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
+        // // Log the information
+        
+        int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
+
+        // Step 5: Set fin positions and publish the command
+        message.fin[0] = heading_pos;    // top fin
+        message.fin[1] = -depth_pos;      // starboard side fin
+        message.fin[2] = depth_pos;      // port side fin
+        message.thruster = this->desired_speed;
+    
+        u_command_publisher_->publish(message);
+        
+
+        // std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
+        
+        // Debugging Message
+        auto message = frost_interfaces::msg::ControlsDebug();
+        message.header.stamp = this->now();
+        message.pitch.actual = this->actual_pitch;
+        message.pitch.rate = this->pitch_rate;
+        message.pitch.desired = this->theta_ref;
+        message.pitch.reference = this->theta_ref;
+        message.pitch.p = myPitchPID.getP();
+        message.pitch.i = myPitchPID.getI();
+        message.pitch.d = myPitchPID.getD();
+        message.pitch.pid = myPitchPID.getPID();
+
+        message.depth.actual = this->actual_depth;
+        message.depth.rate = this->velocity[2];
+        message.depth.desired = this->desired_depth;
+        message.depth.reference = this->depth_ref;
+        message.depth.p = myDepthPID.getP();
+        message.depth.i = myDepthPID.getI();
+        message.depth.d = myDepthPID.getD();
+        message.depth.pid = myDepthPID.getPID();
+
+        message.heading.actual = this->actual_heading;
+        message.heading.rate = this->yaw_rate;
+        message.heading.desired = this->desired_heading;
+        // message.heading.reference = this->heading_ref;
+        message.heading.p = myHeadingPID.getP();
+        message.heading.i = myHeadingPID.getI();
+        message.heading.d = myHeadingPID.getD();
+        message.heading.pid = myHeadingPID.getPID();
+    
+        debug_controls_pub_->publish(message);
+
+
       }
       else{
-          message.fin[0] = 0;    // top fin
-          message.fin[1] = 0;      // right fin
-          message.fin[2] = 0;      // left fin
-          message.thruster = 0;
+        message.fin[0] = 0;    // top fin
+        message.fin[1] = 0;      // right fin
+        message.fin[2] = 0;      // left fin
+        message.thruster = 0;
 
-          u_command_publisher_->publish(message);
+        u_command_publisher_->publish(message);
       }
   }
 
@@ -668,7 +693,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr debug_depth_pub_;
+  rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 
@@ -696,6 +721,7 @@ private:
   float actual_heading = 0.0;
 
   float pitch_rate;
+  float yaw_rate;
   float velocity[3];
 };
 
