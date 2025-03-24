@@ -9,6 +9,7 @@
 #include "pid.cpp"
 #include "actuator.cpp"
 // #include "pid_int2.cpp"
+#include "dvl_msgs/msg/dvl.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
@@ -191,6 +192,8 @@ public:
     this->declare_parameter("wn_d_theta", 0.25);
     this->declare_parameter("outer_loop_threshold", 2.5);
     this->declare_parameter("saturation_offset", 1.7);
+    this->declare_parameter("depth_from_bottom", false);
+    this->dfb = this->get_parameter("depth_from_bottom").as_bool();
 
     update_parameters();
     /**
@@ -265,6 +268,16 @@ public:
         geometry_msgs::msg::PoseWithCovarianceStamped>(
         "depth_data", 10,
         std::bind(&CougControls::actual_depth_callback, this, _1));
+
+    /**
+     * @brief Altitude subscriber.
+     *
+     * This subscriber subscribes to the "dvl/data" topic. It uses the
+     *  message type. Expects data in ENU with the z value being more negative with increasing depth
+     */
+    subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
+        "dvl/data", qos,
+        std::bind(&CougControls::dvl_data_callback, this, _1));
 
     /**
      * @brief Yaw and Pitch subscriber.
@@ -438,6 +451,11 @@ private:
     //Negate the z value in ENU to get postive depth value
   }
 
+  void dvl_data_callback(const dvl_msgs::msg::DVL::SharedPtr msg) {
+    this->altitude = msg->altitude;
+
+  }
+
   /**
    * @brief Callback function for the velocity subscription.
    *
@@ -553,7 +571,7 @@ private:
     return yaw_err;
   }
   
-  int depth_autopilot(float depth, float depth_d){
+  int depth_autopilot(float depth, float depth_d, int altitude_hold=1){
     float surge = this->velocity[0];
     float surge_threshold = this->get_parameter("surge_threshold").as_double();
     float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
@@ -575,7 +593,7 @@ private:
     
     if (std::abs(depth_d - depth) > outer_loop_threshold) {
         // saturate theta_d
-        float theta_d = theta_max * std::copysign(1.0, depth_d - depth);
+        float theta_d = theta_max * std::copysign(1.0, depth_d - depth) * altitude_hold;
         this->theta_ref = std::exp(-timer_period * wn_d_theta) * this->theta_ref
                         + (1.0 - std::exp(-timer_period * wn_d_theta)) * theta_d;
 
@@ -583,7 +601,7 @@ private:
         std::cout <<  "Saturated Depth PID mode" << std::endl;
         myDepthPID.reset_int();
     } else {
-        this->theta_ref = myDepthPID.compute(this->depth_ref, this->actual_depth, this->velocity[2]);
+        this->theta_ref = myDepthPID.compute(this->depth_ref, depth, this->velocity[2]) * altitude_hold;
     }
 
     int depth_pos = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate, this->velocity[0]);  
@@ -609,14 +627,30 @@ private:
       auto message = frost_interfaces::msg::UCommand();
       message.header.stamp = this->now();
 
+      int depth_pos;
       if (this->init_flag) {
-        int depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
-        
-        // Handling roll over when taking the error difference
-        // given desired heading and actual heading from -180 to 180
-        // if they are both negative or they are both positive than just take the difference
-        float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
-        // // Log the information
+          if (dfb){
+            depth_pos = depth_autopilot(this->altitude, this->desired_depth, -1);
+          }
+          else{
+            depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
+          }
+          std::cout << " Fin: " << depth_pos << std::endl;
+          
+          // Handling roll over when taking the error difference
+          // given desired heading and actual heading from -180 to 180
+          // if they are both negative or they are both positive than just take the difference
+          float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
+          // // Log the information
+          
+          int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
+          std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
+
+          // Step 5: Set fin positions and publish the command
+          message.fin[0] = heading_pos;    // top fin
+          message.fin[1] = -depth_pos;      // starboard side fin
+          message.fin[2] = depth_pos;      // port side fin
+          message.thruster = this->desired_speed;
         
         int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
 
@@ -692,6 +726,7 @@ private:
       actual_velocity_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
+  rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
 
   rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 
@@ -723,6 +758,9 @@ private:
   float pitch_rate;
   float yaw_rate;
   float velocity[3];
+
+  bool dfb;
+  float altitude;
 };
 
 int main(int argc, char *argv[]) {
