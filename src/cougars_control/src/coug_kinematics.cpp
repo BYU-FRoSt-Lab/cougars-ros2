@@ -192,6 +192,9 @@ private:
     if (this->get_parameter("demo_mode").as_bool()) {
       command.thruster = 0;
       surface_command_.thruster = 0;
+      for (auto& f : command.fin) {
+        f *= 2;
+      } 
     } else if (!arm_thruster_){
       command.thruster = 0;
       surface_command_.thruster = 0;
