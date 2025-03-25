@@ -22,7 +22,7 @@ using std::placeholders::_1;
 rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 auto qos = rclcpp::QoS(
     rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
-    qos_profile);
+    )qos_profile;
 
 class DVLConvertor : public rclcpp::Node {
 public:

@@ -12,6 +12,12 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>rclpy</depend>
+
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <exec_depend>python3-serial</exec_depend>
 
   <build_depend>seatrac_interfaces</build_depend>
   <exec_depend>seatrac_interfaces</exec_depend>
