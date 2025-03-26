@@ -721,13 +721,15 @@ private:
       int depth_pos;
       int depth_pos;
       if (this->init_flag) {
-          if (dfb){
-            depth_pos = depth_autopilot(this->altitude, this->desired_depth, -1);
-          }
-          else{
-            depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
-          }
-          std::cout << " Fin: " << depth_pos << std::endl;
+        float depth_trackpoint;
+        if (dfb){
+          depth_trackpoint = this->altitude;
+          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth, -1);
+        }
+        else{
+          depth_trackpoint = this->actual_depth;
+          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth);
+        }
           
         // Handling roll over when taking the error difference
         // given desired heading and actual heading from -180 to 180
