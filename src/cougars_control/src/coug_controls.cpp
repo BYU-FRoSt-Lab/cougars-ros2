@@ -404,8 +404,15 @@ private:
     RCLCPP_INFO(this->get_logger(), "New Depth Desired: %f, Old desired depth %f", depth_msg.desired_depth, this->desired_depth);
     this->desired_depth = depth_msg.desired_depth;
 
-    // When a new desired depth sent update the depth_ref to the actual depth
-    this->depth_ref = this->actual_depth;
+    // TODO reset integrator term??
+    // TODO in the message type specify the dfb or not
+    if (dfb){
+      this->depth_ref = this->altitude;
+    }
+    else{
+      // When a new desired depth sent update the depth_ref to the actual depth
+      this->depth_ref = this->actual_depth;
+    }
   }
 
   /**
@@ -629,29 +636,22 @@ private:
 
       int depth_pos;
       if (this->init_flag) {
-          if (dfb){
-            depth_pos = depth_autopilot(this->altitude, this->desired_depth, -1);
-          }
-          else{
-            depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
-          }
-          std::cout << " Fin: " << depth_pos << std::endl;
+        float depth_trackpoint;
+        if (dfb){
+          depth_trackpoint = this->altitude;
+          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth, -1);
+        }
+        else{
+          depth_trackpoint = this->actual_depth;
+          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth);
+        }
           
-          // Handling roll over when taking the error difference
-          // given desired heading and actual heading from -180 to 180
-          // if they are both negative or they are both positive than just take the difference
-          float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
-          // // Log the information
+        // Handling roll over when taking the error difference
+        // given desired heading and actual heading from -180 to 180
+        // if they are both negative or they are both positive than just take the difference
+        float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
+        // // Log the information
           
-          int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
-          std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
-
-          // Step 5: Set fin positions and publish the command
-          message.fin[0] = heading_pos;    // top fin
-          message.fin[1] = -depth_pos;      // starboard side fin
-          message.fin[2] = depth_pos;      // port side fin
-          message.thruster = this->desired_speed;
-        
         int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
 
         // Step 5: Set fin positions and publish the command
@@ -677,7 +677,7 @@ private:
         message.pitch.d = myPitchPID.getD();
         message.pitch.pid = myPitchPID.getPID();
 
-        message.depth.actual = this->actual_depth;
+        message.depth.actual = depth_trackpoint;
         message.depth.rate = this->velocity[2];
         message.depth.desired = this->desired_depth;
         message.depth.reference = this->depth_ref;
@@ -696,7 +696,6 @@ private:
         message.heading.pid = myHeadingPID.getPID();
     
         debug_controls_pub_->publish(message);
-
 
       }
       else{
