@@ -314,7 +314,7 @@ class FactorGraphNode(Node):
         :param jacobians: Optional list of Jacobians
         :return: the unwhitened error
         """
-        pos = values.atPose3(this.keys()[0])
+        pos = values.atVector(this.keys()[0])
 
         # Depth error (z position). TODO 1D or 2D array?
         error = pos.translation()[2] - measurement[0]
@@ -383,10 +383,13 @@ class FactorGraphNode(Node):
         return H
 
     def update(self):
+        # https://github.com/borglab/gtsam/blob/develop/python/gtsam/examples/IMUKittiExampleGPS.py 
+        # for some atVector and atPose3 examples
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
         self.est_xyz = self.result.atPose3(X(self.key)).translation()
         self.est_orientation = self.result.atPose3(X(self.key)).orientation()
+        self.est_velocity = self.result.atVector(V(self.key))
         self.isam.update()
         self.isam.update()
         self.isam.update()
@@ -502,6 +505,7 @@ class FactorGraphNode(Node):
             self.initialEstimate.insert(velKey, velocities)
             self.velKey_to_time[velKey] = self.latest_imu_factor_time
 
+            self.last_state = gtsam.NavState(pose_0, velocities)
             # first factor graph update
             self.update()
             self.publish_state_est()
@@ -510,7 +514,6 @@ class FactorGraphNode(Node):
             self.get_logger().warning("Have not received all necessary sensor inputs to begin")
             self.get_logger().warning(f"IMU: {self.imu_received}\nGPS: {self.gps_received}\nDVL: {self.dvl_received}\nDepth: {self.depth_received}")
 
-        
 
 
     ##################################################################
@@ -521,11 +524,8 @@ class FactorGraphNode(Node):
         # Your timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
         if self.deployed:
-            
             # increment key  
             self.key += 1
-        
-
             
             time_stamp_to_query = self.get_clock().now().to_msg()
             # Tf2 query (need to query tranformations at the the current time, and need to transform the below imu_vel, 
@@ -556,11 +556,10 @@ class FactorGraphNode(Node):
             self.measuredLinAcc = self.linear_acceleration
             self.measuredAngOmega = self.angular_velocity
             self.p_imu.integrateMeasurement(self.measuredLinAcc, self.measuredAngOmega, self.factor_graph_period)
-            self.predicted_state = self.runner.predict(self.p_imu, self.actualBias)
+            self.predicted_state = self.p_imu.predict(self.last_state, gtsam.imuBias.ConstantBias())
             
             # Time sorted DVL velocity (with x, y, and z)
             self.imu_vel = self.predicted_state.velocity()
-
             #  Integrate from IMU?
             self.imu_pose = self.predicted_state.pose()
             
