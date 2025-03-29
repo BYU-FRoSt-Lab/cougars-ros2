@@ -14,14 +14,11 @@ from functools import partial
 import gtsam
 from typing import List, Optional
 from gtsam.symbol_shorthand import L
-
 from geometry_msgs.msg import TransformStamped
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-
-
 from gtsam.symbol_shorthand import B, V, X
 
 TODO = False
@@ -54,7 +51,7 @@ class TimeSync:
     def __init__(self) -> None:
 
         self.msg_queue = []         # append message of specific sensor to queue
-        self.last_pose_key = None
+        self.last_key = None
 
     def add_to_queue(self, msg):
         self.msg_queue.append(msg)
@@ -69,7 +66,7 @@ class TimeSync:
         in_future = False
 
         new_id = init_new_id
-        curr_time = key_to_time[new_id] 
+        curr_time = key_to_time[int(new_id)] 
         key_to_add = None
         msg_to_add = None
 
@@ -97,9 +94,9 @@ class TimeSync:
                 if(time_to_current > time_to_previous):
                     # Meas in queue better suited to previous key, keep working on prev key
                     print('time to current is longer than time to prev')
-                    print('new', new_id, ' prev', self.last_pose_key, ' init', init_new_id)
+                    print('new', new_id, ' prev', self.last_key, ' init', init_new_id)
                     new_id -= 1
-                    if(new_id == self.last_pose_key):
+                    if(new_id == self.last_key):
                         print('pop')
                         self.msg_queue.pop(0)
                         new_id = init_new_id
@@ -122,7 +119,7 @@ class TimeSync:
                         # Actually add the factor
                         key_to_add = new_id
                         msg_to_add = self.msg_queue.pop(0)                    
-                        self.last_pose_key = new_id
+                        self.last_key = new_id
             else:
                 in_future = True
 
@@ -133,10 +130,8 @@ class FactorGraphNode(Node):
     def __init__(self):
         super().__init__('new_factor_graph_node')
 
-        
         self.params, self.bias_covariance, self.delta = preintegration_parameters()
         self.p_imu = gtsam.PreintegratedImuMeasurements(self.params)
-
 
         self.q_gps = TimeSync()
         self.q_depth = TimeSync()
@@ -149,8 +144,6 @@ class FactorGraphNode(Node):
 
         self.key = int(0)
        
-    
-
         # factor graph period
         self.factor_graph_period = 2
 
@@ -214,11 +207,9 @@ class FactorGraphNode(Node):
         
         # Initialize the transform broadcaster
 
-
-
-
         # Call on_timer function every second
         self.timer = self.create_timer(1.0, self.on_timer)
+        
 
     # error functions for unary factors
     def get_unary_heading(self, pose, measurement):
@@ -394,7 +385,8 @@ class FactorGraphNode(Node):
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
-        self.xyz = self.result.atPose3(X(self.key)).translation()
+        self.est_xyz = self.result.atPose3(X(self.key)).translation()
+        self.est_orientation = self.result.atPose3(X(self.key)).orientation()
         self.isam.update()
         self.isam.update()
         self.isam.update()
@@ -407,26 +399,66 @@ class FactorGraphNode(Node):
     ##################################################################
 
     # IMU -- odometry measurements for pre-integrated imu measurements
-    def imu_callback(self, msg: Imu):
-        if self.deployed:
-            self.q_imu.add_to_queue(msg)
+    def parse_imu_data(self, msg: Imu):
+        self.latest_imu_orientation_covariance = np.array(msg.orientation_covariance).reshape(3, 3)
+        # Convert quaternion to rotation matrix
+        quat = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
+        r = R.from_quat(quat)
+        self.angular_velocity = vector3(msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z)
+        self.linear_acceleration = vector3(msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z)
+        self.latest_imu_orientation_matrix = r.as_matrix()
+        self.latest_imu_factor_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
 
-        
-    # d
+    def imu_callback(self, msg: Imu):
+        self.imu_received = True
+        self.latest_imu_msg = msg
+        self.parse_imu_data(self.latest_imu_msg)
+
+    # depth -- to add depth unary factors to pose estimates
+    def parse_depth_data(self, msg: PoseWithCovarianceStamped):
+        self.latest_depth = msg.pose.pose.position.z
+        self.latest_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+
     def depth_callback(self, msg: PoseWithCovarianceStamped):
+        self.depth_received = True
         if self.deployed:
             self.q_depth.add_to_queue(msg)
-    
-    # gps (already in x,y from gps_odom.py)
+        else:
+            self.latest_depth_msg = msg
+            self.parse_depth_data(msg)
+
+    # gps -- to add gps unary factors to pose estimates
+    def parse_gps(self, msg: Odometry):
+        self.latest_gps_x = msg.pose.pose.position.x
+        self.latest_gps_y = msg.pose.pose.position.y
+        self.latest_gps_z = msg.pose.pose.position.z
+        # self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
+        #Plot
+        self.gps_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+
     def gps_callback(self, msg: Odometry):
+        self.gps_received = True
         if self.deployed:
             self.q_gps.add_to_queue(msg)
+        else:
+            self.latest_gps_msg = msg
+            self.parse_gps(msg)
    
+    # dvl -- to add dvl unary factors to velocity estimates
+    def parse_dvl(self, msg: TwistWithCovarianceStamped):
+        self.latest_dvl_vel_x = msg.twist.twist.linear.x
+        self.latest_dvl_vel_y = msg.twist.twist.linear.y
+        self.latest_dvl_vel_z = msg.twist.twist.linear.z
+        self.latest_dvl_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
 
-    # dvl for new odometry
     def dvl_callback(self, msg: TwistWithCovarianceStamped):
+        self.dvl_received = True
         if self.deployed:
             self.q_dvl.add_to_queue(msg)
+        else:
+            self.latest_dvl_msg = msg
+            self.parse_dvl(msg)
+
     
 
     ##################################################################
@@ -434,44 +466,50 @@ class FactorGraphNode(Node):
     ##################################################################
 
     def add_prior_callback(self, msg: Empty):
-            
-        self.deployed = True
 
-        # TODO: gather initial values for these measurements:
-        orientation_matrix = TODO # from the IMU at the beginning
-        translation = TODO # From GPS at the beginning
-        velocities = TODO # from the DVL
+        if self.gps_received and self.dvl_received and self.depth_received and self.imu_received:
+            # set deployed flag to true
+            self.deployed = True
 
-        # add X prior, V prior, and B prior, and attach to initial estimate nodes
+            # Initial values to be used in initial estimatepfjpj
+            orientation_matrix = self.latest_imu_orientation_matrix # from the IMU at the beginning
+            translation = vector3(self.latest_gps_x, self.latest_gps_y, self.latest_depth)
+            velocities = vector3(self.latest_dvl_vel_x, self.latest_dvl_vel_y, self.latest_dvl_vel_z)
 
-        # X: Pose3 prior -- Translation from GPS, orientation from IMU
-        poseKey = X(self.key)
-        pose_0 = self.HfromRT(orientation_matrix, translation)
-        noise = gtsam.noiseModel.Diagonal.Sigmas(
-        np.array([0.1, 0.1, 0.1, 0.3, 0.3, 0.3]))
-        self.graph.push_back(gtsam.PriorFactorPose3(poseKey, pose_0, noise))
-        self.initialEstimate.insert(poseKey, pose_0)
+            # add X prior, V prior, and B prior, and attach to initial estimate nodes
 
-        # B: Bias prior
-        biasKey = B(self.key)
-        biasnoise = gtsam.noiseModel.Isotropic.Sigma(6, 0.1)
-        biasprior = gtsam.PriorFactorConstantBias(biasKey, gtsam.imuBias.ConstantBias(),biasnoise)
-        self.graph.push_back(biasprior)
-        self.initialEstimate.insert(biasKey, gtsam.imuBias.ConstantBias())
+            # X: Pose3 prior -- Translation from GPS, orientation from IMU
+            poseKey = X(self.key)
+            pose_0 = self.HfromRT(orientation_matrix, translation)
+            noise = gtsam.noiseModel.Diagonal.Sigmas(np.array([0.1, 0.1, 0.1, 0.3, 0.3, 0.3]))
+            self.graph.push_back(gtsam.PriorFactorPose3(poseKey, pose_0, noise))
+            self.initialEstimate.insert(poseKey, pose_0)
+            self.poseKey_to_time[poseKey] = self.latest_imu_factor_time
 
+            # B: Bias prior
+            biasKey = B(self.key)
+            biasnoise = gtsam.noiseModel.Isotropic.Sigma(6, 0.1)
+            biasprior = gtsam.PriorFactorConstantBias(biasKey, gtsam.imuBias.ConstantBias(),biasnoise)
+            self.graph.push_back(biasprior)
+            self.initialEstimate.insert(biasKey, gtsam.imuBias.ConstantBias())
+            self.biasKey_to_time[biasKey] = self.latest_imu_factor_time
 
-        # V: Velocity prior -- from DVL
-        velKey = V(self.key)
-        velnoise = gtsam.noiseModel.Isotropic.Sigma(3, 0.1)
-        n_velocity = vector3(velocities.x, velocities.y, velocities.z)
-        velprior = gtsam.PriorFactorVector(velKey, n_velocity, velnoise)
-        self.graph.push_back(velprior)
-        self.initialEstimate.insert(velKey, n_velocity)
+            # V: Velocity prior -- from DVL
+            velKey = V(self.key)
+            self.velnoise = gtsam.noiseModel.Isotropic.Sigma(3, 0.1)
+            velprior = gtsam.PriorFactorVector(velKey, velocities, self.velnoise)
+            self.graph.push_back(velprior)
+            self.initialEstimate.insert(velKey, velocities)
+            self.velKey_to_time[velKey] = self.latest_imu_factor_time
 
-                
-        self.update()
-        self.publish_state_est()
-         
+            # first factor graph update
+            self.update()
+            self.publish_state_est()
+        else:
+            # print 
+            self.get_logger().warning("Have not received all necessary sensor inputs to begin")
+            self.get_logger().warning(f"IMU: {self.imu_received}\nGPS: {self.gps_received}\nDVL: {self.dvl_received}\nDepth: {self.depth_received}")
+
         
 
 
@@ -487,146 +525,125 @@ class FactorGraphNode(Node):
             # increment key  
             self.key += 1
         
-            #####################################################################
-            # TODO: Time sort and tf2 below
-
-            # Time sort
-
-            #     ...
-            #     ...
-            #     ...
-            #     ...
-            #     ...
-            #     ...
 
             time_stamp_to_query = self.get_clock().now().to_msg()
 
-            # Tf2 query (should get IMU measuredLinAcc & measuredAngOmega, DVL xyz velocities, GPS x-y coordinates)
+            # Tf2 query (need to query tranformations at the the current time, and need to transform the below imu_vel, 
+            # imu_pose, vel3D, gps_xyz to the world frame in terms of the shared origin between all the agents)
 
             #     ...
+            #     
+            #     
+            #     
             #     ...
+            #     
+            #     
+            #     
             #     ...
+            #     
+            #     
+            #     
             #     ...
+            #     
+            #     
+            #     
             #     ...
-            #     ...
+
 
             #####################################################################
 
             # Time sorted IMU linear acceleration and angualr velocity
-            self.measuredLinAcc = TODO
-            self.measuredAngOmega = TODO
+            self.measuredLinAcc = self.linear_acceleration
+            self.measuredAngOmega = self.angular_velocity
             self.p_imu.integrateMeasurement(self.measuredLinAcc, self.measuredAngOmega, self.factor_graph_period)
             self.predicted_state = self.runner.predict(self.p_imu, self.actualBias)
             
-
             # Time sorted DVL velocity (with x, y, and z)
             self.imu_vel = self.predicted_state.velocity()
 
             #  Integrate from IMU?
             self.imu_pose = self.predicted_state.pose()
             
-
             # add new bias between factor and bias node
             bias_factor = gtsam.BetweenFactorConstantBias(B(self.key - 1) , B(self.key), gtsam.imuBias.ConstantBias(), self.bias_covariance)
             self.graph.add(bias_factor)
             self.initialEstimate.insert(B(self.key), gtsam.imuBias.ConstantBias())
 
-
             # add imu factors
             imu_factor = gtsam.ImuFactor(X(self.key - 1), V(self.key - 1), X(self.key), V(self.key), B(self.key), self.p_imu)
             self.graph.add(imu_factor)
            
-
             # add X node
             self.initialEstimate.insert(X(self.key), self.imu_pose)
+            self.poseKey_to_time[X(self.key)] = self.latest_imu_factor_time
 
             # add V node
             self.initialEstimate.insert(V(self.key), self.imu_vel)
+            self.poseKey_to_time[V(self.key)] = self.latest_imu_factor_time
 
+
+            # wait till at least 2 new X/V nodes are added to the graph
 
             if self.key > 2:
-                pass
-
-                # TODO: Add unary factors
 
                 # Add DVL unary factor to Velocity V Node, if there exists a time appropriate measurement
 
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-                
+                velKey_to_add_to, msg_to_add = self.q_gps.get_factor_info(V(self.key), self.velKey_to_time)
+                if velKey_to_add_to is not None and msg_to_add is not None:
+                    self.parse_dvl(msg_to_add)
+                    vel_3D = vector3(self.latest_dvl_vel_x, self.latest_dvl_vel_y, self.latest_dvl_vel_z)
+                    self.graph.add(gtsam.CustomFactor(self.velnoise, [V(velKey_to_add_to)], partial(self.error_dvl, [vel_3D])))
 
                 # Add GPS unary factor to Pose3D X Node, if there exists a time appropriate measurement
-
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-
-
-                # Add Heading unary factor to Pose3D X Node, if there exists a time appropriate measurement
-
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-                #     ...
-
+                poseKey_to_add_to, msg_to_add = self.q_gps.get_factor_info(X(self.key), self.poseKey_to_time)
+                if poseKey_to_add_to is not None and msg_to_add is not None:
+                    self.parse_gps(msg_to_add)
+                    gps_xyz = vector3(self.latest_gps_x, self.latest_gps_y, self.latest_gps_z)
+                    gps_meas = gtsam.Point3(self.latest_gps_x, self.latest_gps_y, self.latest_gps_z)
+                    self.graph.add(gtsam.CustomFactor(self.GPS_NOISE, [X(poseKey_to_add_to)], partial(self.error_gps, gps_meas)))
 
                 # add Depth unary factor to Pose3D X Node, if there exists a time appropriate measurement
+                poseKey_to_add_to, msg_to_add = self.q_depth.get_factor_info(int(X(self.key)), self.poseKey_to_time)
+                if poseKey_to_add_to is not None and msg_to_add is not None:
+                    self.parse_depth_data(msg_to_add)
+                    if(self.latest_depth > -0.25):
+                        self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [X(poseKey_to_add_to)], partial(self.error_depth, [np.array([self.latest_depth])])))
 
-                #     ...
-                #     ...
+                # TODO: ??? Add Heading unary factor to Pose3D X Node, if there exists a time appropriate measurement
+                #     Since we are already adding imu information to the graph, why also add heading?
                 #     ...
                 #     ...
                 #     ...
                 #     ...
 
-
+    
 
             self.update()
             self.publish_state_est()
-
-
 
 
     # PUBLISH THE DATA
 
     def publish_state_est(self):
         
-        # # Set the orientation in the message
-        r = R.from_matrix(self.orientation_matrix)
+        # Set the orientation in the message
+        r = R.from_matrix(self.est_orientation)
         quat = r.as_quat()
         self.state_est_msg.pose.pose.orientation.x = quat[0]
         self.state_est_msg.pose.pose.orientation.y = quat[1]
         self.state_est_msg.pose.pose.orientation.z = quat[2]
         self.state_est_msg.pose.pose.orientation.w = quat[3]
 
-        # # Set the position in the message
+        # Set the position in the message
         
         # this is the only gtsam output right now, orientation and depth are raw from the sensors
-        self.state_est_msg.pose.pose.position.x = self.xyz[0]
-        self.state_est_msg.pose.pose.position.y = self.xyz[1]
-        print("vehicle status xyz[0]: ", self.xyz[0])
-
-        print("vehicle status x: ", self.state_est_msg.pose.pose.position.x)
-
-
-        self.state_est_msg.pose.pose.position.z = self.position[2]
-
+        self.state_est_msg.pose.pose.position.x = self.est_xyz[0]
+        self.state_est_msg.pose.pose.position.y = self.est_xyz[1]
+        self.state_est_msg.pose.pose.position.z = self.est_xyz[2]
 
         # Publish the vehicle status
-        print("PUBLISHING NEW FG")
         self.state_est_pub.publish(self.state_est_msg)
 
-
-# x = result.atPose3(poseKey).translation()[0]
 
 
 def main(args=None):
