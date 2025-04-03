@@ -83,8 +83,8 @@ public:
     // smoothed_output_subscription_ =
     //     this->create_subscription<nav_msgs::msg::Odometry>("smoothed_output", 
     //         qos,std::bind(&EmergencyProtocols::factor_graph_callback, this, _1));
-    vehicle_status_moos_subscription_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>("vehicle_status", 
-            qos, std::bind(&EmergencyProtocols::moos_status_callback, this, _1));
+    // vehicle_status_moos_subscription_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>("vehicle_status", 
+    //         qos, std::bind(&EmergencyProtocols::moos_status_callback, this, _1));
 
 
     command_subscription_ =
@@ -412,13 +412,13 @@ void leak_callback(const frost_interfaces::msg::LeakStatus &msg){
 //    a long time and never getting closer
 //        * surfac, return to home
 
-void moos_status_callback(const frost_interfaces::msg::VehicleStatus &msg){
-  if(this->get_parameter("monitor_moos").as_bool()){
-    // TODO: handle MOOS problems here
+// void moos_status_callback(const frost_interfaces::msg::VehicleStatus &msg){
+//   if(this->get_parameter("monitor_moos").as_bool()){
+//     // TODO: handle MOOS problems here
 
 
-  }
-}
+//   }
+// }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -473,7 +473,7 @@ void moos_status_callback(const frost_interfaces::msg::VehicleStatus &msg){
   rclcpp::Subscription<frost_interfaces::msg::LeakStatus>::SharedPtr leak_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::BatteryStatus>::SharedPtr battery_subscription_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr smoothed_output_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
+//   rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr command_subscription_;
 
 
