@@ -122,9 +122,9 @@ public:
 
 
     surface_command_ = frost_interfaces::msg::UCommand();
-    surface_command_.fin[0] = 0;
-    surface_command_.fin[1] = 30;
-    surface_command_.fin[2] = -30;
+    surface_command_.fin[0] = 0 * this->get_parameter("fin_0_direction").as_int() + this->get_parameter("top_fin_offset").as_double();
+    surface_command_.fin[1] = -30 * this->get_parameter("fin_1_direction").as_int() + this->get_parameter("right_fin_offset").as_double();
+    surface_command_.fin[2] = 30 * this->get_parameter("fin_2_direction").as_int() + this->get_parameter("left_fin_offset").as_double() ;
     surface_command_.thruster = 0;
 
     /**

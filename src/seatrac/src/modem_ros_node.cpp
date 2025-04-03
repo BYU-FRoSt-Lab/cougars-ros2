@@ -57,8 +57,9 @@ public:
 
     rec_pub_ =
         this->create_publisher<seatrac_interfaces::msg::ModemRec>("modem_rec", 10);
-    status_pub_ =
-        this->create_publisher<seatrac_interfaces::msg::ModemStatus>("modem_status", 10);
+
+    
+    status_pub_ = this->create_publisher<seatrac_interfaces::msg::ModemStatus>("modem_status", 10);
     cmd_update_pub_ =
         this->create_publisher<seatrac_interfaces::msg::ModemCmdUpdate>("modem_cmd_update", 10);
     

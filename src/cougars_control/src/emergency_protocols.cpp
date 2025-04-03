@@ -8,11 +8,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-#include "frost_interfaces/msg/battery_status.hpp"
-#include "frost_interfaces/msg/leak_status.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
 #include "std_msgs/msg/int32.hpp"
+#include <sensor_msgs/msg/fluid_pressure.hpp>
+#include <sensor_msgs/msg/battery_state.hpp>
+
+
 
 
 using namespace std::chrono_literals;
@@ -26,7 +28,8 @@ auto qos = rclcpp::QoS(
 
 
 static double depth_val;
-
+static bool back_near_surface;
+static bool surfacing_then_disarm;
 class EmergencyProtocols : public rclcpp::Node
 {
 
@@ -63,7 +66,7 @@ public:
 
 
     // safety parameters (voltage, current, depth, etc.)
-    this->declare_parameter("deepest_safe_depth", -0.7); // meters
+    this->declare_parameter("deepest_safe_depth", -0.5); // meters
     this->declare_parameter("critical_voltage", 14.0); // volts
     //  TODO: add more safety parameters as needed
 
@@ -74,12 +77,9 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("depth_data", 
-            qos, std::bind(&EmergencyProtocols::depth_callback, this, _1));
-    leak_subscription_ = this->create_subscription<frost_interfaces::msg::LeakStatus>("leak/data", 
-            qos, std::bind(&EmergencyProtocols::leak_callback, this, _1));
-    battery_subscription_ = this->create_subscription<frost_interfaces::msg::BatteryStatus>("battery/data", 
-            qos, std::bind(&EmergencyProtocols::battery_callback, this, _1));
+    depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("depth_data", qos, std::bind(&EmergencyProtocols::depth_callback, this, _1));
+    leak_subscription_ = this->create_subscription<sensor_msgs::msg::FluidPressure>("leak/data", 10, std::bind(&EmergencyProtocols::leak_callback, this, _1));
+    battery_subscription_ = this->create_subscription<sensor_msgs::msg::BatteryState>("battery/data", 10, std::bind(&EmergencyProtocols::battery_callback, this, _1));
     // smoothed_output_subscription_ =
     //     this->create_subscription<nav_msgs::msg::Odometry>("smoothed_output", 
     //         qos,std::bind(&EmergencyProtocols::factor_graph_callback, this, _1));
@@ -99,6 +99,8 @@ public:
     this->init = false;
 
     depth_val = 1.0;
+    back_near_surface = false;
+    surfacing_then_disarm = false;
 
 
 
@@ -111,6 +113,10 @@ public:
     monitor_timer_ = this->create_wall_timer(
         std::chrono::milliseconds(5000),
         std::bind(&EmergencyProtocols::monitor_timer_callback, this));
+
+    surface_waiter_timer_ = this->create_wall_timer(
+          std::chrono::milliseconds(5000),
+          std::bind(&EmergencyProtocols::surface_waiter_timer_callback_, this));
     handle_factor_graph_ = this->create_wall_timer(
         std::chrono::milliseconds(5000),
         std::bind(&EmergencyProtocols::handle_factor_graph_callback, this));
@@ -142,7 +148,9 @@ public:
                               {"leak/data", true}, 
                               {"depth_data", true},
                                 {"modem_status", true},
-                                {"dvl/dead_reckoning", true}});
+                                {"dvl/dead_reckoning", true},
+                                {"gps_odom", true},
+                                {"extended_fix", true}});
   
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,21 +212,28 @@ public:
 
 void surface(){
   if (this->init){
+    
     RCLCPP_INFO(this->get_logger(), "Surface");
-    // this->okay = false;
-    // surface_fin_override_request->data = true; // true to override
-    // send_set_bool_req(surface_fin_override_request, surface_fin_override_client);
+    this->okay = false;
+    surface_fin_override_request->data = true; // true to override
+    send_set_bool_req(surface_fin_override_request, surface_fin_override_client);
   } 
 }
 
 void disarm(){
   if (this->init){
     RCLCPP_INFO(this->get_logger(), "Disarm");
-    // this->okay = false;
-    // arm_request->data = false; // make false to diarm the thruster
-    // send_set_bool_req(arm_request, arm_thruster_client);
+    this->okay = false;
+    arm_request->data = false; // make false to diarm the thruster
+    send_set_bool_req(arm_request, arm_thruster_client);
   }
 }
+
+void surface_then_disarm(){
+      surfacing_then_disarm = true;
+      surface();
+}
+
   
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,26 +248,26 @@ bool update_publishers(){
 
   bool all_topics_have_publishers = true;
 
-  // // look at all topics of interest
-  // for (auto itr0 : topics_publishing){
+  // look at all topics of interest
+  for (auto itr0 : topics_publishing){
 
-  //   bool topic_has_publishers = false;
+    bool topic_has_publishers = false;
 
-  //   // see if everything in topics_publishing is indeed being published to
-  //   for(auto itr : get_topic_names_and_types()){
-  //     if(itr.first.find(itr0.first) != std::string::npos){
-  //       if (count_publishers(itr.first) > 0){
-  //         topic_has_publishers = true;
-  //       }
-  //     }
-  //   }
-  //   topics_publishing[itr0.first.c_str()] = topic_has_publishers;
-  //   if (!topic_has_publishers){
-  //     all_topics_have_publishers = false;
-  //     this->okay = false;
-  //     RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "%s has no publishers!", itr0.first.c_str());
-  //   }
-  // }
+    // see if everything in topics_publishing is indeed being published to
+    for(auto itr : get_topic_names_and_types()){
+      if(itr.first.find(itr0.first) != std::string::npos){
+        if (count_publishers(itr.first) > 0){
+          topic_has_publishers = true;
+        }
+      }
+    }
+    topics_publishing[itr0.first.c_str()] = topic_has_publishers;
+    if (!topic_has_publishers){
+      all_topics_have_publishers = false;
+      this->okay = false;
+      RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "%s has no publishers!", itr0.first.c_str());
+    }
+  }
 
   return all_topics_have_publishers;
 
@@ -277,9 +292,7 @@ bool update_publishers(){
         this->okay = false;
         // handle topics 
         if (!topics_publishing["modem_status"]){
-          surface();
-          while(depth_val < -0.1);
-          disarm();
+          surface_then_disarm();
         }
       }
     }
@@ -294,7 +307,15 @@ bool update_publishers(){
 
 
   void command_callback(const frost_interfaces::msg::UCommand &msg) {
-    this->init = true;
+      this->init = true;
+
+  }
+
+  void surface_waiter_timer_callback_(){
+
+    if(surfacing_then_disarm && back_near_surface){
+      disarm();
+    }
   }
 
 
@@ -333,11 +354,16 @@ void depth_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &msg){
   if (this->get_parameter("monitor_depth").as_bool()){
     depth_val = msg.pose.pose.position.z;
 
+    if(depth_val > -0.1){
+      back_near_surface = true;
+    }
+
     // RCLCPP_INFO(this->get_logger(), "%f\n" , depth_val);
 
     // if the current depth is too deep, surface
     if (depth_val < this->get_parameter("deepest_safe_depth").as_double()){
-        surface();
+        RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to leak");
+        surface_then_disarm();
     }
 
     // TODO: put any other cases we may deduce from msg
@@ -354,17 +380,21 @@ void depth_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &msg){
 //  Requests to be sent:
 //      * disarm thruster 
 
-void battery_callback(const frost_interfaces::msg::BatteryStatus &msg){
+void battery_callback(const sensor_msgs::msg::BatteryState &msg){
 
   if (this->get_parameter("monitor_low_battery").as_bool()){
     double curr_volt = msg.voltage;
     if (curr_volt < this->get_parameter("critical_voltage").as_double()){
-      disarm();
+
+      RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to voltage");
+      surface_then_disarm();
     }
 
     // TODO: put any other cases we may deduce from msg
     // ... 
     // ...
+
+
   }
 }
 
@@ -376,18 +406,18 @@ void battery_callback(const frost_interfaces::msg::BatteryStatus &msg){
 //  Requests to be sent:
 //      * disarm thruster 
 
-void leak_callback(const frost_interfaces::msg::LeakStatus &msg){
+void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
 
   if (this->get_parameter("monitor_leak").as_bool()){
-    if (msg.leak){
-      disarm();
+
+    if (msg.fluid_pressure > 0.0){
       RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to leak");
-      
+      surface_then_disarm();
+
     }
 
-    // TODO: put any other cases we may deduce from msg
-    // ... 
-    // ...
+    
+      
 
   }
 }
@@ -486,8 +516,8 @@ void leak_callback(const frost_interfaces::msg::LeakStatus &msg){
 /////////////////////////////// SUBSCRIPTION/TIMER DECLARATIONS //////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::LeakStatus>::SharedPtr leak_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::BatteryStatus>::SharedPtr battery_subscription_;
+  rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr leak_subscription_;
+  rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscription_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr smoothed_output_subscription_;
 //   rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr command_subscription_;
@@ -499,6 +529,7 @@ void leak_callback(const frost_interfaces::msg::LeakStatus &msg){
 
   // timers 
   rclcpp::TimerBase::SharedPtr monitor_timer_;
+  rclcpp::TimerBase::SharedPtr surface_waiter_timer_;
   rclcpp::TimerBase::SharedPtr handle_factor_graph_;
   int counter;
 
