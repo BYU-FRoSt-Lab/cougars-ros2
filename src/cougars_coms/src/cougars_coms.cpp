@@ -17,6 +17,10 @@ using namespace cougars_coms;
 
 class ComsNode : public rclcpp::Node {
 public:
+
+    COUG_STATUS_CODE status_code = READY;
+
+
     ComsNode() : Node("cougars_coms") {
 
         this->declare_parameter<int>("base_station_beacon_id", 15);
@@ -41,6 +45,9 @@ public:
             case EMPTY: break;
             case EMERGENCY_KILL: {
                 kill_thruster();
+            } break;
+            case REQUEST_STATUS: {
+                send_vehicle_status();
             } break;
         }
     }
@@ -68,11 +75,18 @@ public:
                     ConfirmEmergencyKill msg;
                     msg.success = response->success;
                     this->send_acoustic_message(base_station_beacon_id_, 1, (uint8_t*)&msg);
+                    status_code = EMERGENCY_STOPPED;
                 } catch (const std::exception &e) {
                     RCLCPP_ERROR(this->get_logger(), "Error while trying to deactivate thruster: %s", e.what());
                 }
             }
         );
+    }
+
+    void send_vehicle_status() {
+        VehicleStatus status;
+        status.status_code = status_code;
+        this->send_acoustic_message(base_station_beacon_id_, sizeof(status), (uint8_t*)&status);
     }
 
     void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
