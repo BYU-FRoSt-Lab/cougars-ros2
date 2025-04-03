@@ -12,6 +12,8 @@
 #include "frost_interfaces/msg/leak_status.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "frost_interfaces/msg/vehicle_status.hpp"
+#include "frost_interfaces/msg/u_command.hpp"
+#include "std_msgs/msg/int32.hpp"
 
 
 using namespace std::chrono_literals;
@@ -88,7 +90,7 @@ public:
     command_subscription_ =
     this->create_subscription<frost_interfaces::msg::UCommand>(
         "controls/command", 10,
-        std::bind(&CougKinematics::command_callback, this, _1));
+        std::bind(&EmergencyProtocols::command_callback, this, _1));
 
 
     status_publisher_ = this->create_publisher<std_msgs::msg::Int32>("safety_status", 10);
@@ -192,13 +194,15 @@ public:
 
 void surface(){
   if (this->init){
+    this->okay = false;
     surface_fin_override_request->data = true; // true to override
     send_set_bool_req(surface_fin_override_request, surface_fin_override_client);
   } 
 }
 
-void disarm_thruster(){
+void disarm(){
   if (this->init){
+    this->okay = false;
     arm_request->data = false; // make false to diarm the thruster
     send_set_bool_req(arm_request, arm_thruster_client);
   }
@@ -213,7 +217,7 @@ void disarm_thruster(){
 // monitor timer helpers
 
 
-void update_publishers(){
+bool update_publishers(){
 
   bool all_topics_have_publishers = true;
 
@@ -233,7 +237,7 @@ void update_publishers(){
     topics_publishing[itr0.first.c_str()] = topic_has_publishers;
     if (!topic_has_publishers){
       all_topics_have_publishers = false;
-      ok = false;
+      this->okay = false;
       RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "%s has no publishers!", itr0.first.c_str());
     }
   }
@@ -317,7 +321,6 @@ void depth_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &msg){
 
     // if the current depth is too deep, surface
     if (curr_depth > this->get_parameter("max_safe_depth").as_double()){
-        this->okay = false;
         surface();
     }
 
@@ -340,7 +343,6 @@ void battery_callback(const frost_interfaces::msg::BatteryStatus &msg){
   if (this->get_parameter("monitor_low_battery").as_bool()){
     double curr_volt = msg.voltage;
     if (curr_volt < this->get_parameter("critical_voltage").as_double()){
-      this->okay = false;
       disarm();
     }
 
@@ -362,7 +364,6 @@ void leak_callback(const frost_interfaces::msg::LeakStatus &msg){
 
   if (this->get_parameter("monitor_leak").as_bool()){
     if (msg.leak){
-      ok = false;
       disarm();
       RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to leak");
       
