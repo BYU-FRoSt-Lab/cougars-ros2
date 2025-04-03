@@ -11,7 +11,6 @@
 #include "frost_interfaces/msg/battery_status.hpp"
 #include "frost_interfaces/msg/leak_status.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "frost_interfaces/msg/vehicle_status.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
 #include "std_msgs/msg/int32.hpp"
 
