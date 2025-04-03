@@ -19,6 +19,11 @@ uint8 msg_type         # AMSGTYPE_E. Specifies how the remote beacon should resp
 uint8 packet_len       # optional packet length for data send commands (0 to 30)
 uint8[30] packet_data  # optional packet data array for data send commands
 
+bool insert_timestamp  # for some applications, it may be usefull to include a timestamp with the message taken at
+                       # at the last possible moment before it sends. If true, the timestamp will be written as an 
+                       # unsigned 4 byte/32 bit integer to the 2nd - 5th bytes in packet_data.
+                       # (the first byte is reserved for the message type)
+
 uint8 nav_query_flags  # NAV_QUERY_T. Bit mask indicating which fields the NAV response should return.
                        # Used only with the NAV protocol
 
