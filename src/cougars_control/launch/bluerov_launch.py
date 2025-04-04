@@ -8,6 +8,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 
 import os
+import yaml
 
 def generate_launch_description():
     '''
@@ -20,6 +21,9 @@ def generate_launch_description():
     GPS = "false"  # Default to 'false'
     verbose = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    # namespace = ''
+    with open(param_file, 'r') as f:
+        vehicle_params = yaml.safe_load(f)
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):
@@ -45,11 +49,11 @@ def generate_launch_description():
     
     launch_actions = []
 
-    if sim == "false":
-        sensors = launch.actions.IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(package_dir, "sensors_launch.py"))
-        )
-        launch_actions.append(sensors)
+    # if sim == "false":
+    #     sensors = launch.actions.IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource(os.path.join(package_dir, "sensors_launch.py"))
+    #     )
+    #     launch_actions.append(sensors)
 
     #TODO just make a parameter in yaml for moos GPS Only
     # if GPS == "true":
@@ -78,13 +82,13 @@ def generate_launch_description():
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
         ),   
-        launch_ros.actions.Node(
-            package='cougars_localization',
-            executable='factor_graph.py',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_localization',
+        #     executable='factor_graph.py',
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        #     output=output,
+        # ),
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem_pinger',
@@ -99,6 +103,52 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
+        # Setup the USBL modem
+        launch_ros.actions.Node(
+            package='seatrac',
+            executable='modem',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
+        # Setup the GPS
+        launch_ros.actions.ComposableNodeContainer(
+            package='rclcpp_components',
+            executable='component_container',
+            name='fix_and_odometry_container',
+            namespace=namespace,
+            composable_node_descriptions=[
+                launch_ros.descriptions.ComposableNode(
+                    package='gpsd_client',
+                    plugin='gpsd_client::GPSDClientComponent',
+                    name='gpsd_client',
+                    namespace=namespace,
+                    parameters=[
+                        vehicle_params[namespace]['gpsd_client']['ros__parameters'],
+                        {'log_level': 'warn'}  # Add log level here
+                    ],
+                    extra_arguments=[{'use_intra_process_comms': True}]
+                ),
+                launch_ros.descriptions.ComposableNode(
+                    package='gps_tools',
+                    plugin='gps_tools::UtmOdometryComponent',
+                    namespace=namespace,
+                    name='utm_gpsfix_to_odometry_node',
+                    parameters=[
+                        {'log_level': 'warn'}  # Add log level here
+                    ],
+                ),
+            ],
+            output=output,
+            arguments=['--ros-args', '--log-level', 'WARN'],
+        ),
+        launch_ros.actions.Node(
+            package='dvl_a50', 
+            executable='dvl_a50_sensor', 
+            parameters=[param_file],
+            namespace=namespace,
+        ),
+
     ])
 
     return launch.LaunchDescription(launch_actions)
