@@ -103,7 +103,6 @@ private:
                     rosidl_generator_traits::name<MsgT>(),
                     time_stamp
                 );
-                // writer_->write(serialized_msg, topic_name, rosidl_generator_traits::name<MsgT>(), time_stamp);
             }
         };
 
