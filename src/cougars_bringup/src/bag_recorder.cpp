@@ -64,7 +64,6 @@ public:
         this->declare_parameter<bool>("system", true);
         this->declare_parameter<bool>("processed", true);
         this->declare_parameter<bool>("controls", true);
-        this->declare_parameter<std::string>("mission_file_path", "");
 
         bool sensors, system, processed, controls;
         this->get_parameter("sensors", sensors);
@@ -89,7 +88,7 @@ public:
 
         if (system){
             // System
-            subscribe_to_topic<frost_interfaces::msg::SystemStatus>("safety_status");
+            subscribe_to_topic<std_msgs::msg::Int32>("saftey_status");
         }
 
 
@@ -99,7 +98,6 @@ public:
             subscribe_to_topic<geometry_msgs::msg::PoseWithCovarianceStamped>("dvl/dr_global");
             subscribe_to_topic<geometry_msgs::msg::TwistWithCovarianceStamped>("dvl/velocity");
             subscribe_to_topic<nav_msgs::msg::Odometry>("gps/odom");
-            subscribe_to_topic<nav_msgs::msg::Odometry>("smoothed_output");
             subscribe_to_topic<sensor_msgs::msg::Imu>("modem_imu");
         }
         
