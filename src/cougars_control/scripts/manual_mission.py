@@ -70,13 +70,14 @@ class ManualMission(Node):
         :param command_timer_period: The period at which the state machine updates the desired values. The default value is 0.5 seconds.
         '''
 
-        self.declare_parameter('states_config_path', '')  
+        self.declare_parameter('states_config_path', '')
         '''
         :param states file path 
         '''
-        self.load_states()
 
-        # TODO: Add delay parameter if we want the system to stop before stopping the bag or to not stop the bag at all
+        
+        self.states = []  # Initialize as an empty list
+        self.states_list = []
 
         # Create the publishers
         self.depth_publisher = self.create_publisher(
@@ -126,10 +127,9 @@ class ManualMission(Node):
         '''
 
         # Create the system services subscriber and publisher
-        # Initialize the QoS profile
         qos_reliable_profile = QoSProfile(depth=5)
-        qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE  # Reliable publisher
-        qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL  # Transient local durability
+        qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
+        qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
         # TODO: Document
         self.system_status_pub = self.create_publisher(SystemControl, 'system/status', qos_reliable_profile)
@@ -143,20 +143,18 @@ class ManualMission(Node):
         json_path = self.get_parameter('states_config_path').value
         try:
             with open(json_path) as f:
-                self.states = json.load(f)['states']
+                data = json.load(f)
+                self.states = data.get('states', [])  # Load the states list
                 self.get_logger().info(f"Loaded {len(self.states)} states")
         except Exception as e:
             self.get_logger().error(f"Failed to load JSON: {e}")
-            self.states = {}
+            self.states = []
 
-        self.states_list = list(self.states.values())  # If using original dict format
+        self.states_list = self.states  # states_list is now a direct copy of self.states
 
 
     def get_parameters(self):
-        
-        self.states = self.get_parameter('states').value
-        self.load_states()
-        print(self.states_list)
+        self.load_states()  # Load states from JSON file
 
         self.destroy_timer(self.timer)
         self.period = self.get_parameter("command_timer_period").get_parameter_value().double_value
@@ -192,7 +190,6 @@ class ManualMission(Node):
             self.counter = 0
             self.state_index = 0
             self.get_logger().info('Manual Mission Stopped')
-
 
     def listener_callback(self, request, response):
         # TODO: This will be deprecated soon
@@ -240,35 +237,42 @@ class ManualMission(Node):
         speed_msg = DesiredSpeed()
 
 
+
+        # TODO actuallly start a timer instead of just counting ticks!!
         # Iterate through the states
         if self.states_list and self.started:
-            current_state = self.states_list[self.state_index]
+            if self.state_index < len(self.states_list):  # Technically this is redundant
+                current_state = self.states_list[self.state_index]
             
-            if self.counter < current_state['time_seconds']:
-                depth_msg.desired_depth = current_state['depth']
-                heading_msg.desired_heading = current_state['heading']
-                speed_msg.desired_speed = current_state['speed']
+                if self.counter < current_state['time_seconds']:
+                    depth_msg.desired_depth = current_state['depth']
+                    heading_msg.desired_heading = current_state['heading']
+                    speed_msg.desired_speed = current_state['speed']
 
-                self.counter += self.period
+                    self.counter += self.period
+                else:
+                    # State time is up, move to the next state
+                    self.state_index += 1   # DO NOT REMOVE THIS LINE OR BAD THINGS WILL HAPPEN :)
+                    self.counter = 0.0  # Reset the counter for the next state 
+
+                    # When completed all the states
+                    if self.state_index == len(self.states_list):
+                        # Reset the variables - This might be redundant because we have a subscriber
+                        self.started = False
+                        self.counter = 0.0
+                        self.state_index = 0
+
+                        msg = SystemControl()
+                        msg.header.stamp = self.get_clock().now().to_msg()
+                        msg.start.data = False
+                        msg.rosbag_flag.data = False
+
+                        self.system_status_pub.publish(msg)
+
             else:
-                # State time is up, move to the next state
-                self.state_index += 1   # DO NOT REMOVE THIS LINE OR BAD THINGS WILL HAPPEN :)
-                self.counter = 0.0  # Reset the counter for the next state 
-
-                # When completed all the states
-                if self.state_index == len(self.states_list):
-                    # Reset the variables - This might be redundant because we have a subscriber
-                    self.started = False
-                    self.counter = 0.0
-                    self.state_index = 0
-
-                    msg = SystemControl()
-                    msg.header.stamp = self.get_clock().now().to_msg()
-                    msg.start.data = False
-                    msg.rosbag_flag.data = False
-
-                    self.system_status_pub.publish(msg)
-
+                depth_msg.desired_depth = 0.0
+                heading_msg.desired_heading = 0.0
+                speed_msg.desired_speed = 0.0
         else:
             depth_msg.desired_depth = 0.0
             heading_msg.desired_heading = 0.0
