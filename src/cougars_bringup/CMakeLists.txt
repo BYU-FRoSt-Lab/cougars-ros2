@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(frost_interfaces)
+project(cougars_bringup)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,28 +7,26 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
-
+find_package(rclcpp REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(dvl_msgs REQUIRED)
+find_package(gps_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(frost_interfaces REQUIRED)
+find_package(seatrac_interfaces REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/BatteryStatus.msg"
-  "msg/DesiredDepth.msg"
-  "msg/DesiredHeading.msg"
-  "msg/DesiredSpeed.msg"
-  "msg/LeakStatus.msg"
-  "msg/UCommand.msg"
-  "srv/EmergencyStop.srv"
-  "msg/ControlDebug.msg"
-  "msg/ControlsDebug.msg"
-  "msg/SystemControl.msg"
-  DEPENDENCIES std_msgs
-  DEPENDENCIES nav_msgs
-)
+add_executable(bag_recorder src/bag_recorder.cpp)
+ament_target_dependencies(bag_recorder rclcpp std_msgs frost_interfaces sensor_msgs dvl_msgs seatrac_interfaces gps_msgs nav_msgs rosbag2_cpp)
+
+target_link_libraries(bag_recorder)
+
+# Install executables
+install(TARGETS
+  bag_recorder
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -41,5 +39,8 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+#Install Launch file
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()
