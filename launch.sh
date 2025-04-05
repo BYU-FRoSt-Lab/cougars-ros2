@@ -36,28 +36,6 @@ echo -e "\033[0m\033[36m#\033[0m BYU FROST LAB - CONFIGURABLE UNDERWATER GROUP O
 echo -e "\033[0m\033[36m######################################################################\033[0m"
 echo ""
 
-# Quick fix for daemon error (TODO: find a better solution)
-source ~/ros2_ws/install/setup.bash
-ros2 daemon stop
-ros2 daemon start
-sleep 3
-
-echo ""
-
-if [ "$(uname -m)" == "aarch64" ]; then
-  # Start the strobe light and Teensy board
-  bash ~/gpio/strobe.sh on
-  bash ~/gpio/power.sh on
-
-  # Test for Teensy board connection
-  if [ -z "$(tycmd list | grep Teensy)" ]; then
-      printError "No Teensy boards avaliable to connect to"
-      exit 1
-  fi
-
-  echo ""
-fi
-
 # Parse options
 SIM_PARAM="false" # Default value for sim
 VERBOSE="false"
@@ -86,11 +64,35 @@ while getopts "svgf" opt; do
   esac
 done
 shift $((OPTIND - 1)) # Shift positional arguments
+
+
+source ~/ros2_ws/install/setup.bash
+
+echo ""
+
+if [ "$(uname -m)" == "aarch64" ]; then
+  # Quick fix for daemon error (TODO: find a better solution)
+  ros2 daemon stop
+  ros2 daemon start
+  sleep 3
+  # Start the strobe light and Teensy board
+  bash ~/gpio/strobe.sh on
+  bash ~/gpio/power.sh on
+
+  # Test for Teensy board connection
+  if [ -z "$(tycmd list | grep Teensy)" ]; then
+      printError "No Teensy boards avaliable to connect to"
+      exit 1
+  fi
+
+  echo ""
+fi
+
+
 #TODO demo option that launchs the teensy controller fins even with sim?
 #TODO just make a parameter in yaml for moos GPS Only
 
 # Start both workspaces
-source ~/microros_ws/install/setup.bash
 source ~/ros2_ws/install/setup.bash
 case $1 in
     "manual")
