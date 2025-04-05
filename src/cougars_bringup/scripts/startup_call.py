@@ -32,14 +32,16 @@ class SystemStatusPublisher(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'system_status_input'
 
+
+        # TODO let the user put in the parameters in the command line
         # Prompt user for input
         try:
-            start_input = input("Start the node? (True/False): ").strip().lower()
-            rosbag_flag_input = input("Record rosbag? (True/False): ").strip().lower()
+            start_input = input("Start the node? (y/n): ").strip().lower()
+            rosbag_flag_input = input("Record rosbag? (y/n): ").strip().lower()
             rosbag_prefix_input = input("Enter rosbag prefix (string): ").strip()
 
-            msg.start = Bool(data=start_input == "true")
-            msg.rosbag_flag = Bool(data=rosbag_flag_input == "true")
+            msg.start = Bool(data=start_input == "y")
+            msg.rosbag_flag = Bool(data=rosbag_flag_input == "y")
             msg.rosbag_prefix = rosbag_prefix_input
 
             # Publish message
