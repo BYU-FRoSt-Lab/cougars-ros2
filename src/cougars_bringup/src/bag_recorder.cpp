@@ -52,36 +52,56 @@ public:
         system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
             "system/status", qos_profile, std::bind(&MultiTopicBagRecorder::system_callback, this, _1));
 
-        // Sensor Data
-        subscribe_to_topic<dvl_msgs::msg::DVL>("dvl/data");
-        subscribe_to_topic<dvl_msgs::msg::DVLDR>("dvl/position");
-        subscribe_to_topic<gps_msgs::msg::GPSFix>("extended_fix");
-        subscribe_to_topic<sensor_msgs::msg::NavSatFix>("fix");
-        subscribe_to_topic<sensor_msgs::msg::FluidPressure>("pressure/data");
-        subscribe_to_topic<sensor_msgs::msg::BatteryState>("battery/data");
-        subscribe_to_topic<sensor_msgs::msg::FluidPressure>("leak/data");
-        subscribe_to_topic<seatrac_interfaces::msg::ModemRec>("modem_rec");
+        this->declare_parameter<bool>("sensors", true);
+        this->declare_parameter<bool>("system", true);
+        this->declare_parameter<bool>("processed", true);
+        this->declare_parameter<bool>("controls", true);
 
-        // Other
-        subscribe_to_topic<std_msgs::msg::Int32>("saftey_status");
-        subscribe_to_topic<seatrac_interfaces::msg::ModemStatus>("modem_status");
-        subscribe_to_topic<seatrac_interfaces::msg::ModemCmdUpdate>("modem_cmd_update");
-        subscribe_to_topic<seatrac_interfaces::msg::ModemSend>("modem_send");
+        bool sensors, system, processed, controls;
+        this->get_parameter("sensors", sensors);
+        this->get_parameter("system", system);
+        this->get_parameter("processed", processed);
+        this->get_parameter("controls", controls);
 
-        // Processed Data
-        subscribe_to_topic<geometry_msgs::msg::PoseWithCovarianceStamped>("dvl/dead_reckoning");
-        subscribe_to_topic<geometry_msgs::msg::PoseWithCovarianceStamped>("dvl/dr_global");
-        subscribe_to_topic<geometry_msgs::msg::TwistWithCovarianceStamped>("dvl/velocity");
-        subscribe_to_topic<nav_msgs::msg::Odometry>("gps/odom");
-        subscribe_to_topic<sensor_msgs::msg::Imu>("modem_imu");
+        if (sensors) {
+            // Sensor Data
+            subscribe_to_topic<dvl_msgs::msg::DVL>("dvl/data");
+            subscribe_to_topic<dvl_msgs::msg::DVLDR>("dvl/position");
+            subscribe_to_topic<gps_msgs::msg::GPSFix>("extended_fix");
+            subscribe_to_topic<sensor_msgs::msg::NavSatFix>("fix");
+            subscribe_to_topic<sensor_msgs::msg::FluidPressure>("pressure/data");
+            subscribe_to_topic<sensor_msgs::msg::BatteryState>("battery/data");
+            subscribe_to_topic<sensor_msgs::msg::FluidPressure>("leak/data");
+            subscribe_to_topic<seatrac_interfaces::msg::ModemRec>("modem_rec");
+            subscribe_to_topic<seatrac_interfaces::msg::ModemSend>("modem_send");
+            subscribe_to_topic<seatrac_interfaces::msg::ModemCmdUpdate>("modem_cmd_update");
+            subscribe_to_topic<seatrac_interfaces::msg::ModemStatus>("modem_status");
+        }
+
+        if (system){
+            // System
+            subscribe_to_topic<std_msgs::msg::Int32>("saftey_status");
+        }
+
+
+        if (processed){
+            // Processed Data
+            subscribe_to_topic<geometry_msgs::msg::PoseWithCovarianceStamped>("dvl/dead_reckoning");
+            subscribe_to_topic<geometry_msgs::msg::PoseWithCovarianceStamped>("dvl/dr_global");
+            subscribe_to_topic<geometry_msgs::msg::TwistWithCovarianceStamped>("dvl/velocity");
+            subscribe_to_topic<nav_msgs::msg::Odometry>("gps/odom");
+            subscribe_to_topic<sensor_msgs::msg::Imu>("modem_imu");
+        }
         
-        // Mission and Controls
-        subscribe_to_topic<frost_interfaces::msg::UCommand>("kinematics/command");
-        subscribe_to_topic<frost_interfaces::msg::UCommand>("controls/command");
-        subscribe_to_topic<frost_interfaces::msg::ControlsDebug>("controls/debug");
-        subscribe_to_topic<frost_interfaces::msg::DesiredDepth>("desired_depth");
-        subscribe_to_topic<frost_interfaces::msg::DesiredHeading>("desired_heading");
-        subscribe_to_topic<frost_interfaces::msg::DesiredSpeed>("desired_speed");
+        if (controls){
+            // Mission and Controls
+            subscribe_to_topic<frost_interfaces::msg::UCommand>("kinematics/command");
+            subscribe_to_topic<frost_interfaces::msg::UCommand>("controls/command");
+            subscribe_to_topic<frost_interfaces::msg::ControlsDebug>("controls/debug");
+            subscribe_to_topic<frost_interfaces::msg::DesiredDepth>("desired_depth");
+            subscribe_to_topic<frost_interfaces::msg::DesiredHeading>("desired_heading");
+            subscribe_to_topic<frost_interfaces::msg::DesiredSpeed>("desired_speed");
+        }
 
     }
 
