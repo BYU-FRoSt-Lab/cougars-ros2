@@ -12,8 +12,6 @@ import os
 
 def generate_launch_description():
     '''
-    :author: Nelson Durrant
-    :date: September 2024
 
     Launches the manual control and sensor nodes for the vehicle.
 

@@ -58,7 +58,6 @@ class ManualMission(Node):
 
         
         self.states = []  # Initialize as an empty list
-        self.states_list = []
 
         # Create the publishers
         self.depth_publisher = self.create_publisher(
@@ -130,8 +129,6 @@ class ManualMission(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to load JSON: {e}")
             self.states = []
-
-        self.states_list = self.states  # states_list is now a direct copy of self.states
 
 
     def get_parameters(self):
@@ -216,15 +213,15 @@ class ManualMission(Node):
 
         # TODO actuallly start a timer instead of just counting ticks!!
         # Iterate through the states
-        if self.states_list and self.started:
-            if self.state_index < len(self.states_list):  # Technically this is redundant
-                current_state = self.states_list[self.state_index]
+        if self.states and self.started:
+            if self.state_index < len(self.states):  # Technically this is redundant
+                current_state = self.states[self.state_index]
+                depth_msg.desired_depth = current_state['depth']
+                heading_msg.desired_heading = current_state['heading']
+                speed_msg.desired_speed = current_state['speed']
             
                 if self.counter < current_state['time_seconds']:
-                    depth_msg.desired_depth = current_state['depth']
-                    heading_msg.desired_heading = current_state['heading']
-                    speed_msg.desired_speed = current_state['speed']
-
+                    
                     self.counter += self.period
                 else:
                     # State time is up, move to the next state
@@ -232,7 +229,7 @@ class ManualMission(Node):
                     self.counter = 0.0  # Reset the counter for the next state 
 
                     # When completed all the states
-                    if self.state_index == len(self.states_list):
+                    if self.state_index == len(self.states):
                         # Reset the variables - This might be redundant because we have a subscriber
                         self.started = False
                         self.counter = 0.0
