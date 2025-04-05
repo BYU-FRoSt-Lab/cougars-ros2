@@ -15,6 +15,7 @@ def generate_launch_description():
     '''
     param_file = '/home/frostlab/config/vehicle_params.yaml'
     GPS = "false"  # Default to 'false'
+    namespace = ''
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):

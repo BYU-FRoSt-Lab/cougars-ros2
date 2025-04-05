@@ -28,6 +28,7 @@ def generate_launch_description():
     verbose = "false"  # Default to 'false'
     fins = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    namespace = ''
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):
