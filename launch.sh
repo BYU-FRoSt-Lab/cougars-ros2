@@ -73,6 +73,7 @@ fi
 #TODO just make a parameter in yaml for moos GPS Only
 
 # Start both workspaces
+source ~/ros2_ws/install/setup.bash
 case $1 in
     "full")
         ros2 launch cougars_bringup persistant_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
