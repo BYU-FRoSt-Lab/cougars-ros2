@@ -19,9 +19,7 @@ class SystemStatusPublisher(Node):
         qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
         qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
-        self.coug1_publisher_ = self.create_publisher(SystemControl, '/coug1/system/status', qos_reliable_profile)
-        self.coug2_publisher_ = self.create_publisher(SystemControl, '/coug2/system/status', qos_reliable_profile)
-        self.coug3_publisher_ = self.create_publisher(SystemControl, '/coug3/system/status', qos_reliable_profile)
+        self.publisher_ = self.create_publisher(SystemControl, 'system/status', qos_reliable_profile)
         self.get_logger().info("SystemStatusPublisher node started. Preparing message...")
 
         self.publish_user_input()
@@ -34,29 +32,20 @@ class SystemStatusPublisher(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'system_status_input'
 
-
-        # TODO let the user put in the parameters in the command line
         # Prompt user for input
         try:
-            start_input = input("Start the node? (y/n): ").strip().lower()
-            rosbag_flag_input = input("Record rosbag? (y/n): ").strip().lower()
+            start_input = input("Start the node? (True/False): ").strip().lower()
+            rosbag_flag_input = input("Record rosbag? (True/False): ").strip().lower()
             rosbag_prefix_input = input("Enter rosbag prefix (string): ").strip()
-            arm_thruster_input = input("Arm Thruster? (y/n): ").strip().lower()
-            dvl_acoustics = input("Start DVL (y/n): ").strip().lower()
 
-            msg.start = Bool(data=start_input == "y")
-            msg.rosbag_flag = Bool(data=rosbag_flag_input == "y")
+            msg.start = Bool(data=start_input == "true")
+            msg.rosbag_flag = Bool(data=rosbag_flag_input == "true")
             msg.rosbag_prefix = rosbag_prefix_input
-            msg.thruster_arm = Bool(data=arm_thruster_input == "y")
-            msg.dvl_acoustics = Bool(data=dvl_acoustics == "y")
 
             # Publish message
-            # TODO control which vehicles to publish to
-            self.coug1_publisher_.publish(msg)
-            self.coug2_publisher_.publish(msg)
-            self.coug3_publisher_.publish(msg)
+            self.publisher_.publish(msg)
             self.get_logger().info("Published SystemControl message.")
-            self.get_logger().info(f"Start: {msg.start.data}, Rosbag Flag: {msg.rosbag_flag.data}, Prefix: {msg.rosbag_prefix}, Thruster: {msg.thruster_arm.data}, DVL: {msg.dvl_acoustics.data}")
+            self.get_logger().info(f"Start: {msg.start.data}, Rosbag Flag: {msg.rosbag_flag.data}, Prefix: {msg.rosbag_prefix}")
 
         except Exception as e:
             self.get_logger().error(f"Error getting user input: {e}")
