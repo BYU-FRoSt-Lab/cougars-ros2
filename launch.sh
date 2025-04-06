@@ -4,7 +4,7 @@
 # Starts the micro-ROS agent and ROS 2 launch files
 # - Specify a launch configuration using 'bash launch.sh <launch>' (ex. 'bash launch.sh moos')
 
-source ~/config/bash_vars.sh
+# source ~/config/bash_vars.sh
 
 function printInfo {
   echo -e "\033[0m\033[36m[INFO] $1\033[0m"
