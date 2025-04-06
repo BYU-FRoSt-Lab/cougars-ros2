@@ -1,24 +1,11 @@
 #!/bin/bash
-# Created by Nelson Durrant, Sep 2024
 #
 # Starts a ROS2 bag recording with a custom name
 # - Specify a DVL acoustics power state using 'bash record.sh <state>' (ex. 'bash record.sh off')
 # - Run this after running the 'launch.sh', 'test.sh' scripts
 # - Log files are saved in 'CoUGARs/bag' on the host machine running the docker container
 
-function printInfo {
-  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
-}
 
-function printWarning {
-  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
-}
-
-function printError {
-  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
-}
-
-source ~/ros2_ws/install/setup.bash
 if [ "$(uname -m)" == "aarch64" ]; then
   case $1 in
     "on")

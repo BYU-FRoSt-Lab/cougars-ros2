@@ -1,33 +1,9 @@
 #!/bin/bash
-# Created by Nelson Durrant, Sep 2024
 #
 # Tests vehicle sensors and actuators
 # - Specify a DVL acoustics power state using 'bash test.sh <state>' (ex. 'bash test.sh off')
 # - Run this after running the 'launch.sh' script
 
-source ~/config/bash_vars.sh
-
-function printInfo {
-  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
-}
-
-function printWarning {
-  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
-}
-
-function printError {
-  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
-}
-
-function printSuccess {
-  echo -e "\033[0m\033[32m[SUCCESS] $1\033[0m"
-}
-
-function printFailure {
-  echo -e "\033[0m\033[31m[FAIL] $1\033[0m"
-}
-
-source ~/ros2_ws/install/setup.bash
 
 if [ "$(uname -m)" == "aarch64" ]; then
   case $1 in
