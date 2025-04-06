@@ -3,19 +3,6 @@
 # Starts the ROS 2 launch files
 # - Specify a launch configuration using 'bash launch.sh <launch>' (ex. 'bash launch.sh moos')
 
-# source ~/config/bash_vars.sh
-
-function printInfo {
-  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
-}
-
-function printWarning {
-  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
-}
-
-function printError {
-  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
-}
 
 cleanup() {
   echo ""
@@ -86,7 +73,6 @@ fi
 #TODO just make a parameter in yaml for moos GPS Only
 
 # Start both workspaces
-source ~/ros2_ws/install/setup.bash
 case $1 in
     "full")
         ros2 launch cougars_bringup persistant_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
