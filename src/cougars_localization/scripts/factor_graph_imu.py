@@ -66,7 +66,7 @@ class TimeSync:
         in_future = False
 
         new_id = init_new_id
-        curr_time = key_to_time[int(new_id)] 
+        curr_time = key_to_time[new_id] 
         key_to_add = None
         msg_to_add = None
 
@@ -193,7 +193,7 @@ class FactorGraphNode(Node):
         self.create_subscription(Imu, 'modem_imu', self.imu_callback, 10) # for unary factor
         self.create_subscription(PoseWithCovarianceStamped, 'depth_data', self.depth_callback, 10) # for unary factor
         self.create_subscription(Odometry, 'gps_odom', self.gps_callback, 10) # for unary factor
-        self.create_subscription(TwistWithCovarianceStamped, 'dvl_velocity', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
+        self.create_subscription(TwistWithCovarianceStamped, 'dvl/velocity', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
         self.create_subscription(Empty, 'init', self.add_prior_callback, 10)
 
         # Publisher
@@ -206,9 +206,6 @@ class FactorGraphNode(Node):
         self.timer = self.create_timer(self.factor_graph_period, self.factor_graph_timer)
         
         # Initialize the transform broadcaster
-
-        # Call on_timer function every second
-        self.timer = self.create_timer(1.0, self.on_timer)
         
 
     # error functions for unary factors
@@ -385,8 +382,12 @@ class FactorGraphNode(Node):
     def update(self):
         self.isam.update(self.graph, self.initialEstimate)
         self.result = self.isam.calculateEstimate()
-        self.est_xyz = self.result.atPose3(X(self.key)).translation()
-        self.est_orientation = self.result.atPose3(X(self.key)).orientation()
+        self.est_pose = self.result.atPose3(X(self.key))
+        self.est_xyz = self.est_pose.translation()
+        self.est_orientation = self.est_pose.rotation()
+        self.est_velocities = self.result.atVector(V(self.key))
+        self.prev_state = gtsam.NavState(self.est_pose, self.est_velocities)
+        print(self.prev_state)
         self.isam.update()
         self.isam.update()
         self.isam.update()
@@ -467,20 +468,22 @@ class FactorGraphNode(Node):
 
     def add_prior_callback(self, msg: Empty):
 
-        if self.gps_received and self.dvl_received and self.depth_received and self.imu_received:
-            # set deployed flag to true
-            self.deployed = True
+        if self.gps_received and self.dvl_received and self.depth_received and self.imu_received and self.deployed == False:
+            self.get_logger().warning("Initing Factor Graph")
+
+            
 
             # Initial values to be used in initial estimatepfjpj
             orientation_matrix = self.latest_imu_orientation_matrix # from the IMU at the beginning
             translation = vector3(self.latest_gps_x, self.latest_gps_y, self.latest_depth)
+            translation = vector3(0., 0., 0.)
             velocities = vector3(self.latest_dvl_vel_x, self.latest_dvl_vel_y, self.latest_dvl_vel_z)
 
             # add X prior, V prior, and B prior, and attach to initial estimate nodes
 
             # X: Pose3 prior -- Translation from GPS, orientation from IMU
             poseKey = X(self.key)
-            pose_0 = self.HfromRT(orientation_matrix, translation)
+            pose_0 = gtsam.Pose3(self.HfromRT(orientation_matrix, translation))
             noise = gtsam.noiseModel.Diagonal.Sigmas(np.array([0.1, 0.1, 0.1, 0.3, 0.3, 0.3]))
             self.graph.push_back(gtsam.PriorFactorPose3(poseKey, pose_0, noise))
             self.initialEstimate.insert(poseKey, pose_0)
@@ -502,13 +505,20 @@ class FactorGraphNode(Node):
             self.initialEstimate.insert(velKey, velocities)
             self.velKey_to_time[velKey] = self.latest_imu_factor_time
 
+
+            # set the previous state
+            
             # first factor graph update
             self.update()
             self.publish_state_est()
+            # set deployed flag to true
+            self.deployed = True
         else:
             # print 
-            self.get_logger().warning("Have not received all necessary sensor inputs to begin")
-            self.get_logger().warning(f"IMU: {self.imu_received}\nGPS: {self.gps_received}\nDVL: {self.dvl_received}\nDepth: {self.depth_received}")
+            if self.deployed == False:
+                self.get_logger().warning("Have not received all necessary sensor inputs to begin")
+                self.get_logger().warning(f"\nIMU: {self.imu_received}\nGPS: {self.gps_received}\nDVL: {self.dvl_received}\nDepth: {self.depth_received}")
+
 
         
 
@@ -556,7 +566,8 @@ class FactorGraphNode(Node):
             self.measuredLinAcc = self.linear_acceleration
             self.measuredAngOmega = self.angular_velocity
             self.p_imu.integrateMeasurement(self.measuredLinAcc, self.measuredAngOmega, self.factor_graph_period)
-            self.predicted_state = self.runner.predict(self.p_imu, self.actualBias)
+            self.predicted_state = self.p_imu.predict(self.prev_state, 
+                                                      gtsam.imuBias.ConstantBias())
             
             # Time sorted DVL velocity (with x, y, and z)
             self.imu_vel = self.predicted_state.velocity()
@@ -579,7 +590,7 @@ class FactorGraphNode(Node):
 
             # add V node
             self.initialEstimate.insert(V(self.key), self.imu_vel)
-            self.poseKey_to_time[V(self.key)] = self.latest_imu_factor_time
+            self.velKey_to_time[V(self.key)] = self.latest_imu_factor_time
 
 
             # wait till at least 2 new X/V nodes are added to the graph
@@ -627,7 +638,7 @@ class FactorGraphNode(Node):
     def publish_state_est(self):
         
         # Set the orientation in the message
-        r = R.from_matrix(self.est_orientation)
+        r = R.from_matrix(self.est_orientation.matrix())
         quat = r.as_quat()
         self.state_est_msg.pose.pose.orientation.x = quat[0]
         self.state_est_msg.pose.pose.orientation.y = quat[1]

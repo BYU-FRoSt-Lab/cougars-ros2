@@ -61,6 +61,7 @@ install(TARGETS
 # Install Python executables
 install(PROGRAMS
   scripts/factor_graph.py
+  scripts/factor_graph_imu.py
   scripts/gps_odom.py
   DESTINATION lib/${PROJECT_NAME}
 )
