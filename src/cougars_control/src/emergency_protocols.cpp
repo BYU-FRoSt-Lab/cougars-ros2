@@ -66,7 +66,7 @@ public:
 
 
     // safety parameters (voltage, current, depth, etc.)
-    this->declare_parameter("deepest_safe_depth", -0.5); // meters
+    this->declare_parameter("deepest_safe_depth", -2.0); // meters
     this->declare_parameter("critical_voltage", 14.0); // volts
     //  TODO: add more safety parameters as needed
 
@@ -362,6 +362,7 @@ void depth_callback(const geometry_msgs::msg::PoseWithCovarianceStamped &msg){
 
     // if the current depth is too deep, surface
     if (depth_val < this->get_parameter("deepest_safe_depth").as_double()){
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "TOO DEEP ERROR.");
         RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to leak");
         surface_then_disarm();
     }
@@ -385,6 +386,8 @@ void battery_callback(const sensor_msgs::msg::BatteryState &msg){
   if (this->get_parameter("monitor_low_battery").as_bool()){
     double curr_volt = msg.voltage;
     if (curr_volt < this->get_parameter("critical_voltage").as_double()){
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "LOW VOLTAGE ERROR.");
+
 
       RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to voltage");
       surface_then_disarm();
@@ -411,6 +414,8 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
   if (this->get_parameter("monitor_leak").as_bool()){
 
     if (msg.fluid_pressure > 0.0){
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "LEAK ERROR.");
+
       RCLCPP_INFO(this->get_logger(), "Emergency request being sent in response to leak");
       surface_then_disarm();
 
