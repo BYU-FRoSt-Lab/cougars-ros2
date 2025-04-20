@@ -127,11 +127,13 @@ private:
     //   publish as modem_imu   //
     //==========================//
 
-    auto modem_imu = std::make_shared<sensor_msgs::msg::Imu>();
-
-    // modem_imu.header.frame_id = "robot";
-
     try {
+
+      auto modem_imu = std::make_shared<sensor_msgs::msg::Imu>();
+
+      modem_imu->header.stamp = msg->header.stamp;
+      modem_imu->header.frame_id = ns_prefix()+"robot";
+
       geometry_msgs::msg::TransformStamped tf_enu_to_robot =
           tf_buffer_->lookupTransform("enu", ns_prefix()+"robot", tf2::TimePointZero);
 
