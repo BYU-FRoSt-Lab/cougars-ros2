@@ -6,14 +6,17 @@
 #include <Eigen/Dense>
 #include <cmath>  // For atan2, M_PI, fmin, fmax
 
-// #include "pid.cpp"
-#include "pid_int2.cpp"
+#include "pid.cpp"
+#include "actuator.cpp"
+// #include "pid_int2.cpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "frost_interfaces/msg/controls_debug.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 
@@ -183,37 +186,13 @@ public:
      */
     this->declare_parameter("heading_max_output", 0.0);
 
-    /**
-     * @param magnetic_declination
-     * 
-     * determines the offset to apply to the imu output based on location in degrees. 
-     * The default is 10.7 degrees for Utah Lake
-     */
-    this->declare_parameter("magnetic_declination", 10.7);
-    this->magnetic_declination = this->get_parameter("magnetic_declination").as_double();
+    this->declare_parameter("surge_threshold", -1.0);
+    this->declare_parameter("wn_d_z", 0.09);
+    this->declare_parameter("wn_d_theta", 0.25);
+    this->declare_parameter("outer_loop_threshold", 2.5);
+    this->declare_parameter("saturation_offset", 1.7);
 
-    // calibrate PID controllers
-    myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
-                         this->get_parameter("depth_ki").as_double(),
-                         this->get_parameter("depth_kd").as_double(),
-                         this->get_parameter("depth_min_output").as_double(),
-                         this->get_parameter("depth_max_output").as_double(),
-                         (float)this->get_parameter("timer_period").as_int()); 
-
-    myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
-                         this->get_parameter("pitch_ki").as_double(),
-                         this->get_parameter("pitch_kd").as_double(),
-                         this->get_parameter("pitch_min_output").as_double(),
-                         this->get_parameter("pitch_max_output").as_double(),
-                         (float)this->get_parameter("timer_period").as_int());
-
-    myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
-                           this->get_parameter("heading_ki").as_double(),
-                           this->get_parameter("heading_kd").as_double(),
-                           this->get_parameter("heading_min_output").as_double(),
-                           this->get_parameter("heading_max_output").as_double(),
-                           (float)this->get_parameter("timer_period").as_int());
-
+    update_parameters();
     /**
      * @brief Control command publisher.
      *
@@ -223,6 +202,15 @@ public:
     u_command_publisher_ =
         this->create_publisher<frost_interfaces::msg::UCommand>(
             "controls/command", 10);
+
+    /**
+     * @brief debug controller publisher.
+     *
+     * This publisher is used for debugging pitch and depth by publishing reference values.
+     */
+    debug_controls_pub_ =
+        this->create_publisher<frost_interfaces::msg::ControlsDebug>(
+            "controls/debug", 10);
 
     /**
      * @brief Initialization Service.
@@ -288,6 +276,20 @@ public:
         this->create_subscription<sensor_msgs::msg::Imu>(
             "modem_imu", 10,
             std::bind(&CougControls::actual_orientation_callback, this, _1));
+    
+    /**
+     * @brief Converted DVL velocity subscriber.
+     *
+     * This subscriber subscribes to the "dvl/velocity" topic. It uses the TwistWithCovarianceStamped
+     * message type.
+     */
+    actual_velocity_subscription_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+        "dvl/velocity", qos,
+        std::bind(&CougControls::dvl_velocity_callback, this, _1));
+
+    this->velocity[0] = 0.6f;
+    this->velocity[1] = 0.0f;
+    this->velocity[2] = 0.0f;
 
     /**
      * @brief Control timer.
@@ -300,6 +302,48 @@ public:
   }
 
 private:
+  /**
+   * @brief function for updating the service.
+   *
+   * This method updates all the parameters for the node
+   */
+  void update_parameters(){
+        // calibrate PID controllers
+    // TODO parameterize this if it works
+    float scalar = 0.5 * 997 * 0.00665 * 0.5 * -0.43 * std::cos(30 * (M_PI / 180.0));
+
+    myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
+                         this->get_parameter("depth_ki").as_double(),
+                         this->get_parameter("depth_kd").as_double(),
+                         this->get_parameter("depth_min_output").as_double(),         
+                         this->get_parameter("depth_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int()); 
+
+    myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
+                         this->get_parameter("pitch_ki").as_double(),
+                         this->get_parameter("pitch_kd").as_double(),
+                         this->get_parameter("pitch_min_output").as_double(),       //THIS is the fin min and max
+                         this->get_parameter("pitch_max_output").as_double(),
+                         (float)this->get_parameter("timer_period").as_int(),
+                         scalar);
+
+    myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
+                           this->get_parameter("heading_ki").as_double(),
+                           this->get_parameter("heading_kd").as_double(),
+                           this->get_parameter("heading_min_output").as_double(),
+                           this->get_parameter("heading_max_output").as_double(),
+                           (float)this->get_parameter("timer_period").as_int());
+
+    std::cout << "Depth Controller Values -";
+    myDepthPID.print_values();
+    std::cout << "Pitch Controller Values -";
+    myPitchPID.print_values();
+    std::cout << "Heading Controller Values -";
+    myHeadingPID.print_values();
+
+  }
+  
+  
   /**
    * @brief Callback function for the initialization service.
    *
@@ -315,11 +359,14 @@ private:
     if (request->data) {
         response->success = true;
         response->message = "Controller Node initialized.";
+
+        update_parameters();
+        RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
     } else {
         response->success = false;
         response->message = "Controller Node de-initialized.";
+        RCLCPP_INFO(this->get_logger(), "Controller Node de-initialized.");
     }
-    RCLCPP_INFO(this->get_logger(), "Init Service recieved");
   }
 
   /**
@@ -333,7 +380,19 @@ private:
    */
   void
   desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
+    constexpr double EPSILON = 1e-6; // Small tolerance value
+    // KEEP THIS OR BAD THINGS WILL HAPPEN - BRADEN MEYERS
+    // floating point precicision issue bug fix
+
+    if (std::abs(depth_msg.desired_depth - this->desired_depth) < EPSILON) {
+        // RCLCPP_INFO(this->get_logger(), "not a new desired depth");
+        return;
+    }
+    RCLCPP_INFO(this->get_logger(), "New Depth Desired: %f, Old desired depth %f", depth_msg.desired_depth, this->desired_depth);
     this->desired_depth = depth_msg.desired_depth;
+
+    // When a new desired depth sent update the depth_ref to the actual depth
+    this->depth_ref = this->actual_depth;
   }
 
   /**
@@ -378,6 +437,33 @@ private:
     this->actual_depth = -depth_msg.pose.pose.position.z;
     //Negate the z value in ENU to get postive depth value
   }
+
+  /**
+   * @brief Callback function for the velocity subscription.
+   *
+   * This method sets the velocity value to the value received from the
+   * velocity message. 
+   *
+   * @param velocity The TwistWithCovarianceStamped message recieved from the
+   * dvl/velocity topic.
+   */
+  void dvl_velocity_callback(
+      const geometry_msgs::msg::TwistWithCovarianceStamped &velocity_msg) {
+    
+    //This is taking from the converted dvl velocity only when dvl velocity is valid.
+    // Velocity in x is expected to be 0.67 m/s at 20/100 thruster with velocity in y and z expected to be < 0.01
+    this->velocity[0] = velocity_msg.twist.twist.linear.x;
+    this->velocity[1] = velocity_msg.twist.twist.linear.y;
+    this->velocity[2] = velocity_msg.twist.twist.linear.z;
+
+
+    // OVERRIDE VELOCITY GIVEN WITH A CONSTANT VELOCITY OF 1 m/s
+    this->velocity[0] = 0.6f;
+    this->velocity[1] = 0.0f;
+    this->velocity[2] = 0.0f;
+
+  }
+
 
   void normalizeAngles(double& yaw, double& pitch, double& roll) {
     // Normalize yaw to [-180, 180]
@@ -446,26 +532,14 @@ private:
     this->actual_pitch = pitch;
     this->actual_roll = roll;
 
+    this->pitch_rate = orientation_msg.angular_velocity.y;
+    this->yaw_rate = orientation_msg.angular_velocity.z;
+
     // // // Log the information
     // RCLCPP_INFO(this->get_logger(), "Yaw: %f, Pitch: %f, Roll: %f",
     //             this->actual_heading, this->actual_pitch, this->actual_roll);
   }
 
-  double look_ahead_theta(double distance, double actual, double desired, double theta_max) {
-    // Find the depth error
-    double depth_error = desired - actual;
-
-    // Calculate the angle using atan2 (rise over run: depth_error / distance)
-    double theta_desired = atan2(depth_error, distance); // atan2(y, x)
-
-    // Convert theta_desired from radians to degrees (optional, depending on your needs)
-    theta_desired *= 180.0 / M_PI; // Uncomment if you want degrees instead of radians
-
-    // Cap the desired theta within the range [-theta_max, theta_max]
-    theta_desired = std::fmax(-theta_max, std::fmin(theta_desired, theta_max));
-
-    return theta_desired;
-  }
   float calculateYawError(float desired_heading, float actual_heading) {
     float yaw_err = desired_heading - actual_heading;
     
@@ -477,6 +551,52 @@ private:
     }
     
     return yaw_err;
+  }
+  
+  int depth_autopilot(float depth, float depth_d){
+    float surge = this->velocity[0];
+    float surge_threshold = this->get_parameter("surge_threshold").as_double();
+    float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
+    float theta_max = this->get_parameter("depth_max_output").as_double();  //FIGURE OUT THIS PARAM for the vehicle at full fin 
+    float wn_d_z = this->get_parameter("wn_d_z").as_double(); //TODO this is an important parameter - See how z tracks z ref
+    float wn_d_theta = this->get_parameter("wn_d_theta").as_double();
+    float outer_loop_threshold = this->get_parameter("outer_loop_threshold").as_double();
+    float saturation_offset = this->get_parameter("saturation_offset").as_double();
+
+    if(surge < surge_threshold){
+        this->theta_ref = this->actual_pitch;   
+        return 0;
+    }
+    // Low Pass filter for depth reference
+    this->depth_ref = std::exp(-timer_period * wn_d_z) * this->depth_ref
+    + (1 - std::exp(-timer_period * wn_d_z)) * depth_d;
+
+    double saturated = saturation_offset * std::copysign(1.0, depth_d - depth);  //CHECK THE SIGN ON THIS
+    
+    if (std::abs(depth_d - depth) > outer_loop_threshold) {
+        // saturate theta_d
+        float theta_d = theta_max * std::copysign(1.0, depth_d - depth);
+        this->theta_ref = std::exp(-timer_period * wn_d_theta) * this->theta_ref
+                        + (1.0 - std::exp(-timer_period * wn_d_theta)) * theta_d;
+
+        this->depth_ref = depth + saturated; // Override low pass filter input
+        std::cout <<  "Saturated Depth PID mode" << std::endl;
+        myDepthPID.reset_int();
+    } else {
+        this->theta_ref = myDepthPID.compute(this->depth_ref, this->actual_depth, this->velocity[2]);
+    }
+
+    int depth_pos = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate, this->velocity[0]);  
+    
+    // Add torque equilibruim?
+    // int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43, deltaMax);
+    //TODO calculate beforehand what torque creates a max deflection.
+    
+    // std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
+    // std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
+    // std::cout << " Fin: " << depth_pos << std::endl;
+
+    return depth_pos;
   }
 
   /**
@@ -490,39 +610,69 @@ private:
       message.header.stamp = this->now();
 
       if (this->init_flag) {
-          // Calculate the desired pitch angle
-          float theta_desired = myDepthPID.compute(this->desired_depth, this->actual_depth);
-          std::cout <<  "Depth: " << this->actual_depth << "Desired Depth: " << this->desired_depth << std::endl;
+        int depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
+        
+        // Handling roll over when taking the error difference
+        // given desired heading and actual heading from -180 to 180
+        // if they are both negative or they are both positive than just take the difference
+        float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
+        // // Log the information
+        
+        int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
 
-          // Handling roll over when taking the error difference
-          // given desired heading and actual heading from -180 to 180
-          // if they are both negative or they are both positive than just take the difference
-          float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
-          // // Log the information
-          
-          // Step 4: Apply PID control to pitch and heading errors directly
-          std::cout <<  "Pitch: " << this->actual_pitch << "Desired Pitch: " << theta_desired << std::endl;
-          int depth_pos = (int)myPitchPID.compute(theta_desired, this->actual_pitch);  // No additional scaling needed
-          
-          int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
-          std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
+        // Step 5: Set fin positions and publish the command
+        message.fin[0] = heading_pos;    // top fin
+        message.fin[1] = -depth_pos;      // starboard side fin
+        message.fin[2] = depth_pos;      // port side fin
+        message.thruster = this->desired_speed;
+    
+        u_command_publisher_->publish(message);
+        
 
-          // Step 5: Set fin positions and publish the command
-          message.fin[0] = heading_pos;    // top fin
-          message.fin[1] = depth_pos;      // right fin
-          message.fin[2] = depth_pos;      // left fin
-          message.thruster = this->desired_speed;
+        // std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
+        
+        // Debugging Message
+        auto message = frost_interfaces::msg::ControlsDebug();
+        message.header.stamp = this->now();
+        message.pitch.actual = this->actual_pitch;
+        message.pitch.rate = this->pitch_rate;
+        message.pitch.desired = this->theta_ref;
+        message.pitch.reference = this->theta_ref;
+        message.pitch.p = myPitchPID.getP();
+        message.pitch.i = myPitchPID.getI();
+        message.pitch.d = myPitchPID.getD();
+        message.pitch.pid = myPitchPID.getPID();
 
-          u_command_publisher_->publish(message);
+        message.depth.actual = this->actual_depth;
+        message.depth.rate = this->velocity[2];
+        message.depth.desired = this->desired_depth;
+        message.depth.reference = this->depth_ref;
+        message.depth.p = myDepthPID.getP();
+        message.depth.i = myDepthPID.getI();
+        message.depth.d = myDepthPID.getD();
+        message.depth.pid = myDepthPID.getPID();
+
+        message.heading.actual = this->actual_heading;
+        message.heading.rate = this->yaw_rate;
+        message.heading.desired = this->desired_heading;
+        // message.heading.reference = this->heading_ref;
+        message.heading.p = myHeadingPID.getP();
+        message.heading.i = myHeadingPID.getI();
+        message.heading.d = myHeadingPID.getD();
+        message.heading.pid = myHeadingPID.getPID();
+    
+        debug_controls_pub_->publish(message);
+
+
       }
-      else{
-          message.fin[0] = 0;    // top fin
-          message.fin[1] = 0;      // right fin
-          message.fin[2] = 0;      // left fin
-          message.thruster = 0;
+      // else{
+      //   message.fin[0] = 0;    // top fin
+      //   message.fin[1] = 0;      // right fin
+      //   message.fin[2] = 0;      // left fin
+      //   message.thruster = 0;
 
-          u_command_publisher_->publish(message);
-      }
+      //   u_command_publisher_->publish(message);
+      // }
   }
 
 
@@ -538,8 +688,12 @@ private:
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       actual_depth_subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr
+      actual_velocity_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
+
+  rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 
@@ -551,13 +705,13 @@ private:
   PID myDepthPID;
   PID myPitchPID;
 
-  // magnetic declination parameter
-  double magnetic_declination;
-
   // node desired values
   float desired_depth = 0.0;
   float desired_heading = 0.0;
   float desired_speed = 0.0;
+
+  float depth_ref;
+  float theta_ref;
 
   // node actual values
   float actual_depth = 0.0;
@@ -565,6 +719,10 @@ private:
   float actual_pitch = 0.0;
   float actual_roll = 0.0;
   float actual_heading = 0.0;
+
+  float pitch_rate;
+  float yaw_rate;
+  float velocity[3];
 };
 
 int main(int argc, char *argv[]) {

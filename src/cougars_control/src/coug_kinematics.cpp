@@ -70,6 +70,27 @@ public:
     this->declare_parameter("left_fin_offset", 0.0);
 
     /**
+     * @param fin_0_direction
+     *
+     * The direction of the fin 0 (top fin) reverse if getting opposite behavior.
+     */
+    this->declare_parameter("fin_0_direction", 1);
+
+    /**
+     * @param fin_1_direction
+     *
+     * The direction of the fin 1 (#TODO) reverse if getting opposite behavior.
+     */
+    this->declare_parameter("fin_1_direction", 1);
+
+    /**
+     * @param fin_2_direction
+     *
+     * The direction of the fin 2 (#TODO) reverse if getting opposite behavior.
+     */
+    this->declare_parameter("fin_2_direction", 1);
+
+    /**
      * @param demo_mode
      * 
      * If true, the node will disable the thruster.
@@ -101,9 +122,9 @@ public:
 
 
     surface_command_ = frost_interfaces::msg::UCommand();
-    surface_command_.fin[0] = 0;
-    surface_command_.fin[1] = 30;
-    surface_command_.fin[2] = -30;
+    surface_command_.fin[0] = 0 * this->get_parameter("fin_0_direction").as_int() + this->get_parameter("top_fin_offset").as_double();
+    surface_command_.fin[1] = -30 * this->get_parameter("fin_1_direction").as_int() + this->get_parameter("right_fin_offset").as_double();
+    surface_command_.fin[2] = 30 * this->get_parameter("fin_2_direction").as_int() + this->get_parameter("left_fin_offset").as_double() ;
     surface_command_.thruster = 0;
 
     /**
@@ -155,13 +176,13 @@ private:
     command.header.stamp = msg.header.stamp;
     
     if(!surface_override_){
-      command.fin[0] =
+      command.fin[0] = this->get_parameter("fin_0_direction").as_int() *
           msg.fin[0] + this->get_parameter("top_fin_offset").as_double() +
           this->get_parameter("trim_ratio").as_double() * msg.thruster;
-      command.fin[1] = -1 *
+      command.fin[1] = this->get_parameter("fin_1_direction").as_int() *
           msg.fin[1] + this->get_parameter("right_fin_offset").as_double() +
           this->get_parameter("trim_ratio").as_double() * msg.thruster;
-      command.fin[2] =
+      command.fin[2] = this->get_parameter("fin_2_direction").as_int() *
           msg.fin[2] + this->get_parameter("left_fin_offset").as_double() +
           this->get_parameter("trim_ratio").as_double() * msg.thruster;
     } else {
@@ -171,6 +192,9 @@ private:
     if (this->get_parameter("demo_mode").as_bool()) {
       command.thruster = 0;
       surface_command_.thruster = 0;
+      for (auto& f : command.fin) {
+        f *= 2;
+      } 
     } else if (!arm_thruster_){
       command.thruster = 0;
       surface_command_.thruster = 0;

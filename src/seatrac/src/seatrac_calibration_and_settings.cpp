@@ -4,9 +4,14 @@
 #include <seatrac_driver/messages/Messages.h>
 #include <seatrac_driver/commands.h>
 #include <seatrac_driver/Calibration.h>
+#include <string>
 
 using namespace std::chrono_literals;
 using namespace narval::seatrac;
+using std::string;
+
+#define DEFAULT_SERIAL_PORT "/dev/frost/rs232_connector_seatrac"
+
 
 /**
  * @brief A C++ terminal application for calibrating and modifying advanced setting on the Seatrac x150 beacon
@@ -24,7 +29,7 @@ class CalibrationDriver : public SeatracDriver
 {
     public:
 
-    CalibrationDriver(const std::string& serialPort = "/dev/ttyUSB0") :
+    CalibrationDriver(const string& serialPort = DEFAULT_SERIAL_PORT) :
         SeatracDriver(serialPort)
     {}
 
@@ -221,7 +226,7 @@ int main(int argc, char *argv[]) {
 
     bool cont = true;
     while(cont) {
-        std::cout << "Enter Serial Port (or blank for default '/dev/ttyUSB0'): ";
+        std::cout << string("Enter Serial Port (or blank for default '")+DEFAULT_SERIAL_PORT+"'): ";
         char serial_port[30];
         fgets(serial_port, sizeof(serial_port), stdin);
         serial_port[strlen(serial_port)-1] = 0x00;
@@ -235,46 +240,45 @@ int main(int argc, char *argv[]) {
         command::status_config_set(seatrac, (STATUS_BITS_E)0x0); 
         std::cout << "Done" << std::endl;
 
-        std::cout << "You may perform any number of actions with this beacon."<<std::endl;
-        int action=0;
+        int action=1;
         while (action<4 && action>0) {
             std::cout   << "Select action:" << std::endl
                         << "\t1) Calibrate Magnetometer" << std::endl
                         << "\t2) Calibrate Accelerometer" << std::endl
-                        << "\t3) View and Modify settings" << std::endl
-                        << "\t4) Finish actions" << std::endl
-                        << "Enter a number: ";
+                        << "\t3) View and Modify Settings" << std::endl
+                        << "\t4) Finish Actions" << std::endl
+                        << "Enter an integer: ";
             scanf("%d", &action);
+            skip_cin_line();
 
             switch(action) {
                 case 1: {
-                    calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, true);
+                    calibration::calibrateMagnetometer(seatrac, std::cout, std::cin, false);
                 } break;
                 case 2: {
-                    calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, true);
+                    calibration::calibrateAccelerometer(seatrac, std::cout, std::cin, false);
                 } break;
                 case 3: {
                     std::cout << "Current Settings:\n" << settings << std::endl << std::endl;
                     manual_set_settings(seatrac, settings);
                 } break;
                 default: {
-                    std::cout << "Exiting Seatrac Modem Calibration" << std::endl;
+                    std::cout << "Actions finished" << std::endl;
                 } break;
             }
         }
 
 
-        std::cout << "Beacon setup complete" << std::endl
-                  << "Review changes to settings (y/n)? ";
+        std::cout << "Review changes to settings (y/n)? ";
         if(yn_answer()) {
-            std::cout << std::endl << "== Origional Settings ==" << std::endl
+            std::cout << std::endl << "== Previous Settings ==" << std::endl
                       << origional_settings << std::endl << std::endl
                       << "== New Settings ==" << std::endl
                       << command::settings_get(seatrac).settings << std::endl << std::endl;
         }
 
-        std::cout << "Save Settings to permanent EEPROM memory? " << std::endl
-                  << "If you chose not to, settings will still be saved in beacon ram. (y/n)? ";
+        std::cout << "Settings have been saved to beacon ram." << std::endl
+                  << "Also save settings to permanent EEPROM memory (y/n)? ";
         if(yn_answer()) {
             std::cout << "Saving Settings... ";
             command::settings_save(seatrac);
@@ -286,8 +290,6 @@ int main(int argc, char *argv[]) {
 
         std::cout << std::endl << "Setup another beacon (y/n)? ";
         cont = yn_answer();
-
-        return 0;
     }
 }
 

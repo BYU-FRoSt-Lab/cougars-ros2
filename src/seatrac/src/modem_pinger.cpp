@@ -49,7 +49,7 @@ public:
          * then this would be the time between pings from Coug 1 and Coug 2.
          * WARNING: ping_delay_seconds should be the same for all vehicles.
          */
-        this->declare_parameter<int>("ping_delay_seconds", 5);
+        this->declare_parameter<int>("ping_delay_seconds", 0);
 
         /**
          * @param number_of_vehicles
@@ -156,7 +156,7 @@ private:
             std::this_thread::sleep_for(std::chrono::seconds(sleep_time));
 
             send_ping();
-            std::this_thread::sleep_for(2s);
+            std::this_thread::sleep_for(100ms);
         }
     }
 
