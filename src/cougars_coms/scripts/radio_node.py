@@ -59,7 +59,7 @@ class RFBridge(Node):
         # Serial configuration
         try:
             self.ser = serial.Serial(
-                port='/dev/ttyUSB3',
+                port='/dev/ttyUSB1',
                 baudrate=9600,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
