@@ -74,7 +74,7 @@ class RFBridge(Node):
         self.publisher = self.create_publisher(String, 'rf_received', 10)
         
         # Create publisher for init commands
-        self.init_publisher = self.create_publisher(String, '/coug1/init', 10)
+        self.init_publisher = self.create_publisher(String, '/init', 10)
         
         # Create subscriber for outgoing RF messages
         self.subscription = self.create_subscription(
@@ -93,31 +93,31 @@ class RFBridge(Node):
         # Create subscribers for all the requested status topics
         self.odom_sub = self.create_subscription(
             Odometry, 
-            '/coug1/odom', 
+            '/odom', 
             self.odom_callback, 
             qos_profile=self.odom_qos)
             
         self.leak_sub = self.create_subscription(
             FluidPressure, 
-            '/coug1/leak/data', 
+            '/leak/data', 
             self.leak_callback, 
             10)
             
         self.battery_sub = self.create_subscription(
             BatteryState, 
-            '/coug1/battery/data', 
+            '/battery/data', 
             self.battery_callback, 
             10)
             
         self.dvl_velocity_sub = self.create_subscription(
             TwistWithCovarianceStamped, 
-            '/coug1/dvl/velocity', 
+            'dvl/velocity', 
             self.dvl_velocity_callback, 
             qos_profile=self.dvl_qos)
             
         self.dvl_position_sub = self.create_subscription(
             DVLDR, 
-            '/coug1/dvl/position', 
+            'dvl/position', 
             self.dvl_position_callback, 
             qos_profile=self.dvl_qos)
         
@@ -301,7 +301,7 @@ class RFBridge(Node):
                         init_msg = String()
                         init_msg.data = "INIT_COMMAND"
                         self.init_publisher.publish(init_msg)
-                        self.get_logger().info(f"Received INIT, published to /coug1/init topic")
+                        self.get_logger().info(f"Received INIT, published to /init topic")
                         
                         # Send confirmation back over RF using XBee API format
                         self.send_xbee_data("INIT_ACK")
