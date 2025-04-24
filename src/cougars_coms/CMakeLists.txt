@@ -24,9 +24,16 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python scripts
-install(PROGRAMS
-  scripts/radio_node.py
+install(
+  PROGRAMS
+    scripts/radio_node.py
   DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install launch files
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

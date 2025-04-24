@@ -19,6 +19,43 @@ class RFBridge(Node):
     def __init__(self):
         super().__init__('rf_bridge')
         
+    # First attempt: Try to get the namespace from the parameter file
+        # This requires the parameter file to be loaded at node startup
+        vehicle_ns = ''
+        
+        # Try to get from top-level parameters first (this is the proper way to get it from yaml)
+        try:
+            # Get all declared parameters to check if any starts with "coug"
+            params = self.get_node_parameters_interface().get_parameter_overrides()
+            vehicle_namespaces = [key.split('.')[0] for key in params.keys() 
+                                if key.startswith('coug') and not key.startswith('/**')]
+            if vehicle_namespaces:
+                vehicle_ns = vehicle_namespaces[0]
+                self.get_logger().info(f"Found vehicle namespace from params: {vehicle_ns}")
+        except Exception as e:
+            self.get_logger().debug(f"Couldn't get namespace from parameters: {str(e)}")
+        
+        # If still not found, use parent namespace
+        if not vehicle_ns:
+            node_namespace = self.get_namespace()
+            if node_namespace and node_namespace != '/':
+                # If namespace is not root, use it
+                vehicle_ns = node_namespace.strip('/')
+                self.get_logger().info(f"Using parent namespace: {vehicle_ns}")
+        
+        # Last resort: use explicit parameter
+        if not vehicle_ns:
+            vehicle_ns = self.declare_parameter('namespace', '').value
+            if vehicle_ns:
+                self.get_logger().info(f"Using explicitly provided namespace: {vehicle_ns}")
+        
+        # Format the namespace properly
+        self.namespace = vehicle_ns.strip('/')
+        if self.namespace and not self.namespace.endswith('/'):
+            self.namespace += '/'
+        
+        self.get_logger().info(f"Final vehicle namespace: '{self.namespace}'")
+            
         # Flag to control thread execution
         self.running = True
         
@@ -59,7 +96,7 @@ class RFBridge(Node):
         # Serial configuration
         try:
             self.ser = serial.Serial(
-                port='/dev/ttyUSB1',
+                port='/dev/ttyUSB0',
                 baudrate=9600,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
