@@ -14,7 +14,7 @@ def generate_launch_description():
     
     param_file_arg = DeclareLaunchArgument(
         'param_file',
-        default_value='/home/bja1701/Code/CoUGARs/config/vehicle_params.yaml',
+        default_value='/home/frostlab/config/vehicle_params.yaml',
         description='Path to vehicle parameters YAML file'
     )
     

@@ -34,7 +34,7 @@ class RFBridge(Node):
             node_namespace = self.get_namespace()
             if node_namespace and node_namespace != '/':
                 vehicle_ns = node_namespace.strip('/')
-                self.get_logger().info(f"Using parent namespace: {vehicle_ns}")
+                # self.get_logger().info(f"Using parent namespace: {vehicle_ns}")
         if not vehicle_ns:
             vehicle_ns = self.declare_parameter('namespace', '').value
             if vehicle_ns:
@@ -42,7 +42,7 @@ class RFBridge(Node):
         self.namespace = vehicle_ns.strip('/')
         if self.namespace and not self.namespace.endswith('/'):
             self.namespace += '/'
-        self.get_logger().info(f"Final vehicle namespace: '{self.namespace}'")
+        # self.get_logger().info(f"Final vehicle namespace: '{self.namespace}'")
 
         # Debug mode
         self.debug_mode = self.declare_parameter('debug_mode', False).value
