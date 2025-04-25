@@ -244,7 +244,9 @@ class RFBridge(Node):
     
     def queue_monitor(self):
         """Monitor queue status"""
-        self.get_logger().info(f"Queue size: {self.data_queue.qsize()}")
+        # Only log if queue is not empty
+        if self.data_queue.qsize() > 0:
+            self.get_logger().info(f"Queue size: {self.data_queue.qsize()}")
     
     def serial_read_loop(self):
         """Thread that only reads from serial and adds to queue"""
