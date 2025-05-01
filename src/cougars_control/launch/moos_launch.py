@@ -111,7 +111,7 @@ def generate_launch_description():
         ),
         launch_ros.actions.Node(
             package='cougars_coms',
-            executable='radio_node',
+            executable='rf_bridge.py',
             parameters=[param_file],
             namespace=namespace,
             output=output,
