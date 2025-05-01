@@ -32,7 +32,7 @@ def generate_launch_description():
     # Define the node
     rf_bridge_node = Node(
         package='cougars_coms',
-        executable='radio_node.py',
+        executable='rf_bridge.py',
         name='rf_bridge',
         namespace=namespace,
         parameters=[

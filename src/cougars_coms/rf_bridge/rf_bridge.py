@@ -70,7 +70,7 @@ class RFBridge(Node):
         self.latest_dvl_position = "NO_DATA"
 
         # XBee configuration
-        self.xbee_port = self.declare_parameter('xbee_port', '/dev/ttyUSB2').value
+        self.xbee_port = self.declare_parameter('xbee_port', '/dev/ttyUSB0').value
         self.xbee_baud = self.declare_parameter('xbee_baud', 9600).value
         self.device = XBeeDevice(self.xbee_port, self.xbee_baud)
         try:

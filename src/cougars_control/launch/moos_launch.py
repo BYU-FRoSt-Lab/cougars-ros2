@@ -109,6 +109,13 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
+        launch_ros.actions.Node(
+            package='cougars_coms',
+            executable='radio_node',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',

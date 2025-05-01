@@ -10,7 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/scripts', ['scripts/radio_node.py']),  # Add this line
+        ('share/' + package_name + '/rf_bridge', ['rf_bridge/rf_bridge.py']),  # Add this line
     ],
     install_requires=['setuptools', 'digi-xbee'],
     zip_safe=True,
@@ -21,7 +21,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'radio_node = cougars_coms.radio_node:main'
+            'rf_bridge = cougars_coms.rf_bridge:main'
         ],
     },
 )

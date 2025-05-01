@@ -26,7 +26,7 @@ install(TARGETS
 # Install Python scripts
 install(
   PROGRAMS
-    scripts/radio_node.py
+    rf_bridge/rf_bridge.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
