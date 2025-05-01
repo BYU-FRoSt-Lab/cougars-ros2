@@ -27,6 +27,7 @@ def generate_launch_description():
     verbose = "false"  # Default to 'false'
     fins = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    fleet_param = '/home/frostlab/config/fleet_params.yaml'
     namespace = ''
 
     for arg in sys.argv:
@@ -34,6 +35,8 @@ def generate_launch_description():
             namespace = arg.split(':=')[1]
         if arg.startswith('param_file:='):
             param_file = arg.split(':=')[1]
+        if arg.startswith('fleet_param:='):
+            fleet_param = arg.split(':=')[1]
         if arg.startswith("sim:="):
             sim = arg.split(":=")[1].lower()
         if arg.startswith("verbose:="):
@@ -52,6 +55,8 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(cougars_control_package_dir, "manual_launch.py"))
     )
     launch_actions.append(manual)
+
+    # TODO add more nodes here that can be activated and disactivated
     
     
     launch_actions.extend([
@@ -60,7 +65,7 @@ def generate_launch_description():
             package='cougars_bringup',
             executable='bag_recorder',
             name='bag_recorder',
-            parameters=[param_file], #TODO 
+            parameters=[param_file, fleet_param], #TODO 
             namespace=namespace,
             output=output,
         ),

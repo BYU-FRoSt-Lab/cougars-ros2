@@ -26,6 +26,7 @@ def generate_launch_description():
     verbose = "false"  # Default to 'false'
     fins = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    fleet_param = '/home/frostlab/config/fleet_params.yaml'
     namespace = ''
 
     for arg in sys.argv:
@@ -33,6 +34,8 @@ def generate_launch_description():
             namespace = arg.split(':=')[1]
         if arg.startswith('param_file:='):
             param_file = arg.split(':=')[1]
+        if arg.startswith('fleet_param:='):
+            fleet_param = arg.split(':=')[1]
         if arg.startswith("sim:="):
             sim = arg.split(":=")[1].lower()
         if arg.startswith("verbose:="):
@@ -57,7 +60,7 @@ def generate_launch_description():
         fins_manual = launch_ros.actions.Node(
             package='cougars_control',
             executable='fins_manual.py',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
             emulate_tty=True,
@@ -67,14 +70,14 @@ def generate_launch_description():
         manual_mission = launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         )
         controls = launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         )
@@ -105,7 +108,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='emergency_protocols',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
         ),
 
