@@ -52,10 +52,10 @@ public:
         writer_ = std::make_unique<rosbag2_cpp::Writer>();
         write_flag_ = false;
 
-        rclcpp::QoS qos_profile(5);  // Depth of 10 messages in the queue
+
+        rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
         qos_profile.reliable();       // Set reliability to reliable
         qos_profile.transient_local(); // Set durability to transient local
-
         system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
             "system/status", qos_profile, std::bind(&MultiTopicBagRecorder::system_callback, this, _1));
 
