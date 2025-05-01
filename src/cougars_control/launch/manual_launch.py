@@ -113,6 +113,16 @@ def generate_launch_description():
         # ),
 
 
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='emergency_protocols',
+            parameters=[param_file, fleet_param],
+            namespace=namespace,
+        ),
+
+        
+
+
     ])
 
     return launch.LaunchDescription(launch_actions)
