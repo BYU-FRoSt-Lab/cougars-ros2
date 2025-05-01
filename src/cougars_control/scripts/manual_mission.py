@@ -70,7 +70,7 @@ class ManualMission(Node):
         :param command_timer_period: The period at which the state machine updates the desired values. The default value is 0.5 seconds.
         '''
 
-        self.declare_parameter('states_config_path', '')
+        self.declare_parameter('mission_file_path', '')
         '''
         :param states file path 
         '''
@@ -139,7 +139,7 @@ class ManualMission(Node):
     
     def load_states(self):
         # Load JSON file
-        json_path = self.get_parameter('states_config_path').value
+        json_path = self.get_parameter('mission_file_path').value
         try:
             with open(json_path) as f:
                 data = json.load(f)
