@@ -17,6 +17,7 @@ def generate_launch_description():
     '''
 
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    fleet_param = '/home/frostlab/config/fleet_params.yaml'
     GPS = "false"  # Default to 'false'
     verbose = "false"
     namespace=''
@@ -26,6 +27,8 @@ def generate_launch_description():
             namespace = arg.split(':=')[1]
         if arg.startswith('param_file:='):
             param_file = arg.split(':=')[1]
+        if arg.startswith('fleet_param:='):
+            fleet_param = arg.split(':=')[1]
         if arg.startswith("verbose:="):
             verbose = arg.split(":=")[1].lower()
         if arg.startswith("GPS:="):
@@ -69,7 +72,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         ),
@@ -77,7 +80,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         ),
