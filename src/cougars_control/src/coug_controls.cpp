@@ -811,6 +811,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
+  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 

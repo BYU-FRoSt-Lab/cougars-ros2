@@ -41,10 +41,12 @@ class SystemStatusPublisher(Node):
             start_input = input("Start the node? (y/n): ").strip().lower()
             rosbag_flag_input = input("Record rosbag? (y/n): ").strip().lower()
             rosbag_prefix_input = input("Enter rosbag prefix (string): ").strip()
+            arm_thruster_input = input("Arm Thruster? (y/n): ").strip().lower()
 
             msg.start = Bool(data=start_input == "y")
             msg.rosbag_flag = Bool(data=rosbag_flag_input == "y")
             msg.rosbag_prefix = rosbag_prefix_input
+            msg.thruster_arm = Bool(data=arm_thruster_input == "y")
 
             # Publish message
             # TODO control which vehicles to publish to
@@ -52,7 +54,7 @@ class SystemStatusPublisher(Node):
             self.coug2_publisher_.publish(msg)
             self.coug3_publisher_.publish(msg)
             self.get_logger().info("Published SystemControl message.")
-            self.get_logger().info(f"Start: {msg.start.data}, Rosbag Flag: {msg.rosbag_flag.data}, Prefix: {msg.rosbag_prefix}")
+            self.get_logger().info(f"Start: {msg.start.data}, Rosbag Flag: {msg.rosbag_flag.data}, Prefix: {msg.rosbag_prefix}, Thruster: {msg.thruster_arm.data}")
 
         except Exception as e:
             self.get_logger().error(f"Error getting user input: {e}")
