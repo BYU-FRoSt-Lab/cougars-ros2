@@ -1,5 +1,12 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <filesystem>
+#include <fstream>
+#include <cstdlib>
+#include <chrono>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 
 // DVL messages
 #include <dvl_msgs/msg/dvl.hpp>
@@ -56,6 +63,7 @@ public:
         this->declare_parameter<bool>("system", true);
         this->declare_parameter<bool>("processed", true);
         this->declare_parameter<bool>("controls", true);
+        this->declare_parameter<std::string>("mission_file_path", "");
 
         bool sensors, system, processed, controls;
         this->get_parameter("sensors", sensors);
@@ -135,13 +143,31 @@ private:
     void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
     {
         RCLCPP_INFO(this->get_logger(), "Received system control message: start=%d, rosbag_flag=%d", msg->start.data, msg->rosbag_flag.data);
-        // Ensure you're checking the actual boolean values from the Bool messages
+
         if (msg->start.data && msg->rosbag_flag.data) {
-            writer_->open(get_bag_filename(msg->rosbag_prefix));  
+            std::string bag_folder = get_bag_filename(msg->rosbag_prefix);
+
+            writer_->open(bag_folder);  
             write_flag_ = true;
+
+            // Retrieve the mission file path from parameter
+            std::string mission_file_src;
+            if (this->get_parameter("mission_file_path", mission_file_src) && !mission_file_src.empty()) {
+                // TODO just get the name of the mission from the file path instead
+                std::string mission_file_dst = bag_folder + "/mission.json";
+                try {
+                    std::filesystem::copy_file(mission_file_src, mission_file_dst,
+                                            std::filesystem::copy_options::overwrite_existing);
+                    RCLCPP_INFO(this->get_logger(), "Copied mission file to %s", mission_file_dst.c_str());
+                } catch (std::filesystem::filesystem_error& e) {
+                    RCLCPP_WARN(this->get_logger(), "Failed to copy mission file: %s", e.what());
+                }
+            } else {
+                RCLCPP_WARN(this->get_logger(), "mission_file_path parameter is not set or empty");
+            }
+
         } else {
             write_flag_ = false;
-            // Stop the current rosbag recording
             writer_->close();
         }
     }
@@ -150,8 +176,10 @@ private:
     {
         auto now = std::chrono::system_clock::now();
         auto now_c = std::chrono::system_clock::to_time_t(now);
+        // TODO parameterize this bag dir
+        std::string bag_dir = "/home/frostlab/bag";
         std::stringstream ss;
-        ss << prefix << "_" << std::put_time(std::localtime(&now_c), "%Y%m%d_%H%M%S");
+        ss << bag_dir << prefix << "_" << std::put_time(std::localtime(&now_c), "%Y%m%d_%H%M%S");
         return ss.str();
     }
 
