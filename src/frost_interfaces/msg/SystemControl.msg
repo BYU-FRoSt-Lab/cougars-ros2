@@ -11,3 +11,9 @@ std_msgs/Bool rosbag_flag
 
 # Prefix for rosbag
 string rosbag_prefix
+
+# Epoch start for Modem
+
+# Origin
+
+# Mission Type
