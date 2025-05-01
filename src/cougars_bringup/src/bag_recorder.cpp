@@ -178,7 +178,7 @@ private:
         auto now = std::chrono::system_clock::now();
         auto now_c = std::chrono::system_clock::to_time_t(now);
         // TODO parameterize this bag dir
-        std::string bag_dir = "/home/frostlab/bag";
+        std::string bag_dir = "/home/frostlab/bag/";
         std::stringstream ss;
         ss << bag_dir << prefix << "_" << std::put_time(std::localtime(&now_c), "%Y%m%d_%H%M%S");
         return ss.str();
