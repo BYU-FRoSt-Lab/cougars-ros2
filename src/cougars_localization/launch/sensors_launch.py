@@ -67,12 +67,6 @@ def generate_launch_description():
             parameters=[param_file, fleet_param],
             namespace=namespace,
         ),
-        launch_ros.actions.Node(
-            package='cougars_localization',
-            executable='dvl_manager.py',
-            parameters=[param_file, fleet_param],
-            namespace=namespace,
-        ),
 
         # Serial Teensy connection
         launch_ros.actions.Node(
