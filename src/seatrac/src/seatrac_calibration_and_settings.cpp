@@ -66,7 +66,7 @@ bool yn_answer() {
         std::cout << "Invalid response. Please enter 'y' or 'n': ";
         }
 }
-inline int get_int(char* param_name, int min, int max) {
+inline int get_int(const char* param_name, int min, int max) {
     int val;
     while(true) {
         std::cout << "Enter New "<<param_name<<" (integer between "<<min<<" and "<<max<<" inclusive): ";
@@ -220,7 +220,7 @@ void manual_set_settings(CalibrationDriver& seatrac, SETTINGS_T& settings) {
         std::cout << "Manual Settings upload complete." << std::endl << std::endl; 
 }
 
-int main(int argc, char *argv[]) {
+int main() {
 
     std::cout << "=== Seatrac x150 Calibration and Settings Tool ==="    << std::endl << std::endl;
 
