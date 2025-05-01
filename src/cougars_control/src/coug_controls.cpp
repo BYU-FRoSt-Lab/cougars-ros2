@@ -19,6 +19,7 @@
 #include "frost_interfaces/msg/controls_debug.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
+#include <frost_interfaces/msg/system_control.hpp>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -29,9 +30,6 @@ auto qos = rclcpp::QoS(
     qos_profile);
 
 /**
- * @brief A simple controls node.
- * @author Nelson Durrant
- * @date September 2024
  *
  * This node subscribes to desired depth, heading, and speed topics and actual
  * depth and heading topics. It then computes the control commands using various
@@ -287,6 +285,13 @@ public:
         "dvl/velocity", qos,
         std::bind(&CougControls::dvl_velocity_callback, this, _1));
 
+    rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
+    qos_profile.reliable();       // Set reliability to reliable
+    qos_profile.transient_local(); // Set durability to transient local
+    system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
+            "system/status", qos_profile, std::bind(&CougControls::system_callback, this, _1));
+
+
     this->velocity[0] = 0.6f;
     this->velocity[1] = 0.0f;
     this->velocity[2] = 0.0f;
@@ -368,6 +373,16 @@ private:
         RCLCPP_INFO(this->get_logger(), "Controller Node de-initialized.");
     }
   }
+
+  void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
+  {
+     // Set the boolean to the requested value
+    this->init_flag = msg->thruster_arm.data;
+    RCLCPP_INFO(this->get_logger(), this->init_flag ? "Controller Node initialized." : "Controller Node de-initialized.");
+    update_parameters();
+
+  }
+
 
   /**
    * @brief Callback function for the desired_depth subscription.
@@ -692,6 +707,8 @@ private:
       actual_velocity_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
+  rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
+  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
 
   rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "frost_interfaces/msg/u_command.hpp"
+#include "frost_interfaces/msg/system_control.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -157,6 +158,12 @@ public:
         this->create_subscription<frost_interfaces::msg::UCommand>(
             "controls/command", 10,
             std::bind(&CougKinematics::command_callback, this, _1));
+
+    rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
+    qos_profile.reliable();       // Set reliability to reliable
+    qos_profile.transient_local(); // Set durability to transient local
+    system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
+            "system/status", qos_profile, std::bind(&CougKinematics::system_callback, this, _1));
   }
 
 private:
@@ -207,6 +214,18 @@ private:
     command_publisher_->publish(command);
   }
 
+  void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
+  {
+     // Set the boolean to the requested value
+    arm_thruster_ = msg->thruster_arm.data;
+    RCLCPP_INFO(this->get_logger(), arm_thruster_ ? "Thruster armed!" : "Thruster unarmed!");
+    
+    if(!arm_thruster_){
+      surface_command_.thruster = 0;
+    }
+
+  }
+
   void arm_thruster(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
                         std::shared_ptr<std_srvs::srv::SetBool::Response> response)
   {
@@ -251,6 +270,8 @@ private:
       command_publisher_;
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr
       command_subscription_;
+  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
+
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr arm_service_;
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr surface_service_;
 };
