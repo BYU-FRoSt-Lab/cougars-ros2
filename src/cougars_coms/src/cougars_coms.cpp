@@ -32,6 +32,14 @@ public:
         this->thruster_client_ = this->create_client<std_srvs::srv::SetBool>(
             "arm_thruster"
         );
+
+        this->surface_client_ = this->create_client<std_srvs::srv::SetBool>(
+            "surface"
+        );
+
+        this->init_controls_client_ = this->create_client<std_srvs::srv::SetBool>(
+            "init_controls"
+        );
     }
 
     void listen_to_modem(seatrac_interfaces::msg::ModemRec msg) {
@@ -39,9 +47,18 @@ public:
         switch(id) {
             default: break;
             case EMPTY: break;
+            case EMERGENCY_SURFACE: {
+                emergency_surface();
+            } break;
             case EMERGENCY_KILL: {
                 kill_thruster();
             } break;
+            case INIT_CONTROLS: {
+                init_controls();
+            } break;
+            case VEHICLE_STATUS: {
+                send_status();
+            }
         }
     }
 
@@ -75,6 +92,70 @@ public:
         );
     }
 
+    void emergency_surface() {
+        auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+        request->data = true;
+        while (!this->surface_client_->wait_for_service(1s)) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), 
+                    "Interrupted while waiting for the surface service. Exiting.");
+            }
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "surface service not available, waiting again...");
+        }
+
+        auto result_future = this->surface_client_->async_send_request(request,
+            [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response_future) {
+                try {
+                    auto response = response_future.get();
+                    if (response->success) {
+                        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Surface command was successfull.");
+                    } else {
+                        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Surface command failed.");
+                    }
+                    ConfirmEmergencySurface msg;
+                    msg.success = response->success;
+                    this->send_acoustic_message(base_station_beacon_id_, 1, (uint8_t*)&msg);
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "Error while trying to send surface command: %s", e.what());
+                }
+            }
+        );
+    }
+
+    void init_controls() {
+        auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+        request->data = true;
+        while (!this->init_controls_client_->wait_for_service(1s)) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), 
+                    "Interrupted while waiting for the init_controls service. Exiting.");
+            }
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "init_controls service not available, waiting again...");
+        }
+
+        auto result_future = this->init_controls_client_->async_send_request(request,
+            [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response_future) {
+                try {
+                    auto response = response_future.get();
+                    if (response->success) {
+                        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Coug has been initialized.");
+                    } else {
+                        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to initialize Coug");
+                    }
+                    ConfirmInitControls msg;
+                    msg.success = response->success;
+                    this->send_acoustic_message(base_station_beacon_id_, 1, (uint8_t*)&msg);
+                } catch (const std::exception &e) {
+                    RCLCPP_ERROR(this->get_logger(), "Error while trying to initialize coug: %s", e.what());
+                }
+            }
+        );
+    }
+
+    void send_status(){
+        
+    }
+
     void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
         auto request = seatrac_interfaces::msg::ModemSend();
         request.msg_id = 0x60; //CID_DAT_SEND
@@ -92,6 +173,8 @@ private:
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
+    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_client_;
+    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr init_controls_client_;
 
     int base_station_beacon_id_;
 
