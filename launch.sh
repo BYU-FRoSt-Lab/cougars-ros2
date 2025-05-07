@@ -2,7 +2,7 @@
 #
 # Starts the ROS 2 launch files
 # - Specify a launch configuration using 'bash launch.sh <launch>' (ex. 'bash launch.sh moos')
-
+source ~/config/cougarsrc.sh
 
 cleanup() {
   echo ""
