@@ -4,7 +4,7 @@
 # - Specify a DVL acoustics power state using 'bash record.sh <state>' (ex. 'bash record.sh off')
 # - Run this after running the 'launch.sh', 'test.sh' scripts
 # - Log files are saved in 'CoUGARs/bag' on the host machine running the docker container
-
+source ~/config/cougarsrc.sh
 
 if [ "$(uname -m)" == "aarch64" ]; then
   case $1 in
