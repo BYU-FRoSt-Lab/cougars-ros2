@@ -1,4 +1,5 @@
 #!/bin/bash
+source ~/config/cougarsrc.sh
 
 # Function to handle service call responses
 function handleServiceCall {

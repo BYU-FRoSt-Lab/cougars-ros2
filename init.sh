@@ -1,4 +1,5 @@
 #!/bin/bash
+source ~/config/cougarsrc.sh
 
 # Initializes the vehicle nodes
 # - This bash script is called by the 'record.sh' script already
