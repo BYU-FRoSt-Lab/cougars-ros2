@@ -2,15 +2,18 @@
 
 import rclpy
 from rclpy.node import Node
-from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
+from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed, SystemControl
 from std_srvs.srv import SetBool
 from rclpy.qos import qos_profile_system_default
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+
+import json
 
 
 class ManualMission(Node):
     '''
-    :author: Nelson Durrant
-    :date: September 2024
+    :author: Braden Meyers
+    :date: Apr 2025
 
     A simple ROS2 node that publishes desired depth, heading, and speed values to control the vehicle.
     The desired values are set based on a simple state machine that transitions between three states.
@@ -19,6 +22,7 @@ class ManualMission(Node):
         - desired_depth (frost_interfaces/msg/DesiredDepth)
         - desired_heading (frost_interfaces/msg/DesiredHeading)
         - desired_speed (frost_interfaces/msg/DesiredSpeed)
+        - system_status (indicate the termination of the mission)
         
     Services:
         - init (std_srvs/srv/Empty) 
@@ -29,76 +33,31 @@ class ManualMission(Node):
         '''
         super().__init__("manual_mission")
 
+        # Default and initial parameters
+        self.period = 0.5
+        self.counter = 0
+        self.state_index = 0
+        self.started = False
+
+        self.last_depth = -1.0
+        self.last_heading = -1.0
+        self.last_speed = -1.0
+        
         # Declare parameters
         self.declare_parameter('vehicle_id', 0)
-        '''
-        :param vehicle_id: The ID of the vehicle. The default value is 0.
-        '''
 
-        self.declare_parameter('command_timer_period', 0.5) # in seconds
+        self.declare_parameter('command_timer_period', self.period) # in seconds
         '''
         :param command_timer_period: The period at which the state machine updates the desired values. The default value is 0.5 seconds.
         '''
 
-        self.declare_parameter('state_1_count', 0) # in intervals based on command_timer_period
+        self.declare_parameter('mission_file_path', '')
         '''
-        :param state_1_count: The number of intervals for state 1, based on the command_timer_period. The default value is 0.
-        '''
-
-        self.declare_parameter('state_1_depth', 0.0)
-        '''
-        :param state_1_depth: The desired depth value for state 1. The default value is 0.0.
+        :param states file path 
         '''
 
-        self.declare_parameter('state_1_heading', 0.0)
-        '''
-        :param state_1_heading: The desired heading value for state 1. The default value is 0.0.
-        '''
-
-        self.declare_parameter('state_1_speed', 0.0)
-        '''
-        :param state_1_speed: The desired speed value for state 1. The default value is 0.0.
-        '''
-
-        self.declare_parameter('state_2_count', 0) # in intervals based on command_timer_period
-        '''
-        :param state_2_count: The number of intervals for state 2, based on the command_timer_period. The default value is 0.
-        '''
-
-        self.declare_parameter('state_2_depth', 0.0)
-        '''
-        :param state_2_depth: The desired depth value for state 2. The default value is 0.0.
-        '''
-
-        self.declare_parameter('state_2_heading', 0.0)
-        '''
-        :param state_2_heading: The desired heading value for state 2. The default value is 0.0.
-        '''
-
-        self.declare_parameter('state_2_speed', 0.0)
-        '''
-        :param state_2_speed: The desired speed value for state 2. The default value is 0.0.
-        '''
-
-        self.declare_parameter('state_3_count', 0) # in intervals based on command_timer_period
-        '''
-        :param state_3_count: The number of intervals for state 3, based on the command_timer_period. The default value is 0.
-        '''
-
-        self.declare_parameter('state_3_depth', 0.0)
-        '''
-        :param state_3_depth: The desired depth value for state 3. The default value is 0.0.
-        '''
-
-        self.declare_parameter('state_3_heading', 0.0)
-        '''
-        :param state_3_heading: The desired heading value for state 3. The default value is 0.0.
-        '''
-
-        self.declare_parameter('state_3_speed', 0.0)
-        '''
-        :param state_3_speed: The desired speed value for state 3. The default value is 0.0.
-        '''
+        
+        self.states = []  # Initialize as an empty list
 
         # Create the publishers
         self.depth_publisher = self.create_publisher(
@@ -147,42 +106,69 @@ class ManualMission(Node):
         Service for the "init_manual" topic with the service type SetBool.
         '''
 
-        self.counter = 0
-        self.started = False
+        # Create the system services subscriber and publisher
+        qos_reliable_profile = QoSProfile(depth=5)
+        qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
+        qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
-        self.last_depth = -1.0
-        self.last_heading = -1.0
-        self.last_speed = -1.0
+        # TODO: Document
+        self.system_status_pub = self.create_publisher(SystemControl, 'system/status', qos_reliable_profile)
+        self.system_status_sub = self.create_subscription(SystemControl, 'system/status', self.system_status_callback, qos_reliable_profile)
 
         self.get_parameters()
 
-        
+    
+    def load_states(self):
+        # Load JSON file
+        json_path = self.get_parameter('mission_file_path').value
+        try:
+            with open(json_path) as f:
+                data = json.load(f)
+                self.states = data.get('states', [])  # Load the states list
+                self.get_logger().info(f"Loaded {len(self.states)} states")
+        except Exception as e:
+            self.get_logger().error(f"Failed to load JSON: {e}")
+            self.states = []
+
 
     def get_parameters(self):
-        self.state_1_count = self.get_parameter("state_1_count").get_parameter_value().integer_value
-        self.state_1_depth = self.get_parameter("state_1_depth").get_parameter_value().double_value
-        self.state_1_heading = self.get_parameter("state_1_heading").get_parameter_value().double_value
-        self.state_1_speed = self.get_parameter("state_1_speed").get_parameter_value().double_value
-
-        self.state_2_count = self.get_parameter("state_2_count").get_parameter_value().integer_value + self.state_1_count
-        self.state_2_depth = self.get_parameter("state_2_depth").get_parameter_value().double_value
-        self.state_2_heading = self.get_parameter("state_2_heading").get_parameter_value().double_value
-        self.state_2_speed = self.get_parameter("state_2_speed").get_parameter_value().double_value
-
-        self.state_3_count = self.get_parameter("state_3_count").get_parameter_value().integer_value + self.state_2_count
-        self.state_3_depth = self.get_parameter("state_3_depth").get_parameter_value().double_value
-        self.state_3_heading = self.get_parameter("state_3_heading").get_parameter_value().double_value
-        self.state_3_speed = self.get_parameter("state_3_speed").get_parameter_value().double_value
+        self.load_states()  # Load states from JSON file
 
         self.destroy_timer(self.timer)
+        self.period = self.get_parameter("command_timer_period").get_parameter_value().double_value
 
         # Create a new timer with the updated period
-        self.timer = self.create_timer(self.get_parameter("command_timer_period").get_parameter_value().double_value, self.timer_callback)
+        self.timer = self.create_timer(self.period, self.timer_callback)
 
         self.get_logger().info("Manual Mission Parameters Updated!")
 
     
+    def system_status_callback(self, msg):
+        '''
+        Callback function for the init service.
+        Sets the started flag to False when the init request is true.
+
+        Sets the started flag to True and resets the counter when request is false
+
+        '''
+        init_bool = msg.start.data
+        if init_bool:
+            if self.started:
+                self.get_logger().info('Manual Mission has already been started. Needs to be reset before initialization')
+            else:
+                self.get_parameters()
+                self.started = init_bool
+                self.get_logger().info('Manual Mission Started')
+                self.counter = 0
+                self.state_index = 0
+        else:
+            self.started = False
+            self.counter = 0
+            self.state_index = 0
+            self.get_logger().info('Manual Mission Stopped')
+
     def listener_callback(self, request, response):
+        # TODO: This will be deprecated soon
         '''
         Callback function for the init service.
         Sets the started flag to False when the init request is true.
@@ -207,6 +193,8 @@ class ManualMission(Node):
             response.success = True
             response.message = 'Manual Mission Restarted'
 
+        self.get_logger().info("this function is soon to be deprecated")
+
         return response
 
 
@@ -221,28 +209,43 @@ class ManualMission(Node):
         heading_msg = DesiredHeading()
         speed_msg = DesiredSpeed()
 
-        # TODO: Adjust this simple state machine
-        if self.started and self.counter < self.state_1_count:
-            depth_msg.desired_depth = self.state_1_depth
-            heading_msg.desired_heading = self.state_1_heading
-            speed_msg.desired_speed = self.state_1_speed
 
-            self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
 
-        elif self.started and self.counter < self.state_2_count:
-            depth_msg.desired_depth = self.state_2_depth
-            heading_msg.desired_heading = self.state_2_heading
-            speed_msg.desired_speed = self.state_2_speed
+        # TODO actuallly start a timer instead of just counting ticks!!
+        # Iterate through the states
+        if self.states and self.started:
+            if self.state_index < len(self.states):  # Technically this is redundant
+                current_state = self.states[self.state_index]
+                depth_msg.desired_depth = current_state['depth']
+                heading_msg.desired_heading = current_state['heading']
+                speed_msg.desired_speed = current_state['speed']
+            
+                if self.counter < current_state['time_seconds']:
+                    
+                    self.counter += self.period
+                else:
+                    # State time is up, move to the next state
+                    self.state_index += 1   # DO NOT REMOVE THIS LINE OR BAD THINGS WILL HAPPEN :)
+                    self.counter = 0.0  # Reset the counter for the next state 
 
-            self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
+                    # When completed all the states
+                    if self.state_index == len(self.states):
+                        # Reset the variables - This might be redundant because we have a subscriber
+                        self.started = False
+                        self.counter = 0.0
+                        self.state_index = 0
 
-        elif self.started and self.counter < self.state_3_count:
-            depth_msg.desired_depth = self.state_3_depth
-            heading_msg.desired_heading = self.state_3_heading
-            speed_msg.desired_speed = self.state_3_speed
+                        msg = SystemControl()
+                        msg.header.stamp = self.get_clock().now().to_msg()
+                        msg.start.data = False
+                        msg.rosbag_flag.data = False
 
-            self.counter += 1 # DO NOT DELETE THIS OR BAD THINGS WILL HAPPEN - NELSON
+                        self.system_status_pub.publish(msg)
 
+            else:
+                depth_msg.desired_depth = 0.0
+                heading_msg.desired_heading = 0.0
+                speed_msg.desired_speed = 0.0
         else:
             depth_msg.desired_depth = 0.0
             heading_msg.desired_heading = 0.0
@@ -263,8 +266,7 @@ class ManualMission(Node):
                 depth_msg.desired_depth,
                 heading_msg.desired_heading,
                 speed_msg.desired_speed,
-            )
-        )
+            ))
             
         # Save last values
         self.last_depth = depth_msg.desired_depth

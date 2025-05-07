@@ -38,10 +38,6 @@ auto qos = rclcpp::QoS(
  */
 class DepthConvertor : public rclcpp::Node {
 public:
-
-  /**
-   * Creates a new depth convertor node.
-   */
   DepthConvertor() : Node("depth_convertor") {
 
     /**
@@ -98,6 +94,12 @@ public:
 
     calibration_timer_ = this->create_wall_timer(
         std::chrono::milliseconds(500), std::bind(&DepthConvertor::timer_calibration_callback, this));
+
+    // Start a calibration on startup of the node:
+    calibration_in_progress_ = true;
+    pressure_readings_.clear();
+    RCLCPP_INFO(this->get_logger(), "Calibration started. Collecting pressure samples...");
+    start_time_ = this->now();
   }
 
 private:
