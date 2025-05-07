@@ -17,6 +17,7 @@
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "frost_interfaces/msg/controls_debug.hpp"
+#include "dvl_msgs/msg/dvl.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 #include <frost_interfaces/msg/system_control.hpp>
