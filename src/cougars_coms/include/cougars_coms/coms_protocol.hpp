@@ -26,8 +26,8 @@ enum COUG_MSG_ID : uint8_t {
     EMERGENCY_SURFACE = 0x50,
     CONFIRM_EMERGENCY_SURFACE = 0x51,
 
-    INIT_CONTROLS = 0x60,
-    CONFIRM_INIT_CONTROLS = 0x61
+    INIT_COUG = 0x60,
+    CONFIRM_INIT_COUG = 0x61
 
 
 };
@@ -46,12 +46,12 @@ struct EmergencySurface {
     COUG_MSG_ID msg = EMERGENCY_SURFACE;
 }__attribute__((packed));
 
-struct InitControls {
-    static const COUG_MSG_ID msg_id = INIT_CONTROLS;
+struct InitCoug{
+    static const COUG_MSG_ID msg_id = INIT_COUG;
 }__attribute__((packed));
 
-struct ConfirmInitControls {
-    static const COUG_MSG_ID msg_id = CONFIRM_INIT_CONTROLS;
+struct ConfirmInitCoug{
+    static const COUG_MSG_ID msg_id = CONFIRM_INIT_COUG;
     bool success;
 }__attribute__((packed));
 
