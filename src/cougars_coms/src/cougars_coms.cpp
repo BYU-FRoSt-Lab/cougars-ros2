@@ -44,8 +44,8 @@ public:
             "surface"
         );
 
-        this->init_controls_client_ = this->create_client<std_srvs::srv::SetBool>(
-            "init_manual"
+        this->init_coug_client_ = this->create_client<std_srvs::srv::SetBool>(
+            "init_coug"
         );
     }
 
@@ -137,15 +137,15 @@ public:
     void init_coug() {
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
         request->data = true;
-        while (!this->init_controls_client_->wait_for_service(1s)) {
+        while (!this->init_coug_client_->wait_for_service(1s)) {
             if (!rclcpp::ok()) {
                 RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), 
-                    "Interrupted while waiting for the init_controls service. Exiting.");
+                    "Interrupted while waiting for the init_coug service. Exiting.");
             }
             RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "init_controls service not available, waiting again...");
         }
 
-        auto result_future = this->init_controls_client_->async_send_request(request,
+        auto result_future = this->init_coug_client_->async_send_request(request,
             [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response_future) {
                 try {
                     auto response = response_future.get();
