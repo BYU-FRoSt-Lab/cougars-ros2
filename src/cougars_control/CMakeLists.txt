@@ -44,7 +44,7 @@ ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS 
 
 
 add_executable(emergency_protocols src/emergency_protocols.cpp)
-ament_target_dependencies(emergency_protocols rclcpp std_msgs frost_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
+ament_target_dependencies(emergency_protocols rclcpp std_msgs gps_msgs dvl_msgs frost_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
 
 # Link libraries
 target_link_libraries(coug_controls)

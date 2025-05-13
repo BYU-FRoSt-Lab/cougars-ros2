@@ -26,6 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ControlDebug.msg"
   "msg/ControlsDebug.msg"
   "msg/SystemControl.msg"
+  "msg/SystemStatus.msg"
   DEPENDENCIES std_msgs
   DEPENDENCIES nav_msgs
 )
