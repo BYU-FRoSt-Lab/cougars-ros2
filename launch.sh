@@ -52,11 +52,11 @@ echo ""
 
 if [ "$(uname -m)" == "aarch64" ]; then
   # Quick fix for daemon error (TODO: find a better solution)
-  ros2 daemon stop
-  ros2 daemon start
-  sleep 3
+  # ros2 daemon stop
+  # ros2 daemon start
+  # sleep 3
   # Start the strobe light and Teensy board
-  bash ~/gpio/strobe.sh on
+  # bash ~/gpio/strobe.sh on
   bash ~/gpio/power.sh on
 
   # Test for Teensy board connection
