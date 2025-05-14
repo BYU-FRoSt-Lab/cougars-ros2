@@ -385,8 +385,29 @@ private:
     myHeadingPID.print_values();
 
   }
-  
-  
+  void handle_factor_response(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future){
+    auto response = future.get();
+    if(response->success){
+      RCLCPP_INFO(this->get_logger(),"Factor graph started");
+    } else {
+      RCLCPP_INFO(this->get_logger(),"Factor graph startup unsuccesful");
+    } 
+  }
+  void start_factor_graph(){
+        //init factor graph
+        rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr factorClient = this->create_client<std_srvs::srv::SetBool>("init_factor_graph");
+        while (!factorClient->wait_for_service(std::chrono::seconds(1))) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+                return;
+            }
+            RCLCPP_INFO(this->get_logger(), "Service not available, waiting again...");
+        }
+        auto factorRequest = std::make_shared<std_srvs::srv::SetBool::Request>();
+        factorRequest->data=true;
+        factorClient->async_send_request(factorRequest,std::bind(&CougControls::handle_factor_response,this,_1));
+
+  }
   /**
    * @brief Callback function for the initialization service.
    *
@@ -404,6 +425,7 @@ private:
         response->message = "Controller Node initialized.";
 
         update_parameters();
+        start_factor_graph();
         RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
     } else {
         response->success = false;
