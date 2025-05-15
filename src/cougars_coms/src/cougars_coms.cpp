@@ -75,6 +75,7 @@ public:
     }
 
     void kill_thruster() {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Recieved kill command from base station");
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
         request->data = false;
         while (!this->thruster_client_->wait_for_service(1s)) {
@@ -105,6 +106,7 @@ public:
     }
 
     void emergency_surface() {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Recieved surface command from base station");
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
         request->data = true;
         while (!this->surface_client_->wait_for_service(1s)) {
@@ -165,6 +167,7 @@ public:
     }
 
     void send_status(){
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending status to base station.");
         VehicleStatus status_msg;
         status_msg.moos_waypoint = 0;
         status_msg.moos_behavior_number = 0;
