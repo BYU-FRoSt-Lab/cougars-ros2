@@ -89,7 +89,15 @@ def generate_launch_description():
         
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
-        ),   
+        ),  
+        #start factor graph for logging
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='factor_graph.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ) 
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
