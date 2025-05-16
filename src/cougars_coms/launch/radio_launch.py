@@ -1,3 +1,6 @@
+# Launch file for the RF bridge node in the cougars_coms package
+
+
 import os
 from launch import LaunchDescription
 from launch_ros.actions import Node

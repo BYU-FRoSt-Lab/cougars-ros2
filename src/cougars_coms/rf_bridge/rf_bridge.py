@@ -19,30 +19,31 @@ class RFBridge(Node):
     def __init__(self):
         super().__init__('rf_bridge')
 
-        # Namespace logic (unchanged)
-        vehicle_ns = ''
-        try:
-            params = self.get_node_parameters_interface().get_parameter_overrides()
-            vehicle_namespaces = [key.split('.')[0] for key in params.keys()
-                                  if key.startswith('coug') and not key.startswith('/**')]
-            if vehicle_namespaces:
-                vehicle_ns = vehicle_namespaces[0]
-                self.get_logger().info(f"Found vehicle namespace from params: {vehicle_ns}")
-        except Exception as e:
-            self.get_logger().debug(f"Couldn't get namespace from parameters: {str(e)}")
-        if not vehicle_ns:
-            node_namespace = self.get_namespace()
-            if node_namespace and node_namespace != '/':
-                vehicle_ns = node_namespace.strip('/')
-                # self.get_logger().info(f"Using parent namespace: {vehicle_ns}")
-        if not vehicle_ns:
-            vehicle_ns = self.declare_parameter('namespace', '').value
-            if vehicle_ns:
-                self.get_logger().info(f"Using explicitly provided namespace: {vehicle_ns}")
-        self.namespace = vehicle_ns.strip('/')
-        if self.namespace and not self.namespace.endswith('/'):
-            self.namespace += '/'
-        # self.get_logger().info(f"Final vehicle namespace: '{self.namespace}'")
+        # Namespace logic not needed if you use the launch file
+
+        # vehicle_ns = ''
+        # try:
+        #     params = self.get_node_parameters_interface().get_parameter_overrides()
+        #     vehicle_namespaces = [key.split('.')[0] for key in params.keys()
+        #                           if key.startswith('coug') and not key.startswith('/**')]
+        #     if vehicle_namespaces:
+        #         vehicle_ns = vehicle_namespaces[0]
+        #         self.get_logger().info(f"Found vehicle namespace from params: {vehicle_ns}")
+        # except Exception as e:
+        #     self.get_logger().debug(f"Couldn't get namespace from parameters: {str(e)}")
+        # if not vehicle_ns:
+        #     node_namespace = self.get_namespace()
+        #     if node_namespace and node_namespace != '/':
+        #         vehicle_ns = node_namespace.strip('/')
+        #         # self.get_logger().info(f"Using parent namespace: {vehicle_ns}")
+        # if not vehicle_ns:
+        #     vehicle_ns = self.declare_parameter('namespace', '').value
+        #     if vehicle_ns:
+        #         self.get_logger().info(f"Using explicitly provided namespace: {vehicle_ns}")
+        # self.namespace = vehicle_ns.strip('/')
+        # if self.namespace and not self.namespace.endswith('/'):
+        #     self.namespace += '/'
+        # # self.get_logger().info(f"Final vehicle namespace: '{self.namespace}'")
 
         # Debug mode
         self.debug_mode = self.declare_parameter('debug_mode', False).value
@@ -201,6 +202,7 @@ class RFBridge(Node):
                 self.device.send_data_broadcast(response)
                 self.get_logger().info(f"Received STATUS, responding with sensor data")
                 self.get_logger().debug(f"Status response: {response}")
+            #TODO: when Braden adds the init system, update this
             elif payload == "INIT":
                 init_msg = String()
                 init_msg.data = "INIT_COMMAND"
