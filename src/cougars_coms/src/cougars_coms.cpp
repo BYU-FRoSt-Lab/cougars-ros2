@@ -44,8 +44,8 @@ public:
             "surface"
         );
 
-        this->init_coug_client_ = this->create_client<std_srvs::srv::SetBool>(
-            "init_coug"
+        this->start_mission_client_ = this->create_client<std_srvs::srv::SetBool>(
+            "start_mission"
         );
     }
 
@@ -60,8 +60,8 @@ public:
             case EMERGENCY_KILL: {
                 kill_thruster();
             } break;
-            case INIT_COUG: {
-                init_coug();
+            case START_MISSION: {
+                start_mission(msg);
             } break;
             case REQUEST_STATUS: {
                 send_status();
@@ -136,34 +136,8 @@ public:
         );
     }
 
-    void init_coug() {
-        auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
-        request->data = true;
-        while (!this->init_coug_client_->wait_for_service(1s)) {
-            if (!rclcpp::ok()) {
-                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), 
-                    "Interrupted while waiting for the init_coug service. Exiting.");
-            }
-            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "init_controls service not available, waiting again...");
-        }
-
-        auto result_future = this->init_coug_client_->async_send_request(request,
-            [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response_future) {
-                try {
-                    auto response = response_future.get();
-                    if (response->success) {
-                        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Coug has been initialized.");
-                    } else {
-                        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to initialize Coug");
-                    }
-                    ConfirmInitCoug msg;
-                    msg.success = response->success;
-                    this->send_acoustic_message(base_station_beacon_id_, 1, (uint8_t*)&msg);
-                } catch (const std::exception &e) {
-                    RCLCPP_ERROR(this->get_logger(), "Error while trying to initialize coug: %s", e.what());
-                }
-            }
-        );
+    void start_mission(seatrac_interfaces::msg::ModemRec msg) {
+        // this has to run record.sh with the instructions from msg
     }
 
     void send_status(){
