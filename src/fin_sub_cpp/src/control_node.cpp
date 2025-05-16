@@ -27,7 +27,7 @@ public:
 
         this->declare_parameter("demo_mode", false);
 
-        sp_set_baudrate(serial_port_, 9600);
+        sp_set_baudrate(serial_port_, 115200);
         // Open the serial port
 
 
