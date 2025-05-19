@@ -61,7 +61,7 @@ struct ConfirmVerifyLaunch {
 struct StartMission {
     static const COUG_MSG_ID msg_id = START_MISSION;
     bool record;
-    string folder
+    std::string folder;
 }__attribute__((packed));
 
 struct ConfirmStartMission {

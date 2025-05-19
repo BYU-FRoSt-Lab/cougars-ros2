@@ -3,7 +3,8 @@
 import rclpy
 from rclpy.node import Node
 from gps_msgs.msg import GPSFix
-from gps_msgs.msg import NavSatFix
+from sensor_msgs.msg import NavSatFix
+
 from nav_msgs.msg import Odometry
 import math
 from message_filters import Subscriber, TimeSynchronizer

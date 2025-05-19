@@ -43,10 +43,6 @@ public:
         this->surface_client_ = this->create_client<std_srvs::srv::SetBool>(
             "surface"
         );
-
-        this->start_mission_client_ = this->create_client<std_srvs::srv::SetBool>(
-            "start_mission"
-        );
     }
 
     void listen_to_modem(seatrac_interfaces::msg::ModemRec msg) {
