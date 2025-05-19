@@ -214,10 +214,10 @@ class ManualMission(Node):
                 response.success = False
                 response.message = 'Manual Mission has already been started. Needs to be reset before initialization'
             else:
-                self.get_parameters()
                 if self.gps_out_of_range():
-                    response.message = 'Current GPS coordinates are too large to start mission. Check origin longitude and latitude in params file.'
+                    response.message = f"Current GPS coordinates of ({self.x}, {self.y}) are too large to start mission. Check origin longitude and latitude in params file."
                     return response
+                self.get_parameters()
                 self.started = request.data
                 response.success = True
                 response.message = 'Manual Mission Started'
