@@ -8,10 +8,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 
 import os
-BAGNAME = '5.0_SO-2025-05-01-19-38-59/'
+BAGNAME = '6.0_SO-2025-05-01-20-02-31/'
 BAGDIR="/home/frostlab/bag/"
 NS='/coug1'
-
+RECORD_ROSBAG = False
 
 def generate_launch_description():
     '''
@@ -50,10 +50,13 @@ def generate_launch_description():
             executable='dummy_factor_starter.py',
             namespace=namespace,
             output=output,
-        ),
+        )
+    ])
+    if(RECORD_ROSBAG):
+        launch_actions.extend(
         launch.actions.TimerAction(
             period=2.0, #record after 2 seconds
             actions= [launch.actions.ExecuteProcess(cmd=["ros2", "bag", "record", NS+"/smoothed_output"],output=output)]
         )
-    ])
+        )
     return launch.LaunchDescription(launch_actions)
