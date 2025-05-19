@@ -54,35 +54,16 @@ public:
   ModemRosNode()
       : Node("modem_ros_node"), SeatracDriver(this->get_serial_port()), count_(0) {
     RCLCPP_INFO(this->get_logger(), "Starting seatrac modem Node");
-
     rec_pub_ =
         this->create_publisher<seatrac_interfaces::msg::ModemRec>("modem_rec", 10);
-
-    
     status_pub_ = this->create_publisher<seatrac_interfaces::msg::ModemStatus>("modem_status", 10);
     cmd_update_pub_ =
         this->create_publisher<seatrac_interfaces::msg::ModemCmdUpdate>("modem_cmd_update", 10);
-    
     subscriber_ = 
         this->create_subscription<seatrac_interfaces::msg::ModemSend>("modem_send", 10,
                       std::bind(&ModemRosNode::modem_send_callback, this, _1));
-
-
-    /**
-     * @param mission_start_time
-     * 
-     * A shared timestamp in seconds for all vehicles in a mission from which
-     * time in the mission is measured. The epoch should be the same
-     * time as the start of the mission and recording data.
-     * 
-     * Since acoustic modems can only send a limited number of bytes,
-     * having a shared epoch among all the vehicles reduces the number
-     * of bytes required to share a timestamp with sufficient precision.
-     * 
-     * This variable should also be saved, somehow, for reference in post
-     * processing.
-     */
-    this->declare_parameter<int>("mission_start_time", (this->get_clock()->now()).seconds());
+    queue_refresh_timer_ = this->create_wall_timer(
+      100ms, std::bind(&ModemRosNode::refresh_queue, this));
 
     /**
      * @param vehicle_ID
@@ -474,7 +455,9 @@ private:
 
   std::queue<seatrac_interfaces::msg::ModemSend::SharedPtr> send_queue;
   std::mutex send_mutex;
-  rclcpp::Time send_timestamp;
+  rclcpp::Time time_last_sent;
+  rclcpp::TimerBase::SharedPtr queue_refresh_timer_;
+  int send_delay_ticker=0;
 
   size_t count_;
   bool beacon_connected = false;
@@ -495,13 +478,23 @@ private:
       if(logging_verbosity>=2) RCLCPP_WARN(this->get_logger(), "Acoustic Message Queue size of %d is larger than %d", 
                     static_cast<int>(send_queue.size()), QUEUE_WARN_SIZE);
     if(send_queue.size()==1) send_acoustic_message(rosmsg);
-    else verify_modem_send(...)
   }
 
-  void attempt_send_acoustic_message(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
-    
+  //queue refresh at 10Hz
+  void refresh_queue() {
+    std::lock_guard<std::mutex> lock(send_mutex);  //locks mutex until method exits
+    attempt_send_acoustic_message();
+    if(send_delay_ticker>0) send_delay_ticker--;
   }
-
+  
+  void attempt_send_acoustic_message() {
+    //only run when send_queue_mutex is locked
+    if((send_queue.size()>=1) && (send_delay_ticker==0)) {
+      send_acoustic_message(send_queue.front());
+      time_last_sent = this->get_clock()->now();
+      send_delay_ticker = 4; //400ms for 4 ticks at 10Hz
+    }
+  }
   void send_acoustic_message(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     if(!beacon_connected) return;
     CID_E msgId = static_cast<CID_E>(rosmsg->msg_id);
