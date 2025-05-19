@@ -7,7 +7,7 @@ from sensor_msgs.msg import NavSatFix
 
 from nav_msgs.msg import Odometry
 import math
-from message_filters import Subscriber, TimeSynchronizer
+from message_filters import Subscriber, ApproximateTimeSynchronizer
 
 EARTH_RADIUS_METERS       = 6371000
 
@@ -47,18 +47,22 @@ class NavSatFixToOdom(Node):
         '''
         
         # Subscribe to NavSatFix
-        fix_sub = Subscriber(self, NavSatFix, 'fix')
+        self.extended_fix_sub = Subscriber(self, NavSatFix, 'fix')
         '''
         Subscription to the "extended_fix" topic with the message type GPSFix.
         '''
 
         # Subscribe to GPSFix to get covariance
-        extended_fix_sub = Subscriber(self, GPSFix, 'extended_fix')
+        self.fix_sub = Subscriber(self, GPSFix, 'extended_fix')
 
         # Message synchronizer enabling callback to use both fix and extended fix
         # This approch is necessary because currently covariance is only in the fix message, not extended fix
-        ts = TimeSynchronizer([fix_sub, extended_fix_sub], queue_size=10)
-        ts.registerCallback(self.gps_callback)
+        self.ts = ApproximateTimeSynchronizer(
+            [self.fix_sub, self.extended_fix_sub],
+            queue_size=10,
+            slop=0.001
+        )
+        self.ts.registerCallback(self.gps_callback)
         
         self.last_msg = None
         self.min_sats = 5  # Minimum number of satellites
@@ -76,12 +80,13 @@ class NavSatFixToOdom(Node):
         
         :param extended_msg: The GPSFix message received from the extended_fix topic.
         '''
+
         # Filter out bad readings based on the number of satellites (if available)
         if extended_msg.status.satellites_used < self.min_sats or extended_msg.latitude < 0.1:
-            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}", throttle_duration_sec=10)
+            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {extended_msg.status.satellites_used}", throttle_duration_sec=10)
             return
         
-        if math.isnan(msg.latitude) or math.isnan(msg.longitude) or math.isnan(msg.altitude):
+        if math.isnan(extended_msg.latitude) or math.isnan(extended_msg.longitude) or math.isnan(extended_msg.altitude):
             self.get_logger().warn("NaN detected in GPS position, skipping this reading", throttle_duration_sec=10)
             return
         
@@ -106,10 +111,7 @@ class NavSatFixToOdom(Node):
         # Set the covariance values for x, y, and z
         odom.pose.covariance[0] = fix_msg.position_covariance[0]  # xx
         odom.pose.covariance[7] = fix_msg.position_covariance[4]  # yy
-        odom.pose.covariance[14] = fix_msg.position_covariance[8]  # zz
-        
-        self.get_logger().info(f"X covariance: {odom.pose.covariance[0]}, Y covariance {odom.pose.covariance[7]}, Z covariance {odom.pose.covariance[14]}")
-
+        odom.pose.covariance[14] = fix_msg.position_covariance[8]  # zz 
 
         # Publish the odometry message
         self.last_msg = odom
