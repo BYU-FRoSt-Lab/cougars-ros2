@@ -35,7 +35,7 @@ class FactorGraphNode(Node):
 
     def __init__(self):
         super().__init__('factor_graph_node')
-
+        #PLOT
         # self.plot = Plotter()
 
         # Create Plotter objects with different series
@@ -46,8 +46,11 @@ class FactorGraphNode(Node):
 
         self.prev_x = 0
 
-        # number of seconds we take a dvl dead reck. pose
-        self.dvl_time_interval = 2
+        # number of seconds we take a dvl dead reck. pose/factor graph callback time
+        self.declare_parameter("factor_callback_seconds",.75) #was 2s
+        self.dvl_time_interval =  self.get_parameter("factor_callback_seconds").get_parameter_value().integer_value 
+
+        self.declare_parameter("max_factor_graph_size",40) #max number of factors
 
         # flags to start the whole system
         self.depth_received = False
@@ -61,7 +64,7 @@ class FactorGraphNode(Node):
         self.q_gps = []
         self.q_dvl = []
 
-        # map of poseKeys to time stamps
+        # map of poseKeys to time stamps - dvl synced
         self.poseKey_to_time = {}
         
         # 'pointer' to mark the oldest pose that we shouldn't worry about adding a unary factor to
@@ -115,12 +118,11 @@ class FactorGraphNode(Node):
         self.create_subscription(PoseWithCovarianceStamped, 'dvl/dead_reckoning', self.dvl_callback, 10) # for between factor (dead reckon. pose to pose)
         # signal to add prior (should be sent after DVL-lock and ref. gps/ heading is stored and DVL is restarted)
 
-        # Publisher
-
         # Service
         # self.create_subscription(Empty, 'init', self.init_callback, 10)
         self.create_service(SetBool, 'init_factor_graph', self.init_callback)
 
+        # Publisher
         # publishes the LATEST output of the smoothing and mapping (most importantly gps x,y), although remember the whole path is being smoothed
         self.vehicle_status_pub = self.create_publisher(Odometry, 'smoothed_output', 10)
         self.odom_msg = Odometry()
@@ -131,9 +133,9 @@ class FactorGraphNode(Node):
         # Initialize the transform broadcaster
         self.tf_broadcaster = StaticTransformBroadcaster(self)
     
-
-    # error functions for unary factors
-
+    ###############################################
+    ##### error functions for unary factors #######
+    ###############################################
 
     def get_unary_heading(self, pose, measurement):
 
@@ -287,24 +289,7 @@ class FactorGraphNode(Node):
         H[:3, 3] = t
         return H
 
-    # update at every tick of the timer (after between factor and checking for unary factors)
-    def update(self):
-        self.isam.update(self.graph, self.initialEstimate)
-        self.result = self.isam.calculateEstimate()
-        print("translation ", self.result.atPose3(self.agent.poseKey).translation())
-        print("poseKey number: ", self.agent.poseKey)
-        self.xyz = self.result.atPose3(self.agent.poseKey).translation()
-        print("latest pose x result: ", self.result.atPose3(self.agent.poseKey).translation()[0])
-        print("latest pose y result: ", self.result.atPose3(self.agent.poseKey).translation()[1])
-        print("1st pose x result: ", self.result.atPose3(int(1)).translation()[0])
-        print("1st pose y result: ", self.result.atPose3(int(1)).translation()[1])
-        # print("2nd pose x result: ", self.result.atPose3(int(2)).translation()[0])
-        # print("2nd pose y result: ", self.result.atPose3(int(2)).translation()[1])
-        self.isam.update()
-        self.isam.update()
-        self.isam.update()
-        self.initialEstimate.clear()
-        self.graph.resize(0)
+
 
 
     
@@ -324,6 +309,7 @@ class FactorGraphNode(Node):
         self.orientation_matrix = r.as_matrix()
 
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        #PLOT
         # self.plot.add_measurement(DUMMY_IMU_VAL,time,posekey=None,sensor='imu')
     
 
@@ -340,6 +326,7 @@ class FactorGraphNode(Node):
 
 
         time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        #PLOT
         # self.plot.add_measurement(self.position[2],time,posekey=None,sensor='depth')
     
         if self.deployed:
@@ -355,8 +342,8 @@ class FactorGraphNode(Node):
         self.position[1] = msg.pose.pose.position.y
         self.gps_z = msg.pose.pose.position.z
         # self.position_covariance = np.array(msg.pose.covariance).reshape(3, 3)
-        #Plot
-        time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
+        #PLOT
+        #time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
         # self.plot.add_measurement(self.position[0],time,sensor='gps')
         # self.x_gps.add_measurement(self.position[0], time)
         # print("gps:", self.position[0], time)
@@ -373,8 +360,6 @@ class FactorGraphNode(Node):
         self.dvl_position[1] = msg.pose.pose.position.y
         self.dvl_position[2] = msg.pose.pose.position.z
         self.dvl_std = msg.pose.covariance[0]
-        # self.std_pose = np.array([self.dvl_std, self.dvl_std, self.dvl_std, np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5)])
-        # self.DVL_NOISE = gtsam.noiseModel.Diagonal.Sigmas(self.std_pose)
         self.dvl_quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
         self.dvl_time = msg.header.stamp.nanosec + msg.header.stamp.sec * 1e9
         self.dvl_stamp = msg.header.stamp
@@ -390,6 +375,7 @@ class FactorGraphNode(Node):
 
         if self.dvl_received and self.gps_received and self.depth_received and self.imu_received and not self.deployed:
             # Store current state as the initial state
+            self.get_logger().info("starting graph")
             self.init_state = {
                 'position': self.position.copy(),
                 'orientation_matrix': self.orientation_matrix,
@@ -478,8 +464,11 @@ class FactorGraphNode(Node):
             self.tf_broadcaster.sendTransform(t)
 
             response.success = True
-            response.message = "Factor Graph Prior Set"
-
+            response.message = "Factor Graph Started"
+        elif self.deployed:
+            self.get_logger().info("already deployed")
+            response.success = True
+            response.message = f"IMU: {self.imu_received}, GPS: {self.gps_received}, DVL:{self.dvl_received}, Depth: {self.depth_received}"
         else:
             dummy = 1
             self.get_logger().info("Have not received all necessary sensor inputs to begin")
@@ -682,93 +671,6 @@ class FactorGraphNode(Node):
                 elif sensor == 'depth':
                     self.depth_last_pose_key = last_pose_key
 
-            
-            # time_of_earliest_msg = msg_queue[0].header.stamp.nanosec + msg_queue[0].header.stamp.sec * 1e9
-            # keepLookingForClosest = True
-            # changed_last = False
-            # while(keepLookingForClosest):
-                
-            #     if self.poseKey_to_time.get(int(last_pose_key + 1)) is not None:
-            #         time_of_next_pose = self.poseKey_to_time[int(last_pose_key + 1)]
-            #     else:
-            #         time_of_next_pose = None
-
-            #     if time_of_next_pose is not None:
-            #         last_pose_key = int(last_pose_key + 1)
-            #         changed_last = True
-            #     else:
-            #         keepLookingForClosest = False
-                
-            # if(changed_last):
-            #     if(self.poseKey_to_time.get(int(last_pose_key + 1)) and abs(time_of_earliest_msg - self.poseKey_to_time[int(last_pose_key)]) < abs(time_of_earliest_msg - self.poseKey_to_time[int(last_pose_key + 1)])):
-            #         next_oldest_measurement_msg = msg_queue.pop()
-
-
-            #         if sensor == 'imu':
-            #             quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
-            #             r = R.from_quat(quat)
-            #             orientation_matrix = r.as_matrix()
-            #             # Get the orientation covariance
-            #             orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-            #             self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [int(self.agent.poseKey)], partial(self.error_unary_heading, [orientation_meas])))
-            #             time = next_oldest_measurement_msg.header.stamp.nanosec + next_oldest_measurement_msg.header.stamp.sec * 1e9
-            #             self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=self.agent.poseKey, sensor='imu' )
-            #         elif sensor == 'depth':
-            #             self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, np.array([next_oldest_measurement_msg.pose.pose.position.z]))))
-            #             time = next_oldest_measurement_msg.header.stamp.nanosec + next_oldest_measurement_msg.header.stamp.sec * 1e9
-            #             self.plot.add_measurement(DUMMY_DEPTH_VAL,time, posekey=self.agent.poseKey, sensor='depth' )
-
-                        
-                    
-            # while(int(last_pose_key) < int(self.agent.poseKey)):
-            #     time_of_pose = self.poseKey_to_time[int(last_pose_key + 1)]
-            #     if(time_of_earliest_msg < time_of_pose):
-            #         right_ns = None
-            #         while len(msg_queue) > 1 and right_ns == None:
-            #             oldest_measurement_msg = msg_queue.pop() 
-            #             left_ns = oldest_measurement_msg.header.stamp.nanosec + oldest_measurement_msg.header.stamp.sec * 1e9
-            #             right_ns = msg_queue[1].header.stamp.nanosec + msg_queue[1].header.stamp.sec * 1e9 < time_of_pose
-            #             if right_ns < time_of_pose:
-            #                 right_ns = None
-            #         if right_ns != None:
-            #             if (abs(left_ns - time_of_pose)) > abs(right_ns - time_of_pose):
-            #                 next_oldest_measurement_msg = msg_queue.pop()
-
-            #                 if sensor == 'depth':
-            #                     self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, np.array([next_oldest_measurement_msg.pose.pose.position.z]))))
-            #                     self.get_logger().info("added depth unary")
-
-            #                 elif sensor == 'imu':
-            #                     quat = [next_oldest_measurement_msg.orientation.x, next_oldest_measurement_msg.orientation.y, next_oldest_measurement_msg.orientation.z, next_oldest_measurement_msg.orientation.w]
-            #                     r = R.from_quat(quat)
-            #                     orientation_matrix = r.as_matrix()
-            #                     # Get the orientation covariance
-            #                     orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-            #                     self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [int(self.agent.poseKey)], partial(self.error_unary_heading, [orientation_meas])))
-            #                     time = next_oldest_measurement_msg.header.stamp.nanosec + next_oldest_measurement_msg.header.stamp.sec * 1e9
-            #                     self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=self.agent.poseKey, sensor='imu' )
-                                
-            #                     self.get_logger().info("added imu unary")
-            #             else:
-            #                 if sensor == 'depth':
-            #                     self.graph.add(gtsam.CustomFactor(self.DEPTH_NOISE, [int(self.agent.poseKey)], partial(self.error_depth, np.array([oldest_measurement_msg.pose.pose.position.z]))))
-            #                     time = oldest_measurement_msg.header.stamp.nanosec + oldest_measurement_msg.header.stamp.sec * 1e9
-            #                     self.plot.add_measurement(DUMMY_DEPTH_VAL,time, posekey=self.agent.poseKey, sensor='depth' )
-            #                     self.get_logger().info("added depth unary")
-
-            #                 elif sensor == 'imu':
-            #                     quat = [oldest_measurement_msg.orientation.x, oldest_measurement_msg.orientation.y, oldest_measurement_msg.orientation.z, oldest_measurement_msg.orientation.w]
-            #                     r = R.from_quat(quat)
-            #                     orientation_matrix = r.as_matrix()
-            #                     # Get the orientation covariance
-            #                     orientation_meas = gtsam.Pose3(self.HfromRT(orientation_matrix, [0,0,0])).rotation()
-            #                     self.graph.add(gtsam.CustomFactor(self.UNARY_HEADING_NOISE, [int(self.agent.poseKey)], partial(self.error_unary_heading, [orientation_meas])))
-            #                     time = oldest_measurement_msg.header.stamp.nanosec + oldest_measurement_msg.header.stamp.sec * 1e9
-            #                     self.plot.add_measurement(DUMMY_IMU_VAL,time, posekey=self.agent.poseKey, sensor='imu' )
-            #                     self.get_logger().info("added imu unary")
-
-            #             last_pose_key = int(last_pose_key + 1)
-
             if sensor == 'depth':
                 self.depth_last_pose_key = int(last_pose_key)
             elif sensor == 'imu':
@@ -779,9 +681,26 @@ class FactorGraphNode(Node):
     ##################################################################
     ####################### factor graph stuff #######################
     ##################################################################
-    
+
+        # update at every tick of the timer (after between factor and checking for unary factors)
+    def update(self):
+        self.isam.update(self.graph, self.initialEstimate)
+        self.result = self.isam.calculateEstimate()
+        print("translation ", self.result.atPose3(self.agent.poseKey).translation())
+        print("poseKey number: ", self.agent.poseKey)
+        self.xyz = self.result.atPose3(self.agent.poseKey).translation()
+        print("latest pose x result: ", self.result.atPose3(self.agent.poseKey).translation()[0])
+        print("latest pose y result: ", self.result.atPose3(self.agent.poseKey).translation()[1])
+        print("1st pose x result: ", self.result.atPose3(int(1)).translation()[0])
+        print("1st pose y result: ", self.result.atPose3(int(1)).translation()[1])
+        self.isam.update()
+        self.initialEstimate.clear()
+        factorNum=self.get_parameter("max_factor_graph_size").get_parameter_value().integer_value
+        if(self.graph.size()>factorNum):
+            self.graph.resize(factorNum) #clears previous factors
+
     def factor_graph_timer(self):
-        # Your timer callback function
+        # Timer callback function
         # self.get_logger().info('factor_graph_timer function is called')
         if self.deployed:
             dvl_position = self.dvl_position
@@ -790,7 +709,7 @@ class FactorGraphNode(Node):
             self.dvl_pose_current = gtsam.Pose3(self.HfromRT(self.dvl_orientation_matrix , dvl_position))
             
             
-            # get the pose2 wrt pose1
+            # get the pose2 wrt (with respect to) pose1
             H_pose2_wrt_pose1= self.dvl_position_last.inverse().compose(self.dvl_pose_current)
 
 
@@ -799,11 +718,11 @@ class FactorGraphNode(Node):
             self.agent.poseKey = int(1 + self.agent.poseKey)
             print('posekey:', self.agent.poseKey)
 
-
+            #transforms previous result by the dvl's origin
             global_pose_current_init = self.result.atPose3(self.agent.prevPoseKey).compose(H_pose2_wrt_pose1)
             
 
-            # this is the 
+            # initial estimate = previous estimate transformed by dvl origin
             self.initialEstimate.insert(self.agent.poseKey, global_pose_current_init)
             self.graph.add(gtsam.BetweenFactorPose3(self.agent.prevPoseKey, self.agent.poseKey, H_pose2_wrt_pose1, self.DVL_NOISE))
             self.poseKey_to_time[int(self.agent.poseKey)] = self.dvl_time
@@ -825,23 +744,12 @@ class FactorGraphNode(Node):
             # IMU unary factor
             self.unary_assignment('imu')
             # print('out of imu')
-
             # Depth unary factor
             self.unary_assignment('depth')
             # print('out of depth')
-
             # GPS unary factor
             self.unary_assignment('gps')
             # print('out of gps')
-
-
-
-
-
-
-
-
-
             self.dvl_position_last = self.dvl_pose_current
 
             self.update()
@@ -851,12 +759,11 @@ class FactorGraphNode(Node):
             # self.x_output.add_measurement(self.xyz[0], self.dvl_time,self.agent.poseKey)
             # for i in range (len(self.x_output.pose_keys)):
             #     self.x_output.values[i] = self.result.atPose3(self.x_output.pose_keys[i]).translation()[0]
-
             # self.x_plot.update_plot()
 
-
-
-    # PUBLISH THE DATA
+    ##############################
+    #### DATA PUBLISHING FUNC ####
+    ##############################
 
     def publish_vehicle_status(self):
         
@@ -894,9 +801,6 @@ class FactorGraphNode(Node):
 
         # Publish the vehicle status
         self.vehicle_status_pub.publish(self.odom_msg)
-
-
-# x = result.atPose3(poseKey).translation()[0]
 
 
 def main(args=None):
