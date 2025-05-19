@@ -5,6 +5,7 @@ from rclpy.node import Node
 from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed
 from std_srvs.srv import SetBool
 from rclpy.qos import qos_profile_system_default
+from nav_msgs.msg import Odometry
 
 
 class ManualMission(Node):
@@ -128,6 +129,14 @@ class ManualMission(Node):
         Publisher for the "desired_speed" topic with the message type DesiredSpeed.
         '''
 
+
+        self.subscriber = self.create_subscription(
+            Odometry,
+            'gps_odom',
+            self.update_gps_coords,
+            10
+        )
+
         # Create the timers
         self.timer = self.create_timer(
             self.get_parameter("command_timer_period").get_parameter_value().double_value,
@@ -153,6 +162,9 @@ class ManualMission(Node):
         self.last_depth = -1.0
         self.last_heading = -1.0
         self.last_speed = -1.0
+
+        self.x = 0
+        self.y = 0
 
         self.get_parameters()
 
@@ -181,6 +193,12 @@ class ManualMission(Node):
 
         self.get_logger().info("Manual Mission Parameters Updated!")
 
+    def update_gps_coords(self, msg: Odometry):
+        self.x = msg.pose.pose.position.x
+        self.y = msg.pose.pose.position.y
+
+
+
     
     def listener_callback(self, request, response):
         '''
@@ -197,6 +215,9 @@ class ManualMission(Node):
                 response.message = 'Manual Mission has already been started. Needs to be reset before initialization'
             else:
                 self.get_parameters()
+                if self.gps_out_of_range():
+                    response.message = 'Current GPS coordinates are too large to start mission. Check origin longitude and latitude in params file.'
+                    return response
                 self.started = request.data
                 response.success = True
                 response.message = 'Manual Mission Started'
@@ -270,6 +291,12 @@ class ManualMission(Node):
         self.last_depth = depth_msg.desired_depth
         self.last_heading = heading_msg.desired_heading
         self.last_speed = speed_msg.desired_speed
+
+    #if origin is not accurate then x and y coords will be large at launch
+    #returns bool saying if measured x and y coord of coug is too large
+    def gps_out_of_range(self):
+        return abs(self.x) >= 1000 or abs(self.y) >= 1000
+        
 
 
 def main(args=None):
