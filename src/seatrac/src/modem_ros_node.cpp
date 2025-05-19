@@ -474,10 +474,7 @@ private:
   void modem_send_callback(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
     std::lock_guard<std::mutex> lock(send_mutex);  //locks mutex until method exits
     send_queue.push(rosmsg);
-    if(send_queue.size()>=QUEUE_WARN_SIZE)
-      if(logging_verbosity>=2) RCLCPP_WARN(this->get_logger(), "Acoustic Message Queue size of %d is larger than %d", 
-                    static_cast<int>(send_queue.size()), QUEUE_WARN_SIZE);
-    if(send_queue.size()==1) send_acoustic_message(rosmsg);
+    attempt_send_acoustic_message();
   }
 
   //queue refresh at 10Hz
@@ -490,9 +487,13 @@ private:
   void attempt_send_acoustic_message() {
     //only run when send_queue_mutex is locked
     if((send_queue.size()>=1) && (send_delay_ticker==0)) {
+      if(send_queue.size()>=QUEUE_WARN_SIZE && logging_verbosity>=2) {
+        RCLCPP_WARN(this->get_logger(), "Acoustic Message Queue size of %d is larger than %d", 
+          static_cast<int>(send_queue.size()), QUEUE_WARN_SIZE);
+      }
       send_acoustic_message(send_queue.front());
       time_last_sent = this->get_clock()->now();
-      send_delay_ticker = 4; //400ms for 4 ticks at 10Hz
+      send_delay_ticker = 5; //400ms for 4 ticks at 10Hz (subtracting this one)
     }
   }
   void send_acoustic_message(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
