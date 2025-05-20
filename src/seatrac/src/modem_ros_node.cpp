@@ -178,9 +178,9 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
 
-        verify_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       case CID_ECHO_RESP: {
@@ -230,9 +230,8 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
-
-        verify_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       case CID_PING_RESP: {
@@ -281,9 +280,8 @@ public:
         report = data;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.target;
+        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
-
-        verify_modem_send(msgId, report.statusCode, report.target);
       } break;
 
       case CID_NAV_QUERY_RESP: {
@@ -349,9 +347,8 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
+        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
-
-        verify_modem_send(msgId, report.status, report.beaconId);
       } break;
 
       // Fields don't match the ros message types provided.
@@ -542,42 +539,39 @@ private:
     }
   }
 
-  inline void verify_modem_send(CID_E msg_id, CST_E status_code, BID_E target_id) {
+  inline void verify_modem_send(seatrac_interfaces::msg::ModemCmdUpdate::SharedPtr rosmsg) {
     std::lock_guard<std::mutex> lock(send_mutex);
-    switch(status_code) {
+    switch(rosmsg->command_status_code) {
       case CST_OK: {
         send_queue.pop();
         if(logging_verbosity>=3) {
           std::ostringstream ss;
-          ss << "Transmitting "<<msg_id<<" message to target id "<<target_id;
+          ss << "Transmitting "<<rosmsg->msg_id<<" message to target id "<<rosmsg->target_id;
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
       } break;
-
       case CST_XCVR_BUSY: {
         if(logging_verbosity>=4) {
           std::ostringstream ss;
-          ss << "Seatrac Busy. Could not send "<<msg_id<<" message to "
-            <<target_id<< ". Queue size: "<<send_queue.size();
+          ss << "Seatrac Busy. Could not send "<<rosmsg->msg_id<<" message to "
+            <<rosmsg->target_id<< ". Queue size: "<<send_queue.size();
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
       } break;
-
       case CST_CMD_PARAM_INVALID: {
         send_queue.pop();
         if(logging_verbosity>=1) {
           std::ostringstream ss;
-          ss << "Invalid Parameter. "<<msg_id<<" message to "<<target_id
+          ss << "Invalid Parameter. "<<rosmsg->msg_id<<" message to "<<rosmsg->target_id
             << " could not be sent. Queue size: "<<send_queue.size();
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
       } break;
-
       case CST_CMD_PARAM_MISSING: {
         send_queue.pop();
         if(logging_verbosity>=1) {
           std::ostringstream ss;
-          ss << "Parameter Missing. "<<msg_id<<" message to "<<target_id
+          ss << "Parameter Missing. "<<rosmsg->msg_id<<" message to "<<rosmsg->target_id
             << " could not be sent. Queue size: "<<send_queue.size();
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
