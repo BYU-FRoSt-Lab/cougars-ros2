@@ -100,15 +100,11 @@ public:
     this->declare_parameter("logging_verbosity", 2);
     logging_verbosity = this->get_parameter("logging_verbosity").as_int();
 
-
-    uint64_t start_time = (uint64_t)(this->get_parameter("mission_start_time").as_int());
-
     BID_E beaconId = (BID_E)(this->get_parameter("vehicle_ID").as_int());
     uint16_t salinity = (uint16_t)(this->get_parameter("water_salinity_ppt").as_double()*10);
 
     if(logging_verbosity >= 2) {
       RCLCPP_INFO(this->get_logger(), "Beacon ID: %d", beaconId);
-      RCLCPP_INFO(this->get_logger(), "Mission Start Time: %ld s", start_time);
       RCLCPP_INFO(this->get_logger(), "Salinity: %d ppt", salinity);
     }
 
@@ -178,7 +174,7 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(&msg);
         cmd_update_pub_->publish(msg);
 
       } break;
@@ -230,7 +226,7 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(&msg);
         cmd_update_pub_->publish(msg);
       } break;
 
@@ -280,7 +276,7 @@ public:
         report = data;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.target;
-        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(&msg);
         cmd_update_pub_->publish(msg);
       } break;
 
@@ -347,7 +343,7 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(&msg);
         cmd_update_pub_->publish(msg);
       } break;
 
@@ -539,22 +535,23 @@ private:
     }
   }
 
-  inline void handle_send_update(seatrac_interfaces::msg::ModemCmdUpdate::SharedPtr rosmsg) {
+  inline void handle_send_update(seatrac_interfaces::msg::ModemCmdUpdate* rosmsg) {
     std::lock_guard<std::mutex> lock(send_mutex);
     switch(rosmsg->command_status_code) {
       case CST_OK: {
         send_queue.pop();
         if(logging_verbosity>=3) {
           std::ostringstream ss;
-          ss << "Transmitting "<<rosmsg->msg_id<<" message to target id "<<rosmsg->target_id;
+          ss << "Transmitting "<<(CID_E)rosmsg->msg_id<<" message to target id "
+             << (BID_E)rosmsg->target_id<<". Queue size: "<<send_queue.size();
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
       } break;
       case CST_XCVR_BUSY: {
         if(logging_verbosity>=4) {
           std::ostringstream ss;
-          ss << "Seatrac Busy. Could not send "<<rosmsg->msg_id<<" message to "
-            <<rosmsg->target_id<< ". Queue size: "<<send_queue.size();
+          ss << "Seatrac Busy. Could not send "<<(CID_E)rosmsg->msg_id<<" message to "
+            <<(BID_E)rosmsg->target_id<< ". Queue size: "<<send_queue.size();
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
       } break;
@@ -562,7 +559,7 @@ private:
         send_queue.pop();
         if(logging_verbosity>=1) {
           std::ostringstream ss;
-          ss << "Invalid Parameter. "<<rosmsg->msg_id<<" message to "<<rosmsg->target_id
+          ss << "Invalid Parameter. "<<(CID_E)rosmsg->msg_id<<" message to "<<(BID_E)rosmsg->target_id
             << " could not be sent. Queue size: "<<send_queue.size();
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
@@ -571,7 +568,7 @@ private:
         send_queue.pop();
         if(logging_verbosity>=1) {
           std::ostringstream ss;
-          ss << "Parameter Missing. "<<rosmsg->msg_id<<" message to "<<rosmsg->target_id
+          ss << "Parameter Missing. "<<(CID_E)rosmsg->msg_id<<" message to "<<(BID_E)rosmsg->target_id
             << " could not be sent. Queue size: "<<send_queue.size();
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
