@@ -543,56 +543,55 @@ private:
   }
 
   inline void verify_modem_send(CID_E msg_id, CST_E status_code, BID_E target_id) {
+    std::lock_guard<std::mutex> lock(send_mutex);
     switch(status_code) {
-      
       case CST_OK: {
-        std::ostringstream ss;
-        ss << "Transmitting "<<msg_id<<" message to target id "<<target_id;
-        if(logging_verbosity>=3) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
-        std::lock_guard<std::mutex> lock(send_mutex);
         send_queue.pop();
+        if(logging_verbosity>=3) {
+          std::ostringstream ss;
+          ss << "Transmitting "<<msg_id<<" message to target id "<<target_id;
+          RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        }
       } break;
 
       case CST_XCVR_BUSY: {
-        std::ostringstream ss;
-        ss << "Seatrac Busy. Could not send "<<msg_id<<" message to "
-           <<target_id<< ". Queue size: "<<send_queue.size();
-        if(logging_verbosity>=4) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        std::lock_guard<std::mutex> lock(send_mutex);
+        if(logging_verbosity>=4) {
+          std::ostringstream ss;
+          ss << "Seatrac Busy. Could not send "<<msg_id<<" message to "
+            <<target_id<< ". Queue size: "<<send_queue.size();
+          RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        }
       } break;
 
       case CST_CMD_PARAM_INVALID: {
-        std::lock_guard<std::mutex> lock(send_mutex);  
         send_queue.pop();
-        std::ostringstream ss;
-        ss << "Invalid Parameter. "<<msg_id<<" message to "<<target_id
-           << " could not be sent.";
-        if(logging_verbosity>=4) ss<<" Queue size: "<<send_queue.size();
-        if(logging_verbosity>=1) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=1) {
+          std::ostringstream ss;
+          ss << "Invalid Parameter. "<<msg_id<<" message to "<<target_id
+            << " could not be sent. Queue size: "<<send_queue.size();
+          RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        }
       } break;
 
       case CST_CMD_PARAM_MISSING: {
-        std::lock_guard<std::mutex> lock(send_mutex);  
         send_queue.pop();
-        std::ostringstream ss;
-        ss << "Parameter Missing. "<<msg_id<<" message to "<<target_id
-           << " could not be sent.";
-        if(logging_verbosity>=4) ss<<" Queue size: "<<send_queue.size();
-        if(logging_verbosity>=1) RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        if(logging_verbosity>=1) {
+          std::ostringstream ss;
+          ss << "Parameter Missing. "<<msg_id<<" message to "<<target_id
+            << " could not be sent. Queue size: "<<send_queue.size();
+          RCLCPP_INFO(this->get_logger(), ss.str().c_str());
+        }
       } break;
 
       default: {
-        std::lock_guard<std::mutex> lock(send_mutex);
         send_queue.pop();
-        if(logging_verbosity>=1) 
-          RCLCPP_ERROR(this->get_logger(), "An unknown error occured. Acoustic message removed from queue. Queue Size: %d", 
-                      static_cast<int>(send_queue.size()));
+        if(logging_verbosity>=1) {
+          RCLCPP_ERROR(this->get_logger(), 
+            "An unknown error occured. Acoustic message removed from queue. Queue Size: %d", 
+            static_cast<int>(send_queue.size()));
+        }
       } break;
     }
-  
-    if(send_queue.size()>=1) send_acoustic_message(send_queue.front());
-
   }
 
 };
