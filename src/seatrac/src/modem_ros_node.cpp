@@ -178,7 +178,7 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
 
       } break;
@@ -230,7 +230,7 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
       } break;
 
@@ -280,7 +280,7 @@ public:
         report = data;
         msg.command_status_code = report.statusCode;
         msg.target_id = report.target;
-        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
       } break;
 
@@ -347,7 +347,7 @@ public:
         report = data;
         msg.command_status_code = report.status;
         msg.target_id = report.beaconId;
-        verify_modem_send(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
+        handle_send_update(std::make_shared<seatrac_interfaces::msg::ModemCmdUpdate>(msg));
         cmd_update_pub_->publish(msg);
       } break;
 
@@ -490,7 +490,7 @@ private:
       }
       send_acoustic_message(send_queue.front());
       time_last_sent = this->get_clock()->now();
-      send_delay_ticker = 5; //400ms for 4 ticks at 10Hz (subtracting this one)
+      send_delay_ticker = 5; //400ms for 4 ticks at 10Hz (subtracting this tick)
     }
   }
   void send_acoustic_message(const seatrac_interfaces::msg::ModemSend::SharedPtr rosmsg) {
@@ -539,7 +539,7 @@ private:
     }
   }
 
-  inline void verify_modem_send(seatrac_interfaces::msg::ModemCmdUpdate::SharedPtr rosmsg) {
+  inline void handle_send_update(seatrac_interfaces::msg::ModemCmdUpdate::SharedPtr rosmsg) {
     std::lock_guard<std::mutex> lock(send_mutex);
     switch(rosmsg->command_status_code) {
       case CST_OK: {
@@ -576,7 +576,6 @@ private:
           RCLCPP_INFO(this->get_logger(), ss.str().c_str());
         }
       } break;
-
       default: {
         send_queue.pop();
         if(logging_verbosity>=1) {
@@ -586,6 +585,8 @@ private:
         }
       } break;
     }
+    rosmsg->time_sent = time_last_sent;
+    rosmsg->queue_size = (uint8_t)send_queue.size();
   }
 
 };
