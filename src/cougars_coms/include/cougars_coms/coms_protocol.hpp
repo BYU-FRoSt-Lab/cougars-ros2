@@ -15,12 +15,6 @@ enum COUG_MSG_ID : uint8_t {
     VEHICLE_STATUS = 0x10,
     REQUEST_STATUS = 0x11,
 
-    VERIFY_LAUNCH = 0x20,        
-    CONFIRM_VERIFY = 0x21,
-
-    START_MISSION = 0x30,
-    CONFIRM_START_MISSION = 0x31,
-
     EMERGENCY_KILL = 0x40,
     CONFIRM_EMERGENCY_KILL = 0x41,
 
@@ -46,31 +40,6 @@ struct ConfirmEmergencySurface {
     COUG_MSG_ID msg_id = CONFIRM_EMERGENCY_SURFACE;
     bool success;
 }__attribute__((packed));
-
-struct VerifyLaunch {
-    static const COUG_MSG_ID msg_id = VERIFY_LAUNCH;
-}__attribute__((packed));
-
-struct ConfirmVerifyLaunch {
-    static const COUG_MSG_ID msg_id = CONFIRM_VERIFY;
-    bool ready;
-}__attribute__((packed));
-
-
-
-
-struct StartMission {
-    static const COUG_MSG_ID msg_id = START_MISSION;
-    std::string folder;
-}__attribute__((packed));
-
-struct ConfirmStartMission {
-    static const COUG_MSG_ID msg_id = CONFIRM_START_MISSION;
-    bool success;
-}__attribute__((packed));
-
-
-
 
 struct RequestStatus {
     static const COUG_MSG_ID msg_id = REQUEST_STATUS;
