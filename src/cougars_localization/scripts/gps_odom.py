@@ -42,6 +42,8 @@ class NavSatFixToOdom(Node):
         '''
         :param origin.altitude: The altitude of the origin (datum) for the local Cartesian projection. The default value is 0.0.
         '''
+
+        self.declare_parameter('warning_message', True)
         
         # Subscribe to NavSatFix
         self.subscriber = self.create_subscription(
@@ -56,6 +58,12 @@ class NavSatFixToOdom(Node):
         
         self.last_msg = None
         self.min_sats = 5  # Minimum number of satellites
+
+        self.start_in_range = False
+        self.startup_message_count = 0
+        self.startup_message_max = 4
+        self.range_threshold = 1000.0
+        self.warning_message = self.get_parameter('warning_message').get_parameter_value()._bool_value
 
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, 'gps_odom', 10)
@@ -84,6 +92,15 @@ class NavSatFixToOdom(Node):
                                        self.get_parameter('origin.longitude').get_parameter_value().double_value,
                                        msg.latitude,
                                        msg.longitude)
+        
+        # Checks first few messages. If X and Y are out of range then starts sending warning message
+        if (self.startup_message_count < self.startup_message_max):
+            self.startup_message_count+=1
+            if x < self.range_threshold and y < self.range_threshold:
+                self.start_in_range = True
+        elif not self.start_in_range and self.warning_message:
+            self.warning_message = False
+            self.warning_timer = self.create_timer(5.0, self.warning_callback)
         
         # Access the altitude (z) value from the NavSatFix message
         z = msg.altitude - self.get_parameter('origin.altitude').get_parameter_value().double_value
@@ -125,6 +142,10 @@ class NavSatFixToOdom(Node):
         y = d * math.cos(theta)
         x = d * math.sin(theta)
         return x, y
+    
+    def warning_callback(self):
+        self.get_logger().warn(f"Started out of range. Ensure that the origin latitude and longitude values in the params file are correct.")
+
 
 def main(args=None):
     rclpy.init(args=args)
