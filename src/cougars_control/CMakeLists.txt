@@ -24,6 +24,14 @@ find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
 find_package(MOOS 10 REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED) # Add this to be safe, as you use it directly
+
+# Waypoints dependencies
+# Find yaml-cpp package
+find_package(yaml-cpp REQUIRED)
+
+
 
 include_directories(include/${PROJECT_NAME})
 
@@ -46,6 +54,20 @@ ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS 
 add_executable(emergency_protocols src/emergency_protocols.cpp)
 ament_target_dependencies(emergency_protocols rclcpp std_msgs frost_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
 
+# Add executable for the waypoint follower node
+add_executable(waypoint_follower src/waypoint_follower.cpp)
+ament_target_dependencies(waypoint_follower
+  rclcpp
+  nav_msgs
+  sensor_msgs
+  frost_interfaces
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  yaml-cpp  # Add yaml-cpp dependency
+)
+
+target_link_libraries(waypoint_follower yaml-cpp)
 # Link libraries
 target_link_libraries(coug_controls)
 target_link_libraries(coug_kinematics)
@@ -62,6 +84,7 @@ install(TARGETS
   moos_bridge_sim
   moos_bridge_gps
   emergency_protocols
+  waypoint_follower #added for waypoint follower
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules
@@ -72,6 +95,12 @@ install(PROGRAMS
   scripts/manual_mission.py
   scripts/fins_manual.py
   DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install mission configuration files
+install(DIRECTORY
+  waypoint_missions/ # Assuming your YAML files are in a 'waypoint_missions' subdir of cougars_control
+  DESTINATION share/${PROJECT_NAME}/waypoint_missions
 )
 
 if(BUILD_TESTING)
