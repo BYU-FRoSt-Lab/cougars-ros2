@@ -9,16 +9,17 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     '''
-    Launches the waypoint following mission stack, including localization,
-    waypoint following, controls, and sensor nodes (if not in sim mode).
-    Removes MOOS dependencies.
+    Launches the waypoint following mission stack.
+    Accepts a 'mission_file' argument to specify which mission to run.
     '''
 
     # --- Parameter Parsing ---
     sim = "false"
     verbose = "false"
     param_file = '/home/frostlab/config/vehicle_params.yaml'
-    namespace = '' # Initialize namespace to empty, can be set via arg
+    namespace = ''
+    # Default mission file in case 'mission_file' argument isn't provided
+    mission_file = 'provo_marina_mission.yaml'
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):
@@ -29,6 +30,8 @@ def generate_launch_description():
             sim = arg.split(":=")[1].lower()
         elif arg.startswith("verbose:="):
             verbose = arg.split(":=")[1].lower()
+        elif arg.startswith("mission_file:="): # <-- PARSE NEW ARGUMENT
+            mission_file = arg.split(":=")[1]
 
     output_config = 'screen' if verbose == "true" else 'log'
 
@@ -36,13 +39,14 @@ def generate_launch_description():
     localization_pkg_dir = get_package_share_directory('cougars_localization')
     control_pkg_dir = get_package_share_directory('cougars_control')
 
-    # --- Mission File Path ---
+    # --- Mission File Path (Now Dynamic) ---
     mission_yaml_path = os.path.join(
         control_pkg_dir,
         'waypoint_missions',
-        'provo_marina_mission.yaml'
+        mission_file # <-- USE THE PARSED FILENAME
     )
-    
+    print(f"[INFO] [launch] Using mission file: {mission_yaml_path}") # Added for confirmation
+
     # --- Launch Actions List ---
     launch_actions = []
 
@@ -52,8 +56,6 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 os.path.join(localization_pkg_dir, 'launch', "sensors_launch.py")
             )
-            # You might need to pass parameters like 'namespace' or 'param_file'
-            # to included launch files if they support it.
         )
         launch_actions.append(sensors_launch)
 
@@ -62,7 +64,6 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(localization_pkg_dir, 'launch', "converters_launch.py")
         )
-        # Add parameters if needed
     )
     launch_actions.append(converters_launch)
 
@@ -72,12 +73,12 @@ def generate_launch_description():
         executable='waypoint_follower',
         name='waypoint_follower',
         namespace=namespace,
-        output='screen', # Keep waypoint follower on screen for visibility
+        output='screen',
         parameters=[
-            {'waypoint_file_path': mission_yaml_path},
-            {'slip_radius': 3.0}, # meters
-            {'desired_travel_speed': 25.0}, # Example speed
-            {'loop_rate': 5.0} # Hz
+            {'waypoint_file_path': mission_yaml_path}, # <-- USES THE DYNAMIC PATH
+            {'slip_radius': 3.0},
+            {'desired_travel_speed': 25.0},
+            {'loop_rate': 5.0}
         ]
     )
 
@@ -126,7 +127,7 @@ def generate_launch_description():
             executable='emergency_protocols',
             namespace=namespace,
             parameters=[param_file],
-            output=output_config, # Or 'screen' if you always want to see it
+            output=output_config,
     )
 
     # --- Add Nodes to Launch Actions ---
@@ -137,7 +138,7 @@ def generate_launch_description():
         factor_graph_node,
         modem_pinger_node,
         rf_bridge_node,
-        emergency_protocols_node, # Added for safety
+        emergency_protocols_node,
     ])
 
     # --- Return Launch Description ---
