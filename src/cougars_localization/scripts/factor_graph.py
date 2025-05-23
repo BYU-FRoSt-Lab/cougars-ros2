@@ -47,7 +47,7 @@ class FactorGraphNode(Node):
         self.prev_x = 0
 
         # number of seconds we take a dvl dead reck. pose/factor graph callback time
-        self.declare_parameter("factor_callback_seconds",1.25) #was 2s
+        self.declare_parameter("factor_callback_seconds",.75) #was 2s
         self.dvl_time_interval =  self.get_parameter("factor_callback_seconds").get_parameter_value().integer_value 
 
         self.declare_parameter("max_factor_graph_size",50) #max number of factors
