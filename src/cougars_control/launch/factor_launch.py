@@ -48,7 +48,7 @@ def generate_launch_description():
             package='cougars_localization',
             executable='factor_graph.py',
             namespace=namespace,
-            output=output,
+            output='log'
         ),
         launch.actions.ExecuteProcess(
             cmd=["ros2", "bag", "play", BAGDIR+BAGNAME, "--clock", "-r 2"], #r = rate, was at 5
@@ -58,7 +58,7 @@ def generate_launch_description():
             package='cougars_control',
             executable='dummy_factor_starter.py',
             namespace=namespace,
-            output=output,
+            output=output
         ),
         launch_ros.actions.Node(
         package='robot_localization',
