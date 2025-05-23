@@ -33,23 +33,40 @@ def generate_launch_description():
     param_file = '/home/frostlab/config/vehicle_params.yaml'
 
     launch_actions = []
-
+    #sets namespace of ekf node - unfortunately neccisary bc yamls can't be dynamically configured as far as I know
+    with open('/home/frostlab/ros2_ws/config/ekf.yaml', 'r') as f:
+        #change line containing 'ekf node' to 'NS/ekf_node'
+        lines=f.readlines()
+        for line in range(len(lines)):
+            if 'ekf_node' in lines[line]:
+                lines[line]=NS+'/ekf_node:\n'
+    with open('/home/frostlab/ros2_ws/config/ekf.yaml', 'w') as f:
+        f.writelines(lines)
+    
     launch_actions.extend([
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='factor_graph.py',
             namespace=namespace,
-            output=output,
+            output='log'
         ),
         launch.actions.ExecuteProcess(
-            cmd=["ros2", "bag", "play", BAGDIR+BAGNAME, "--clock", "-r 5"],
+            cmd=["ros2", "bag", "play", BAGDIR+BAGNAME, "--clock", "-r 2"], #r = rate, was at 5
             output=output
         ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='dummy_factor_starter.py',
             namespace=namespace,
-            output=output,
+            output=output
+        ),
+        launch_ros.actions.Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_node',
+        output=output,
+        namespace=namespace,
+        parameters=['/home/frostlab/ros2_ws/config/ekf.yaml']
         )
     ])
     if(RECORD_ROSBAG):

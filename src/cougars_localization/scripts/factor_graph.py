@@ -50,7 +50,7 @@ class FactorGraphNode(Node):
         self.declare_parameter("factor_callback_seconds",.75) #was 2s
         self.dvl_time_interval =  self.get_parameter("factor_callback_seconds").get_parameter_value().integer_value 
 
-        self.declare_parameter("max_factor_graph_size",40) #max number of factors
+        self.declare_parameter("max_factor_graph_size",50) #max number of factors
 
         # flags to start the whole system
         self.depth_received = False
