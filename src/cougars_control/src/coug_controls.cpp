@@ -10,6 +10,7 @@
 #include "actuator.cpp"
 // #include "pid_int2.cpp"
 #include "dvl_msgs/msg/dvl.hpp"
+#include "dvl_msgs/msg/dvl.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
@@ -20,6 +21,7 @@
 #include "frost_interfaces/msg/controls_debug.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
+#include <frost_interfaces/msg/system_control.hpp>
 #include <frost_interfaces/msg/system_control.hpp>
 
 using namespace std::chrono_literals;
