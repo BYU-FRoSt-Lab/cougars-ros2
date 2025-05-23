@@ -22,6 +22,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 #include <frost_interfaces/msg/system_control.hpp>
+#include <frost_interfaces/msg/system_control.hpp>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
