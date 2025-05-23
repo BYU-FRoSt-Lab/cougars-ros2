@@ -9,8 +9,6 @@
 #include "pid.cpp"
 #include "actuator.cpp"
 // #include "pid_int2.cpp"
-#include "dvl_msgs/msg/dvl.hpp"
-#include "dvl_msgs/msg/dvl.hpp"
 #include "frost_interfaces/msg/desired_depth.hpp"
 #include "frost_interfaces/msg/desired_heading.hpp"
 #include "frost_interfaces/msg/desired_speed.hpp"
@@ -21,8 +19,6 @@
 #include "frost_interfaces/msg/controls_debug.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
-#include <frost_interfaces/msg/system_control.hpp>
-#include <frost_interfaces/msg/system_control.hpp>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -33,6 +29,9 @@ auto qos = rclcpp::QoS(
     qos_profile);
 
 /**
+ * @brief A simple controls node.
+ * @author Nelson Durrant
+ * @date September 2024
  *
  * This node subscribes to desired depth, heading, and speed topics and actual
  * depth and heading topics. It then computes the control commands using various
@@ -192,37 +191,8 @@ public:
     this->declare_parameter("wn_d_theta", 0.25);
     this->declare_parameter("outer_loop_threshold", 2.5);
     this->declare_parameter("saturation_offset", 1.7);
-    this->declare_parameter("depth_from_bottom", false);
-    this->dfb = this->get_parameter("depth_from_bottom").as_bool();
-    this->declare_parameter("depth_from_bottom", false);
-    this->dfb = this->get_parameter("depth_from_bottom").as_bool();
 
-    // calibrate PID controllers
-    myDepthPID.initialize(this->get_parameter("depth_kp").as_double(),
-                         this->get_parameter("depth_ki").as_double(),
-                         this->get_parameter("depth_kd").as_double(),
-                         this->get_parameter("depth_min_output").as_double(),         
-                         this->get_parameter("depth_max_output").as_double(),
-                         (float)this->get_parameter("timer_period").as_int()); 
-
-    // TODO parameterize this if it works
-    float scalar = 0.5 * 997 * 0.00665 * 0.5 * -0.43 * std::cos(30 * (M_PI / 180.0));
-
-    myPitchPID.initialize(this->get_parameter("pitch_kp").as_double(),
-                         this->get_parameter("pitch_ki").as_double(),
-                         this->get_parameter("pitch_kd").as_double(),
-                         this->get_parameter("pitch_min_output").as_double(),       //THIS is the fin min and max
-                         this->get_parameter("pitch_max_output").as_double(),
-                         (float)this->get_parameter("timer_period").as_int(),
-                         scalar);
-
-    myHeadingPID.initialize(this->get_parameter("heading_kp").as_double(),
-                           this->get_parameter("heading_ki").as_double(),
-                           this->get_parameter("heading_kd").as_double(),
-                           this->get_parameter("heading_min_output").as_double(),
-                           this->get_parameter("heading_max_output").as_double(),
-                           (float)this->get_parameter("timer_period").as_int());
-
+    update_parameters();
     /**
      * @brief Control command publisher.
      *
@@ -297,26 +267,6 @@ public:
         std::bind(&CougControls::actual_depth_callback, this, _1));
 
     /**
-     * @brief Altitude subscriber.
-     *
-     * This subscriber subscribes to the "dvl/data" topic. It uses the
-     *  message type. Expects data in ENU with the z value being more negative with increasing depth
-     */
-    subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
-        "dvl/data", qos,
-        std::bind(&CougControls::dvl_data_callback, this, _1));
-
-    /**
-     * @brief Altitude subscriber.
-     *
-     * This subscriber subscribes to the "dvl/data" topic. It uses the
-     *  message type. Expects data in ENU with the z value being more negative with increasing depth
-     */
-    subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
-        "dvl/data", qos,
-        std::bind(&CougControls::dvl_data_callback, this, _1));
-
-    /**
      * @brief Yaw and Pitch subscriber.
      *
      * This subscriber subscribes to the "modem_imu" topic. It uses the Imu
@@ -336,13 +286,6 @@ public:
     actual_velocity_subscription_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
         "dvl/velocity", qos,
         std::bind(&CougControls::dvl_velocity_callback, this, _1));
-
-    rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
-    qos_profile.reliable();       // Set reliability to reliable
-    qos_profile.transient_local(); // Set durability to transient local
-    system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
-            "system/status", qos_profile, std::bind(&CougControls::system_callback, this, _1));
-
 
     this->velocity[0] = 0.6f;
     this->velocity[1] = 0.0f;
@@ -399,29 +342,8 @@ private:
     myHeadingPID.print_values();
 
   }
-  void handle_factor_response(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future){
-    auto response = future.get();
-    if(response->success){
-      RCLCPP_INFO(this->get_logger(),"Factor graph started");
-    } else {
-      RCLCPP_INFO(this->get_logger(),"Factor graph startup unsuccesful");
-    } 
-  }
-  void start_factor_graph(){
-        //init factor graph
-        rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr factorClient = this->create_client<std_srvs::srv::SetBool>("init_factor_graph");
-        while (!factorClient->wait_for_service(std::chrono::seconds(1))) {
-            if (!rclcpp::ok()) {
-                RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-                return;
-            }
-            RCLCPP_INFO(this->get_logger(), "Service not available, waiting again...");
-        }
-        auto factorRequest = std::make_shared<std_srvs::srv::SetBool::Request>();
-        factorRequest->data=true;
-        factorClient->async_send_request(factorRequest,std::bind(&CougControls::handle_factor_response,this,_1));
-
-  }
+  
+  
   /**
    * @brief Callback function for the initialization service.
    *
@@ -439,7 +361,6 @@ private:
         response->message = "Controller Node initialized.";
 
         update_parameters();
-        start_factor_graph();
         RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
     } else {
         response->success = false;
@@ -447,16 +368,6 @@ private:
         RCLCPP_INFO(this->get_logger(), "Controller Node de-initialized.");
     }
   }
-
-  void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
-  {
-     // Set the boolean to the requested value
-    this->init_flag = msg->thruster_arm.data;
-    RCLCPP_INFO(this->get_logger(), this->init_flag ? "Controller Node initialized." : "Controller Node de-initialized.");
-    update_parameters();
-
-  }
-
 
   /**
    * @brief Callback function for the desired_depth subscription.
@@ -480,15 +391,8 @@ private:
     RCLCPP_INFO(this->get_logger(), "New Depth Desired: %f, Old desired depth %f", depth_msg.desired_depth, this->desired_depth);
     this->desired_depth = depth_msg.desired_depth;
 
-    // TODO reset integrator term??
-    // TODO in the message type specify the dfb or not
-    if (dfb){
-      this->depth_ref = this->altitude;
-    }
-    else{
-      // When a new desired depth sent update the depth_ref to the actual depth
-      this->depth_ref = this->actual_depth;
-    }
+    // When a new desired depth sent update the depth_ref to the actual depth
+    this->depth_ref = this->actual_depth;
   }
 
   /**
@@ -532,16 +436,6 @@ private:
       const geometry_msgs::msg::PoseWithCovarianceStamped &depth_msg) {
     this->actual_depth = -depth_msg.pose.pose.position.z;
     //Negate the z value in ENU to get postive depth value
-  }
-
-  void dvl_data_callback(const dvl_msgs::msg::DVL::SharedPtr msg) {
-    this->altitude = msg->altitude;
-
-  }
-
-  void dvl_data_callback(const dvl_msgs::msg::DVL::SharedPtr msg) {
-    this->altitude = msg->altitude;
-
   }
 
   /**
@@ -659,8 +553,7 @@ private:
     return yaw_err;
   }
   
-  int depth_autopilot(float depth, float depth_d, int altitude_hold=1){
-  int depth_autopilot(float depth, float depth_d, int altitude_hold=1){
+  int depth_autopilot(float depth, float depth_d){
     float surge = this->velocity[0];
     float surge_threshold = this->get_parameter("surge_threshold").as_double();
     float timer_period = this->get_parameter("timer_period").as_int() / 1000.0;
@@ -682,8 +575,7 @@ private:
     
     if (std::abs(depth_d - depth) > outer_loop_threshold) {
         // saturate theta_d
-        float theta_d = theta_max * std::copysign(1.0, depth_d - depth) * altitude_hold;
-        float theta_d = theta_max * std::copysign(1.0, depth_d - depth) * altitude_hold;
+        float theta_d = theta_max * std::copysign(1.0, depth_d - depth);
         this->theta_ref = std::exp(-timer_period * wn_d_theta) * this->theta_ref
                         + (1.0 - std::exp(-timer_period * wn_d_theta)) * theta_d;
 
@@ -691,20 +583,18 @@ private:
         std::cout <<  "Saturated Depth PID mode" << std::endl;
         myDepthPID.reset_int();
     } else {
-        this->theta_ref = myDepthPID.compute(this->depth_ref, depth, this->velocity[2]) * altitude_hold;
-        this->theta_ref = myDepthPID.compute(this->depth_ref, depth, this->velocity[2]) * altitude_hold;
+        this->theta_ref = myDepthPID.compute(this->depth_ref, this->actual_depth, this->velocity[2]);
     }
 
-    std::cout <<  "Depth: " << depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
-    std::cout <<  "Depth: " << depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
-
-
-    std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
     int depth_pos = (int)myPitchPID.compute(this->theta_ref, this->actual_pitch, this->pitch_rate, this->velocity[0]);  
     
     // Add torque equilibruim?
     // int depth_pos = (int)calculate_deflection(torque_s, this->velocity, -0.43, deltaMax);
     //TODO calculate beforehand what torque creates a max deflection.
+    
+    // std::cout <<  "Depth: " << this->actual_depth << " Depth Ref: " << this->depth_ref << " Desired Depth: " << depth_d << std::endl;
+    // std::cout <<  "Pitch: " << this->actual_pitch << " Desired Pitch: " << this->theta_ref  << " Pitch Rate: " << this->pitch_rate << std::endl;
+    // std::cout << " Fin: " << depth_pos << std::endl;
 
     return depth_pos;
   }
@@ -719,25 +609,15 @@ private:
       auto message = frost_interfaces::msg::UCommand();
       message.header.stamp = this->now();
 
-      int depth_pos;
-      int depth_pos;
       if (this->init_flag) {
-        float depth_trackpoint;
-        if (dfb){
-          depth_trackpoint = this->altitude;
-          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth, -1);
-        }
-        else{
-          depth_trackpoint = this->actual_depth;
-          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth);
-        }
-          
+        int depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
+        
         // Handling roll over when taking the error difference
         // given desired heading and actual heading from -180 to 180
         // if they are both negative or they are both positive than just take the difference
         float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
         // // Log the information
-          
+        
         int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
 
         // Step 5: Set fin positions and publish the command
@@ -763,7 +643,7 @@ private:
         message.pitch.d = myPitchPID.getD();
         message.pitch.pid = myPitchPID.getPID();
 
-        message.depth.actual = depth_trackpoint;
+        message.depth.actual = this->actual_depth;
         message.depth.rate = this->velocity[2];
         message.depth.desired = this->desired_depth;
         message.depth.reference = this->depth_ref;
@@ -782,6 +662,7 @@ private:
         message.heading.pid = myHeadingPID.getPID();
     
         debug_controls_pub_->publish(message);
+
 
       }
       // else{
@@ -811,8 +692,8 @@ private:
       actual_velocity_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
-  rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
-  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
+
+  rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 
@@ -842,12 +723,6 @@ private:
   float pitch_rate;
   float yaw_rate;
   float velocity[3];
-
-  bool dfb;
-  float altitude;
-
-  bool dfb;
-  float altitude;
 };
 
 int main(int argc, char *argv[]) {
