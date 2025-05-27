@@ -12,3 +12,10 @@ uint8 msg_id            # CID_E - Command Identification Code. Indicates the typ
         # Reports that include a command status code usually do not include any other fields besides msg_id and local_beacon_id
 uint8 command_status_code # CST_E. Indicates the status of the 
 uint8 target_id   # BID_E. For error reports from acoustic transmissions, the target_id is the id of the remote beacon.
+
+uint8 queue_size  # The size of the queue (implemented in modem_ros_node) of messages waiting to be
+                  # waiting to be over the modem (after this message was processed)
+
+# header.stamp is the time the response was processed.
+# time_sent is the time the acoustic signal was requested from the beacon.
+builtin_interfaces/Time time_sent
