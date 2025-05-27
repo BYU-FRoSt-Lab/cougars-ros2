@@ -151,7 +151,7 @@ case $1 in
         # --- End Waypoint Selection Logic ---
 
         # Launch with the selected mission file
-        ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=$MISSION_NAME
+        ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=$MISSION_NAME GPS:=$GPS
         ;;
     *)
         printError "No start configuration specified"

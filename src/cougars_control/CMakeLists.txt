@@ -66,8 +66,21 @@ ament_target_dependencies(waypoint_follower
   tf2_geometry_msgs
   yaml-cpp  # Add yaml-cpp dependency
 )
+add_executable(waypoint_follower_gps src/waypoint_follower_gps.cpp) 
+ament_target_dependencies(waypoint_follower_gps
+  rclcpp
+  nav_msgs
+  sensor_msgs
+  frost_interfaces
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  yaml-cpp  # Add yaml-cpp dependency
+)
+
 
 target_link_libraries(waypoint_follower yaml-cpp)
+target_link_libraries(waypoint_follower_gps yaml-cpp)
 # Link libraries
 target_link_libraries(coug_controls)
 target_link_libraries(coug_kinematics)
@@ -85,6 +98,7 @@ install(TARGETS
   moos_bridge_gps
   emergency_protocols
   waypoint_follower #added for waypoint follower
+  waypoint_follower_gps #added for waypoint follower
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules
