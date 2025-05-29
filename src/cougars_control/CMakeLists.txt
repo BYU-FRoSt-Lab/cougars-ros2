@@ -42,12 +42,17 @@ ament_target_dependencies(moos_bridge_sim rclcpp std_msgs frost_interfaces MOOS 
 add_executable(moos_bridge_gps src/moos_bridge_gps.cpp)
 ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
 
+
+add_executable(emergency_protocols src/emergency_protocols.cpp)
+ament_target_dependencies(emergency_protocols rclcpp std_msgs frost_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
+
 # Link libraries
 target_link_libraries(coug_controls)
 target_link_libraries(coug_kinematics)
 target_link_libraries(moos_bridge)
 target_link_libraries(moos_bridge_sim)
 target_link_libraries(moos_bridge_gps)
+target_link_libraries(emergency_protocols)
 
 # Install executables
 install(TARGETS
@@ -56,6 +61,7 @@ install(TARGETS
   moos_bridge
   moos_bridge_sim
   moos_bridge_gps
+  emergency_protocols
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python modules
@@ -63,8 +69,6 @@ install(TARGETS
 
 # Install Python executables
 install(PROGRAMS
-  scripts/battery_sub.py
-  scripts/leak_sub.py
   scripts/manual_mission.py
   scripts/fins_manual.py
   DESTINATION lib/${PROJECT_NAME}
