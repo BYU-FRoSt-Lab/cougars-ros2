@@ -21,7 +21,6 @@ setup(
     entry_points={
         'console_scripts': [
             'talker = pressure_sensor.run_ps:main',
-            'listener = pressure_sensor.listen_ps:main'
         ],
     },
 )
