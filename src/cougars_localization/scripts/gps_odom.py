@@ -58,7 +58,7 @@ class NavSatFixToOdom(Node):
         # Message synchronizer enabling callback to use both fix and extended fix
         # This approch is necessary because currently covariance is only in the fix message, not extended fix
         self.ts = ApproximateTimeSynchronizer(
-            [self.fix_sub, self.extended_fix_sub],
+            [self.extended_fix_sub, self.fix_sub],
             queue_size=10,
             slop=0.001
         )
