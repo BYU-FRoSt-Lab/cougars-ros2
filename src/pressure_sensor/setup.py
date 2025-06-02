@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = pressure_sensor.run_ps:main',
+            'get_pressure = pressure_sensor.run_ps:main',
         ],
     },
 )

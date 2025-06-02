@@ -127,6 +127,14 @@ def generate_launch_description():
             output=output,
             arguments=['--ros-args', '--log-level', 'WARN'],
         ),
+        # Setup the pressure sensor
+        launch_ros.actions.Node(
+            package='pressure_sensor',
+            executable='get_pressure',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
     ])
 
     return launch.LaunchDescription(launch_actions)
