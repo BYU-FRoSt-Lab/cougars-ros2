@@ -10,7 +10,7 @@ from geometry_msgs.msg import TwistWithCovarianceStamped
 from dvl_msgs.msg import DVLDR
 from std_srvs.srv import SetBool
 
-from digi.xbee.devices import XBeeDevice
+from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
 from digi.xbee.exception import TransmitException
 
 import json
@@ -184,9 +184,10 @@ class RFBridge(Node):
             self.get_logger().error(f"XBee transmission error: {str(e)}")
             self.get_logger().error(traceback.format_exc())
 
-    def send_message(self, msg):
+    def send_message(self, msg, address):
         try:
-            self.device.send_data_broadcast(msg)
+            remote_device = RemoteXBeeDevice(self.device, address)
+            self.device.send_data(remote_device, msg)
             self.get_logger().info(f"Sent via XBee: {msg}")
         except TransmitException as e:
             self.get_logger().error(f"XBee transmission error - TransmitException: {e}")
@@ -197,7 +198,6 @@ class RFBridge(Node):
 
     def get_all_status_data(self):
         data_dict = {
-            "target_vehicle_id" : self.base_station_id,
             "src_id" : self.vehicle_id,
             "message" : "STATUS",
             "odom": self.latest_odom,
@@ -212,42 +212,36 @@ class RFBridge(Node):
     def data_receive_callback(self, xbee_message):
         try:
             payload = xbee_message.data.decode('utf-8', errors='replace')
-
-            data = json.loads(payload)
-            msg_type = data.get("type")
-            target_vehicle_id = data.get("target_vehicle_id", "unknown")
+            return_address = xbee_message.remote_device.get_64bit_addr()
+            self.get_logger().info(f"Received from {return_address}: {payload}")
             
-            if self.vehicle_id == target_vehicle_id:
-                self.get_logger().info(f"Received from {xbee_message.remote_device.get_64bit_addr()}: {payload}")
-                msg = String()
-                msg.data = payload
-                self.publisher.publish(msg)
+            msg = String()
+            msg.data = payload
+            self.publisher.publish(msg)
+            self.get_logger().info(f"{payload}")
 
-                # Command handling (STATUS/INIT)
-                if msg_type == "STATUS":
-                    response = self.get_all_status_data()
-                    self.device.send_data_broadcast(response)
-                    self.get_logger().info(f"Received STATUS, responding with sensor data")
-                    self.get_logger().debug(f"Status response: {response}")
-                elif msg_type == "PING":
-                    response = {
-                    "target_vehicle_id" : self.base_station_id,
-                    "src_id" : self.vehicle_id,
-                    "Message" : "PING",
-                    }
-                    self.device.send_data_broadcast(json.dumps(response))
-                    self.get_logger().info(f"Received PING, responding with PING")
-                elif msg_type == "E_KILL":
-                    self.get_logger().info(f"Received E_KILL message")
-                #TODO: when Braden adds the init system, update this
-                elif msg_type == "INIT":
-                    init_msg = String()
-                    init_msg.data = "INIT_COMMAND"
-                    self.init_publisher.publish(init_msg)
-                    self.get_logger().info(f"Received INIT, published to init topic")
-                    self.device.send_data_broadcast("INIT_ACK")
+            # Command handling (STATUS/INIT)
+            if payload == "STATUS":
+                response = self.get_all_status_data()
+                self.send_message(response, return_address)
+                self.get_logger().info(f"Received STATUS, responding with sensor data")
+                self.get_logger().debug(f"Status response: {response}")
+            elif payload == "PING":
+                response = {"message": "PING", "src_id": self.vehicle_id}
+                self.send_message(json.dumps(response), return_address)
+                self.get_logger().info(f"Received PING, responding with PING")
+            elif payload == "E_KILL":
+                self.get_logger().info(f"Received E_KILL message")
+            #TODO: when Braden adds the init system, update this
+            elif payload == "INIT":
+                init_msg = String()
+                init_msg.data = "INIT_COMMAND"
+                self.init_publisher.publish(init_msg)
+                self.get_logger().info(f"Received INIT, published to init topic")
+                self.device.send_data_broadcast("INIT_ACK")
         except Exception as e:
             self.get_logger().error(f"Error in data_receive_callback: {e}")
+            self.get_logger().error(traceback.format_exc())
 
     
     def kill_thruster(self):
