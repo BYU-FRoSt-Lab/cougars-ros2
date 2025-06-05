@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import rclpy
 from rclpy.node import Node
 from rclpy.parameter import Parameter
@@ -12,7 +13,7 @@ import math # For atan2, sqrt, degrees
 
 class NavSatToNmeaNode(Node):
     def __init__(self):
-        super().__init__('navsat_to_nmea_serial_node')
+        super().__init__('nmea_converter')
 
         # Declare parameters
         serial_port_descriptor = ParameterDescriptor(description='The virtual serial port to write NMEA sentences to (e.g., /dev/tnt1)')

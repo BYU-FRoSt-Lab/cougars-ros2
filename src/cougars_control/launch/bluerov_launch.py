@@ -45,6 +45,7 @@ def generate_launch_description():
     # Get the directory of the launch files
     package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
+    imu_package_dir = os.path.join(get_package_share_directory('microstrain_inertial_driver'), 'launch')
 
     
     launch_actions = []
@@ -81,6 +82,9 @@ def generate_launch_description():
 
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
+        ),
+        launch.actions.IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(imu_package_dir, "microstrain_launch.py"))
         ),   
         # launch_ros.actions.Node(
         #     package='cougars_localization',
@@ -147,6 +151,13 @@ def generate_launch_description():
             executable='dvl_a50_sensor', 
             parameters=[param_file],
             namespace=namespace,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='nmea_constructor.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
         ),
 
     ])
