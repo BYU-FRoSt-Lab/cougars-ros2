@@ -47,16 +47,17 @@ struct RequestStatus {
 
 struct VehicleStatus {
     COUG_MSG_ID msg_id = VEHICLE_STATUS;
-
-    uint32_t timestamp;
-
-    uint8_t moos_waypoint;
-    uint8_t moos_behavior_number;
-
+    uint8_t vehicle_id;
+    uint8_t dvl_vel;
+    bool dvl_running;
+    uint8_t battery_voltage; // in mV
+    uint8_t waypoint;
+    bool gps_connection;
+    bool leak_detection;
     int16_t x;
     int16_t y;
-    uint16_t depth;
-    uint16_t heading;
+    uint8_t depth;
+    uint8_t heading;
 
 }__attribute__((packed));
 

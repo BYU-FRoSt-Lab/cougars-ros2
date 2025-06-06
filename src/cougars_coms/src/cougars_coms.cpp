@@ -7,6 +7,12 @@
 #include "seatrac_interfaces/msg/modem_rec.hpp"
 #include "seatrac_interfaces/msg/modem_send.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "sensor_msgs/msg/fluid_pressure.hpp"
+#include "sensor_msgs/msg/battery_state.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "dvl_msgs/msg/dvldr.hpp"
+
 
 
 #include "cougars_coms/coms_protocol.hpp"
@@ -32,18 +38,25 @@ public:
 
         this->base_station_beacon_id_ = this->get_parameter("base_station_beacon_id").as_int();
 
+        this->odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>(
+            "odom", 10,
+            std::bind(&ComsNode::odom_callback, this, _1)
+        );
+
+        this->leak_subscriber_ = this->create_subscription<sensor_msgs::msg::FluidPressure>(
+            "leak/data", 10,
+            std::bind(&ComsNode::leak_callback, this, _1)
+        );
+
+        this->dvl_velocity_subscriber_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+            "dvl/velocity", 10,
+            std::bind(&ComsNode::dvl_velocity_callback, this, _1)
+        );
 
         this->modem_subscriber_ = this->create_subscription<seatrac_interfaces::msg::ModemRec>(
             "modem_rec", 10,
             std::bind(&ComsNode::listen_to_modem, this, _1)
         );
-
-
-        this->dvl_dead_reckoning = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-            "dvl/dead_reckoning", 10,
-            std::bind(&ComsNode::listen_to_pose, this, _1)
-        );
-
 
         this->modem_publisher_ = this->create_publisher<seatrac_interfaces::msg::ModemSend>("modem_send", 10);
 
@@ -76,15 +89,44 @@ public:
         }
     }
 
-
-    void listen_to_pose(geometry_msgs::msg::PoseWithCovarianceStamped msg){
+    void odom_callback(nav_msgs::msg::Odometry msg) {
         this->x = msg.pose.pose.position.x;
         this->y = msg.pose.pose.position.y;
+        this->z = msg.pose.pose.position.z;
+        this->vx = msg.twist.twist.linear.x;
+        this->vy = msg.twist.twist.linear.y;
+    }
+
+    void leak_callback(sensor_msgs::msg::FluidPressure msg) {
+        // Here you can handle the leak detection data if needed
+        this->leak_pressure = msg.fluid_pressure;
+    }
+
+    void battery_callback(sensor_msgs::msg::BatteryState msg) {
+        // Here you can handle the battery data if needed
+        this->battery_voltage = msg.percentage * 100; 
+    }
+
+    void dvl_velocity_callback(geometry_msgs::msg::TwistWithCovarianceStamped msg) {
+        this->dvl_vel_x = msg.twist.twist.linear.x;
+        this->dvl_vel_y = msg.twist.twist.linear.y;
+        this->dvl_vel_z = msg.twist.twist.linear.z;
+        this->dvl_running = true;
+    }
+
+    void dvl_position_callback(dvl_msgs::msg::DVLDR msg) {
+        this->dvl_position_x = msg.position.x;
+        this->dvl_position_y = msg.position.y;
+        this->dvl_position_z = msg.position.z;
+        this->roll = msg.roll;
+        this->pitch = msg.pitch;
+        this->yaw = msg.yaw;
+        this->dvl_running = true;
     }
 
 
     void kill_thruster() {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Recieved kill command from base station");
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received kill command from base station");
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
         request->data = false;
         while (!this->thruster_client_->wait_for_service(1s)) {
@@ -117,7 +159,7 @@ public:
 
 
     void emergency_surface() {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Recieved surface command from base station");
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received surface command from base station");
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
         request->data = true;
         while (!this->surface_client_->wait_for_service(1s)) {
@@ -152,12 +194,17 @@ public:
     void send_status(){
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending status to base station.");
         VehicleStatus status_msg;
-        status_msg.moos_waypoint = 0;
-        status_msg.moos_behavior_number = 0;
-        status_msg.x = this->x;
-        status_msg.y = this->y;
         status_msg.depth = 0;
+        status_msg.x = this->dvl_position_x;
+        status_msg.y = this->dvl_position_y;
+        // status_msg.z = this->dvl_position_z;
         status_msg.heading = 0;
+        status_msg.dvl_vel = this->dvl_vel_x; 
+        status_msg.battery_voltage = this->battery_voltage;
+        status_msg.dvl_running = this->dvl_running;
+        status_msg.gps_connection = false;
+        status_msg.leak_detection = this->leak_pressure > 16;
+        status_msg.waypoint = 0;
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
 
@@ -178,16 +225,38 @@ private:
 
 
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr dvl_dead_reckoning;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
+    rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr leak_subscriber_;
+    rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr dvl_velocity_subscriber_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr dvl_position_subscriber_;
+
+
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr init_controls_client_;
 
 
+
+    
     float x;
     float y;
+    float z;
+    float vx;
+    float vy;
     int base_station_beacon_id_;
+    float dvl_position_x;
+    float dvl_position_y;
+    float dvl_position_z;
+    float dvl_vel_x;
+    float dvl_vel_y;
+    float dvl_vel_z;
+    bool dvl_running;
+    float battery_voltage;
+    float leak_pressure;
+    float roll;
+    float pitch;
+    float yaw;
 
 
 };
