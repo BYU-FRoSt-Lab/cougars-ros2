@@ -21,7 +21,7 @@ def generate_launch_description():
     GPS = "false"  # Default to 'false'
     verbose = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
-    # namespace = ''
+    namespace = ''
     with open(param_file, 'r') as f:
         vehicle_params = yaml.safe_load(f)
 
@@ -100,14 +100,14 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
-        launch_ros.actions.Node(
-            package='mavlink_bridge',
-            executable='mavlink_bridge',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        ),
-        # Setup the USBL modem
+        # launch_ros.actions.Node(
+        #     package='mavlink_bridge',
+        #     executable='mavlink_bridge',
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        #     output=output,
+        # ),
+        Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
@@ -116,36 +116,36 @@ def generate_launch_description():
             output=output,
         ),
         # Setup the GPS
-        launch_ros.actions.ComposableNodeContainer(
-            package='rclcpp_components',
-            executable='component_container',
-            name='fix_and_odometry_container',
-            namespace=namespace,
-            composable_node_descriptions=[
-                launch_ros.descriptions.ComposableNode(
-                    package='gpsd_client',
-                    plugin='gpsd_client::GPSDClientComponent',
-                    name='gpsd_client',
-                    namespace=namespace,
-                    parameters=[
-                        vehicle_params[namespace]['gpsd_client']['ros__parameters'],
-                        {'log_level': 'warn'}  # Add log level here
-                    ],
-                    extra_arguments=[{'use_intra_process_comms': True}]
-                ),
-                launch_ros.descriptions.ComposableNode(
-                    package='gps_tools',
-                    plugin='gps_tools::UtmOdometryComponent',
-                    namespace=namespace,
-                    name='utm_gpsfix_to_odometry_node',
-                    parameters=[
-                        {'log_level': 'warn'}  # Add log level here
-                    ],
-                ),
-            ],
-            output=output,
-            arguments=['--ros-args', '--log-level', 'WARN'],
-        ),
+        # launch_ros.actions.ComposableNodeContainer(
+        #     package='rclcpp_components',
+        #     executable='component_container',
+        #     name='fix_and_odometry_container',
+        #     namespace=namespace,
+        #     composable_node_descriptions=[
+        #         launch_ros.descriptions.ComposableNode(
+        #             package='gpsd_client',
+        #             plugin='gpsd_client::GPSDClientComponent',
+        #             name='gpsd_client',
+        #             namespace=namespace,
+        #             parameters=[
+        #                 vehicle_params[namespace]['gpsd_client']['ros__parameters'],
+        #                 {'log_level': 'warn'}  # Add log level here
+        #             ],
+        #             extra_arguments=[{'use_intra_process_comms': True}]
+        #         ),
+        #         launch_ros.descriptions.ComposableNode(
+        #             package='gps_tools',
+        #             plugin='gps_tools::UtmOdometryComponent',
+        #             namespace=namespace,
+        #             name='utm_gpsfix_to_odometry_node',
+        #             parameters=[
+        #                 {'log_level': 'warn'}  # Add log level here
+        #             ],
+        #         ),
+        #     ],
+        #     output=output,
+        #     arguments=['--ros-args', '--log-level', 'WARN'],
+        # ),
         launch_ros.actions.Node(
             package='dvl_a50', 
             executable='dvl_a50_sensor', 
@@ -155,6 +155,13 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='nmea_constructor.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
+        launch_ros.actions.Node(
+            package='pressure_sensor',
+            executable='pressure_pub',
             parameters=[param_file],
             namespace=namespace,
             output=output,

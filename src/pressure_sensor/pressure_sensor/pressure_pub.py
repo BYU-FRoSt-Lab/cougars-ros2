@@ -34,7 +34,7 @@ class PressurePublisher(Node):
             msg.variance = 0.0
 
             self.publisher_.publish(msg)
-            self.get_logger().info(f"Published pressure: {pressure_pa:.2f} Pa")
+            # self.get_logger().info(f"Published pressure: {pressure_pa:.2f} Pa")
         else:
             self.get_logger().error("Sensor read failed!")
             rclpy.shutdown()

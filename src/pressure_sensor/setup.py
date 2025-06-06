@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'get_pressure = pressure_sensor.run_ps:main',
+            'pressure_pub = pressure_sensor.pressure_pub:main',
         ],
     },
 )

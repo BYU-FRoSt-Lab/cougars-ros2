@@ -20,7 +20,7 @@ class MAVLinkBridge(Node):
             # pressure_msg.header.stamp = self.
             pressure_msg.fluid_pressure = msg.press_abs * 100 # Conversion to Pa
             self.publisher.publish(pressure_msg)
-            self.get_logger().info("Published Pressure data")
+            # self.get_logger().info("Published Pressure data")
 
 def main(args=None):
     rclpy.init(args=args)
