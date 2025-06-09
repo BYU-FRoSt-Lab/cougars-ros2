@@ -1,0 +1,17 @@
+# Format: <file pattern> <GitHub username or team>
+
+# Examples:
+# Assign a user to a specific file
+# src/database/db.py @alice
+
+# Assign a user to a folder
+# src/backend/ @bob
+
+# Assign a team (must be an org team, like @myorg/devs)
+# scripts/ @myorg/tools-team
+
+# Assign multiple owners
+# *.py @alice @bob
+
+
+* @BradenMeyers
