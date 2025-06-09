@@ -148,7 +148,6 @@ public:
         );
     }
 
-
     void send_status(){
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending status to base station.");
         VehicleStatus status_msg;
