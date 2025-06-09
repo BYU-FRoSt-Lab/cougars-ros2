@@ -24,7 +24,7 @@ find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
 find_package(MOOS 10 REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(robot_localization REQUIRED)
+# find_package(robot_localization REQUIRED) #add if using the EKF
 
 include_directories(include/${PROJECT_NAME})
 
