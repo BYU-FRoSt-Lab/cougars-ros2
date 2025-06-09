@@ -12,13 +12,23 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>rclpy</depend>
+
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <exec_depend>python3-serial</exec_depend>
 
   <build_depend>seatrac_interfaces</build_depend>
   <exec_depend>seatrac_interfaces</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <exec_depend>python3-digi-xbee</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
