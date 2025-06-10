@@ -6,7 +6,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy, QoS
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState, FluidPressure
-from geometry_msgs.msg import TwistWithCovarianceStamped
+from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from dvl_msgs.msg import DVLDR
 from std_srvs.srv import SetBool
 
@@ -121,6 +121,13 @@ class RFBridge(Node):
             'smoothed_odom',
             self.smoothed_odom_callback,
             10)
+        
+        self.depth_sub = self.create_subscription(
+            PoseWithCovarianceStamped,
+            'depth_data',
+            self.depth_callback,
+            10)
+
 
         # Register XBee data receive callback
         self.device.add_data_received_callback(self.data_receive_callback)
@@ -176,6 +183,14 @@ def smoothed_odom_callback(self, msg):
     else:
         self.get_logger().error("Received message without twist field in smoothed_odom_callback")
 
+    def depth_callback(self, msg):
+        if hasattr(msg, 'pose') and hasattr(msg.pose, 'pose'):
+            pose = msg.pose.pose
+            self.latest_depth = {
+                "depth": float(pose.position.z),
+            }
+            self.get_logger().debug("Updated depth data")
+
     def tx_callback(self, msg):
         try:
             message = msg.data
@@ -204,7 +219,8 @@ def smoothed_odom_callback(self, msg):
             "safety_status": self.latest_safety_status,
             "leak_status": self.latest_leak,
             "smoothed_odom": self.latest_smoothed_odom,
-            "battery_state": self.latest_battery, 
+            "battery_state": self.latest_battery,
+            "depth_data": self.latest_depth,
         }
         data_dict = {k: v for k, v in data_dict.items() if v and v != "NO_DATA"}
         return json.dumps(data_dict, separators=(',', ':'))
