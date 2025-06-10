@@ -98,17 +98,11 @@ class RFBridge(Node):
             self.tx_callback,
             10)
 
-        self.status_data_sub = self.create_subscription(
-            String,
-            'status_data',
-            self.status_data_callback,
+        self.subscription = self.create_subscription(
+            SystemStatus,
+            'safety_status',
+            self.safety_status_callback,
             10)
-
-        self.odom_sub = self.create_subscription(
-            Odometry,
-            'odom',
-            self.odom_callback,
-            qos_profile=self.odom_qos)
 
         self.leak_sub = self.create_subscription(
             FluidPressure,
@@ -121,18 +115,12 @@ class RFBridge(Node):
             'battery/data',
             self.battery_callback,
             10)
-
-        self.dvl_velocity_sub = self.create_subscription(
-            TwistWithCovarianceStamped,
-            'dvl/velocity',
-            self.dvl_velocity_callback,
-            qos_profile=self.dvl_qos)
-
-        self.dvl_position_sub = self.create_subscription(
-            DVLDR,
-            'dvl/position',
-            self.dvl_position_callback,
-            qos_profile=self.dvl_qos)
+        
+        self.smoothed_odom_sub = self.create_subscription(
+            Odometry,
+            'smoothed_odom',
+            self.smoothed_odom_callback,
+            10)
 
         # Register XBee data receive callback
         self.device.add_data_received_callback(self.data_receive_callback)
@@ -141,39 +129,52 @@ class RFBridge(Node):
         # Thread-safe shutdown flag
         self.running = True
 
-    def status_data_callback(self, msg):
-        if hasattr(msg, 'data'):
-            self.latest_status_data = msg.data
-            self.get_logger().debug(f"Updated status data: {self.latest_status_data}")
-        else:
-            self.get_logger().error(f"Received non-String message in status_data_callback")
+def leak_callback(self, msg):
+    if hasattr(msg, 'fluid_pressure'):
+        self.latest_leak = {"leak": float(msg.fluid_pressure)}
+        self.get_logger().debug(f"Updated leak data: {self.latest_leak}")
+    else:
+        self.get_logger().error("Received message without fluid_pressure field in leak_callback")
 
-    def odom_callback(self, msg):
-        pos = msg.pose.pose.position
-        vel = msg.twist.twist.linear
-        self.latest_odom = f"odom:x={pos.x:.2f},y={pos.y:.2f},z={pos.z:.2f},vx={vel.x:.2f},vy={vel.y:.2f}"
-        self.get_logger().debug("Updated odom data")
+def battery_callback(self, msg):
+    self.latest_battery = {
+        "voltage": float(msg.voltage),
+        "percentage": float(msg.percentage)
+    }
+    self.get_logger().debug("Updated battery data")
 
-    def leak_callback(self, msg):
-        if hasattr(msg, 'fluid_pressure'):
-            self.latest_leak = f"leak:{msg.fluid_pressure:.2f}"
-            self.get_logger().debug(f"Updated leak data: {self.latest_leak}")
-        else:
-            self.get_logger().error("Received message without fluid_pressure field in leak_callback")
+def safety_status_callback(self, msg):
+    self.latest_safety_status = {
+        "depth_status": int(msg.depth_status),
+        "gps_status": int(msg.gps_status),
+        "modem_status": int(msg.modem_status),
+        "dvl_status": int(msg.dvl_status),
+        "emergency_status": int(msg.emergency_status)
+    }
+    self.get_logger().debug("Updated safety status data")
 
-    def battery_callback(self, msg):
-        self.latest_battery = f"batt:v={msg.voltage:.1f},pct={msg.percentage*100:.0f}"
-        self.get_logger().debug("Updated battery data")
-
-    def dvl_velocity_callback(self, msg):
-        lin = msg.twist.twist.linear
-        self.latest_dvl_velocity = f"dvl_v:x={lin.x:.2f},y={lin.y:.2f},z={lin.z:.2f}"
-        self.get_logger().debug("Updated DVL velocity data")
-
-    def dvl_position_callback(self, msg):
-        pos = msg.position
-        self.latest_dvl_position = f"dvl_p:x={pos.x:.2f},y={pos.y:.2f},z={pos.z:.2f},r={msg.roll:.2f},p={msg.pitch:.2f},y={msg.yaw:.2f}"
-        self.get_logger().debug("Updated DVL position data")
+def smoothed_odom_callback(self, msg):
+    if hasattr(msg, 'twist') and hasattr(msg.twist, 'twist'):
+        twist = msg.twist.twist
+        pose = msg.pose.pose
+        self.latest_smoothed_odom = {
+            "position_x": float(pose.position.x),
+            "position_y": float(pose.position.y),
+            "position_z": float(pose.position.z),
+            "orientation_x": float(pose.orientation.x),
+            "orientation_y": float(pose.orientation.y),
+            "orientation_z": float(pose.orientation.z),
+            "orientation_w": float(pose.orientation.w),
+            "linear_x": float(twist.linear.x),
+            "linear_y": float(twist.linear.y),
+            "linear_z": float(twist.linear.z),
+            "angular_x": float(twist.angular.x),
+            "angular_y": float(twist.angular.y),
+            "angular_z": float(twist.angular.z)
+        }
+        self.get_logger().debug("Updated smoothed odometry data")
+    else:
+        self.get_logger().error("Received message without twist field in smoothed_odom_callback")
 
     def tx_callback(self, msg):
         try:
@@ -200,11 +201,10 @@ class RFBridge(Node):
         data_dict = {
             "src_id" : self.vehicle_id,
             "message" : "STATUS",
-            "odom": self.latest_odom,
-            "leak": self.latest_leak,
-            "battery": self.latest_battery,
-            "dvl_vel": self.latest_dvl_velocity,
-            "dvl_pos": self.latest_dvl_position,
+            "safety_status": self.latest_safety_status,
+            "leak_status": self.latest_leak,
+            "smoothed_odom": self.latest_smoothed_odom,
+            "battery_state": self.latest_battery, 
         }
         data_dict = {k: v for k, v in data_dict.items() if v and v != "NO_DATA"}
         return json.dumps(data_dict, separators=(',', ':'))
