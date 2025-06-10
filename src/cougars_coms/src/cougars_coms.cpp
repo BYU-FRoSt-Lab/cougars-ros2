@@ -38,9 +38,9 @@ public:
 
         this->base_station_beacon_id_ = this->get_parameter("base_station_beacon_id").as_int();
 
-        this->odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "odom", 10,
-            std::bind(&ComsNode::odom_callback, this, _1)
+        this->safety_subscriber_ = this->create_subscription<frost_interfaces::msg::SystemStatus>(
+            "safety_status", 10,
+            std::bind(&ComsNode::safety_callback, this, _1)
         );
 
         this->leak_subscriber_ = this->create_subscription<sensor_msgs::msg::FluidPressure>(
@@ -48,9 +48,9 @@ public:
             std::bind(&ComsNode::leak_callback, this, _1)
         );
 
-        this->dvl_velocity_subscriber_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
-            "dvl/velocity", 10,
-            std::bind(&ComsNode::dvl_velocity_callback, this, _1)
+        this->battery_subscriber_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
+            "battery/data", 10,
+            std::bind(&ComsNode::battery_callback, this, _1)
         );
 
         this->modem_subscriber_ = this->create_subscription<seatrac_interfaces::msg::ModemRec>(
@@ -89,14 +89,6 @@ public:
         }
     }
 
-    void odom_callback(nav_msgs::msg::Odometry msg) {
-        this->x = msg.pose.pose.position.x;
-        this->y = msg.pose.pose.position.y;
-        this->z = msg.pose.pose.position.z;
-        this->vx = msg.twist.twist.linear.x;
-        this->vy = msg.twist.twist.linear.y;
-    }
-
     void leak_callback(sensor_msgs::msg::FluidPressure msg) {
         // Here you can handle the leak detection data if needed
         this->leak_pressure = msg.fluid_pressure;
@@ -107,21 +99,21 @@ public:
         this->battery_voltage = msg.percentage * 100; 
     }
 
-    void dvl_velocity_callback(geometry_msgs::msg::TwistWithCovarianceStamped msg) {
-        this->dvl_vel_x = msg.twist.twist.linear.x;
-        this->dvl_vel_y = msg.twist.twist.linear.y;
-        this->dvl_vel_z = msg.twist.twist.linear.z;
-        this->dvl_running = true;
+    void safety_callback(frost_interfaces::msg::SystemStatus msg) {
+        // Here you can handle the safety system status data if needed
+        uint8_t safety_mask =
+            (msg.depth_status      ? 1 << 0 : 0) |
+            (msg.gps_status        ? 1 << 1 : 0) |
+            (msg.modem_status      ? 1 << 2 : 0) |
+            (msg.dvl_status        ? 1 << 3 : 0) |
+            (msg.emergency_status  ? 1 << 4 : 0);
     }
 
-    void dvl_position_callback(dvl_msgs::msg::DVLDR msg) {
-        this->dvl_position_x = msg.position.x;
-        this->dvl_position_y = msg.position.y;
-        this->dvl_position_z = msg.position.z;
-        this->roll = msg.roll;
-        this->pitch = msg.pitch;
-        this->yaw = msg.yaw;
-        this->dvl_running = true;
+    void smoothed_odom_callback(nav_msgs::msg::Odometry msg) {
+        this->position_x = msg.pose.pose.position.x;
+        this->position_y = msg.pose.pose.position.y;
+        this->velocity_x = msg.twist.twist.linear.x;
+        this->velocity_y = msg.twist.twist.linear.y;
     }
 
 
@@ -194,17 +186,16 @@ public:
     void send_status(){
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending status to base station.");
         VehicleStatus status_msg;
-        status_msg.depth = 0;
-        status_msg.x = this->dvl_position_x;
-        status_msg.y = this->dvl_position_y;
-        // status_msg.z = this->dvl_position_z;
-        status_msg.heading = 0;
-        status_msg.dvl_vel = this->dvl_vel_x; 
+        status_msg.waypoint = 0; // Placeholder, update as needed
         status_msg.battery_voltage = this->battery_voltage;
-        status_msg.dvl_running = this->dvl_running;
-        status_msg.gps_connection = false;
-        status_msg.leak_detection = this->leak_pressure > 16;
-        status_msg.waypoint = 0;
+        status_msg.battery_percentage = this->battery_percentage;
+        status_msg.leak = this->leak_pressure;
+        status_msg.safety_status = this->safety_mask;
+        status_msg.x = this->position_x;
+        status_msg.y = this->position_y;
+        status_msg.heading = 0;
+        status_msg.x_vel = this->x_vel; 
+        status_msg.y_vel = this->y_vel;
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
 
