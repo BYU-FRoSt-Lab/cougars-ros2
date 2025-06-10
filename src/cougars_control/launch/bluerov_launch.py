@@ -46,6 +46,7 @@ def generate_launch_description():
     package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
     imu_package_dir = os.path.join(get_package_share_directory('microstrain_inertial_driver'), 'launch')
+    dvl_package_dir = os.path.join(get_package_share_directory('dvl_a50'), 'launch')
 
     
     launch_actions = []
@@ -86,6 +87,15 @@ def generate_launch_description():
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(imu_package_dir, "microstrain_launch.py"))
         ),   
+        launch.actions.IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(dvl_package_dir, "dvl_a50.launch.py"))
+        ),  
+        # launch_ros.actions.Node(
+        #     package='dvl_a50', 
+        #     executable='dvl_a50_sensor', 
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        # ),
         # launch_ros.actions.Node(
         #     package='cougars_localization',
         #     executable='factor_graph.py',
@@ -107,7 +117,7 @@ def generate_launch_description():
         #     namespace=namespace,
         #     output=output,
         # ),
-        Setup the USBL modem
+        # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
@@ -146,12 +156,7 @@ def generate_launch_description():
         #     output=output,
         #     arguments=['--ros-args', '--log-level', 'WARN'],
         # ),
-        launch_ros.actions.Node(
-            package='dvl_a50', 
-            executable='dvl_a50_sensor', 
-            parameters=[param_file],
-            namespace=namespace,
-        ),
+        
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='nmea_constructor.py',
