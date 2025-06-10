@@ -33,16 +33,16 @@ class NavSatToNmeaNode(Node):
         # Subscribers
         self.navsat_subscription = self.create_subscription(
             NavSatFix,
-            '/gnss_1/llh_position', # Source of position and fix status
+            'gnss_1/llh_position', # Source of position and fix status
             self.navsat_callback,
             10)
         self.velocity_subscription = self.create_subscription(
             TwistWithCovarianceStamped,
-            '/gnss_1/velocity', # Source of speed and course
+            'gnss_1/velocity', # Source of speed and course
             self.velocity_callback,
             10)
         
-        self.publisher = self.create_publisher(Sentence, '/nmea_constructed', 10)
+        self.publisher = self.create_publisher(Sentence, 'nmea_constructed', 10)
         self.ser = None
         self._serial_warning_issued = False
 
