@@ -10,7 +10,7 @@ class PressurePublisher(Node):
         self.declare_parameter('sensor_type', 0)  # 0: 02BA, 1: 30BA ##default to 02BA
         sensor_type = self.get_parameter('sensor_type').get_parameter_value().integer_value
 
-        self.publisher_ = self.create_publisher(FluidPressure, 'pressure_data', 10)
+        self.publisher_ = self.create_publisher(FluidPressure, 'pressure/data', 10)
 
         if sensor_type == 0:
             self.sensor = ms5837.MS5837_02BA()

@@ -6,7 +6,7 @@ from pymavlink import mavutil
 class MAVLinkBridge(Node):
     def __init__(self):
         super().__init__('mavlink_bridge')
-        self.publisher = self.create_publisher(FluidPressure, 'pressure/data', 10)
+        self.publisher = self.create_publisher(FluidPressure, 'pressure/bar30', 10)
         self.mavlink_connection = mavutil.mavlink_connection('udpin:192.168.2.103:15550')
         self.get_logger().info("Waiting for MAVLink messages...")
         self.mavlink_connection.wait_heartbeat()

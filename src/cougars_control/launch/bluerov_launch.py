@@ -3,6 +3,8 @@ import sys
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
@@ -80,13 +82,23 @@ def generate_launch_description():
 
 
     launch_actions.extend([
+        DeclareLaunchArgument(
+            'param_file',
+            default_value='/home/frostlab/config/microstrain_params.yaml',
+            description='Path to the microstrain parameter file'
+        ),
 
+        launch.actions.IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(imu_package_dir, "microstrain_launch.py")
+            ),
+            launch_arguments={
+                'param_file': LaunchConfiguration('param_file'),
+            }.items()
+        ),
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
         ),
-        launch.actions.IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(imu_package_dir, "microstrain_launch.py"))
-        ),   
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(dvl_package_dir, "dvl_a50.launch.py"))
         ),  
@@ -110,13 +122,13 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
-        # launch_ros.actions.Node(
-        #     package='mavlink_bridge',
-        #     executable='mavlink_bridge',
-        #     parameters=[param_file],
-        #     namespace=namespace,
-        #     output=output,
-        # ),
+        launch_ros.actions.Node(
+            package='mavlink_bridge',
+            executable='mavlink_bridge',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
