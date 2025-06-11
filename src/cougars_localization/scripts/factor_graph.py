@@ -676,10 +676,9 @@ class FactorGraphNode(Node):
 
         # update at every tick of the timer (after between factor and checking for unary factors)
     def update(self):
-        self.isam.update(self.graph, self.initialEstimate) #initial estimate becomes the dvl transformed by 
+        self.factorStatus=self.isam.update(self.graph, self.initialEstimate) #initial estimate becomes the dvl transformed by 
         self.result = self.isam.calculateEstimate()
         self.xyz = self.result.atPose3(self.agent.poseKey).translation()
-        self.isam.update()
         self.initialEstimate.clear()
         maxFactorNum=self.get_parameter("max_factor_graph_size").get_parameter_value().integer_value
         if(self.graph.size()>maxFactorNum):

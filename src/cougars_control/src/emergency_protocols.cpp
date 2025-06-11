@@ -17,6 +17,7 @@
 #include "gps_msgs/msg/gps_fix.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
 #include "seatrac_interfaces/msg/modem_status.hpp"
+#include "rcl_interfaces/srv/get_parameters.hpp"
 
 
 using namespace std::chrono_literals;
@@ -74,8 +75,10 @@ public:
     this->declare_parameter("dvl_message_timeout",2);
     this->declare_parameter("dvl_position_stddev_threshold",5.0);
     this->declare_parameter("gps_sat_num_threshold",4);
+    this->declare_parameter("origin_gps_msgs",5);
+    this->declare_parameter("origin_gps_threshold_alt",100); 
+    this->declare_parameter("origin_gps_threshold",.5); //around 35 miles
     //  TODO: add more safety parameters as needed
-
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +89,7 @@ public:
     depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("depth_data", 10, std::bind(&EmergencyProtocols::depth_callback, this, _1));
     leak_subscription_ = this->create_subscription<sensor_msgs::msg::FluidPressure>("leak/data", 1, std::bind(&EmergencyProtocols::leak_callback, this, _1));
     battery_subscription_ = this->create_subscription<sensor_msgs::msg::BatteryState>("battery/data", 1, std::bind(&EmergencyProtocols::battery_callback, this, _1));
-    gps_subscription_ = this->create_subscription<gps_msgs::msg::GPSFix>("extended_fix", 1, std::bind(&EmergencyProtocols::gps_callback, this, _1));
+    gps_subscription_ = this->create_subscription<gps_msgs::msg::GPSFix>("extended_fix", 1, std::bind(&EmergencyProtocols::gps_fix_callback, this, _1));
     dvl_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>("dvl/position",1,std::bind(&EmergencyProtocols::dvl_callback, this, _1));
     //         qos,std::bind(&EmergencyProtocols::factor_graph_callback, this, _1));
     // vehicle_status_moos_subscription_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>("vehicle_status", 
@@ -103,17 +106,22 @@ public:
 
     this->okay = true;
     this->init = false;
-
+    this->gps_count=0;
+    this->gps_origin_lat=0;
+    this->gps_origin_lon=0;
+    this->gps_origin_alt=0;
+    this->gps_bad_origin=0;
+    grab_gps_params();
     depth_val = 1.0;
     back_near_surface = false;
     surfacing_then_disarm = false;
-      std_msgs::msg::Header defaultHeader = std_msgs::msg::Header();
-      builtin_interfaces::msg::Time defaultTime =builtin_interfaces::msg::Time();
-      defaultTime.set__sec(0);
-      defaultHeader.set__stamp(defaultTime);
-      latest_dvl_message.set__header(defaultHeader);
-      latest_gps_message.set__header(defaultHeader);
-      latest_modem_message.set__header(defaultHeader);
+    std_msgs::msg::Header defaultHeader = std_msgs::msg::Header();
+    builtin_interfaces::msg::Time defaultTime =builtin_interfaces::msg::Time();
+    defaultTime.set__sec(0);
+    defaultHeader.set__stamp(defaultTime);
+    latest_dvl_message.set__header(defaultHeader);
+    latest_gps_message.set__header(defaultHeader);
+    latest_modem_message.set__header(defaultHeader);
 
 
     // status publisher
@@ -217,7 +225,6 @@ public:
   
 
  private:
-
 
 
 
@@ -328,10 +335,13 @@ bool update_publishers(){
           surface_then_disarm();
         }
       }
-
+      if(gps_bad_origin){
+        message.gps_status.set__data(2);
+        this->okay=false;
+      }
       if(latest_gps_message.status.satellites_used<(this->get_parameter("gps_sat_num_threshold").as_int())){
         //not going to set okay to false because this is expected during the mission
-        message.gps_status.set__data(1);
+        message.gps_status.set__data(message.gps_status.data|1);
       }
     }
 
@@ -347,9 +357,51 @@ bool update_publishers(){
     status_publisher_->publish(message);
 
   }
-  void gps_callback(const gps_msgs::msg::GPSFix &msg){
+  void handle_gps_param_response(rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedFuture future){
+    auto response = future.get();
+    if (response->values.empty()) {
+      RCLCPP_ERROR(this->get_logger(), "No parameter values returned!");
+      return;
+    }
+   this->gps_origin_lat = response->values[0].double_value;
+   this->gps_origin_lon = response->values[1].double_value;
+   this->gps_origin_alt = response->values[2].double_value;
+  }
+  void grab_gps_params(){
+        // Create the client for the target node's parameter service
+    rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedPtr client_ = this->create_client<rcl_interfaces::srv::GetParameters>("/gps_odom/get_parameters");
+
+    // Wait for the service to be available
+    while (!client_->wait_for_service(std::chrono::seconds(1))) {
+      RCLCPP_INFO(this->get_logger(), "waiting for parameters from gps odom");
+    }
+
+    // Create the request
+    auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
+    request->names.push_back("origin.latitude");
+    request->names.push_back("origin.longitude");
+    request->names.push_back("origin.altitude");
+
+    // Send the request asynchronously
+    auto future = client_->async_send_request(request,
+      std::bind(&EmergencyProtocols::handle_gps_param_response, this, std::placeholders::_1));
+  
+  }
+  void gps_fix_callback(const gps_msgs::msg::GPSFix &msg){
+    if(this->gps_count<this->get_parameter("origin_gps_msgs").as_int()){
+      this->gps_count++;
+      if(gps_origin_lat!=0 && gps_origin_lon!=0 && gps_origin_alt!=0){ //params grabbed
+        if(abs(msg.longitude-gps_origin_lon>this->get_parameter("origin_gps_threshold").as_double()) || abs(msg.altitude-gps_origin_alt>this->get_parameter("origin_gps_threshold_alt").as_int()) || abs(msg.latitude-gps_origin_lat)>this->get_parameter("origin_gps_threshold").as_double()){
+            RCLCPP_ERROR(this->get_logger(), "GPS origin likely set incorrectly");
+            this->gps_bad_origin=1;
+        }
+
+      }
+    }
     latest_gps_message=msg;
   }
+
+
   void dvl_callback(const dvl_msgs::msg::DVLDR &msg){
     latest_dvl_message=msg;
   }
@@ -594,7 +646,9 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
 
   bool okay;
   bool init;
-
+  int gps_count;
+  float gps_origin_lat,gps_origin_lon,gps_origin_alt;
+  bool gps_bad_origin;
   //messages
   gps_msgs::msg::GPSFix latest_gps_message=gps_msgs::msg::GPSFix();
   dvl_msgs::msg::DVLDR latest_dvl_message=dvl_msgs::msg::DVLDR();
