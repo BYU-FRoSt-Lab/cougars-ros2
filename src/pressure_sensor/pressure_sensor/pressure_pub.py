@@ -30,6 +30,7 @@ class PressurePublisher(Node):
         if self.sensor.read():
             pressure_pa = self.sensor.pressure() * 100  # mbar to Pascal
             msg = FluidPressure()
+            msg.header.stamp = self.get_clock().now().to_msg()
             msg.fluid_pressure = pressure_pa
             msg.variance = 0.0
 
