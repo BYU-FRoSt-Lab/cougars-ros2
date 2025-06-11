@@ -27,12 +27,12 @@ def generate_launch_description():
     launch_actions = []
 
     if GPS == "false":
-        depth = launch_ros.actions.Node(
-            package='cougars_localization',
-            executable='depth_convertor',
-            parameters=[param_file],
-            namespace=namespace,
-        )
+        # depth = launch_ros.actions.Node(
+        #     package='cougars_localization',
+        #     executable='depth_convertor',
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        # )
         dvl = launch_ros.actions.Node(
             package='cougars_localization',
             executable='dvl_convertor',
@@ -45,7 +45,10 @@ def generate_launch_description():
             parameters=[param_file],
             namespace=namespace,
         )
-        launch_actions.extend([depth, dvl, dvl_global])
+        launch_actions.extend([
+            # depth, 
+            dvl, 
+            dvl_global])
 
 
 
