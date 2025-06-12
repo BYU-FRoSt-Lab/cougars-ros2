@@ -20,22 +20,23 @@ DVL_A50::DVL_A50():
 Node("dvl_a50_node"),
 old_altitude(0.0)
 {
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+    // rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 
-    auto qos = rclcpp::QoS(
-            rclcpp::QoSInitialization(
-            qos_profile.history,
-            qos_profile.depth),
-            qos_profile);
+    // auto qos = rclcpp::QoS(
+    //         rclcpp::QoSInitialization(
+    //         qos_profile.history,
+    //         qos_profile.depth),
+    //         qos_profile);
+
 
     timer_receive = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&DVL_A50::handle_receive, this));
 
     //Publishers
-    dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", qos);
-    dvl_pub_pos = this->create_publisher<dvl_msgs::msg::DVLDR>("dvl/position", qos);
-    dvl_pub_config_status = this->create_publisher<dvl_msgs::msg::ConfigStatus>("dvl/config/status", qos);
-    dvl_pub_command_response = this->create_publisher<dvl_msgs::msg::CommandResponse>("dvl/command/response", qos);
-    dvl_sub_config_command = this->create_subscription<dvl_msgs::msg::ConfigCommand>("dvl/config/command", qos, std::bind(&DVL_A50::command_subscriber, this, _1));
+    dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", 10);
+    dvl_pub_pos = this->create_publisher<dvl_msgs::msg::DVLDR>("dvl/position", 10);
+    dvl_pub_config_status = this->create_publisher<dvl_msgs::msg::ConfigStatus>("dvl/config/status", 10);
+    dvl_pub_command_response = this->create_publisher<dvl_msgs::msg::CommandResponse>("dvl/command/response", 10);
+    dvl_sub_config_command = this->create_subscription<dvl_msgs::msg::ConfigCommand>("dvl/config/command", 10, std::bind(&DVL_A50::command_subscriber, this, _1));
 
     this->declare_parameter<std::string>("dvl_ip_address", "192.168.194.95");
     this->declare_parameter<std::string>("velocity_frame_id", "dvl_A50/velocity_link");

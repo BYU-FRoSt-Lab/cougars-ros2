@@ -23,21 +23,21 @@ def generate_launch_description():
     GPS = "false"  # Default to 'false'
     verbose = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
-    namespace = ''
+    namespace = 'coug3'
     with open(param_file, 'r') as f:
         vehicle_params = yaml.safe_load(f)
 
-    for arg in sys.argv:
-        if arg.startswith('namespace:='):
-            namespace = arg.split(':=')[1]
-        if arg.startswith('param_file:='):
-            param_file = arg.split(':=')[1]
-        if arg.startswith("sim:="):
-            sim = arg.split(":=")[1].lower()
-        if arg.startswith("GPS:="):
-            GPS = arg.split(":=")[1].lower()
-        if arg.startswith("verbose:="):
-            verbose = arg.split(":=")[1].lower()
+    # for arg in sys.argv:
+    #     if arg.startswith('namespace:='):
+    #         namespace = arg.split(':=')[1]
+    #     if arg.startswith('param_file:='):
+    #         param_file = arg.split(':=')[1]
+    #     if arg.startswith("sim:="):
+    #         sim = arg.split(":=")[1].lower()
+    #     if arg.startswith("GPS:="):
+    #         GPS = arg.split(":=")[1].lower()
+    #     if arg.startswith("verbose:="):
+    #         verbose = arg.split(":=")[1].lower()
 
     if verbose == "true":
         output = 'screen'
@@ -83,7 +83,7 @@ def generate_launch_description():
 
     launch_actions.extend([
         DeclareLaunchArgument(
-            'param_file',
+            'microstrain_params_file',
             default_value='/home/frostlab/config/microstrain_params.yaml',
             description='Path to the microstrain parameter file'
         ),
@@ -92,9 +92,9 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 os.path.join(imu_package_dir, "microstrain_launch.py")
             ),
-            launch_arguments={
-                'param_file': LaunchConfiguration('param_file'),
-            }.items()
+            launch_arguments=[
+                ('params_file', LaunchConfiguration('microstrain_params_file')),    
+            ]
         ),
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
