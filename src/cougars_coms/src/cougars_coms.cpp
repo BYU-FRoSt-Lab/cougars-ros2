@@ -12,6 +12,7 @@
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
+#include "frost_interfaces/msg/system_status.hpp"
 
 
 
@@ -101,12 +102,12 @@ public:
 
     void safety_callback(frost_interfaces::msg::SystemStatus msg) {
         // Here you can handle the safety system status data if needed
-        uint8_t safety_mask =
-            (msg.depth_status      ? 1 << 0 : 0) |
-            (msg.gps_status        ? 1 << 1 : 0) |
-            (msg.modem_status      ? 1 << 2 : 0) |
-            (msg.dvl_status        ? 1 << 3 : 0) |
-            (msg.emergency_status  ? 1 << 4 : 0);
+        this->safety_mask =
+            (msg.depth_status.data      ? 1 << 0 : 0) |
+            (msg.gps_status.data        ? 1 << 1 : 0) |
+            (msg.modem_status.data      ? 1 << 2 : 0) |
+            (msg.dvl_status.data        ? 1 << 3 : 0) |
+            (msg.emergency_status.data  ? 1 << 4 : 0);
     }
 
     void smoothed_odom_callback(nav_msgs::msg::Odometry msg) {
@@ -190,12 +191,12 @@ public:
         status_msg.battery_voltage = this->battery_voltage;
         status_msg.battery_percentage = this->battery_percentage;
         status_msg.leak = this->leak_pressure;
-        status_msg.safety_status = this->safety_mask;
+        status_msg.safety_mask = this->safety_mask;
         status_msg.x = this->position_x;
         status_msg.y = this->position_y;
         status_msg.heading = 0;
-        status_msg.x_vel = this->x_vel; 
-        status_msg.y_vel = this->y_vel;
+        status_msg.x_vel = this->velocity_x;
+        status_msg.y_vel = this->velocity_y;
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
 
@@ -220,6 +221,8 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr leak_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr dvl_velocity_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr dvl_position_subscriber_;
+    rclcpp::Subscription<frost_interfaces::msg::SystemStatus>::SharedPtr safety_subscriber_;
+    rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscriber_;
 
 
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
@@ -229,25 +232,18 @@ private:
 
 
 
-    
-    float x;
-    float y;
-    float z;
-    float vx;
-    float vy;
-    int base_station_beacon_id_;
-    float dvl_position_x;
-    float dvl_position_y;
-    float dvl_position_z;
-    float dvl_vel_x;
-    float dvl_vel_y;
-    float dvl_vel_z;
-    bool dvl_running;
-    float battery_voltage;
-    float leak_pressure;
-    float roll;
-    float pitch;
-    float yaw;
+    uint8_t position_x;
+    uint8_t position_y;
+    uint8_t position_z;
+    uint8_t velocity_x;
+    uint8_t velocity_y;
+    uint8_t base_station_beacon_id_;
+    uint8_t safety_mask;
+    uint8_t battery_voltage;
+    uint8_t battery_percentage;
+    uint8_t leak_pressure;
+    uint8_t heading;
+
 
 
 };

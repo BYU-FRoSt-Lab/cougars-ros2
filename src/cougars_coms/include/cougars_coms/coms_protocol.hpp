@@ -1,4 +1,3 @@
-#include <string>
 
 #ifndef _COUGARS_COMS_PROTOCOL_
 #define _COUGARS_COMS_PROTOCOL_
@@ -15,11 +14,15 @@ enum COUG_MSG_ID : uint8_t {
     VEHICLE_STATUS = 0x10,
     REQUEST_STATUS = 0x11,
 
+    VERIFY_LAUNCH = 0x20,        
+    CONFIRM_VERIFY = 0x21,
+
     EMERGENCY_KILL = 0x40,
     CONFIRM_EMERGENCY_KILL = 0x41,
 
     EMERGENCY_SURFACE = 0x50,
     CONFIRM_EMERGENCY_SURFACE = 0x51,
+
 };
 
 
@@ -47,15 +50,20 @@ struct RequestStatus {
 
 struct VehicleStatus {
     COUG_MSG_ID msg_id = VEHICLE_STATUS;
-    uint8_t vehicle_id;
-    uint8_t dvl_vel;
-    bool dvl_running;
-    uint8_t battery_voltage; // in mV
+
     uint8_t waypoint;
-    bool gps_connection;
-    bool leak_detection;
-    int16_t x;
-    int16_t y;
+
+    uint8_t battery_voltage;
+    uint8_t battery_percentage;
+
+    uint8_t leak;
+
+    uint8_t safety_mask;
+
+    int8_t x;
+    int8_t y;
+    int8_t x_vel;
+    int8_t y_vel;
     uint8_t depth;
     uint8_t heading;
 
