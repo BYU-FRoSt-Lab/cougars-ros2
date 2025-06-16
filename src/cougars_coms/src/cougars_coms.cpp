@@ -44,11 +44,6 @@ public:
             std::bind(&ComsNode::safety_callback, this, _1)
         );
 
-        this->leak_subscriber_ = this->create_subscription<sensor_msgs::msg::FluidPressure>(
-            "leak/data", 10,
-            std::bind(&ComsNode::leak_callback, this, _1)
-        );
-
         this->battery_subscriber_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
             "battery/data", 10,
             std::bind(&ComsNode::battery_callback, this, _1)
@@ -88,11 +83,6 @@ public:
                 send_status();
             } break;
         }
-    }
-
-    void leak_callback(sensor_msgs::msg::FluidPressure msg) {
-        // Here you can handle the leak detection data if needed
-        this->leak_pressure = msg.fluid_pressure;
     }
 
     void battery_callback(sensor_msgs::msg::BatteryState msg) {
@@ -190,7 +180,6 @@ public:
         status_msg.waypoint = 0; // Placeholder, update as needed
         status_msg.battery_voltage = this->battery_voltage;
         status_msg.battery_percentage = this->battery_percentage;
-        status_msg.leak = this->leak_pressure;
         status_msg.safety_mask = this->safety_mask;
         status_msg.x = this->position_x;
         status_msg.y = this->position_y;
@@ -218,7 +207,6 @@ private:
 
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
-    rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr leak_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr dvl_velocity_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr dvl_position_subscriber_;
     rclcpp::Subscription<frost_interfaces::msg::SystemStatus>::SharedPtr safety_subscriber_;
@@ -241,7 +229,6 @@ private:
     uint8_t safety_mask;
     uint8_t battery_voltage;
     uint8_t battery_percentage;
-    uint8_t leak_pressure;
     uint8_t heading;
 
 

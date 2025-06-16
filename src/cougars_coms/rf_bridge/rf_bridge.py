@@ -67,7 +67,6 @@ class RFBridge(Node):
         # Data storage
         self.latest_status_data = "NO_DATA"
         self.latest_odom = "NO_DATA"
-        self.latest_leak = "NO_DATA"
         self.latest_battery = "NO_DATA"
         self.latest_dvl_velocity = "NO_DATA"
         self.latest_dvl_position = "NO_DATA"
@@ -104,12 +103,6 @@ class RFBridge(Node):
             self.safety_status_callback,
             10)
 
-        self.leak_sub = self.create_subscription(
-            FluidPressure,
-            'leak/data',
-            self.leak_callback,
-            10)
-
         self.battery_sub = self.create_subscription(
             BatteryState,
             'battery/data',
@@ -135,13 +128,6 @@ class RFBridge(Node):
 
         # Thread-safe shutdown flag
         self.running = True
-
-def leak_callback(self, msg):
-    if hasattr(msg, 'fluid_pressure'):
-        self.latest_leak = {"leak": float(msg.fluid_pressure)}
-        self.get_logger().debug(f"Updated leak data: {self.latest_leak}")
-    else:
-        self.get_logger().error("Received message without fluid_pressure field in leak_callback")
 
 def battery_callback(self, msg):
     self.latest_battery = {
@@ -217,7 +203,6 @@ def smoothed_odom_callback(self, msg):
             "src_id" : self.vehicle_id,
             "message" : "STATUS",
             "safety_status": self.latest_safety_status,
-            "leak_status": self.latest_leak,
             "smoothed_odom": self.latest_smoothed_odom,
             "battery_state": self.latest_battery,
             "depth_data": self.latest_depth,
