@@ -49,6 +49,11 @@ public:
             std::bind(&ComsNode::battery_callback, this, _1)
         );
 
+        this->pressure_subscriber_ = this->create_subscription<sensor_msgs::msg::FluidPressure>(
+            "pressure/data", 10,
+            std::bind(&ComsNode::pressure_callback, this, _1)
+        );
+
         this->modem_subscriber_ = this->create_subscription<seatrac_interfaces::msg::ModemRec>(
             "modem_rec", 10,
             std::bind(&ComsNode::listen_to_modem, this, _1)
@@ -98,6 +103,10 @@ public:
             (msg.modem_status.data      ? 1 << 2 : 0) |
             (msg.dvl_status.data        ? 1 << 3 : 0) |
             (msg.emergency_status.data  ? 1 << 4 : 0);
+    }
+
+    void pressure_callback(sensor_msgs::msg::FluidPressure msg) {
+        this->pressure = msg.fluid_pressure; 
     }
 
     void smoothed_odom_callback(nav_msgs::msg::Odometry msg) {
@@ -186,6 +195,7 @@ public:
         status_msg.heading = 0;
         status_msg.x_vel = this->velocity_x;
         status_msg.y_vel = this->velocity_y;
+        status_msg.pressure = this->pressure; // Assuming pressure is depth, update as needed
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
 
@@ -230,6 +240,7 @@ private:
     uint8_t battery_voltage;
     uint8_t battery_percentage;
     uint8_t heading;
+    uint8_t pressure;
 
 
 

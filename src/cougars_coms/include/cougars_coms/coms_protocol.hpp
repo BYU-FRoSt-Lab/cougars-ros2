@@ -56,7 +56,7 @@ struct VehicleStatus {
     uint8_t battery_voltage;
     uint8_t battery_percentage;
 
-    uint8_t leak;
+    uint8_t depth;
 
     uint8_t safety_mask;
 
@@ -64,7 +64,7 @@ struct VehicleStatus {
     int8_t y;
     int8_t x_vel;
     int8_t y_vel;
-    uint8_t depth;
+    uint8_t pressure;
     uint8_t heading;
 
 }__attribute__((packed));

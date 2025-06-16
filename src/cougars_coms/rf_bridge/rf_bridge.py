@@ -65,11 +65,11 @@ class RFBridge(Node):
             depth=5)
 
         # Data storage
-        self.latest_status_data = "NO_DATA"
-        self.latest_odom = "NO_DATA"
+        self.latest_safety_status = "NO_DATA"
+        self.latest_smoothed_odom = "NO_DATA"
         self.latest_battery = "NO_DATA"
-        self.latest_dvl_velocity = "NO_DATA"
-        self.latest_dvl_position = "NO_DATA"
+        self.latest_depth = "NO_DATA"
+        self.latest_pressure = "NO_DATA"
 
         self.vehicle_id = self.declare_parameter('vehicle_id', 0).value
         self.base_station_id = self.declare_parameter('base_station_id', 15).value
@@ -119,6 +119,12 @@ class RFBridge(Node):
             PoseWithCovarianceStamped,
             'depth_data',
             self.depth_callback,
+            10)
+        
+        self.pressure_sub = self.create_subscription(
+            FluidPressure,
+            'pressure/data',
+            self.pressure_callback
             10)
 
 
@@ -177,6 +183,13 @@ def smoothed_odom_callback(self, msg):
             }
             self.get_logger().debug("Updated depth data")
 
+    def pressure_callback(self, msg):
+        if hasattr(msg, 'fluid_pressure'):
+            self.latest_pressure = {"pressure": float(msg.fluid_pressure)}
+            self.get_logger().debug(f"Updated pressure data: {self.latest_pressure}")
+        else:
+            self.get_logger().error("Received message without fluid_pressure field in pressure_callback")
+
     def tx_callback(self, msg):
         try:
             message = msg.data
@@ -206,6 +219,7 @@ def smoothed_odom_callback(self, msg):
             "smoothed_odom": self.latest_smoothed_odom,
             "battery_state": self.latest_battery,
             "depth_data": self.latest_depth,
+            "pressure_data": self.latest_pressure,
         }
         data_dict = {k: v for k, v in data_dict.items() if v and v != "NO_DATA"}
         return json.dumps(data_dict, separators=(',', ':'))
@@ -243,6 +257,9 @@ def smoothed_odom_callback(self, msg):
         except Exception as e:
             self.get_logger().error(f"Error in data_receive_callback: {e}")
             self.get_logger().error(traceback.format_exc())
+
+    
+
 
     
     def kill_thruster(self):
