@@ -14,6 +14,7 @@
 #include "std_msgs/msg/int32.hpp"
 #include <sensor_msgs/msg/fluid_pressure.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include "gps_msgs/msg/gps_fix.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
 #include "seatrac_interfaces/msg/modem_status.hpp"
@@ -75,7 +76,7 @@ public:
     this->declare_parameter("dvl_message_timeout",2);
     this->declare_parameter("dvl_position_stddev_threshold",5.0);
     this->declare_parameter("gps_sat_num_threshold",4);
-    this->declare_parameter("origin_gps_msgs",5);
+    this->declare_parameter("origin_gps_msgs",3);
     this->declare_parameter("origin_gps_threshold_alt",100); 
     this->declare_parameter("origin_gps_threshold",.5); //around 35 miles
     //  TODO: add more safety parameters as needed
@@ -88,6 +89,7 @@ public:
 
     depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("depth_data", 10, std::bind(&EmergencyProtocols::depth_callback, this, _1));
     leak_subscription_ = this->create_subscription<sensor_msgs::msg::FluidPressure>("leak/data", 1, std::bind(&EmergencyProtocols::leak_callback, this, _1));
+    imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>("modem_imu", 1, std::bind(&EmergencyProtocols::imu_callback, this, _1));
     battery_subscription_ = this->create_subscription<sensor_msgs::msg::BatteryState>("battery/data", 1, std::bind(&EmergencyProtocols::battery_callback, this, _1));
     gps_subscription_ = this->create_subscription<gps_msgs::msg::GPSFix>("extended_fix", 1, std::bind(&EmergencyProtocols::gps_fix_callback, this, _1));
     dvl_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>("dvl/position",1,std::bind(&EmergencyProtocols::dvl_callback, this, _1));
@@ -106,6 +108,7 @@ public:
 
     this->okay = true;
     this->init = false;
+    this->imuPub=false;
     this->gps_count=0;
     this->gps_origin_lat=0;
     this->gps_origin_lon=0;
@@ -166,10 +169,11 @@ public:
     topics_publishing.insert({{"battery/data", true},
                               {"leak/data", true}, 
                               {"depth_data", true},
-                                {"modem_status", true},
-                                {"dvl/dead_reckoning", true},
-                                {"gps_odom", true},
-                                {"extended_fix", true}});
+                              {"modem_status", true},
+                              {"dvl/dead_reckoning", true},
+                              {"gps_odom", true},
+                              {"extended_fix", true},
+                              {"modem_imu",true}});
   
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -304,7 +308,8 @@ bool update_publishers(){
     message.dvl_status.set__data(0);
     message.modem_status.set__data(0);
     message.gps_status.set__data(0);
-
+    message.sender_id.set__data(1); //message from base station
+    message.imu_published.set__data(this->imuPub);
     if (counter < 1){ //dont run the first time
       counter++;
     }
@@ -363,7 +368,7 @@ bool update_publishers(){
       RCLCPP_ERROR(this->get_logger(), "No parameter values returned!");
       return;
     }
-   this->gps_origin_lat = response->values[0].double_value;
+   this->gps_origin_lat = response->values[0].double_value; //test which value is which
    this->gps_origin_lon = response->values[1].double_value;
    this->gps_origin_alt = response->values[2].double_value;
   }
@@ -411,9 +416,10 @@ bool update_publishers(){
 
   void command_callback(const frost_interfaces::msg::UCommand &msg) {
       this->init = true;
-
   }
-
+  void imu_callback(const sensor_msgs::msg::Imu &msg){
+    this->imuPub=true;
+  }
   void surface_waiter_timer_callback_(){
 
     if(surfacing_then_disarm && back_near_surface){
@@ -533,46 +539,7 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
 ///////////////////////////////////
 // MOOS Emergency
 ///////////////////////////////////
-//
-// THIS IS WHAT IS PUBLISHED FROM MOOS BRIDGE:
-//
-//         message.x = vehicle_status.x_;
-//         message.y = vehicle_status.y_;
-//         message.depth = vehicle_status.depth_;
-//         message.heading = vehicle_status.heading_;
-//         message.error = vehicle_status.error_;
-//         vehicle_status_publisher_->publish(message);
-//
-//      # VehicleStatus message:
-
-        // # header
-        // std_msgs/Header header
-
-        // # status members
-        // float64 x
-        // float64 y
-        // float64 depth
-        // float64 heading
-        // int64 error
-        // int8 behavior_number
-        // int8 waypoints_reached
-        // bool mission_complete
-        // float64 dist_to_next_wpt
-//         
-//    if error is non zero, BHV_ERROR:
-//        * surface, return to home
-// 
-//    if dist_to_next_wpt is increasing for 
-//    a long time and never getting closer
-//        * surfac, return to home
-
-// void moos_status_callback(const frost_interfaces::msg::VehicleStatus &msg){
-//   if(this->get_parameter("monitor_moos").as_bool()){
-//     // TODO: handle MOOS problems here
-
-
-//   }
-// }
+//TODO: handle MOOS/waypoint problems here
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -626,6 +593,7 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr leak_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscription_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr smoothed_output_subscription_;
 //   rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr command_subscription_;
@@ -646,6 +614,7 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
 
   bool okay;
   bool init;
+  bool imuPub;
   int gps_count;
   float gps_origin_lat,gps_origin_lon,gps_origin_alt;
   bool gps_bad_origin;
