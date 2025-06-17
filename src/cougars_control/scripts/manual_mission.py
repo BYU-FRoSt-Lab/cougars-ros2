@@ -7,6 +7,7 @@ from std_srvs.srv import SetBool
 from rclpy.qos import qos_profile_system_default
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
+
 import json
 
 
@@ -32,6 +33,7 @@ class ManualMission(Node):
         Creates a new ManualMission node.
         '''
         super().__init__("manual_mission")
+
 
         # Default and initial parameters
         self.period = 0.5
@@ -139,6 +141,7 @@ class ManualMission(Node):
 
         # Create a new timer with the updated period
         self.timer = self.create_timer(self.period, self.timer_callback)
+        self.timer = self.create_timer(self.period, self.timer_callback)
 
         self.get_logger().info("Manual Mission Parameters Updated!")
 
@@ -192,6 +195,7 @@ class ManualMission(Node):
             self.counter = 0
             response.success = True
             response.message = 'Manual Mission Restarted'
+
 
         self.get_logger().info("this function is soon to be deprecated")
 

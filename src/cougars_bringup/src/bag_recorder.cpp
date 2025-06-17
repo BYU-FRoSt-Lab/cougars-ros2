@@ -31,6 +31,7 @@
 #include <frost_interfaces/msg/desired_heading.hpp>
 #include <frost_interfaces/msg/desired_speed.hpp>
 #include <frost_interfaces/msg/system_control.hpp>
+#include <frost_interfaces/msg/system_status.hpp>
 
 // Geometry Messages
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
@@ -88,7 +89,7 @@ public:
 
         if (system){
             // System
-            subscribe_to_topic<std_msgs::msg::Int32>("saftey_status");
+            subscribe_to_topic<frost_interfaces::msg::SystemStatus>("safety_status");
         }
 
 
@@ -98,6 +99,7 @@ public:
             subscribe_to_topic<geometry_msgs::msg::PoseWithCovarianceStamped>("dvl/dr_global");
             subscribe_to_topic<geometry_msgs::msg::TwistWithCovarianceStamped>("dvl/velocity");
             subscribe_to_topic<nav_msgs::msg::Odometry>("gps/odom");
+            subscribe_to_topic<nav_msgs::msg::Odometry>("smoothed_output");
             subscribe_to_topic<sensor_msgs::msg::Imu>("modem_imu");
         }
         

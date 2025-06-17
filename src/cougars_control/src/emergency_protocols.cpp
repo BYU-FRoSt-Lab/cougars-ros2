@@ -10,11 +10,15 @@
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "frost_interfaces/msg/u_command.hpp"
+#include "frost_interfaces/msg/system_status.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include <sensor_msgs/msg/fluid_pressure.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
-
-
+#include <sensor_msgs/msg/imu.hpp>
+#include "gps_msgs/msg/gps_fix.hpp"
+#include "dvl_msgs/msg/dvldr.hpp"
+#include "seatrac_interfaces/msg/modem_status.hpp"
+#include "rcl_interfaces/srv/get_parameters.hpp"
 
 
 using namespace std::chrono_literals;
@@ -68,8 +72,14 @@ public:
     // safety parameters (voltage, current, depth, etc.)
     this->declare_parameter("deepest_safe_depth", -2.0); // meters
     this->declare_parameter("critical_voltage", 14.0); // volts
+    this->declare_parameter("modem_message_timeout", 2);
+    this->declare_parameter("dvl_message_timeout",2);
+    this->declare_parameter("dvl_position_stddev_threshold",5.0);
+    this->declare_parameter("gps_sat_num_threshold",4);
+    this->declare_parameter("origin_gps_msgs",3);
+    this->declare_parameter("origin_gps_threshold_alt",100); 
+    this->declare_parameter("origin_gps_threshold",.5); //around 35 miles
     //  TODO: add more safety parameters as needed
-
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,11 +87,12 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("depth_data", qos, std::bind(&EmergencyProtocols::depth_callback, this, _1));
-    leak_subscription_ = this->create_subscription<sensor_msgs::msg::FluidPressure>("leak/data", 10, std::bind(&EmergencyProtocols::leak_callback, this, _1));
-    battery_subscription_ = this->create_subscription<sensor_msgs::msg::BatteryState>("battery/data", 10, std::bind(&EmergencyProtocols::battery_callback, this, _1));
-    // smoothed_output_subscription_ =
-    //     this->create_subscription<nav_msgs::msg::Odometry>("smoothed_output", 
+    depth_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("depth_data", 10, std::bind(&EmergencyProtocols::depth_callback, this, _1));
+    leak_subscription_ = this->create_subscription<sensor_msgs::msg::FluidPressure>("leak/data", 1, std::bind(&EmergencyProtocols::leak_callback, this, _1));
+    imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>("modem_imu", 1, std::bind(&EmergencyProtocols::imu_callback, this, _1));
+    battery_subscription_ = this->create_subscription<sensor_msgs::msg::BatteryState>("battery/data", 1, std::bind(&EmergencyProtocols::battery_callback, this, _1));
+    gps_subscription_ = this->create_subscription<gps_msgs::msg::GPSFix>("extended_fix", 1, std::bind(&EmergencyProtocols::gps_fix_callback, this, _1));
+    dvl_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>("dvl/position",1,std::bind(&EmergencyProtocols::dvl_callback, this, _1));
     //         qos,std::bind(&EmergencyProtocols::factor_graph_callback, this, _1));
     // vehicle_status_moos_subscription_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>("vehicle_status", 
     //         qos, std::bind(&EmergencyProtocols::moos_status_callback, this, _1));
@@ -93,16 +104,27 @@ public:
         std::bind(&EmergencyProtocols::command_callback, this, _1));
 
 
-    status_publisher_ = this->create_publisher<std_msgs::msg::Int32>("safety_status", 10);
+    status_publisher_ = this->create_publisher<frost_interfaces::msg::SystemStatus>("safety_status", 10);
 
     this->okay = true;
     this->init = false;
-
+    this->imuPub=false;
+    this->gps_count=0;
+    this->gps_origin_lat=0;
+    this->gps_origin_lon=0;
+    this->gps_origin_alt=0;
+    this->gps_bad_origin=0;
+    grab_gps_params();
     depth_val = 1.0;
     back_near_surface = false;
     surfacing_then_disarm = false;
-
-
+    std_msgs::msg::Header defaultHeader = std_msgs::msg::Header();
+    builtin_interfaces::msg::Time defaultTime =builtin_interfaces::msg::Time();
+    defaultTime.set__sec(0);
+    defaultHeader.set__stamp(defaultTime);
+    latest_dvl_message.set__header(defaultHeader);
+    latest_gps_message.set__header(defaultHeader);
+    latest_modem_message.set__header(defaultHeader);
 
 
     // status publisher
@@ -111,7 +133,7 @@ public:
 
     // timers
     monitor_timer_ = this->create_wall_timer(
-        std::chrono::milliseconds(5000),
+        std::chrono::milliseconds(3000),
         std::bind(&EmergencyProtocols::monitor_timer_callback, this));
 
     surface_waiter_timer_ = this->create_wall_timer(
@@ -147,10 +169,11 @@ public:
     topics_publishing.insert({{"battery/data", true},
                               {"leak/data", true}, 
                               {"depth_data", true},
-                                {"modem_status", true},
-                                {"dvl/dead_reckoning", true},
-                                {"gps_odom", true},
-                                {"extended_fix", true}});
+                              {"modem_status", true},
+                              {"dvl/dead_reckoning", true},
+                              {"gps_odom", true},
+                              {"extended_fix", true},
+                              {"modem_imu",true}});
   
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +229,6 @@ public:
   
 
  private:
-
 
 
 
@@ -282,8 +304,13 @@ bool update_publishers(){
   // this timer looks through all topics on the network and checks for crucial topics such as 
   // smoothed_output, leak/data, etc. Key topics are in topics_publishing map
   void monitor_timer_callback() {
-
-    if (counter < 1){
+    auto message = frost_interfaces::msg::SystemStatus();
+    message.dvl_status.set__data(0);
+    message.modem_status.set__data(0);
+    message.gps_status.set__data(0);
+    message.sender_id.set__data(1); //message from base station
+    message.imu_published.set__data(this->imuPub);
+    if (counter < 1){ //dont run the first time
       counter++;
     }
     else{
@@ -294,23 +321,105 @@ bool update_publishers(){
         if (!topics_publishing["modem_status"]){
           surface_then_disarm();
         }
+
+      }
+      if(latest_dvl_message.header.stamp.sec!=0){//checking if this is a real message, not just default
+        if(((this->get_clock()->now().seconds()-latest_dvl_message.header.stamp.sec)>this->get_parameter("dvl_message_timeout").as_int())){
+          this->okay = false;
+          message.dvl_status.set__data(message.dvl_status.data|1);
+        } 
+        if(latest_dvl_message.pos_std>this->get_parameter("dvl_position_stddev_threshold").as_double()){
+          this->okay=false;
+          message.dvl_status.set__data(message.dvl_status.data|(1>>1));
+        }
+      }
+      if(latest_modem_message.header.stamp.sec!=0){ //checking if this is a real message, not just default
+        if(((this->get_clock()->now().seconds()-latest_modem_message.header.stamp.sec)>this->get_parameter("modem_message_timeout").as_int())){
+          this->okay = false;
+          message.modem_status.set__data(1);
+          surface_then_disarm();
+        }
+      }
+      if(gps_bad_origin){
+        message.gps_status.set__data(2);
+        this->okay=false;
+      }
+      if(latest_gps_message.status.satellites_used<(this->get_parameter("gps_sat_num_threshold").as_int())){
+        //not going to set okay to false because this is expected during the mission
+        message.gps_status.set__data(message.gps_status.data|1);
       }
     }
 
-
-    auto message = std_msgs::msg::Int32();
-    message.data = int32_t(this->okay);
+    
+    if(okay){
+      message.emergency_status.set__data(0);
+    } else if(back_near_surface|| !okay){
+      message.emergency_status.set__data(2); 
+    }else if(surfacing_then_disarm){
+      message.emergency_status.set__data(1);
+    }
+    message.emergency_status.set__data(okay);
     status_publisher_->publish(message);
 
   }
+  void handle_gps_param_response(rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedFuture future){
+    auto response = future.get();
+    if (response->values.empty()) {
+      RCLCPP_ERROR(this->get_logger(), "No parameter values returned!");
+      return;
+    }
+   this->gps_origin_lat = response->values[0].double_value; //test which value is which
+   this->gps_origin_lon = response->values[1].double_value;
+   this->gps_origin_alt = response->values[2].double_value;
+  }
+  void grab_gps_params(){
+        // Create the client for the target node's parameter service
+    rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedPtr client_ = this->create_client<rcl_interfaces::srv::GetParameters>("/gps_odom/get_parameters");
+
+    // Wait for the service to be available
+    while (!client_->wait_for_service(std::chrono::seconds(1))) {
+      RCLCPP_INFO(this->get_logger(), "waiting for parameters from gps odom");
+    }
+
+    // Create the request
+    auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
+    request->names.push_back("origin.latitude");
+    request->names.push_back("origin.longitude");
+    request->names.push_back("origin.altitude");
+
+    // Send the request asynchronously
+    auto future = client_->async_send_request(request,
+      std::bind(&EmergencyProtocols::handle_gps_param_response, this, std::placeholders::_1));
+  
+  }
+  void gps_fix_callback(const gps_msgs::msg::GPSFix &msg){
+    if(this->gps_count<this->get_parameter("origin_gps_msgs").as_int()){
+      this->gps_count++;
+      if(gps_origin_lat!=0 && gps_origin_lon!=0 && gps_origin_alt!=0){ //params grabbed
+        if(abs(msg.longitude-gps_origin_lon>this->get_parameter("origin_gps_threshold").as_double()) || abs(msg.altitude-gps_origin_alt>this->get_parameter("origin_gps_threshold_alt").as_int()) || abs(msg.latitude-gps_origin_lat)>this->get_parameter("origin_gps_threshold").as_double()){
+            RCLCPP_ERROR(this->get_logger(), "GPS origin likely set incorrectly");
+            this->gps_bad_origin=1;
+        }
+
+      }
+    }
+    latest_gps_message=msg;
+  }
 
 
+  void dvl_callback(const dvl_msgs::msg::DVLDR &msg){
+    latest_dvl_message=msg;
+  }
+  void modem_callback(const seatrac_interfaces::msg::ModemStatus &msg){
+    latest_modem_message=msg;
+  }
 
   void command_callback(const frost_interfaces::msg::UCommand &msg) {
       this->init = true;
-
   }
-
+  void imu_callback(const sensor_msgs::msg::Imu &msg){
+    this->imuPub=true;
+  }
   void surface_waiter_timer_callback_(){
 
     if(surfacing_then_disarm && back_near_surface){
@@ -430,46 +539,7 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
 ///////////////////////////////////
 // MOOS Emergency
 ///////////////////////////////////
-//
-// THIS IS WHAT IS PUBLISHED FROM MOOS BRIDGE:
-//
-//         message.x = vehicle_status.x_;
-//         message.y = vehicle_status.y_;
-//         message.depth = vehicle_status.depth_;
-//         message.heading = vehicle_status.heading_;
-//         message.error = vehicle_status.error_;
-//         vehicle_status_publisher_->publish(message);
-//
-//      # VehicleStatus message:
-
-        // # header
-        // std_msgs/Header header
-
-        // # status members
-        // float64 x
-        // float64 y
-        // float64 depth
-        // float64 heading
-        // int64 error
-        // int8 behavior_number
-        // int8 waypoints_reached
-        // bool mission_complete
-        // float64 dist_to_next_wpt
-//         
-//    if error is non zero, BHV_ERROR:
-//        * surface, return to home
-// 
-//    if dist_to_next_wpt is increasing for 
-//    a long time and never getting closer
-//        * surfac, return to home
-
-// void moos_status_callback(const frost_interfaces::msg::VehicleStatus &msg){
-//   if(this->get_parameter("monitor_moos").as_bool()){
-//     // TODO: handle MOOS problems here
-
-
-//   }
-// }
+//TODO: handle MOOS/waypoint problems here
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -523,14 +593,18 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr leak_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscription_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr smoothed_output_subscription_;
 //   rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
   rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr command_subscription_;
+  rclcpp::Subscription<gps_msgs::msg::GPSFix>::SharedPtr gps_subscription_;
+  rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscription_;
+  rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr modem_subscription_;
 
 
 
   //publisher
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr status_publisher_;
+  rclcpp::Publisher<frost_interfaces::msg::SystemStatus>::SharedPtr status_publisher_;
 
   // timers 
   rclcpp::TimerBase::SharedPtr monitor_timer_;
@@ -540,7 +614,14 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
 
   bool okay;
   bool init;
-
+  bool imuPub;
+  int gps_count;
+  float gps_origin_lat,gps_origin_lon,gps_origin_alt;
+  bool gps_bad_origin;
+  //messages
+  gps_msgs::msg::GPSFix latest_gps_message=gps_msgs::msg::GPSFix();
+  dvl_msgs::msg::DVLDR latest_dvl_message=dvl_msgs::msg::DVLDR();
+  seatrac_interfaces::msg::ModemStatus latest_modem_message;
    // topic name vector
   std::map<std::string, bool> topics_publishing;
   
