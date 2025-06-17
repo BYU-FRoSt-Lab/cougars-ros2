@@ -3,21 +3,16 @@
 import rclpy
 from rclpy.node import Node
 from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed, SystemControl
-from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed, SystemControl
 from std_srvs.srv import SetBool
 from rclpy.qos import qos_profile_system_default
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
-import json
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 import json
 
 
 class ManualMission(Node):
     '''
-    :author: Braden Meyers
-    :date: Apr 2025
     :author: Braden Meyers
     :date: Apr 2025
 
@@ -29,7 +24,6 @@ class ManualMission(Node):
         - desired_heading (frost_interfaces/msg/DesiredHeading)
         - desired_speed (frost_interfaces/msg/DesiredSpeed)
         - system_status (indicate the termination of the mission)
-        - system_status (indicate the termination of the mission)
         
     Services:
         - init (std_srvs/srv/Empty) 
@@ -40,16 +34,6 @@ class ManualMission(Node):
         '''
         super().__init__("manual_mission")
 
-        # Default and initial parameters
-        self.period = 0.5
-        self.counter = 0
-        self.state_index = 0
-        self.started = False
-
-        self.last_depth = -1.0
-        self.last_heading = -1.0
-        self.last_speed = -1.0
-        
 
         # Default and initial parameters
         self.period = 0.5
@@ -64,7 +48,6 @@ class ManualMission(Node):
         # Declare parameters
         self.declare_parameter('vehicle_id', 0)
 
-        self.declare_parameter('command_timer_period', self.period) # in seconds
         self.declare_parameter('command_timer_period', self.period) # in seconds
         '''
         :param command_timer_period: The period at which the state machine updates the desired values. The default value is 0.5 seconds.
@@ -155,7 +138,6 @@ class ManualMission(Node):
 
         self.destroy_timer(self.timer)
         self.period = self.get_parameter("command_timer_period").get_parameter_value().double_value
-        self.period = self.get_parameter("command_timer_period").get_parameter_value().double_value
 
         # Create a new timer with the updated period
         self.timer = self.create_timer(self.period, self.timer_callback)
@@ -190,7 +172,6 @@ class ManualMission(Node):
 
     def listener_callback(self, request, response):
         # TODO: This will be deprecated soon
-        # TODO: This will be deprecated soon
         '''
         Callback function for the init service.
         Sets the started flag to False when the init request is true.
@@ -215,7 +196,6 @@ class ManualMission(Node):
             response.success = True
             response.message = 'Manual Mission Restarted'
 
-        self.get_logger().info("this function is soon to be deprecated")
 
         self.get_logger().info("this function is soon to be deprecated")
 
