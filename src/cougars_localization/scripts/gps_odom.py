@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from gps_msgs.msg import GPSFix
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import NavSatFix
 import math
 
 EARTH_RADIUS_METERS       = 6371000
@@ -45,17 +46,22 @@ class NavSatFixToOdom(Node):
         
         # Subscribe to NavSatFix
         self.subscriber = self.create_subscription(
-            GPSFix,
-            'extended_fix',
+            NavSatFix,
+            'gnss_1/llh_position',
             self.gps_callback,
             10
         )
-        '''
-        Subscription to the "extended_fix" topic with the message type GPSFix.
-        '''
+        # self.subscriber = self.create_subscription(
+        #     GPSFix,
+        #     'extended_fix',
+        #     self.gps_callback,
+        #     10
+        # )
+        # '''
+        # Subscription to the "extended_fix" topic with the message type GPSFix.
+        # '''
         
-        self.last_msg = None
-        self.min_sats = 5  # Minimum number of satellites
+        # self.min_sats = 5  # Minimum number of satellites
 
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, 'gps_odom', 10)
@@ -71,8 +77,8 @@ class NavSatFixToOdom(Node):
         :param msg: The GPSFix message received from the extended_fix topic.
         '''
         # Filter out bad readings based on the number of satellites (if available)
-        if msg.status.satellites_used < self.min_sats or msg.latitude < 0.1:
-            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}", throttle_duration_sec=10)
+        if msg.latitude < 0.1:
+            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. {msg.latitude}", throttle_duration_sec=10)
             return
         
         if math.isnan(msg.latitude) or math.isnan(msg.longitude) or math.isnan(msg.altitude):
@@ -92,7 +98,7 @@ class NavSatFixToOdom(Node):
         odom = Odometry()
         odom.header.stamp = msg.header.stamp
         odom.header.frame_id = "map"
-        odom.child_frame_id = "odom"
+        odom.child_frame_id = "gnss_link"
         odom.pose.pose.position.x = x
         odom.pose.pose.position.y = y
         odom.pose.pose.position.z = z  # Use the altitude as the z-value
@@ -103,7 +109,6 @@ class NavSatFixToOdom(Node):
         odom.pose.covariance[14] = msg.position_covariance[8]  # zz
 
         # Publish the odometry message
-        self.last_msg = odom
         self.publisher.publish(odom)
 
     def CalculateHaversine(self, refLat, refLong, pointLat, pointLong):

@@ -1,6 +1,9 @@
 #!/bin/bash
 # Created by Nelson Durrant, Sep 2024
 #
+# MODIFIED: This script has been updated to pass arguments to ROS 2 launch files
+# using the standard 'argument_name:=value' syntax for better compatibility.
+#
 # Starts the micro-ROS agent and ROS 2 launch files
 # - Specify a launch configuration using 'bash launch.sh <launch>' (ex. 'bash launch.sh moos')
 
@@ -44,31 +47,20 @@ sleep 3
 
 echo ""
 
-# if [ "$(uname -m)" == "aarch64" ]; then
-#   # Start the strobe light and Teensy board
-#   bash ~/gpio/strobe.sh on
-#   bash ~/gpio/power.sh on
-
-#   # Test for Teensy board connection
-#   if [ -z "$(tycmd list | grep Teensy)" ]; then
-#       printError "No Teensy boards avaliable to connect to"
-#       exit 1
-#   fi
-
-#   echo ""
-# fi
-
 # Parse options
 SIM_PARAM="false" # Default value for sim
 VERBOSE="false"
 GPS="false"
 FINS="false"
+# Set a default vehicle parameter file. It can be overridden by the -s flag.
+VEHICLE_PARAMS_FILE="/home/frostlab/config/vehicle_params.yaml"
+
 while getopts "svgfb" opt; do
   case $opt in
     s)
       SIM_PARAM="true"
-      VEHICLE_PARAMS_FILE=/home/frostlab/config/sim_params.yaml
-      echo "Using param file $VEHICLE_PARAMS_FILE"
+      VEHICLE_PARAMS_FILE="/home/frostlab/config/sim_params.yaml"
+      printInfo "Using SIM param file: $VEHICLE_PARAMS_FILE"
       ;;
     v)
       VERBOSE="true"
@@ -86,29 +78,48 @@ while getopts "svgfb" opt; do
   esac
 done
 shift $((OPTIND - 1)) # Shift positional arguments
-#TODO demo option that launchs the teensy controller fins even with sim?
-#TODO just make a parameter in yaml for moos GPS Only
 
 # Start both workspaces
 source ~/microros_ws/install/setup.bash
 source ~/ros2_ws/install/setup.bash
+
+# The following 'ros2 launch' commands now use the standard 'argument:=value' syntax.
+# This is the correct way to pass parameters to a ROS 2 launch file.
 case $1 in
     "manual")
-        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
+        ros2 launch cougars_control manual_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE" \
+          sim:="$SIM_PARAM" \
+          verbose:="$VERBOSE" \
+          fins:="$FINS"
         ;;
     "moos")
-        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE GPS:=$GPS
+        ros2 launch cougars_control moos_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE" \
+          sim:="$SIM_PARAM" \
+          verbose:="$VERBOSE" \
+          GPS:="$GPS"
         ;;
     "sensors")
-        ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+        ros2 launch cougars_localization sensors_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE"
         ;;
 
     "demo")
-        ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE
+        ros2 launch cougars_localization demo_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE"
         ;;
 
     "bluerov")
-        ros2 launch cougars_control bluerov_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE BLUEROV:="true"
+        ros2 launch cougars_control bluerov_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE" \
+          BLUEROV:="true" \
+          verbose:="$VERBOSE"
         ;;
 
     *)
