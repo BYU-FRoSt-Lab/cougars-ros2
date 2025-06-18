@@ -54,6 +54,14 @@ public:
             std::bind(&ComsNode::pressure_callback, this, _1)
         );
 
+        this->depth_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+            "depth_data", 10,
+            [this](geometry_msgs::msg::PoseWithCovarianceStamped msg) {
+                this->position_z = msg.pose.pose.position.z;
+            }
+        );
+        
+
         this->modem_subscriber_ = this->create_subscription<seatrac_interfaces::msg::ModemRec>(
             "modem_rec", 10,
             std::bind(&ComsNode::listen_to_modem, this, _1)
@@ -114,6 +122,10 @@ public:
         this->position_y = msg.pose.pose.position.y;
         this->velocity_x = msg.twist.twist.linear.x;
         this->velocity_y = msg.twist.twist.linear.y;
+    }
+
+    void depth_callback(geometry_msgs::msg::PoseWithCovarianceStamped msg) {
+        this->position_z = msg.pose.pose.position.z;
     }
 
 
@@ -186,16 +198,17 @@ public:
     void send_status(){
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending status to base station.");
         VehicleStatus status_msg;
-        status_msg.waypoint = 0; // Placeholder, update as needed
+        status_msg.waypoint = 0;
         status_msg.battery_voltage = this->battery_voltage;
         status_msg.battery_percentage = this->battery_percentage;
         status_msg.safety_mask = this->safety_mask;
         status_msg.x = this->position_x;
         status_msg.y = this->position_y;
         status_msg.heading = 0;
+        status_msg.depth = this->position_z; 
         status_msg.x_vel = this->velocity_x;
         status_msg.y_vel = this->velocity_y;
-        status_msg.pressure = this->pressure; // Assuming pressure is depth, update as needed
+        status_msg.pressure = this->pressure;
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
 
@@ -217,10 +230,9 @@ private:
 
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
-    rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr dvl_velocity_subscriber_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr dvl_position_subscriber_;
     rclcpp::Subscription<frost_interfaces::msg::SystemStatus>::SharedPtr safety_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscriber_;
+    rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_subscriber_;
 
 
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;

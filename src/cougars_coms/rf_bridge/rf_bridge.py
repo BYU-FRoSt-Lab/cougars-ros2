@@ -124,7 +124,7 @@ class RFBridge(Node):
         self.pressure_sub = self.create_subscription(
             FluidPressure,
             'pressure/data',
-            self.pressure_callback
+            self.pressure_callback,
             10)
 
 
@@ -135,45 +135,45 @@ class RFBridge(Node):
         # Thread-safe shutdown flag
         self.running = True
 
-def battery_callback(self, msg):
-    self.latest_battery = {
-        "voltage": float(msg.voltage),
-        "percentage": float(msg.percentage)
-    }
-    self.get_logger().debug("Updated battery data")
-
-def safety_status_callback(self, msg):
-    self.latest_safety_status = {
-        "depth_status": int(msg.depth_status),
-        "gps_status": int(msg.gps_status),
-        "modem_status": int(msg.modem_status),
-        "dvl_status": int(msg.dvl_status),
-        "emergency_status": int(msg.emergency_status)
-    }
-    self.get_logger().debug("Updated safety status data")
-
-def smoothed_odom_callback(self, msg):
-    if hasattr(msg, 'twist') and hasattr(msg.twist, 'twist'):
-        twist = msg.twist.twist
-        pose = msg.pose.pose
-        self.latest_smoothed_odom = {
-            "position_x": float(pose.position.x),
-            "position_y": float(pose.position.y),
-            "position_z": float(pose.position.z),
-            "orientation_x": float(pose.orientation.x),
-            "orientation_y": float(pose.orientation.y),
-            "orientation_z": float(pose.orientation.z),
-            "orientation_w": float(pose.orientation.w),
-            "linear_x": float(twist.linear.x),
-            "linear_y": float(twist.linear.y),
-            "linear_z": float(twist.linear.z),
-            "angular_x": float(twist.angular.x),
-            "angular_y": float(twist.angular.y),
-            "angular_z": float(twist.angular.z)
+    def battery_callback(self, msg):
+        self.latest_battery = {
+            "voltage": float(msg.voltage),
+            "percentage": float(msg.percentage)
         }
-        self.get_logger().debug("Updated smoothed odometry data")
-    else:
-        self.get_logger().error("Received message without twist field in smoothed_odom_callback")
+        self.get_logger().debug("Updated battery data")
+
+    def safety_status_callback(self, msg):
+        self.latest_safety_status = {
+            "depth_status": int(msg.depth_status),
+            "gps_status": int(msg.gps_status),
+            "modem_status": int(msg.modem_status),
+            "dvl_status": int(msg.dvl_status),
+            "emergency_status": int(msg.emergency_status)
+        }
+        self.get_logger().debug("Updated safety status data")
+
+    def smoothed_odom_callback(self, msg):
+        if hasattr(msg, 'twist') and hasattr(msg.twist, 'twist'):
+            twist = msg.twist.twist
+            pose = msg.pose.pose
+            self.latest_smoothed_odom = {
+                "position_x": float(pose.position.x),
+                "position_y": float(pose.position.y),
+                "position_z": float(pose.position.z),
+                "orientation_x": float(pose.orientation.x),
+                "orientation_y": float(pose.orientation.y),
+                "orientation_z": float(pose.orientation.z),
+                "orientation_w": float(pose.orientation.w),
+                "linear_x": float(twist.linear.x),
+                "linear_y": float(twist.linear.y),
+                "linear_z": float(twist.linear.z),
+                "angular_x": float(twist.angular.x),
+                "angular_y": float(twist.angular.y),
+                "angular_z": float(twist.angular.z)
+            }
+            self.get_logger().debug("Updated smoothed odometry data")
+        else:
+            self.get_logger().error("Received message without twist field in smoothed_odom_callback")
 
     def depth_callback(self, msg):
         if hasattr(msg, 'pose') and hasattr(msg.pose, 'pose'):
