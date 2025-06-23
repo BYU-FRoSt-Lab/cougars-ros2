@@ -20,6 +20,7 @@
 #include "frost_interfaces/msg/controls_debug.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
+#include <frost_interfaces/msg/system_control.hpp>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -30,9 +31,6 @@ auto qos = rclcpp::QoS(
     qos_profile);
 
 /**
- * @brief A simple controls node.
- * @author Nelson Durrant
- * @date September 2024
  *
  * This node subscribes to desired depth, heading, and speed topics and actual
  * depth and heading topics. It then computes the control commands using various
@@ -300,6 +298,13 @@ public:
         "dvl/velocity", qos,
         std::bind(&CougControls::dvl_velocity_callback, this, _1));
 
+    rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
+    qos_profile.reliable();       // Set reliability to reliable
+    qos_profile.transient_local(); // Set durability to transient local
+    system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
+            "system/status", qos_profile, std::bind(&CougControls::system_callback, this, _1));
+
+
     this->velocity[0] = 0.6f;
     this->velocity[1] = 0.0f;
     this->velocity[2] = 0.0f;
@@ -382,6 +387,16 @@ private:
     }
   }
 
+  void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
+  {
+     // Set the boolean to the requested value
+    this->init_flag = msg->thruster_arm.data;
+    RCLCPP_INFO(this->get_logger(), this->init_flag ? "Controller Node initialized." : "Controller Node de-initialized.");
+    update_parameters();
+
+  }
+
+
   /**
    * @brief Callback function for the desired_depth subscription.
    *
@@ -404,8 +419,15 @@ private:
     RCLCPP_INFO(this->get_logger(), "New Depth Desired: %f, Old desired depth %f", depth_msg.desired_depth, this->desired_depth);
     this->desired_depth = depth_msg.desired_depth;
 
-    // When a new desired depth sent update the depth_ref to the actual depth
-    this->depth_ref = this->actual_depth;
+    // TODO reset integrator term??
+    // TODO in the message type specify the dfb or not
+    if (dfb){
+      this->depth_ref = this->altitude;
+    }
+    else{
+      // When a new desired depth sent update the depth_ref to the actual depth
+      this->depth_ref = this->actual_depth;
+    }
   }
 
   /**
@@ -629,29 +651,22 @@ private:
 
       int depth_pos;
       if (this->init_flag) {
-          if (dfb){
-            depth_pos = depth_autopilot(this->altitude, this->desired_depth, -1);
-          }
-          else{
-            depth_pos = depth_autopilot(this->actual_depth, this->desired_depth);
-          }
-          std::cout << " Fin: " << depth_pos << std::endl;
+        float depth_trackpoint;
+        if (dfb){
+          depth_trackpoint = this->altitude;
+          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth, -1);
+        }
+        else{
+          depth_trackpoint = this->actual_depth;
+          depth_pos = depth_autopilot(depth_trackpoint, this->desired_depth);
+        }
           
-          // Handling roll over when taking the error difference
-          // given desired heading and actual heading from -180 to 180
-          // if they are both negative or they are both positive than just take the difference
-          float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
-          // // Log the information
+        // Handling roll over when taking the error difference
+        // given desired heading and actual heading from -180 to 180
+        // if they are both negative or they are both positive than just take the difference
+        float yaw_err = calculateYawError(this->desired_heading, this->actual_heading);
+        // // Log the information
           
-          int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
-          std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
-
-          // Step 5: Set fin positions and publish the command
-          message.fin[0] = heading_pos;    // top fin
-          message.fin[1] = -depth_pos;      // starboard side fin
-          message.fin[2] = depth_pos;      // port side fin
-          message.thruster = this->desired_speed;
-        
         int heading_pos = (int)myHeadingPID.compute(0.0, yaw_err);
 
         // Step 5: Set fin positions and publish the command
@@ -677,7 +692,7 @@ private:
         message.pitch.d = myPitchPID.getD();
         message.pitch.pid = myPitchPID.getPID();
 
-        message.depth.actual = this->actual_depth;
+        message.depth.actual = depth_trackpoint;
         message.depth.rate = this->velocity[2];
         message.depth.desired = this->desired_depth;
         message.depth.reference = this->depth_ref;
@@ -696,7 +711,6 @@ private:
         message.heading.pid = myHeadingPID.getPID();
     
         debug_controls_pub_->publish(message);
-
 
       }
       // else{
@@ -727,6 +741,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
+  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
 
   rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 
