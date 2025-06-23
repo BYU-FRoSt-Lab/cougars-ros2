@@ -93,6 +93,7 @@ public:
     battery_subscription_ = this->create_subscription<sensor_msgs::msg::BatteryState>("battery/data", 1, std::bind(&EmergencyProtocols::battery_callback, this, _1));
     gps_subscription_ = this->create_subscription<gps_msgs::msg::GPSFix>("extended_fix", 1, std::bind(&EmergencyProtocols::gps_fix_callback, this, _1));
     dvl_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>("dvl/position",1,std::bind(&EmergencyProtocols::dvl_callback, this, _1));
+    modem_subscription_ = this->create_subscription<seatrac_interfaces::msg::ModemStatus>("modem_status",1,std::bind(&EmergencyProtocols::modem_callback,this,_1));
     //         qos,std::bind(&EmergencyProtocols::factor_graph_callback, this, _1));
     // vehicle_status_moos_subscription_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>("vehicle_status", 
     //         qos, std::bind(&EmergencyProtocols::moos_status_callback, this, _1));
