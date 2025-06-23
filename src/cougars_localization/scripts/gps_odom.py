@@ -3,8 +3,11 @@
 import rclpy
 from rclpy.node import Node
 from gps_msgs.msg import GPSFix
+from sensor_msgs.msg import NavSatFix
+
 from nav_msgs.msg import Odometry
 import math
+from message_filters import Subscriber, ApproximateTimeSynchronizer
 
 EARTH_RADIUS_METERS       = 6371000
 
@@ -44,15 +47,22 @@ class NavSatFixToOdom(Node):
         '''
         
         # Subscribe to NavSatFix
-        self.subscriber = self.create_subscription(
-            GPSFix,
-            'extended_fix',
-            self.gps_callback,
-            10
-        )
+        self.fix_sub = Subscriber(self, NavSatFix, 'fix')
         '''
         Subscription to the "extended_fix" topic with the message type GPSFix.
         '''
+
+        # Subscribe to GPSFix to get covariance
+        self.extended_fix_sub = Subscriber(self, GPSFix, 'extended_fix')
+
+        # Message synchronizer enabling callback to use both fix and extended fix
+        # This approch is necessary because currently covariance is only in the fix message, not extended fix
+        self.ts = ApproximateTimeSynchronizer(
+            [self.fix_sub, self.extended_fix_sub],
+            queue_size=10,
+            slop=0.001
+        )
+        self.ts.registerCallback(self.gps_callback)
         
         self.last_msg = None
         self.min_sats = 5  # Minimum number of satellites
@@ -63,34 +73,35 @@ class NavSatFixToOdom(Node):
         Publisher for the "gps_odom" topic with the message type Odometry.
         '''
     
-    def gps_callback(self, msg: GPSFix):
+    def gps_callback(self, extended_msg: GPSFix, fix_msg: NavSatFix):
         '''
         Callback function for the GPSFix subscription.
         Converts the GPS data to Odometry messages and publishes them.
         
-        :param msg: The GPSFix message received from the extended_fix topic.
+        :param extended_msg: The GPSFix message received from the extended_fix topic.
         '''
+
         # Filter out bad readings based on the number of satellites (if available)
-        if msg.status.satellites_used < self.min_sats or msg.latitude < 0.1:
-            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {msg.status.satellites_used}", throttle_duration_sec=10)
+        if extended_msg.status.satellites_used < self.min_sats or extended_msg.latitude < 0.1:
+            self.get_logger().warn(f"Bad GPS status, skipping this GPS reading. Sat Used: {extended_msg.status.satellites_used}", throttle_duration_sec=10)
             return
         
-        if math.isnan(msg.latitude) or math.isnan(msg.longitude) or math.isnan(msg.altitude):
+        if math.isnan(extended_msg.latitude) or math.isnan(extended_msg.longitude) or math.isnan(extended_msg.altitude):
             self.get_logger().warn("NaN detected in GPS position, skipping this reading", throttle_duration_sec=10)
             return
         
         # Convert latitude/longitude to local Cartesian coordinates
         x, y = self.CalculateHaversine(self.get_parameter('origin.latitude').get_parameter_value().double_value,
                                        self.get_parameter('origin.longitude').get_parameter_value().double_value,
-                                       msg.latitude,
-                                       msg.longitude)
+                                       extended_msg.latitude,
+                                       extended_msg.longitude)
         
         # Access the altitude (z) value from the NavSatFix message
-        z = msg.altitude - self.get_parameter('origin.altitude').get_parameter_value().double_value
+        z = extended_msg.altitude - self.get_parameter('origin.altitude').get_parameter_value().double_value
 
         # Fill in the odometry message
         odom = Odometry()
-        odom.header.stamp = msg.header.stamp
+        odom.header.stamp = extended_msg.header.stamp
         odom.header.frame_id = "map"
         odom.child_frame_id = "odom"
         odom.pose.pose.position.x = x
@@ -98,9 +109,9 @@ class NavSatFixToOdom(Node):
         odom.pose.pose.position.z = z  # Use the altitude as the z-value
 
         # Set the covariance values for x, y, and z
-        odom.pose.covariance[0] = msg.position_covariance[0]  # xx
-        odom.pose.covariance[7] = msg.position_covariance[4]  # yy
-        odom.pose.covariance[14] = msg.position_covariance[8]  # zz
+        odom.pose.covariance[0] = fix_msg.position_covariance[0]  # xx
+        odom.pose.covariance[7] = fix_msg.position_covariance[4]  # yy
+        odom.pose.covariance[14] = fix_msg.position_covariance[8]  # zz 
 
         # Publish the odometry message
         self.last_msg = odom
