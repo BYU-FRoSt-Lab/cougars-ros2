@@ -134,6 +134,7 @@ private:
                 sensor_msgs::msg::BatteryState battery_msg;
                 battery_msg.voltage = voltage;
                 battery_msg.current = current;
+                battery_msg.header.stamp = this->now();
 
                 battery_pub_->publish(battery_msg);
             }
@@ -144,6 +145,7 @@ private:
                 sensor_msgs::msg::FluidPressure leak_msg;
                 leak_msg.header.stamp = this->now();
                 leak_msg.fluid_pressure = leak;
+                leak_msg.header.stamp = this->now();
                 leak_pub_->publish(leak_msg);
             }
         }
