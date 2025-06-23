@@ -37,13 +37,13 @@ def generate_launch_description():
 
     launch_actions = []
 
-    if GPS == "false":
-        dvl = launch_ros.actions.Node(
-            package='dvl_a50', 
-            executable='dvl_a50_sensor', 
-            namespace=namespace,
-        )
-        launch_actions.append(dvl)
+    # if GPS == "false":
+    #     dvl = launch_ros.actions.Node(
+    #         package='dvl_a50', 
+    #         executable='dvl_a50_sensor', 
+    #         namespace=namespace,
+    #     )
+    #     launch_actions.append(dvl)
 
 
     with open(param_file, 'r') as f:

@@ -18,17 +18,17 @@ function printError {
   echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
 }
 
-cleanup() {
-  echo ""
+# cleanup() {
+#   echo ""
   
-  if [ "$(uname -m)" == "aarch64" ]; then
-    bash ~/gpio/strobe.sh off
-    bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-  fi
+#   if [ "$(uname -m)" == "aarch64" ]; then
+#     bash ~/gpio/strobe.sh off
+#     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
+#   fi
   
-  exit 0
-}
-trap cleanup SIGINT
+#   exit 0
+# }
+# trap cleanup SIGINT
 
 echo ""
 echo -e "\033[0m\033[36m######################################################################\033[0m"
@@ -44,19 +44,19 @@ sleep 3
 
 echo ""
 
-if [ "$(uname -m)" == "aarch64" ]; then
-  # Start the strobe light and Teensy board
-  bash ~/gpio/strobe.sh on
-  bash ~/gpio/power.sh on
+# if [ "$(uname -m)" == "aarch64" ]; then
+#   # Start the strobe light and Teensy board
+#   bash ~/gpio/strobe.sh on
+#   bash ~/gpio/power.sh on
 
-  # Test for Teensy board connection
-  if [ -z "$(tycmd list | grep Teensy)" ]; then
-      printError "No Teensy boards avaliable to connect to"
-      exit 1
-  fi
+#   # Test for Teensy board connection
+#   if [ -z "$(tycmd list | grep Teensy)" ]; then
+#       printError "No Teensy boards avaliable to connect to"
+#       exit 1
+#   fi
 
-  echo ""
-fi
+#   echo ""
+# fi
 
 # Parse options
 SIM_PARAM="false" # Default value for sim

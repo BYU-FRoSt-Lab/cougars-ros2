@@ -18,8 +18,8 @@ def generate_launch_description():
     sim = "false"
     verbose = "false"
     param_file = '/home/frostlab/config/vehicle_params.yaml'
-    namespace = ''
-    mission_file = 'provo_marina_mission.yaml' # Default mission file
+    namespace = 'coug4'
+    mission_file = 'mission_plan_mission.yaml' # Default mission file
     GPS = "false"  # Initialize GPS to false (default)
 
     # --- Diagnostic Print for sys.argv ---
