@@ -76,6 +76,7 @@ public:
     this->declare_parameter("dvl_message_timeout",2);
     this->declare_parameter("dvl_position_stddev_threshold",5.0);
     this->declare_parameter("gps_sat_num_threshold",4);
+    this->declare_parameter("gps_origin_check",false);
     this->declare_parameter("origin_gps_msgs",3);
     this->declare_parameter("origin_gps_threshold_alt",100); 
     this->declare_parameter("origin_gps_threshold",.5); //around 35 miles
@@ -114,7 +115,10 @@ public:
     this->gps_origin_lon=0;
     this->gps_origin_alt=0;
     this->gps_bad_origin=0;
-    grab_gps_params();
+    if(this->get_parameter("gps_origin_check").as_bool()){
+      grab_gps_params();
+    }
+  
     depth_val = 1.0;
     back_near_surface = false;
     surfacing_then_disarm = false;
@@ -340,7 +344,7 @@ bool update_publishers(){
           surface_then_disarm();
         }
       }
-      if(gps_bad_origin){
+      if(gps_bad_origin&&this->get_parameter("gps_origin_check").as_bool()){
         message.gps_status.set__data(2);
         this->okay=false;
       }
@@ -393,6 +397,7 @@ bool update_publishers(){
   
   }
   void gps_fix_callback(const gps_msgs::msg::GPSFix &msg){
+    if(this->get_parameter("gps_origin_check").as_bool()){
     if(this->gps_count<this->get_parameter("origin_gps_msgs").as_int()){
       this->gps_count++;
       if(gps_origin_lat!=0 && gps_origin_lon!=0 && gps_origin_alt!=0){ //params grabbed
@@ -403,6 +408,7 @@ bool update_publishers(){
 
       }
     }
+  }
     latest_gps_message=msg;
   }
 

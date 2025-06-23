@@ -114,12 +114,12 @@ def generate_launch_description():
         # ),
 
 
-        launch_ros.actions.Node(
-            package='cougars_control',
-            executable='emergency_protocols',
-            parameters=[param_file],
-            namespace=namespace,
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_control',
+        #     executable='emergency_protocols',
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        # ),
         # Start the rf_bridge node
         launch_ros.actions.Node(
             package='cougars_coms',
