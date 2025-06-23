@@ -3,7 +3,7 @@
 # Tests vehicle sensors and actuators
 # - Specify a DVL acoustics power state using 'bash test.sh <state>' (ex. 'bash test.sh off')
 # - Run this after running the 'launch.sh' script
-
+source ~/config/cougarsrc.sh
 
 if [ "$(uname -m)" == "aarch64" ]; then
   case $1 in
