@@ -47,13 +47,13 @@ class NavSatFixToOdom(Node):
         '''
         
         # Subscribe to NavSatFix
-        self.extended_fix_sub = Subscriber(self, NavSatFix, 'fix')
+        self.fix_sub = Subscriber(self, NavSatFix, 'fix')
         '''
         Subscription to the "extended_fix" topic with the message type GPSFix.
         '''
 
         # Subscribe to GPSFix to get covariance
-        self.fix_sub = Subscriber(self, GPSFix, 'extended_fix')
+        self.extended_fix_sub = Subscriber(self, GPSFix, 'extended_fix')
 
         # Message synchronizer enabling callback to use both fix and extended fix
         # This approch is necessary because currently covariance is only in the fix message, not extended fix
