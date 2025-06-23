@@ -699,14 +699,14 @@ private:
 
 
       }
-      else{
-        message.fin[0] = 0;    // top fin
-        message.fin[1] = 0;      // right fin
-        message.fin[2] = 0;      // left fin
-        message.thruster = 0;
+      // else{
+      //   message.fin[0] = 0;    // top fin
+      //   message.fin[1] = 0;      // right fin
+      //   message.fin[2] = 0;      // left fin
+      //   message.thruster = 0;
 
-        u_command_publisher_->publish(message);
-      }
+      //   u_command_publisher_->publish(message);
+      // }
   }
 
 

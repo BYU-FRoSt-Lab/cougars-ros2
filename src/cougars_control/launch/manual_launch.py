@@ -87,7 +87,8 @@ def generate_launch_description():
         
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
-        ),   
+        ),
+  
         # Start the EmergencyStop checks
         # launch_ros.actions.Node(
         #     package='cougars_control',
@@ -101,6 +102,23 @@ def generate_launch_description():
         #     parameters=[param_file],
         #     namespace=namespace,
         # ),
+
+
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='emergency_protocols',
+            parameters=[param_file],
+            namespace=namespace,
+        ),
+        # Start the rf_bridge node
+        launch_ros.actions.Node(
+            package='cougars_coms',
+            executable='rf_bridge.py',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ), 
+        
 
 
     ])
