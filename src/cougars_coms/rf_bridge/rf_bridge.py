@@ -284,8 +284,8 @@ class RFBridge(Node):
                     self.get_logger().error("Failed to deactivate thruster.")
 
                 msg_dict = {
-                    "vehicle_id": self.vehicle_id,  
-                    "type": "E_KILL",
+                    "src_id": self.vehicle_id,  
+                    "message": "E_KILL",
                     "success": response.success
                 }
                 msg = json.dumps(msg_dict)
