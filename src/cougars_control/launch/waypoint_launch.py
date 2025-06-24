@@ -19,7 +19,7 @@ def generate_launch_description():
     verbose = "false"
     param_file = '/home/frostlab/config/vehicle_params.yaml'
     namespace = 'coug4'
-    mission_file = 'mission_plan_mission.yaml' # Default mission file
+    mission_file = '/home/frostlab/config/test_mission.yaml' # Default mission file
     GPS = "false"  # Initialize GPS to false (default)
 
     # --- Diagnostic Print for sys.argv ---
@@ -50,14 +50,10 @@ def generate_launch_description():
 
     # --- Package Directories ---
     localization_pkg_dir = get_package_share_directory('cougars_localization')
-    control_pkg_dir = get_package_share_directory('cougars_control')
+    # config_pkg_dir = get_package_share_directory('config')
 
     # --- Mission File Path ---
-    mission_yaml_path = os.path.join(
-        control_pkg_dir,
-        'waypoint_missions',
-        mission_file
-    )
+    mission_yaml_path = mission_file
     print(f"[INFO] [launch] Using mission file: {mission_yaml_path}")
 
     # --- Launch Actions List (Initialize) ---
@@ -105,12 +101,8 @@ def generate_launch_description():
             name='waypoint_follower_node',
             namespace=namespace,
             output='screen',
-            parameters=[
-                {'waypoint_file_path': mission_yaml_path},
-                {'slip_radius': 3.0},
-                {'desired_travel_speed': 25.0},
-                {'loop_rate': 5.0}
-            ]
+            parameters=[param_file]
+            
         )
 
     # --- Define Other Standard Nodes ---

@@ -27,6 +27,7 @@ SIM_PARAM="false" # Default value for sim
 VERBOSE="false"
 GPS="false"
 FINS="false"
+MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
 while getopts "svgf" opt; do
   case $opt in
     s)
@@ -91,47 +92,47 @@ case $1 in
         ;;
     "waypoint")
         # --- Start Waypoint Selection Logic ---
-        MISSIONS_DIR=$(ros2 pkg prefix cougars_control)/share/cougars_control/waypoint_missions
+        # MISSIONS_DIR=$(ros2 pkg prefix cougars_control)/share/cougars_control/waypoint_missions
 
-        if [ ! -d "$MISSIONS_DIR" ]; then
-            printError "Missions directory not found at $MISSIONS_DIR"
-            exit 1
-        fi
+        # if [ ! -d "$MISSIONS_DIR" ]; then
+        #     printError "Missions directory not found at $MISSIONS_DIR"
+        #     exit 1
+        # fi
 
-        MISSIONS=("$MISSIONS_DIR"/*.yaml)
+        # MISSIONS=("$MISSIONS_DIR"/*.yaml)
 
-        if [ ${#MISSIONS[@]} -eq 1 ] && [ ! -e "${MISSIONS[0]}" ]; then
-            printError "No mission files (.yaml) found in $MISSIONS_DIR"
-            exit 1
-        fi
+        # if [ ${#MISSIONS[@]} -eq 1 ] && [ ! -e "${MISSIONS[0]}" ]; then
+        #     printError "No mission files (.yaml) found in $MISSIONS_DIR"
+        #     exit 1
+        # fi
 
-        # Use 'basename' to show only filenames in the list
-        MISSIONS_BASENAMES=()
-        for mission in "${MISSIONS[@]}"; do
-            MISSIONS_BASENAMES+=("$(basename "$mission")")
-        done
+        # # Use 'basename' to show only filenames in the list
+        # MISSIONS_BASENAMES=()
+        # for mission in "${MISSIONS[@]}"; do
+        #     MISSIONS_BASENAMES+=("$(basename "$mission")")
+        # done
 
-        MISSIONS_BASENAMES+=("Cancel")
+        # MISSIONS_BASENAMES+=("Cancel")
 
-        printInfo "Please select a mission to launch:"
-        PS3="Enter number: " # Set the prompt for the select command
+        # printInfo "Please select a mission to launch:"
+        # PS3="Enter number: " # Set the prompt for the select command
 
-        select MISSION_NAME in "${MISSIONS_BASENAMES[@]}"; do
-            if [ "$MISSION_NAME" == "Cancel" ]; then
-                printInfo "Launch cancelled."
-                exit 0
-            elif [ -n "$MISSION_NAME" ]; then
-                printInfo "You selected mission: $MISSION_NAME"
-                break
-            else
-                printWarning "Invalid selection. Please try again."
-            fi
-        done
+        # select MISSION_NAME in "${MISSIONS_BASENAMES[@]}"; do
+        #     if [ "$MISSION_NAME" == "Cancel" ]; then
+        #         printInfo "Launch cancelled."
+        #         exit 0
+        #     elif [ -n "$MISSION_NAME" ]; then
+        #         printInfo "You selected mission: $MISSION_NAME"
+        #         break
+        #     else
+        #         printWarning "Invalid selection. Please try again."
+        #     fi
+        # done
 
-        if [ -z "$MISSION_NAME" ]; then
-            printError "No mission selected."
-            exit 1
-        fi
+        # if [ -z "$MISSION_NAME" ]; then
+        #     printError "No mission selected."
+        #     exit 1
+        # fi
         # --- End Waypoint Selection Logic ---
 
         # Launch with the selected mission file
