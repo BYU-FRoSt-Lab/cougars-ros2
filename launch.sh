@@ -4,17 +4,17 @@
 # - Specify a launch configuration using 'bash launch.sh <launch>' (ex. 'bash launch.sh moos')
 source ~/config/cougarsrc.sh
 
-cleanup() {
-  echo ""
+# cleanup() {
+#   echo ""
   
-  if [ "$(uname -m)" == "aarch64" ]; then
-    bash ~/gpio/strobe.sh off
-    bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
-  fi
+#   if [ "$(uname -m)" == "aarch64" ]; then
+#     bash ~/gpio/strobe.sh off
+#     bash ~/ros2_ws/dvl_tools/acoustics_on.sh false
+#   fi
   
-  exit 0
-}
-trap cleanup SIGINT
+#   exit 0
+# }
+# trap cleanup SIGINT
 
 echo ""
 echo -e "\033[0m\033[36m######################################################################\033[0m"
@@ -88,6 +88,54 @@ case $1 in
         ;;
     "demo")
         ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE
+        ;;
+    "waypoint")
+        # --- Start Waypoint Selection Logic ---
+        MISSIONS_DIR=$(ros2 pkg prefix cougars_control)/share/cougars_control/waypoint_missions
+
+        if [ ! -d "$MISSIONS_DIR" ]; then
+            printError "Missions directory not found at $MISSIONS_DIR"
+            exit 1
+        fi
+
+        MISSIONS=("$MISSIONS_DIR"/*.yaml)
+
+        if [ ${#MISSIONS[@]} -eq 1 ] && [ ! -e "${MISSIONS[0]}" ]; then
+            printError "No mission files (.yaml) found in $MISSIONS_DIR"
+            exit 1
+        fi
+
+        # Use 'basename' to show only filenames in the list
+        MISSIONS_BASENAMES=()
+        for mission in "${MISSIONS[@]}"; do
+            MISSIONS_BASENAMES+=("$(basename "$mission")")
+        done
+
+        MISSIONS_BASENAMES+=("Cancel")
+
+        printInfo "Please select a mission to launch:"
+        PS3="Enter number: " # Set the prompt for the select command
+
+        select MISSION_NAME in "${MISSIONS_BASENAMES[@]}"; do
+            if [ "$MISSION_NAME" == "Cancel" ]; then
+                printInfo "Launch cancelled."
+                exit 0
+            elif [ -n "$MISSION_NAME" ]; then
+                printInfo "You selected mission: $MISSION_NAME"
+                break
+            else
+                printWarning "Invalid selection. Please try again."
+            fi
+        done
+
+        if [ -z "$MISSION_NAME" ]; then
+            printError "No mission selected."
+            exit 1
+        fi
+        # --- End Waypoint Selection Logic ---
+
+        # Launch with the selected mission file
+        ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=$MISSION_NAME GPS:=$GPS
         ;;
     *)
         printError "No start configuration specified"

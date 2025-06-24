@@ -29,14 +29,14 @@ class NavSatFixToOdom(Node):
         Creates a new NavSatFixToOdom node.
         '''
         super().__init__('gps_odom')
-        
+         
         # Declare parameters for the origin (datum)
-        self.declare_parameter('origin.latitude', 34.0219)
+        self.declare_parameter('origin.latitude', 40.2470633) #34.0219
         '''
         :param origin.latitude: The latitude of the origin (datum) for the local Cartesian projection. The default value is 34.0219.
         '''
 
-        self.declare_parameter('origin.longitude', -118.4814)
+        self.declare_parameter('origin.longitude', -111.6446798) # -118.4814
         '''
         :param origin.longitude: The longitude of the origin (datum) for the local Cartesian projection. The default value is -118.4814.
         '''

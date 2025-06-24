@@ -12,6 +12,10 @@
 
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>yaml-cpp</depend> 
 
   <exec_depend>std_msgs</exec_depend>
   <!-- <exec_depend>robot_localization</exec_depend> -->
