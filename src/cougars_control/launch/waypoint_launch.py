@@ -105,12 +105,8 @@ def generate_launch_description():
             name='waypoint_follower_node',
             namespace=namespace,
             output='screen',
-            parameters=[
-                {'waypoint_file_path': mission_yaml_path},
-                {'slip_radius': 3.0},
-                {'desired_travel_speed': 25.0},
-                {'loop_rate': 5.0}
-            ]
+            parameters=[param_file]
+            
         )
 
     # --- Define Other Standard Nodes ---
