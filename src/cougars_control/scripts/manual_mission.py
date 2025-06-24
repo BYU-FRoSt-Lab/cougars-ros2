@@ -8,8 +8,8 @@ from rclpy.qos import qos_profile_system_default
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 
-import json
 import time
+import yaml
 
 
 class ManualMission(Node):
@@ -123,21 +123,35 @@ class ManualMission(Node):
 
     
     def load_states(self):
-        # Load JSON file
-        json_path = self.get_parameter('mission_file_path').value
+    # Load YAML file
+        yaml_path = self.get_parameter('mission_file_path').value
         try:
-            with open(json_path) as f:
-                data = json.load(f)
-                self.states = data.get('states', [])  # Load the states list
-                self.get_logger().info(f"Loaded {len(self.states)} states")
+            with open(yaml_path, 'r') as f:
+                data = yaml.safe_load(f)
+                mission_type = data.get('mission_type', '')
+                if mission_type == "manual":
+                    states = data.get('states', [])
+                    self.states = []
+
+                    for i, state in enumerate(states):
+                        state = {
+                            'depth': state.get('depth'),
+                            'heading': state.get('heading'),  
+                            'speed': state.get('speed'),    
+                            'time_seconds': state.get('time_seconds') 
+                        }
+                        self.states.append(state)
+                    self.get_logger().info(f"Loaded {len(self.states)} states from YAML")
+                    return True
+                else:
+                    self.get_logger().info(f"Did not load mission states because not right mission type")
+                    return False
         except Exception as e:
-            self.get_logger().error(f"Failed to load JSON: {e}")
+            self.get_logger().error(f"Failed to load YAML: {e}")
             self.states = []
 
 
     def get_parameters(self):
-        self.load_states()  # Load states from JSON file
-
         self.destroy_timer(self.timer)
         self.period = self.get_parameter("command_timer_period").get_parameter_value().double_value
 
@@ -160,12 +174,16 @@ class ManualMission(Node):
             if self.started:
                 self.get_logger().info('Manual Mission has already been started. Needs to be reset before initialization')
             else:
-                self.get_parameters()
-                self.started = init_bool
-                self.get_logger().info('Manual Mission Started')
-                # self.counter = 0
-                self.start_time = time.time()
-                self.state_index = 0
+                start_mission = self.load_states()  # Load states from JSON file
+                if start_mission:
+                    self.get_parameters()
+                    self.started = init_bool
+                    self.get_logger().info('Manual Mission Started')
+                    # self.counter = 0
+                    self.start_time = time.time()
+                    self.state_index = 0
+                else:
+                    self.get_logger().info('Mission type is not manual')
         else:
             self.started = False
             # self.counter = 0
