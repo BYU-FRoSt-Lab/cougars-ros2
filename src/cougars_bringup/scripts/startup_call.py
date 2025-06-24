@@ -15,7 +15,7 @@ class SystemStatusPublisher(Node):
         super().__init__('system_status_publisher')
 
         # Set reliable and transient local QoS profile
-        qos_reliable_profile = QoSProfile(depth=5)
+        qos_reliable_profile = QoSProfile(depth=1)
         qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
         qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
