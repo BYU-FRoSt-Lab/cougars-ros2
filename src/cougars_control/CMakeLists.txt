@@ -24,6 +24,7 @@ find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
 find_package(MOOS 10 REQUIRED)
 find_package(Eigen3 REQUIRED)
+# find_package(robot_localization REQUIRED) #add if using the EKF
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED) # Add this to be safe, as you use it directly
 
@@ -32,11 +33,10 @@ find_package(tf2_geometry_msgs REQUIRED) # Add this to be safe, as you use it di
 find_package(yaml-cpp REQUIRED)
 
 
-
 include_directories(include/${PROJECT_NAME})
 
 add_executable(coug_controls src/coug_controls.cpp src/pid.cpp)
-ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces sensor_msgs geometry_msgs std_srvs)
+ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces sensor_msgs geometry_msgs std_srvs dvl_msgs)
 
 add_executable(coug_kinematics src/coug_kinematics.cpp)
 ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces std_srvs)
@@ -52,7 +52,7 @@ ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS 
 
 
 add_executable(emergency_protocols src/emergency_protocols.cpp)
-ament_target_dependencies(emergency_protocols rclcpp std_msgs frost_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
+ament_target_dependencies(emergency_protocols rclcpp std_msgs gps_msgs dvl_msgs frost_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
 
 # Add executable for the waypoint follower node
 add_executable(waypoint_follower src/waypoint_follower.cpp)
@@ -107,6 +107,7 @@ install(TARGETS
 # Install Python executables
 install(PROGRAMS
   scripts/manual_mission.py
+  scripts/dummy_factor_starter.py
   scripts/fins_manual.py
   DESTINATION lib/${PROJECT_NAME}
 )
