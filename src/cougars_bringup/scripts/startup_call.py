@@ -19,6 +19,7 @@ class SystemStatusPublisher(Node):
         qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
         qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
+        self.coug0_publisher_ = self.create_publisher(SystemControl, '/coug0/system/status', qos_reliable_profile)
         self.coug1_publisher_ = self.create_publisher(SystemControl, '/coug1/system/status', qos_reliable_profile)
         self.coug2_publisher_ = self.create_publisher(SystemControl, '/coug2/system/status', qos_reliable_profile)
         self.coug3_publisher_ = self.create_publisher(SystemControl, '/coug3/system/status', qos_reliable_profile)
@@ -52,6 +53,7 @@ class SystemStatusPublisher(Node):
 
             # Publish message
             # TODO control which vehicles to publish to
+            self.coug0_publisher_.publish(msg)
             self.coug1_publisher_.publish(msg)
             self.coug2_publisher_.publish(msg)
             self.coug3_publisher_.publish(msg)
