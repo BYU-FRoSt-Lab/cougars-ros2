@@ -27,6 +27,7 @@ SIM_PARAM="false" # Default value for sim
 VERBOSE="false"
 GPS="false"
 FINS="false"
+MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
 while getopts "svgf" opt; do
   case $opt in
     s)
@@ -135,7 +136,7 @@ case $1 in
         # --- End Waypoint Selection Logic ---
 
         # Launch with the selected mission file
-        ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=/home/frostlab/config/test_mission.yaml GPS:=$GPS
+        ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=$MISSION_NAME GPS:=$GPS
         ;;
     *)
         printError "No start configuration specified"

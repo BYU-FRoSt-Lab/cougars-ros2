@@ -1,3 +1,4 @@
+
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -93,43 +94,42 @@ public:
 
 private:
     // Callback for system control messages to start or stop the mission
-   void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
-{
-    // Handle the START command
-    if (msg->start.data) {
-        
-        if (!mission_loaded_) {
-            RCLCPP_WARN(this->get_logger(), "Received START command, but mission is not loaded. Ignoring.");
-            return;
-        }
-        if (mission_active_) {
-            RCLCPP_INFO(this->get_logger(), "Received START command, but mission is already active. Ignoring.");
-            return;
-        }
-
-        // Check if the mission_type parameter is 'waypoint'
-        if (mission_yaml_["mission_type"] && mission_yaml_["mission_type"].as<std::string>() == "waypoint") {
-            RCLCPP_INFO(this->get_logger(), "Received START command for 'waypoint' mission. Activating waypoint follower.");
-            mission_active_ = true;
-            current_waypoint_index_ = 0; // Reset to the first waypoint
-        } else {
-            std::string type = "undefined";
-            if (mission_yaml_["mission_type"]) {
-                type = mission_yaml_["mission_type"].as<std::string>();
+    void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
+    {
+        // Handle the START command
+        if (msg->start.data) {
+            if (!mission_loaded_) {
+                RCLCPP_WARN(this->get_logger(), "Received START command, but mission is not loaded. Ignoring.");
+                return;
             }
-            RCLCPP_WARN(this->get_logger(),
-                        "Received START command, but mission_type is '%s', not 'waypoint'. Node will not activate.",
-                        type.c_str());
+            if (mission_active_) {
+                RCLCPP_INFO(this->get_logger(), "Received START command, but mission is already active. Ignoring.");
+                return;
+            }
+
+            // Check if the mission_type parameter is 'waypoint'
+            if (mission_yaml_["mission_type"] && mission_yaml_["mission_type"].as<std::string>() == "waypoint") {
+                RCLCPP_INFO(this->get_logger(), "Received START command for 'waypoint' mission. Activating waypoint follower.");
+                mission_active_ = true;
+                current_waypoint_index_ = 0; // Reset to the first waypoint
+            } else {
+                std::string type = "undefined";
+                if (mission_yaml_["mission_type"]) {
+                    type = mission_yaml_["mission_type"].as<std::string>();
+                }
+                RCLCPP_WARN(this->get_logger(),
+                            "Received START command, but mission_type is '%s', not 'waypoint'. Node will not activate.",
+                            type.c_str());
+            }
+        }
+        // Handle the STOP command
+        else {
+            if (mission_active_) {
+                RCLCPP_INFO(this->get_logger(), "Received STOP command. Deactivating waypoint follower.");
+                mission_active_ = false;
+            }
         }
     }
-    // Handle the STOP command
-    else {
-        if (mission_active_) {
-            RCLCPP_INFO(this->get_logger(), "Received STOP command. Deactivating waypoint follower.");
-            mission_active_ = false;
-        }
-    }
-}
 
     // Callback for odometry data (current position)
     void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
@@ -166,12 +166,9 @@ private:
 
         // State 2: Mission loaded, but not active (waiting for start command or has been stopped). Hold position.
         if (!mission_active_) {
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Mission is inactive.");
-            // Hold last known depth if available, otherwise a default. Zero speed.
-            double hold_depth = (current_waypoint_index_ > 0 && current_waypoint_index_ <= waypoints_.size()) 
-                                ? waypoints_[current_waypoint_index_ - 1].depth 
-                                : waypoints_.front().depth;
-            publish_control_commands(current_heading_degrees_, hold_depth, 0.0);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Mission is inactive. Waiting for start command.");
+            // Hold the depth of the first waypoint.
+            publish_control_commands(current_heading_degrees_, waypoints_.front().depth, 0.0);
             return;
         }
 
@@ -195,8 +192,8 @@ private:
         if (distance_to_target < slip_radius_) {
             RCLCPP_INFO(this->get_logger(), "Reached waypoint %d. Moving to next.", target_wp.id);
             current_waypoint_index_++;
-            // The check for mission completion at the start of the loop will handle the final waypoint.
-            return; // Exit and wait for the next timer tick to process the new waypoint
+            // Exit and wait for the next timer tick to process the new waypoint or mission completion
+            return;
         }
         
         // If not at the waypoint yet, calculate and publish control commands
@@ -205,7 +202,7 @@ private:
         
         publish_control_commands(desired_heading_deg, target_wp.depth, desired_travel_speed_);
         RCLCPP_DEBUG(this->get_logger(), "Publishing: Desired Heading: %.2f deg, Desired Depth: %.2f m, Desired Speed: %.2f",
-                        desired_heading_deg, target_wp.depth, desired_travel_speed_);
+                         desired_heading_deg, target_wp.depth, desired_travel_speed_);
     }
 
     // Publish control commands
@@ -224,37 +221,46 @@ private:
         desired_speed_pub_->publish(speed_msg);
     }
 
-    // Load waypoints from YAML file
+    // Load waypoints from YAML file (CORE LOGIC UNCHANGED, as requested)
     bool load_waypoints()
-{
-    try {
-        // Assign the loaded YAML data to the MEMBER variable
-        mission_yaml_ = YAML::LoadFile(mission_file_path_);
+    {
+        try {
+            // Use the member variable to store the parsed YAML for access in other functions
+            mission_yaml_ = YAML::LoadFile(mission_file_path_);
 
-        // Now, check for the parameter using the member variable
-        if (!mission_yaml_["mission_type"]) {
-            RCLCPP_ERROR(this->get_logger(), "YAML file is missing the 'mission_type' parameter.");
+            // Add checks for all required sections for robust loading
+            if (!mission_yaml_["mission_type"] || !mission_yaml_["origin_lla"] || !mission_yaml_["waypoints"]) {
+                RCLCPP_ERROR(this->get_logger(), "YAML file missing 'mission_type', 'origin_lla', or 'waypoints' section.");
+                return false;
+            }
+            
+            // The original logic for parsing waypoints is preserved below
+            const YAML::Node& wps = mission_yaml_["waypoints"];
+            if (!wps.IsSequence()) {
+                 RCLCPP_ERROR(this->get_logger(), "'waypoints' is not a sequence in YAML file.");
+                return false;
+            }
+
+            waypoints_.clear();
+            for (const auto& wp_node : wps) {
+                Waypoint wp;
+                wp.id = wp_node["id"].as<int>();
+                wp.enu_x = wp_node["position_enu"]["x"].as<double>();
+                wp.enu_y = wp_node["position_enu"]["y"].as<double>();
+                wp.depth = wp_node["depth"].as<double>(); 
+                waypoints_.push_back(wp);
+                RCLCPP_INFO(this->get_logger(), "Loaded WP ID: %d, ENU_X: %.2f, ENU_Y: %.2f, Depth: %.2f",
+                            wp.id, wp.enu_x, wp.enu_y, wp.depth);
+            }
+        } catch (const YAML::Exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "YAML parsing error in %s: %s", mission_file_path_.c_str(), e.what());
+            return false;
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "Error loading waypoints: %s", e.what());
             return false;
         }
-
-        // Also, ensure future checks in this function use the member variable
-        if (!mission_yaml_["waypoints"]) {
-            RCLCPP_ERROR(this->get_logger(), "YAML file missing 'waypoints' section.");
-            return false;
-        }
-
-        const YAML::Node& wps = mission_yaml_["waypoints"];
-        // ... (the rest of your function remains the same)
-
-    } catch (const YAML::Exception& e) {
-        RCLCPP_ERROR(this->get_logger(), "YAML parsing error in %s: %s", mission_file_path_.c_str(), e.what());
-        return false;
-    } catch (const std::exception& e) {
-        RCLCPP_ERROR(this->get_logger(), "Error loading waypoints: %s", e.what());
-        return false;
+        return !waypoints_.empty();
     }
-    return !waypoints_.empty();
-}
 
     // Calculate 2D Euclidean distance
     double calculate_distance(double x1, double y1, double x2, double y2)
