@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
-from frost_interfaces.msg import SystemStatus
+from frost_interfaces.msg import SystemControl
 from dvl_msgs.msg import ConfigCommand  # Replace with correct package
 
 class DVLAcousticController(Node):
@@ -21,13 +21,13 @@ class DVLAcousticController(Node):
 
         # Subscriber with matching QoS
         self.subscription = self.create_subscription(
-            SystemStatus,
+            SystemControl,
             'system/status',
             self.listener_callback,
             qos_reliable_profile
         )
 
-    def listener_callback(self, msg: SystemStatus):
+    def listener_callback(self, msg: SystemControl):
         cmd_msg = ConfigCommand()
         cmd_msg.command = "set_config"
         cmd_msg.parameter_name = "acoustic_enabled"
