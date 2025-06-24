@@ -9,6 +9,7 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 
 import json
+import time
 
 
 class ManualMission(Node):
@@ -38,6 +39,7 @@ class ManualMission(Node):
         # Default and initial parameters
         self.period = 0.5
         self.counter = 0
+        self.start_time = time.time()
         self.state_index = 0
         self.started = False
 
@@ -141,7 +143,6 @@ class ManualMission(Node):
 
         # Create a new timer with the updated period
         self.timer = self.create_timer(self.period, self.timer_callback)
-        self.timer = self.create_timer(self.period, self.timer_callback)
 
         self.get_logger().info("Manual Mission Parameters Updated!")
 
@@ -162,11 +163,13 @@ class ManualMission(Node):
                 self.get_parameters()
                 self.started = init_bool
                 self.get_logger().info('Manual Mission Started')
-                self.counter = 0
+                # self.counter = 0
+                self.start_time = time.time()
                 self.state_index = 0
         else:
             self.started = False
-            self.counter = 0
+            # self.counter = 0
+            self.start_time = time.time()
             self.state_index = 0
             self.get_logger().info('Manual Mission Stopped')
 
@@ -189,10 +192,12 @@ class ManualMission(Node):
                 self.started = request.data
                 response.success = True
                 response.message = 'Manual Mission Started'
-                self.counter = 0
+                # self.counter = 0
+                self.start_time = time.time()
         else:
             self.started = False
-            self.counter = 0
+            # self.counter = 0
+            self.start_time = time.time()
             response.success = True
             response.message = 'Manual Mission Restarted'
 
@@ -213,8 +218,8 @@ class ManualMission(Node):
         heading_msg = DesiredHeading()
         speed_msg = DesiredSpeed()
 
-
-
+        # Elapsed time
+        elapsed_time = time.time() - self.start_time
         # TODO actuallly start a timer instead of just counting ticks!!
         # Iterate through the states
         if self.states and self.started:
@@ -223,20 +228,23 @@ class ManualMission(Node):
                 depth_msg.desired_depth = current_state['depth']
                 heading_msg.desired_heading = current_state['heading']
                 speed_msg.desired_speed = current_state['speed']
-            
-                if self.counter < current_state['time_seconds']:
-                    
-                    self.counter += self.period
+
+
+                if elapsed_time < current_state['time_seconds']:
+                    # DO WE NEED ANYTHING HERE?
+                    pass
                 else:
                     # State time is up, move to the next state
                     self.state_index += 1   # DO NOT REMOVE THIS LINE OR BAD THINGS WILL HAPPEN :)
-                    self.counter = 0.0  # Reset the counter for the next state 
+                    # self.counter = 0.0  # Reset the counter for the next state 
+                    self.start_time = time.time()
 
                     # When completed all the states
                     if self.state_index == len(self.states):
                         # Reset the variables - This might be redundant because we have a subscriber
                         self.started = False
-                        self.counter = 0.0
+                        # self.counter = 0.0
+                        self.start_time = time.time()
                         self.state_index = 0
 
                         msg = SystemControl()
