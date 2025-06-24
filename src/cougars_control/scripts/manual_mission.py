@@ -111,7 +111,7 @@ class ManualMission(Node):
         '''
 
         # Create the system services subscriber and publisher
-        qos_reliable_profile = QoSProfile(depth=5)
+        qos_reliable_profile = QoSProfile(depth=1)
         qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
         qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
@@ -123,7 +123,7 @@ class ManualMission(Node):
 
     
     def load_states(self):
-    # Load YAML file
+        # Load YAML file
         yaml_path = self.get_parameter('mission_file_path').value
         try:
             with open(yaml_path, 'r') as f:

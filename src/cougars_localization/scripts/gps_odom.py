@@ -4,10 +4,13 @@ import rclpy
 from rclpy.node import Node
 from gps_msgs.msg import GPSFix
 from sensor_msgs.msg import NavSatFix
-
+from frost_interfaces.msg import SystemControl
 from nav_msgs.msg import Odometry
-import math
 from message_filters import Subscriber, ApproximateTimeSynchronizer
+from rclpy.qos import qos_profile_system_default
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+import math
+import yaml
 
 EARTH_RADIUS_METERS       = 6371000
 
@@ -45,6 +48,7 @@ class NavSatFixToOdom(Node):
         '''
         :param origin.altitude: The altitude of the origin (datum) for the local Cartesian projection. The default value is 0.0.
         '''
+        self.declare_parameter('mission_file_path', '')
         
         # Subscribe to NavSatFix
         self.fix_sub = Subscriber(self, NavSatFix, 'fix')
@@ -72,6 +76,56 @@ class NavSatFixToOdom(Node):
         '''
         Publisher for the "gps_odom" topic with the message type Odometry.
         '''
+        # Set the origin from the mission file path
+        self.set_origin()
+
+        # Subscriber for setting the origin
+        # Create the system services subscriber and publisher
+        qos_reliable_profile = QoSProfile(depth=1)
+        qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
+        qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
+
+        self.system_status_sub = self.create_subscription(SystemControl, 'system/status', self.system_status_callback, qos_reliable_profile)
+
+
+    def set_origin(self):
+        """
+        Load the origin (latitude, longitude, altitude) from the YAML file
+        and set them as parameters: origin.latitude, origin.longitude, origin.altitude
+        """
+        yaml_path = self.get_parameter('mission_file_path').value
+        try:
+            with open(yaml_path, 'r') as f:
+                data = yaml.safe_load(f)
+                origin = data.get('origin_lla', {})
+                lat = origin.get('latitude')
+                lon = origin.get('longitude')
+                alt = origin.get('altitude')
+
+                if lat is not None and lon is not None and alt is not None:
+                    self.set_parameters([
+                        rclpy.parameter.Parameter('origin.latitude', rclpy.Parameter.Type.DOUBLE, lat),
+                        rclpy.parameter.Parameter('origin.longitude', rclpy.Parameter.Type.DOUBLE, lon),
+                        rclpy.parameter.Parameter('origin.altitude', rclpy.Parameter.Type.DOUBLE, alt)
+                    ])
+                    self.get_logger().info(f"Set origin to lat: {lat}, lon: {lon}, alt: {alt}")
+                else:
+                    self.get_logger().error("Origin fields missing in YAML. Parameters not updated.")
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to load YAML for origin: {e}")
+
+    
+    def system_status_callback(self, msg):
+        '''
+        Callback function for the init mission to set the origin.
+        '''
+        init_bool = msg.start.data
+        if init_bool:
+            self.set_origin()
+        else:
+            self.get_logger.info("GPS Odom node will not set new origin - Init flag false")
+    
     
     def gps_callback(self, extended_msg: GPSFix, fix_msg: NavSatFix):
         '''
