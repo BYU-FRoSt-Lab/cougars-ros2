@@ -5,9 +5,9 @@ from sensor_msgs.msg import FluidPressure
 from . import ms5837
 
 class PressurePublisher(Node):
-    def __init__(self):
-        super().__init__('pressure_publisher')
-        self.declare_parameter('sensor_type', 0)  # 0: 02BA, 1: 30BA ##default to 02BA
+    def __init__(self, sensor_model, node_name):
+        super().__init__(node_name)
+        self.declare_parameter('sensor_type', sensor_model)
         sensor_type = self.get_parameter('sensor_type').get_parameter_value().integer_value
 
         self.publisher_ = self.create_publisher(FluidPressure, 'pressure_data', 10)
@@ -21,10 +21,9 @@ class PressurePublisher(Node):
 
         if not self.sensor.init():
             self.get_logger().error("Sensor could not be initialized")
-            rclpy.shutdown()
             return
 
-        self.timer = self.create_timer(0.1, self.timer_callback)  # 1 Hz
+        self.timer = self.create_timer(0.1, self.timer_callback)  # 10 Hz
 
     def timer_callback(self):
         if self.sensor.read():
@@ -41,15 +40,26 @@ class PressurePublisher(Node):
 
 def main():
     rclpy.init()
-    node = PressurePublisher()
+    node = None
+    node2 = None
     try:
-        rclpy.spin(node)
+        node = PressurePublisher(0, 'pressure_publisher_02ba')
+        node2 = PressurePublisher(1, 'pressure_publisher_30ba')
+        if node is None or node2 is None:
+            rclpy.shutdown()
+            return
+        executor = rclpy.executors.MultiThreadedExecutor()
+        executor.add_node(node)
+        executor.add_node(node2)
+        executor.spin()
     except KeyboardInterrupt:
         pass
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
+        if node2 is not None:
+            node2.destroy_node()
         rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
