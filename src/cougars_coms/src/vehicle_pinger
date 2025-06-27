@@ -1,0 +1,56 @@
+#include "seatrac_interfaces/msg/modem_send.hpp"
+
+
+#include "cougars_coms/coms_protocol.hpp"
+
+
+#include <iostream>
+#include <chrono>
+#include <memory>
+
+using namespace std::literals::chrono_literals;
+using namespace cougars_coms;
+using namespace narval::seatrac;
+
+using std::placeholders::_1;
+using std::placeholders::_2;
+
+class VehiclePinger : public rclcpp::Node {
+public:
+    VehiclePinger() : Node("vehicle_pinger") {
+        this->declare_parameter<std::vector<int64_t>>("vehicles_in_mission", {1, 2, 5});
+        this->vehicles_in_mission_ = this->get_parameter("vehicles_in_mission").as_integer_array();
+
+
+    }
+
+    void ping_schedule() {
+        vehicle_id_index += 1;
+        if (vehicle_id_index >= vehicles_in_mission_.size())
+            vehicle_id_index = 0;
+
+        this->send_ping(vehicles_in_mission_[vehicle_id_index]);
+    }
+
+    void send_ping(int target_id) {
+
+
+        auto request = seatrac_interfaces::msg::ModemSend();
+        request.msg_id = CID_DAT_SEND;
+        request.dest_id = (uint8_t)target_id;
+        request.msg_type = MSG_OWAY;
+        RequestLocalizationInfo message;
+        request.packet_len = (uint8_t)std::min(sizeof(message), 31);
+        std::memcpy(&request.packet_data, &message, request.packet_len);
+
+        this->modem_publisher_->publish(request);
+    }
+
+private:
+
+    rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
+
+    std::vector<int64_t> vehicles_in_mission_;
+    size_t vehicle_id_index = -1;  // Index to track which vehicle to ping next
+    
+}

@@ -14,14 +14,14 @@ enum COUG_MSG_ID : uint8_t {
     VEHICLE_STATUS = 0x10,
     REQUEST_STATUS = 0x11,
 
-    VERIFY_LAUNCH = 0x20,        
-    CONFIRM_VERIFY = 0x21,
-
     EMERGENCY_KILL = 0x40,
     CONFIRM_EMERGENCY_KILL = 0x41,
 
     EMERGENCY_SURFACE = 0x50,
     CONFIRM_EMERGENCY_SURFACE = 0x51,
+
+    REQUEST_LOCALIZATION_INFO = 0x60,
+    LOCALIZATION_INFO = 0x61,
 
 };
 
@@ -68,6 +68,25 @@ struct VehicleStatus {
     uint8_t heading;
 
 }__attribute__((packed));
+
+struct RequestLocalizationInfo{
+   COUG_MSG_ID msg_id = REQUEST_LOCALIZATION_INFO;
+};
+
+
+struct LocalizationInfo {
+   COUG_MSG_ID msg_id = LOCALIZATION_INFO;
+
+
+   float x;
+   float y;
+   float z;
+   int16_t roll;
+   int16_t pitch;
+   int16_t yaw;
+   float depth;
+}__attribute__((packed));
+
 
 
 

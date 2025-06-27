@@ -13,6 +13,7 @@
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
 #include "frost_interfaces/msg/system_status.hpp"
+#include "frost_interfaces/msg/localization_data.hpp"
 
 
 
@@ -95,6 +96,13 @@ public:
             case REQUEST_STATUS: {
                 send_status();
             } break;
+            case REQUEST_LOCALIZATION_INFO: {
+               send_localization_info(msg.src_id);
+            } break;
+            case LOCALIZATION_INFO: {
+               record_localization_info(msg);
+            }
+
         }
     }
 
@@ -125,7 +133,7 @@ public:
     }
 
     void depth_callback(geometry_msgs::msg::PoseWithCovarianceStamped msg) {
-        this->position_z = msg.pose.pose.position.z;
+        this->depth = msg.pose.pose.position.z;
     }
 
 
@@ -211,6 +219,44 @@ public:
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
 
+    void send_localization_info(int src_id) {
+       RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending localization info.");
+       LocalizationInfo message;
+       message.x = this->position_x;
+       message.y = this->position_y;
+       message.z = this->position_z;
+       message.roll = this->roll;
+       message.pitch = this->pitch;
+       message.yaw = this->yaw;
+       message.depth = this->depth;
+       send_acoustic_message(src_id, sizeof(message), (uint8_t*)&message);
+   }
+
+
+   void record_localization_info(seatrac_interfaces::msg::ModemRec msg) {
+
+
+       const LocalizationInfo* info = reinterpret_cast<const LocalizationInfo*>(msg.packet_data.data());
+       frost_interfaces::msg::LocalizationData localization_data;
+       localization_data.vehicle_id = msg.src_id;
+       localization_data.x = info->x;
+       localization_data.y = info->y;
+       localization_data.z = info->z;
+       localization_data.roll = info->roll;
+       localization_data.pitch = info->pitch;
+       localization_data.yaw = info->yaw;
+       localization_data.depth = info->depth;
+
+
+       localization_data_publisher_->publish(localization_data);
+
+
+       RCLCPP_INFO(this->get_logger(), "Localization Info: (x, y, z): (%.2f, %.2f, %.2f), (roll, pitch, yaw): (%.2f, %.2f, %.2f), depth: %.2f",
+           localization_data.x, localization_data.y, localization_data.z,
+           localization_data.roll, localization_data.pitch, localization_data.yaw,
+           localization_data.depth);
+   }
+
 
     void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
         auto request = seatrac_interfaces::msg::ModemSend();
@@ -234,7 +280,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscriber_;
 
-
+    rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_client_;
@@ -254,7 +300,13 @@ private:
     uint8_t heading;
     uint8_t pressure;
 
-
+    float dvl_position_x;
+    float dvl_position_y;
+    float dvl_position_z;
+    float roll;
+    float pitch;
+    float yaw;
+    float depth;
 
 };
 
