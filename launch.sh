@@ -1,6 +1,10 @@
 #!/bin/bash
 #
-# Starts the ROS 2 launch files
+
+# MODIFIED: This script has been updated to pass arguments to ROS 2 launch files
+# using the standard 'argument_name:=value' syntax for better compatibility.
+#
+# Starts the micro-ROS agent and ROS 2 launch files
 # - Specify a launch configuration using 'bash launch.sh <launch>' (ex. 'bash launch.sh moos')
 source ~/config/cougarsrc.sh
 
@@ -28,12 +32,14 @@ VERBOSE="false"
 GPS="false"
 FINS="false"
 MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
-while getopts "svgf" opt; do
+# Set a default vehicle parameter file. It can be overridden by the -s flag.
+
+while getopts "svgfb" opt; do
   case $opt in
     s)
       SIM_PARAM="true"
-      VEHICLE_PARAMS_FILE=/home/frostlab/config/sim_params.yaml
-      echo "Using param file $VEHICLE_PARAMS_FILE"
+      VEHICLE_PARAMS_FILE="/home/frostlab/config/sim_params.yaml"
+      printInfo "Using SIM param file: $VEHICLE_PARAMS_FILE"
       ;;
     v)
       VERBOSE="true"
@@ -45,9 +51,6 @@ while getopts "svgf" opt; do
   esac
 done
 shift $((OPTIND - 1)) # Shift positional arguments
-
-
-source ~/ros2_ws/install/setup.bash
 
 echo ""
 
@@ -74,70 +77,52 @@ fi
 #TODO just make a parameter in yaml for moos GPS Only
 
 # Start both workspaces
+source ~/ros2_ws/install/setup.bash
+
 case $1 in
     "full")
         ros2 launch cougars_bringup persistant_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
         ;;
     "manual")
-        ros2 launch cougars_control manual_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
+        ros2 launch cougars_control manual_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE" \
+          sim:="$SIM_PARAM" \
+          verbose:="$VERBOSE" \
+          fins:="$FINS"
         ;;
     "moos")
-        ros2 launch cougars_control moos_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE GPS:=$GPS
+        ros2 launch cougars_control moos_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE" \
+          sim:="$SIM_PARAM" \
+          verbose:="$VERBOSE" \
+          GPS:="$GPS"
         ;;
     "sensors")
-        ros2 launch cougars_localization sensors_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE
+        ros2 launch cougars_localization sensors_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE"
         ;;
+
     "demo")
-        ros2 launch cougars_localization demo_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE
+        ros2 launch cougars_localization demo_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE"
         ;;
     "waypoint")
-        # --- Start Waypoint Selection Logic ---
-        # MISSIONS_DIR=$(ros2 pkg prefix cougars_control)/share/cougars_control/waypoint_missions
-
-        # if [ ! -d "$MISSIONS_DIR" ]; then
-        #     printError "Missions directory not found at $MISSIONS_DIR"
-        #     exit 1
-        # fi
-
-        # MISSIONS=("$MISSIONS_DIR"/*.yaml)
-
-        # if [ ${#MISSIONS[@]} -eq 1 ] && [ ! -e "${MISSIONS[0]}" ]; then
-        #     printError "No mission files (.yaml) found in $MISSIONS_DIR"
-        #     exit 1
-        # fi
-
-        # # Use 'basename' to show only filenames in the list
-        # MISSIONS_BASENAMES=()
-        # for mission in "${MISSIONS[@]}"; do
-        #     MISSIONS_BASENAMES+=("$(basename "$mission")")
-        # done
-
-        # MISSIONS_BASENAMES+=("Cancel")
-
-        # printInfo "Please select a mission to launch:"
-        # PS3="Enter number: " # Set the prompt for the select command
-
-        # select MISSION_NAME in "${MISSIONS_BASENAMES[@]}"; do
-        #     if [ "$MISSION_NAME" == "Cancel" ]; then
-        #         printInfo "Launch cancelled."
-        #         exit 0
-        #     elif [ -n "$MISSION_NAME" ]; then
-        #         printInfo "You selected mission: $MISSION_NAME"
-        #         break
-        #     else
-        #         printWarning "Invalid selection. Please try again."
-        #     fi
-        # done
-
-        # if [ -z "$MISSION_NAME" ]; then
-        #     printError "No mission selected."
-        #     exit 1
-        # fi
-        # --- End Waypoint Selection Logic ---
-
         # Launch with the selected mission file
         ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=$MISSION_NAME GPS:=$GPS
         ;;
+
+    "bluerov")
+        ros2 launch cougars_control bluerov_launch.py \
+          namespace:="$NAMESPACE" \
+          param_file:="$VEHICLE_PARAMS_FILE" \
+          BLUEROV:="true" \
+          verbose:="$VERBOSE"
+        ;;
+
     *)
         printError "No start configuration specified"
         printError "Specify a launch configuration using 'bash launch.sh <config>' (ex. 'bash launch.sh moos')"
