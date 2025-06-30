@@ -21,11 +21,15 @@ include_directories(include)
 add_executable(cougars_coms src/cougars_coms.cpp)
 ament_target_dependencies(cougars_coms rclcpp std_srvs seatrac_interfaces geometry_msgs frost_interfaces nav_msgs sensor_msgs dvl_msgs)
 
+add_executable(vehicle_pinger src/vehicle_pinger.cpp)
+ament_target_dependencies(vehicle_pinger rclcpp seatrac_interfaces)
+
 install(DIRECTORY include/
         DESTINATION include/${PROJECT_NAME})
 
 install(TARGETS
   cougars_coms
+  vehicle_pinger
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python scripts
