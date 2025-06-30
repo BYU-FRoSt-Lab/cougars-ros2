@@ -23,7 +23,6 @@ fi
 # Build the JSON string
 JSON_STRING='"set_config","parameters":{"acoustic_enabled":'"$ACOUSTIC_ENABLED"'}'
 
-
 MAX_ATTEMPTS=2
 TIMEOUT=4
 

@@ -49,7 +49,10 @@ def generate_launch_description():
             parameters=[param_file, fleet_param],
             namespace=namespace,
         )
-        launch_actions.extend([depth, dvl, dvl_global])
+        launch_actions.extend([
+            # depth, 
+            dvl, 
+            dvl_global])
 
 
 

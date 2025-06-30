@@ -19,10 +19,10 @@
 
 using std::placeholders::_1;
 
-rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-auto qos = rclcpp::QoS(
-    rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
-    qos_profile);
+// rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+// auto qos = rclcpp::QoS(
+//     rclcpp::QoSInitialization(qos_profile.history, qos_profile.depth),
+//     qos_profile);
 
 class DVLConvertor : public rclcpp::Node {
 public:
@@ -37,26 +37,27 @@ public:
         this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "dvl/dead_reckoning", 10);
     subscriber_dvl_data = this->create_subscription<dvl_msgs::msg::DVL>(
-        "dvl/data", qos,
+        "dvl/data", 10,
         std::bind(&DVLConvertor::dvl_data_callback, this, _1));
     subscriber_dvl_position = this->create_subscription<dvl_msgs::msg::DVLDR>(
-        "dvl/position", qos,
+        "dvl/position", 10,
         std::bind(&DVLConvertor::dvl_pos_callback, this, _1));
   }
 
   void dvl_data_callback(const dvl_msgs::msg::DVL::SharedPtr msg) {
 
         geometry_msgs::msg::TwistWithCovarianceStamped stamped_msg;
-    stamped_msg.header.stamp = msg->header.stamp;
+    // This is if we copy the time when it recieves the data
+    // stamped_msg.header.stamp = msg->header.stamp;
 
-    // double msg_time = msg->time TODO: Figure how to use the NTP time from
-    // DVL.
-
-    // stamped_msg.header.stamp
+    // This should grab the time from the DVL that is using the NTP server
+    float time = msg->time;
+    stamped_msg.header.stamp.sec = static_cast<int32_t>(time);
+    stamped_msg.header.stamp.nanosec = static_cast<uint32_t>((time - stamped_msg.header.stamp.sec) * 1e9);
 
     // filling in the upper left corner of the 6X6 covariance matrix
     // HANDLE CASE WHEN COVARIANCE IS EMPTY?
-        int index = 0;
+    int index = 0;
     double defaultValue = 0;
     for (int i = 0; i < 36; i++) {
             if (i % 6 < 3 && i < 15) {

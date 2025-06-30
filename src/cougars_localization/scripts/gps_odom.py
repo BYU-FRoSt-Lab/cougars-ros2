@@ -68,8 +68,7 @@ class NavSatFixToOdom(Node):
         )
         self.ts.registerCallback(self.gps_callback)
         
-        self.last_msg = None
-        self.min_sats = 5  # Minimum number of satellites
+        # self.min_sats = 5  # Minimum number of satellites
 
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, 'gps_odom', 10)
@@ -157,7 +156,7 @@ class NavSatFixToOdom(Node):
         odom = Odometry()
         odom.header.stamp = extended_msg.header.stamp
         odom.header.frame_id = "map"
-        odom.child_frame_id = "odom"
+        odom.child_frame_id = "gnss_link"
         odom.pose.pose.position.x = x
         odom.pose.pose.position.y = y
         odom.pose.pose.position.z = z  # Use the altitude as the z-value
@@ -168,7 +167,6 @@ class NavSatFixToOdom(Node):
         odom.pose.covariance[14] = fix_msg.position_covariance[8]  # zz 
 
         # Publish the odometry message
-        self.last_msg = odom
         self.publisher.publish(odom)
 
     def CalculateHaversine(self, refLat, refLong, pointLat, pointLong):

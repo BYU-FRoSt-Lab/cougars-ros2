@@ -25,10 +25,10 @@ function handleServiceCall {
 }
 
 # Call services and handle responses
-handleServiceCall "$NAMESPACE/arm_thruster" "std_srvs/srv/SetBool" "data: true"
-handleServiceCall "$NAMESPACE/init_factor_graph" "std_srvs/srv/SetBool" "data: true"
-handleServiceCall "$NAMESPACE/init_controls" "std_srvs/srv/SetBool" "data: true"
-handleServiceCall "$NAMESPACE/init_manual" "std_srvs/srv/SetBool" "data: true"
+# handleServiceCall "$NAMESPACE/arm_thruster" "std_srvs/srv/SetBool" "data: true"
+# handleServiceCall "$NAMESPACE/init_factor_graph" "std_srvs/srv/SetBool" "data: true"
+# handleServiceCall "$NAMESPACE/init_controls" "std_srvs/srv/SetBool" "data: true"
+# handleServiceCall "$NAMESPACE/init_manual" "std_srvs/srv/SetBool" "data: true"
 
 
 # TODO: Add mission deploy for moos
