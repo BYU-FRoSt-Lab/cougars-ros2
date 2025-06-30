@@ -81,9 +81,9 @@ struct LocalizationInfo {
    float x;
    float y;
    float z;
-   int16_t roll;
-   int16_t pitch;
-   int16_t yaw;
+   float roll;
+   float pitch;
+   float yaw;
    float depth;
 }__attribute__((packed));
 
@@ -92,3 +92,4 @@ struct LocalizationInfo {
 
 } // cougars_coms
 #endif //_COUGARS_COMS_PROTOCOL_
+

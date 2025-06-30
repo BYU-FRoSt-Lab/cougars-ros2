@@ -101,7 +101,7 @@ public:
             } break;
             case LOCALIZATION_INFO: {
                record_localization_info(msg);
-            }
+            } break;
 
         }
     }
@@ -234,27 +234,34 @@ public:
 
 
    void record_localization_info(seatrac_interfaces::msg::ModemRec msg) {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received localization info.");
+
+        if (msg.packet_len < sizeof(LocalizationInfo)) {
+            RCLCPP_ERROR(this->get_logger(),
+                "packet_data too small for LocalizationInfo! Got %u bytes, expected %zu",
+                msg.packet_len, sizeof(LocalizationInfo));
+            return;
+        }   
+
+        const LocalizationInfo* info = reinterpret_cast<const LocalizationInfo*>(msg.packet_data.data());
+        frost_interfaces::msg::LocalizationData localization_data;
+        localization_data.vehicle_id = msg.src_id;
+        localization_data.x = info->x;
+        localization_data.y = info->y;
+        localization_data.z = info->z;
+        localization_data.roll = info->roll;
+        localization_data.pitch = info->pitch;
+        localization_data.yaw = info->yaw;
+        localization_data.depth = info->depth;
 
 
-       const LocalizationInfo* info = reinterpret_cast<const LocalizationInfo*>(msg.packet_data.data());
-       frost_interfaces::msg::LocalizationData localization_data;
-       localization_data.vehicle_id = msg.src_id;
-       localization_data.x = info->x;
-       localization_data.y = info->y;
-       localization_data.z = info->z;
-       localization_data.roll = info->roll;
-       localization_data.pitch = info->pitch;
-       localization_data.yaw = info->yaw;
-       localization_data.depth = info->depth;
+        localization_data_publisher_->publish(localization_data);
 
-
-       localization_data_publisher_->publish(localization_data);
-
-
-       RCLCPP_INFO(this->get_logger(), "Localization Info: (x, y, z): (%.2f, %.2f, %.2f), (roll, pitch, yaw): (%.2f, %.2f, %.2f), depth: %.2f",
-           localization_data.x, localization_data.y, localization_data.z,
-           localization_data.roll, localization_data.pitch, localization_data.yaw,
-           localization_data.depth);
+        RCLCPP_INFO(this->get_logger(), "Received localization info from vehicle ID %d", msg.src_id);
+        RCLCPP_INFO(this->get_logger(), "Localization Info: (x, y, z): (%.2f, %.2f, %.2f), (roll, pitch, yaw): (%.2f, %.2f, %.2f), depth: %.2f",
+            localization_data.x, localization_data.y, localization_data.z,
+            localization_data.roll, localization_data.pitch, localization_data.yaw,
+            localization_data.depth);
    }
 
 
