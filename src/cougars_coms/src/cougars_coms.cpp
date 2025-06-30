@@ -57,9 +57,12 @@ public:
 
         this->depth_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "depth_data", 10,
-            [this](geometry_msgs::msg::PoseWithCovarianceStamped msg) {
-                this->position_z = msg.pose.pose.position.z;
-            }
+            std::bind(&ComsNode::depth_callback, this, _1)
+        );
+
+        this->dvl_subscriber_ = this->create_subscription<dvl_msgs::msg::DVLDR>( 
+            "dvl/data", 10,
+            std::bind(&ComsNode::dvl_data_callback, this, _1)
         );
         
 
@@ -104,6 +107,15 @@ public:
             } break;
 
         }
+    }
+
+    void dvl_data_callback(dvl_msgs::msg::DVLDR msg) {
+        this->dvl_position_x = msg.position.x;
+        this->dvl_position_y = msg.position.y;
+        this->dvl_position_z = msg.position.z;
+        this->roll = msg.roll;
+        this->pitch = msg.pitch;
+        this->yaw = msg.yaw;
     }
 
     void battery_callback(sensor_msgs::msg::BatteryState msg) {
@@ -286,6 +298,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscriber_;
+    rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscriber_;
 
     rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
