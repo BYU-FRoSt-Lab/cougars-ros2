@@ -1,3 +1,4 @@
+#include "rclcpp/rclcpp.hpp"
 #include "seatrac_interfaces/msg/modem_send.hpp"
 
 
@@ -10,7 +11,7 @@
 
 using namespace std::literals::chrono_literals;
 using namespace cougars_coms;
-using namespace narval::seatrac;
+// using namespace narval::seatrac;
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -20,8 +21,14 @@ public:
     VehiclePinger() : Node("vehicle_pinger") {
         this->declare_parameter<std::vector<int64_t>>("vehicles_in_mission", {1, 2, 5});
         this->vehicles_in_mission_ = this->get_parameter("vehicles_in_mission").as_integer_array();
+        
+        this->declare_parameter<int>("ping_frequency_seconds", 4);
+        this->ping_frequency = this->get_parameter("ping_frequency_seconds").as_int();
 
+        this->modem_publisher_ = this->create_publisher<seatrac_interfaces::msg::ModemSend>("modem_send", 10);
 
+        timer_ = this->create_wall_timer(
+                    std::chrono::seconds(ping_frequency), std::bind(&VehiclePinger::ping_schedule, this));
     }
 
     void ping_schedule() {
@@ -34,13 +41,13 @@ public:
 
     void send_ping(int target_id) {
 
-
+        RCLCPP_INFO(this->get_logger(), "Pinging vehicle with ID: %d", target_id);
         auto request = seatrac_interfaces::msg::ModemSend();
-        request.msg_id = CID_DAT_SEND;
+        request.msg_id = 0x60; //CID_DAT_SEND
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = MSG_OWAY;
+        request.msg_type = 0x0; //MSG_OWAY, data sent one way without response or position data
         RequestLocalizationInfo message;
-        request.packet_len = (uint8_t)std::min(sizeof(message), 31);
+        request.packet_len = (uint8_t)std::min((int)sizeof(message), 31);
         std::memcpy(&request.packet_data, &message, request.packet_len);
 
         this->modem_publisher_->publish(request);
@@ -52,5 +59,15 @@ private:
 
     std::vector<int64_t> vehicles_in_mission_;
     size_t vehicle_id_index = -1;  // Index to track which vehicle to ping next
+    int ping_frequency;  // Frequency of pings in seconds
+    rclcpp::TimerBase::SharedPtr timer_;
     
+};
+
+int main(int argc, char *argv[]) {
+  rclcpp::init(argc, argv);
+  auto vehicle_pinger_node = std::make_shared<VehiclePinger>();
+  rclcpp::spin(vehicle_pinger_node);
+  rclcpp::shutdown();
+  return 0;
 }
