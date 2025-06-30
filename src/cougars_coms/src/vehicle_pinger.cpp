@@ -19,16 +19,20 @@ using std::placeholders::_2;
 class VehiclePinger : public rclcpp::Node {
 public:
     VehiclePinger() : Node("vehicle_pinger") {
-        this->declare_parameter<std::vector<int64_t>>("vehicles_in_mission", {1, 2, 5});
+        this->declare_parameter<std::vector<int64_t>>("vehicles_in_mission", {1, 2});
         this->vehicles_in_mission_ = this->get_parameter("vehicles_in_mission").as_integer_array();
         
         this->declare_parameter<int>("ping_frequency_seconds", 4);
         this->ping_frequency = this->get_parameter("ping_frequency_seconds").as_int();
 
-        this->modem_publisher_ = this->create_publisher<seatrac_interfaces::msg::ModemSend>("modem_send", 10);
+        this->declare_parameter<bool>("enable_ping", false);
+        bool enable_ping = this->get_parameter("enable_ping").as_bool();
 
-        timer_ = this->create_wall_timer(
-                    std::chrono::seconds(ping_frequency), std::bind(&VehiclePinger::ping_schedule, this));
+        if (enable_ping) {
+            this->modem_publisher_ = this->create_publisher<seatrac_interfaces::msg::ModemSend>("modem_send", 10);
+            timer_ = this->create_wall_timer(std::chrono::seconds(ping_frequency), std::bind(&VehiclePinger::ping_schedule, this));
+        }
+
     }
 
     void ping_schedule() {
