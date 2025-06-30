@@ -137,6 +137,13 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
+        launch_ros.actions.Node(
+            package='cougars_coms',
+            executable='vehicle_pinger',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ),
         # Setup the GPS
         # launch_ros.actions.ComposableNodeContainer(
         #     package='rclcpp_components',
