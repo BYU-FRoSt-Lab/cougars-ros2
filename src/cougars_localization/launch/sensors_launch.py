@@ -17,8 +17,10 @@ def generate_launch_description():
     '''
 
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    fleet_param = '/home/frostlab/config/fleet_params.yaml'
     GPS = "false"  # Default to 'false'
     verbose = "false"
+    namespace=''
     BLUEROV = "false"
 
     for arg in sys.argv:
@@ -26,6 +28,8 @@ def generate_launch_description():
             namespace = arg.split(':=')[1]
         if arg.startswith('param_file:='):
             param_file = arg.split(':=')[1]
+        if arg.startswith('fleet_param:='):
+            fleet_param = arg.split(':=')[1]
         if arg.startswith("verbose:="):
             verbose = arg.split(":=")[1].lower()
         if arg.startswith("GPS:="):
@@ -71,6 +75,18 @@ def generate_launch_description():
         #     executable='micro_ros_agent',
         #     arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
         # ),
+        launch_ros.actions.Node(
+            package='cougars_control',
+            executable='emergency_protocols',
+            parameters=[param_file, fleet_param],
+            namespace=namespace,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='dvl_manager.py',
+            parameters=[param_file, fleet_param],
+            namespace=namespace,
+        ),
 
 
         # Serial Teensy connection
@@ -83,7 +99,7 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         ),
@@ -92,7 +108,14 @@ def generate_launch_description():
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
+            namespace=namespace,
+            output=output,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_coms',
+            executable='vehicle_pinger',
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         ),
