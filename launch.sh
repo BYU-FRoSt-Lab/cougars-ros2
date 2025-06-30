@@ -33,7 +33,6 @@ GPS="false"
 FINS="false"
 MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
 # Set a default vehicle parameter file. It can be overridden by the -s flag.
-VEHICLE_PARAMS_FILE="/home/frostlab/config/vehicle_params.yaml"
 
 while getopts "svgfb" opt; do
   case $opt in

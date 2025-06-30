@@ -62,6 +62,15 @@ def generate_launch_description():
             namespace=namespace,
             output='log',
         ))
+    else:
+        # Pressure sensor for blueROV
+        launch_actions.append(launch_ros.actions.Node(
+            package='pressure_sensor',
+            executable='get_pressure',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ))
 
 
     with open(param_file, 'r') as f:
@@ -149,14 +158,6 @@ def generate_launch_description():
             ],
             output=output,
             arguments=['--ros-args', '--log-level', 'WARN'],
-        ),
-        # Setup the pressure sensor
-        launch_ros.actions.Node(
-            package='pressure_sensor',
-            executable='get_pressure',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
         ),
     ])
 
