@@ -50,7 +50,7 @@ def generate_launch_description():
             namespace=namespace,
         )
         launch_actions.extend([
-            # depth, 
+            depth, 
             dvl, 
             dvl_global])
 
