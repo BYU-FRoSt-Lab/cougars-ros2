@@ -57,8 +57,21 @@ public:
 
         this->depth_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "depth_data", 10,
+
             [this](geometry_msgs::msg::PoseWithCovarianceStamped msg) {
-                this->position_z = msg.pose.pose.position.z;
+                this->depth = msg.pose.pose.position.z;
+            }
+        );
+
+        this->dvl_subscriber_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
+            "dvl_data", 10,
+            [this](dvl_msgs::msg::DVLDR msg) {
+                this->dvl_position_x = msg.position.x;
+                this->dvl_position_y = msg.position.y;
+                this->dvl_position_z = msg.position.z;
+                this->roll = msg.roll;
+                this->pitch = msg.pitch;
+                this->yaw = msg.yaw;
             }
         );
         
@@ -79,11 +92,14 @@ public:
         this->surface_client_ = this->create_client<std_srvs::srv::SetBool>(
             "surface"
         );
+
+        this->localization_data_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationData>("localization_data", 10);
     }
 
 
     void listen_to_modem(seatrac_interfaces::msg::ModemRec msg) {
         COUG_MSG_ID id = (COUG_MSG_ID)msg.packet_data[0];
+        this->check_range_and_azimuth(msg);
         switch(id) {
             default: break;
             case EMPTY: break;
@@ -212,7 +228,7 @@ public:
         status_msg.x = this->position_x;
         status_msg.y = this->position_y;
         status_msg.heading = 0;
-        status_msg.depth = this->position_z; 
+        status_msg.depth = this->depth; 
         status_msg.x_vel = this->velocity_x;
         status_msg.y_vel = this->velocity_y;
         status_msg.pressure = this->pressure;
@@ -222,9 +238,9 @@ public:
     void send_localization_info(int src_id) {
        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending localization info.");
        LocalizationInfo message;
-       message.x = this->position_x;
-       message.y = this->position_y;
-       message.z = this->position_z;
+       message.x = this->dvl_position_x;
+       message.y = this->dvl_position_y;
+       message.z = this->dvl_position_z;
        message.roll = this->roll;
        message.pitch = this->pitch;
        message.yaw = this->yaw;
@@ -253,16 +269,31 @@ public:
         localization_data.pitch = info->pitch;
         localization_data.yaw = info->yaw;
         localization_data.depth = info->depth;
+        localization_data.range = this->recent_range;
+        localization_data.azimuth = this->recent_azimuth;
 
 
         localization_data_publisher_->publish(localization_data);
 
         RCLCPP_INFO(this->get_logger(), "Received localization info from vehicle ID %d", msg.src_id);
-        RCLCPP_INFO(this->get_logger(), "Localization Info: (x, y, z): (%.2f, %.2f, %.2f), (roll, pitch, yaw): (%.2f, %.2f, %.2f), depth: %.2f",
+        RCLCPP_INFO(this->get_logger(), "Localization Info: (x, y, z): (%.2f, %.2f, %.2f), (roll, pitch, yaw): (%.2f, %.2f, %.2f), depth: %.2f, range: %.2f, azimuth: %.2f",
             localization_data.x, localization_data.y, localization_data.z,
             localization_data.roll, localization_data.pitch, localization_data.yaw,
-            localization_data.depth);
+            localization_data.depth, localization_data.range, localization_data.azimuth);
    }
+
+   void check_range_and_azimuth(seatrac_interfaces::msg::ModemRec msg) {
+        if (msg.includes_range) {
+            RCLCPP_INFO(this->get_logger(), "Range count: %d, Range time: %d, Range distance: %d",
+                msg.range_count, msg.range_time, msg.range_dist);
+            this->recent_range = msg.range_dist;
+        }
+        if (msg.includes_usbl) {
+            RCLCPP_INFO(this->get_logger(), "USBL channels: %d, Azimuth: %i, Elevation: %i, Fit error: %d",
+                msg.usbl_channels, msg.usbl_azimuth, msg.usbl_elevation, msg.usbl_fit_error);
+            this->recent_azimuth = msg.usbl_azimuth;
+        }
+    }
 
 
     void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
@@ -286,8 +317,10 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscriber_;
+    rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscriber_;
 
     rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
+
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_client_;
@@ -314,6 +347,9 @@ private:
     float pitch;
     float yaw;
     float depth;
+
+    float recent_range;
+    float recent_azimuth;
 
 };
 

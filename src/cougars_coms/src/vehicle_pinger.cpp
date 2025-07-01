@@ -49,7 +49,7 @@ public:
         auto request = seatrac_interfaces::msg::ModemSend();
         request.msg_id = 0x60; //CID_DAT_SEND
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = 0x0; //MSG_OWAY, data sent one way without response or position data
+        request.msg_type = 0x4; //MSG_REQU
         RequestLocalizationInfo message;
         request.packet_len = (uint8_t)std::min((int)sizeof(message), 31);
         std::memcpy(&request.packet_data, &message, request.packet_len);
