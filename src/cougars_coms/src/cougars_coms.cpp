@@ -64,7 +64,7 @@ public:
         );
 
         this->dvl_subscriber_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
-            "dvl_data", 10,
+            "dvl/position", 10,
             [this](dvl_msgs::msg::DVLDR msg) {
                 this->dvl_position_x = msg.position.x;
                 this->dvl_position_y = msg.position.y;
@@ -271,6 +271,7 @@ public:
         localization_data.depth = info->depth;
         localization_data.range = this->recent_range;
         localization_data.azimuth = this->recent_azimuth;
+        localization_data.elevation = this->recent_elevation;
 
 
         localization_data_publisher_->publish(localization_data);
@@ -292,6 +293,7 @@ public:
             RCLCPP_INFO(this->get_logger(), "USBL channels: %d, Azimuth: %i, Elevation: %i, Fit error: %d",
                 msg.usbl_channels, msg.usbl_azimuth, msg.usbl_elevation, msg.usbl_fit_error);
             this->recent_azimuth = msg.usbl_azimuth;
+            this->recent_elevation = msg.usbl_elevation;
         }
     }
 
@@ -350,6 +352,7 @@ private:
 
     float recent_range;
     float recent_azimuth;
+    float recent_elevation;
 
 };
 

@@ -62,6 +62,7 @@ def generate_launch_description():
             namespace=namespace,
             output='log',
         ))
+        print("Launching not on blueROV")
     else:
         # Pressure sensor for blueROV
         launch_actions.append(launch_ros.actions.Node(
@@ -98,13 +99,6 @@ def generate_launch_description():
         ),
 
 
-        # Serial Teensy connection
-        launch_ros.actions.Node(
-            package='fin_sub_cpp', 
-            executable='control_node', 
-            namespace=namespace,
-            output='log',
-        ),
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
