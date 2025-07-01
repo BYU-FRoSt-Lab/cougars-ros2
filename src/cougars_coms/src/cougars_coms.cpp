@@ -64,7 +64,7 @@ public:
         );
 
         this->dvl_subscriber_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
-            "dvl_data", 10,
+            "dvl/position", 10,
             [this](dvl_msgs::msg::DVLDR msg) {
                 this->dvl_position_x = msg.position.x;
                 this->dvl_position_y = msg.position.y;
