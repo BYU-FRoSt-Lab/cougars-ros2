@@ -21,6 +21,7 @@ def generate_launch_description():
     GPS = "false"  # Default to 'false'
     verbose = "false"
     namespace=''
+    BLUEROV = "false"
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):
@@ -33,6 +34,8 @@ def generate_launch_description():
             verbose = arg.split(":=")[1].lower()
         if arg.startswith("GPS:="):
             GPS = arg.split(":=")[1].lower()
+        if arg.startswith("BLUEROV:="):
+            BLUEROV = arg.split(":=")[1].lower()
     
     if verbose == "true":
         output = 'screen'
@@ -41,13 +44,33 @@ def generate_launch_description():
 
     launch_actions = []
 
-    # if GPS == "false":
-    #     dvl = launch_ros.actions.Node(
-    #         package='dvl_a50', 
-    #         executable='dvl_a50_sensor', 
-    #         namespace=namespace,
-    #     )
-    #     launch_actions.append(dvl)
+    if GPS == "false":
+        dvl = launch_ros.actions.Node(
+            package='dvl_a50', 
+            executable='dvl_a50_sensor', 
+            parameters=[param_file],
+            namespace=namespace,
+        )
+        launch_actions.append(dvl)
+
+    if BLUEROV == "false":
+        # Serial Teensy connection
+        launch_actions.append(
+            launch_ros.actions.Node(
+            package='fin_sub_cpp', 
+            executable='control_node', 
+            namespace=namespace,
+            output='log',
+        ))
+    else:
+        # Pressure sensor for blueROV
+        launch_actions.append(launch_ros.actions.Node(
+            package='pressure_sensor',
+            executable='get_pressure',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ))
 
 
     with open(param_file, 'r') as f:
@@ -74,6 +97,7 @@ def generate_launch_description():
             namespace=namespace,
         ),
 
+
         # Serial Teensy connection
         launch_ros.actions.Node(
             package='fin_sub_cpp', 
@@ -88,10 +112,18 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
+
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
+            parameters=[param_file, fleet_param],
+            namespace=namespace,
+            output=output,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_coms',
+            executable='vehicle_pinger',
             parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,

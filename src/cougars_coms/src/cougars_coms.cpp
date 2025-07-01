@@ -57,6 +57,7 @@ public:
 
         this->depth_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "depth_data", 10,
+
             [this](geometry_msgs::msg::PoseWithCovarianceStamped msg) {
                 this->depth = msg.pose.pose.position.z;
             }
