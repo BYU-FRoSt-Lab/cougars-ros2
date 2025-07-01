@@ -99,35 +99,15 @@ def generate_launch_description():
             output=output,
         ), 
 
-        # Start the EmergencyStop checks
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='leak_sub.py',
-        #     parameters=[param_file],
-        #     namespace=namespace,
-        # ),
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='battery_sub.py',
-        #     parameters=[param_file],
-        #     namespace=namespace,
-        # ),
 
-
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='emergency_protocols',
-        #     parameters=[param_file],
-        #     namespace=namespace,
-        # ),
         # Start the rf_bridge node
-        launch_ros.actions.Node(
-            package='cougars_coms',
-            executable='rf_bridge.py',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        ), 
+        # launch_ros.actions.Node(
+        #     package='cougars_coms',
+        #     executable='rf_bridge.py',
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        #     output=output,
+        # ), 
         
     ])
 
