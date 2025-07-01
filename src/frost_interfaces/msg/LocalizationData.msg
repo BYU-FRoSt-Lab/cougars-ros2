@@ -9,3 +9,4 @@ float32 yaw
 float32 depth
 float32 range
 float32 azimuth
+float32 elevation
