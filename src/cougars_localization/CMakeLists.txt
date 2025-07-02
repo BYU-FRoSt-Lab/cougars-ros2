@@ -79,6 +79,13 @@ install(PROGRAMS
   scripts/gps_odom.py
   scripts/dvl_manager.py
   scripts/nmea_constructor.py
+  scripts/pressure_pub.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install non-executable helper module(s) for import
+install(FILES
+  scripts/ms5837.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

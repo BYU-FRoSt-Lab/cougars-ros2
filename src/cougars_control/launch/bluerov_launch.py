@@ -183,13 +183,35 @@ def generate_launch_description():
             namespace=namespace,
             output=output,
         ),
+        # launch_ros.actions.Node(
+        #     package='pressure_sensor',
+        #     executable='pressure_pub',
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        #     output=output,
+        # ),
+        # Pressure sensor for blueROV
         launch_ros.actions.Node(
-            package='pressure_sensor',
-            executable='pressure_pub',
+            package='cougars_localization',
+            executable='pressure_pub.py',
+            name='shallow_pressure_pub',
             parameters=[param_file],
             namespace=namespace,
             output=output,
+            remappings=[('pressure/data' , 'pressure/shallow/data')],
         ),
+
+        # Deep Pressure sensor for blueROV
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='pressure_pub.py',
+            name='deep_pressure_pub',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+            remappings=[('pressure/data' , 'pressure/deep/data')],
+        ),
+
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='gps_odom.py',

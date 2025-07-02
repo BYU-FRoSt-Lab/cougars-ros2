@@ -64,14 +64,9 @@ def generate_launch_description():
         ))
         print("Launching not on blueROV")
     else:
-        # Pressure sensor for blueROV
-        launch_actions.append(launch_ros.actions.Node(
-            package='pressure_sensor',
-            executable='get_pressure',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        ))
+        
+        print("launching on bluerov")
+
 
 
     with open(param_file, 'r') as f:
