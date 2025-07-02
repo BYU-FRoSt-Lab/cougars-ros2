@@ -28,6 +28,9 @@ public:
         this->declare_parameter<bool>("enable_ping", false);
         bool enable_ping = this->get_parameter("enable_ping").as_bool();
 
+        this->declare_parameter<bool>("request_response", true);
+        this->request_response = this->get_parameter("request_response").as_bool();
+
         if (enable_ping) {
             this->modem_publisher_ = this->create_publisher<seatrac_interfaces::msg::ModemSend>("modem_send", 10);
             timer_ = this->create_wall_timer(std::chrono::seconds(ping_frequency), std::bind(&VehiclePinger::ping_schedule, this));
@@ -49,7 +52,7 @@ public:
         auto request = seatrac_interfaces::msg::ModemSend();
         request.msg_id = 0x60; //CID_DAT_SEND
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = 0x4; //MSG_REQU
+        request.msg_type = this->request_response ? 0x4 : 0x1; //MSG_REQU : MSG_OWAYU
         RequestLocalizationInfo message;
         request.packet_len = (uint8_t)std::min((int)sizeof(message), 31);
         std::memcpy(&request.packet_data, &message, request.packet_len);
@@ -65,6 +68,8 @@ private:
     size_t vehicle_id_index = -1;  // Index to track which vehicle to ping next
     int ping_frequency;  // Frequency of pings in seconds
     rclcpp::TimerBase::SharedPtr timer_;
+
+    bool request_response;  // Whether to request a response from the vehicle
     
 };
 
