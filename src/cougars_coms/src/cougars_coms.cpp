@@ -14,6 +14,7 @@
 #include "dvl_msgs/msg/dvldr.hpp"
 #include "frost_interfaces/msg/system_status.hpp"
 #include "frost_interfaces/msg/localization_data.hpp"
+#include "frost_interfaces/msg/localization_data_short.hpp"
 
 
 
@@ -37,8 +38,12 @@ public:
 
         this->declare_parameter<int>("base_station_beacon_id", 15);
 
-
         this->base_station_beacon_id_ = this->get_parameter("base_station_beacon_id").as_int();
+
+        this->declare_parameter<int>("localization_response_buffer_ms", 250);
+
+        this->localization_response_buffer = this->get_parameter("localization_response_buffer_ms").as_int();
+
 
         this->safety_subscriber_ = this->create_subscription<frost_interfaces::msg::SystemStatus>(
             "safety_status", 10,
@@ -94,6 +99,8 @@ public:
         );
 
         this->localization_data_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationData>("localization_data", 10);
+
+        this->localization_data_short_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationDataShort>("localization_data_short", 10);
     }
 
 
@@ -237,6 +244,8 @@ public:
 
     void send_localization_info(int src_id) {
        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending localization info.");
+
+       rclcpp::sleep_for(std::chrono::milliseconds(this->localization_response_buffer)); // Delay to ensure no interference
        LocalizationInfo message;
        message.x = this->dvl_position_x;
        message.y = this->dvl_position_y;
@@ -276,24 +285,24 @@ public:
 
         localization_data_publisher_->publish(localization_data);
 
-        RCLCPP_INFO(this->get_logger(), "Received localization info from vehicle ID %d", msg.src_id);
-        RCLCPP_INFO(this->get_logger(), "Localization Info: (x, y, z): (%.2f, %.2f, %.2f), (roll, pitch, yaw): (%.2f, %.2f, %.2f), depth: %.2f, range: %.2f, azimuth: %.2f",
-            localization_data.x, localization_data.y, localization_data.z,
+        RCLCPP_INFO(this->get_logger(), "Localization Info for vehicle %d: (x, y, z): (%.2f, %.2f, %.2f), (roll, pitch, yaw): (%.2f, %.2f, %.2f), depth: %.2f, range: %.2f, azimuth: %.2f",
+            localization_data.vehicle_id, localization_data.x, localization_data.y, localization_data.z,
             localization_data.roll, localization_data.pitch, localization_data.yaw,
             localization_data.depth, localization_data.range, localization_data.azimuth);
    }
 
    void check_range_and_azimuth(seatrac_interfaces::msg::ModemRec msg) {
-        if (msg.includes_range) {
-            RCLCPP_INFO(this->get_logger(), "Range count: %d, Range time: %d, Range distance: %d",
-                msg.range_count, msg.range_time, msg.range_dist);
+        if (msg.includes_range && msg.includes_usbl) {
+            RCLCPP_INFO(this->get_logger(), "Vehicle %d:  Range distance: %d, Azimuth: %i, Elevation: %i", msg.src_id, msg.range_dist, msg.usbl_azimuth, msg.usbl_elevation);
             this->recent_range = msg.range_dist;
-        }
-        if (msg.includes_usbl) {
-            RCLCPP_INFO(this->get_logger(), "USBL channels: %d, Azimuth: %i, Elevation: %i, Fit error: %d",
-                msg.usbl_channels, msg.usbl_azimuth, msg.usbl_elevation, msg.usbl_fit_error);
             this->recent_azimuth = msg.usbl_azimuth;
             this->recent_elevation = msg.usbl_elevation;
+            frost_interfaces::msg::LocalizationDataShort localization_data_short;
+            localization_data_short.vehicle_id = msg.src_id;
+            localization_data_short.range = this->recent_range;
+            localization_data_short.azimuth = this->recent_azimuth;
+            localization_data_short.elevation = this->recent_elevation;
+            this->localization_data_short_publisher_->publish(localization_data_short);
         }
     }
 
@@ -322,6 +331,7 @@ private:
     rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscriber_;
 
     rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
+    rclcpp::Publisher<frost_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
 
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
@@ -354,6 +364,7 @@ private:
     float recent_azimuth;
     float recent_elevation;
 
+    int localization_response_buffer;
 };
 
 
