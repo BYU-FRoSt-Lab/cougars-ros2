@@ -68,7 +68,7 @@ class NavSatFixToOdom(Node):
         )
         self.ts.registerCallback(self.gps_callback)
         
-        # self.min_sats = 5  # Minimum number of satellites
+        self.min_sats = 5  # Minimum number of satellites
 
         # Publisher for Odometry
         self.publisher = self.create_publisher(Odometry, 'gps_odom', 10)
