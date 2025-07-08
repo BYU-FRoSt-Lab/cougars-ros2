@@ -17,18 +17,25 @@ def generate_launch_description():
     '''
 
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    fleet_param = '/home/frostlab/config/fleet_params.yaml'
     GPS = "false"  # Default to 'false'
     verbose = "false"
+    namespace=''
+    BLUEROV = "false"
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):
             namespace = arg.split(':=')[1]
         if arg.startswith('param_file:='):
             param_file = arg.split(':=')[1]
+        if arg.startswith('fleet_param:='):
+            fleet_param = arg.split(':=')[1]
         if arg.startswith("verbose:="):
             verbose = arg.split(":=")[1].lower()
         if arg.startswith("GPS:="):
             GPS = arg.split(":=")[1].lower()
+        if arg.startswith("BLUEROV:="):
+            BLUEROV = arg.split(":=")[1].lower()
     
     if verbose == "true":
         output = 'screen'
@@ -41,9 +48,30 @@ def generate_launch_description():
         dvl = launch_ros.actions.Node(
             package='dvl_a50', 
             executable='dvl_a50_sensor', 
+            parameters=[param_file],
             namespace=namespace,
         )
         launch_actions.append(dvl)
+
+    if BLUEROV == "false":
+        # Serial Teensy connection
+        launch_actions.append(
+            launch_ros.actions.Node(
+            package='fin_sub_cpp', 
+            executable='control_node', 
+            namespace=namespace,
+            output='log',
+        ))
+        print("Launching not on blueROV")
+    else:
+        # Pressure sensor for blueROV
+        launch_actions.append(launch_ros.actions.Node(
+            package='pressure_sensor',
+            executable='get_pressure',
+            parameters=[param_file],
+            namespace=namespace,
+            output=output,
+        ))
 
 
     with open(param_file, 'r') as f:
@@ -57,26 +85,40 @@ def generate_launch_description():
         #     executable='micro_ros_agent',
         #     arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
         # ),
-
-        # Serial Teensy connection
         launch_ros.actions.Node(
-            package='fin_sub_cpp', 
-            executable='control_node', 
+            package='cougars_control',
+            executable='emergency_protocols',
+            parameters=[param_file, fleet_param],
             namespace=namespace,
-            output='log',
         ),
+        launch_ros.actions.Node(
+            package='cougars_localization',
+            executable='dvl_manager.py',
+            parameters=[param_file, fleet_param],
+            namespace=namespace,
+        ),
+
+
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         ),
+
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
+            namespace=namespace,
+            output=output,
+        ),
+        launch_ros.actions.Node(
+            package='cougars_coms',
+            executable='vehicle_pinger',
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         ),

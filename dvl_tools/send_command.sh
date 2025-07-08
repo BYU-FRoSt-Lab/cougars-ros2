@@ -1,26 +1,6 @@
 #!/bin/bash
 
-function printInfo {
-  echo -e "\033[0m\033[36m[INFO] $1\033[0m"
-}
-
-function printWarning {
-  echo -e "\033[0m\033[33m[WARNING] $1\033[0m"
-}
-
-function printError {
-  echo -e "\033[0m\033[31m[ERROR] $1\033[0m"
-}
-
-function printSuccess {
-  echo -e "\033[0m\033[32m[SUCCESS] $1\033[0m"
-}
-
-function printFailure {
-  echo -e "\033[0m\033[31m[FAIL] $1\033[0m"
-}
-
-IPADDRESS=192.168.194.95
+source ~/config/cougarsrc.sh
 
 # Function to send command and check for success
 send_command() {
@@ -28,7 +8,7 @@ send_command() {
     local description=$2
     local timeout=$3
     local JSON_STRING="{\"command\": $command}"
-    local response=$(echo -n "$JSON_STRING" | nc -w $timeout -q 0 $IPADDRESS 16171)
+    local response=$(echo -n "$JSON_STRING" | nc -w $timeout -q 0 $DVL_IP_ADDRESS 16171)
     
     if [ -z "$response" ]; then
         printError "No response received from DVL."

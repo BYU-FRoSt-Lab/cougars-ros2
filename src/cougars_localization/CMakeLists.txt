@@ -77,6 +77,8 @@ install(TARGETS
 install(PROGRAMS
   scripts/factor_graph.py
   scripts/gps_odom.py
+  scripts/dvl_manager.py
+  scripts/nmea_constructor.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

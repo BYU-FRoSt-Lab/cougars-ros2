@@ -3,5 +3,7 @@
 #
 # ADD HERE
 
-echo -n '{"command": "get_config"}' | nc -q 0 192.168.194.95 16171
+source ~/config/cougarsrc.sh
+
+echo -n '{"command": "get_config"}' | nc -q 0 $DVL_IP_ADDRESS 16171
 

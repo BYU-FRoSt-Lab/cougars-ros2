@@ -125,7 +125,7 @@ public:
     settings.xcvrBeaconId = beaconId;
     settings.envSalinity = salinity;
     settings.statusFlags = STATUS_MODE_10HZ;
-    settings.status_output = ATTITUDE | AHRS_COMP_DATA;
+    settings.status_output = ATTITUDE | AHRS_COMP_DATA | ENVIRONMENT;
     command::settings_set(*this, settings);
     command::settings_save(*this);    
     beacon_connected = true;

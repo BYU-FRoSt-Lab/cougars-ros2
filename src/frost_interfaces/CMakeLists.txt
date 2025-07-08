@@ -21,10 +21,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DesiredHeading.msg"
   "msg/DesiredSpeed.msg"
   "msg/LeakStatus.msg"
+  "msg/LocalizationData.msg"
   "msg/UCommand.msg"
   "srv/EmergencyStop.srv"
   "msg/ControlDebug.msg"
   "msg/ControlsDebug.msg"
+  "msg/SystemControl.msg"
+  "msg/SystemStatus.msg"
+  "msg/LocalizationDataShort.msg"
   DEPENDENCIES std_msgs
   DEPENDENCIES nav_msgs
 )

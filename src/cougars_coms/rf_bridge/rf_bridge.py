@@ -6,10 +6,12 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy, QoS
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState, FluidPressure
-from geometry_msgs.msg import TwistWithCovarianceStamped
+from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from dvl_msgs.msg import DVLDR
+from std_srvs.srv import SetBool
 
-from digi.xbee.devices import XBeeDevice
+from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
+from digi.xbee.exception import TransmitException
 
 import json
 import threading
@@ -63,12 +65,14 @@ class RFBridge(Node):
             depth=5)
 
         # Data storage
-        self.latest_status_data = "NO_DATA"
-        self.latest_odom = "NO_DATA"
-        self.latest_leak = "NO_DATA"
+        self.latest_safety_status = "NO_DATA"
+        self.latest_smoothed_odom = "NO_DATA"
         self.latest_battery = "NO_DATA"
-        self.latest_dvl_velocity = "NO_DATA"
-        self.latest_dvl_position = "NO_DATA"
+        self.latest_depth = "NO_DATA"
+        self.latest_pressure = "NO_DATA"
+
+        self.vehicle_id = self.declare_parameter('vehicle_id', 0).value
+        self.base_station_id = self.declare_parameter('base_station_id', 15).value
 
         # XBee configuration
         self.xbee_port = self.declare_parameter('xbee_port', '/dev/ttyUSB0').value
@@ -85,28 +89,18 @@ class RFBridge(Node):
         self.publisher = self.create_publisher(String, 'rf_received', 10)
         self.init_publisher = self.create_publisher(String, 'init', 10)
 
+        self.e_kill_client = self.create_client(SetBool, "arm_thruster")
+
         self.subscription = self.create_subscription(
             String,
             'rf_transmit',
             self.tx_callback,
             10)
 
-        self.status_data_sub = self.create_subscription(
-            String,
-            'status_data',
-            self.status_data_callback,
-            10)
-
-        self.odom_sub = self.create_subscription(
-            Odometry,
-            'odom',
-            self.odom_callback,
-            qos_profile=self.odom_qos)
-
-        self.leak_sub = self.create_subscription(
-            FluidPressure,
-            'leak/data',
-            self.leak_callback,
+        self.subscription = self.create_subscription(
+            SystemStatus,
+            'safety_status',
+            self.safety_status_callback,
             10)
 
         self.battery_sub = self.create_subscription(
@@ -114,18 +108,25 @@ class RFBridge(Node):
             'battery/data',
             self.battery_callback,
             10)
+        
+        self.smoothed_odom_sub = self.create_subscription(
+            Odometry,
+            'smoothed_odom',
+            self.smoothed_odom_callback,
+            10)
+        
+        self.depth_sub = self.create_subscription(
+            PoseWithCovarianceStamped,
+            'depth_data',
+            self.depth_callback,
+            10)
+        
+        self.pressure_sub = self.create_subscription(
+            FluidPressure,
+            'pressure/data',
+            self.pressure_callback,
+            10)
 
-        self.dvl_velocity_sub = self.create_subscription(
-            TwistWithCovarianceStamped,
-            'dvl/velocity',
-            self.dvl_velocity_callback,
-            qos_profile=self.dvl_qos)
-
-        self.dvl_position_sub = self.create_subscription(
-            DVLDR,
-            'dvl/position',
-            self.dvl_position_callback,
-            qos_profile=self.dvl_qos)
 
         # Register XBee data receive callback
         self.device.add_data_received_callback(self.data_receive_callback)
@@ -134,39 +135,60 @@ class RFBridge(Node):
         # Thread-safe shutdown flag
         self.running = True
 
-    def status_data_callback(self, msg):
-        if hasattr(msg, 'data'):
-            self.latest_status_data = msg.data
-            self.get_logger().debug(f"Updated status data: {self.latest_status_data}")
-        else:
-            self.get_logger().error(f"Received non-String message in status_data_callback")
-
-    def odom_callback(self, msg):
-        pos = msg.pose.pose.position
-        vel = msg.twist.twist.linear
-        self.latest_odom = f"odom:x={pos.x:.2f},y={pos.y:.2f},z={pos.z:.2f},vx={vel.x:.2f},vy={vel.y:.2f}"
-        self.get_logger().debug("Updated odom data")
-
-    def leak_callback(self, msg):
-        if hasattr(msg, 'fluid_pressure'):
-            self.latest_leak = f"leak:{msg.fluid_pressure:.2f}"
-            self.get_logger().debug(f"Updated leak data: {self.latest_leak}")
-        else:
-            self.get_logger().error("Received message without fluid_pressure field in leak_callback")
-
     def battery_callback(self, msg):
-        self.latest_battery = f"batt:v={msg.voltage:.1f},pct={msg.percentage*100:.0f}"
+        self.latest_battery = {
+            "voltage": float(msg.voltage),
+            "percentage": float(msg.percentage)
+        }
         self.get_logger().debug("Updated battery data")
 
-    def dvl_velocity_callback(self, msg):
-        lin = msg.twist.twist.linear
-        self.latest_dvl_velocity = f"dvl_v:x={lin.x:.2f},y={lin.y:.2f},z={lin.z:.2f}"
-        self.get_logger().debug("Updated DVL velocity data")
+    def safety_status_callback(self, msg):
+        self.latest_safety_status = {
+            "depth_status": int(msg.depth_status),
+            "gps_status": int(msg.gps_status),
+            "modem_status": int(msg.modem_status),
+            "dvl_status": int(msg.dvl_status),
+            "emergency_status": int(msg.emergency_status)
+        }
+        self.get_logger().debug("Updated safety status data")
 
-    def dvl_position_callback(self, msg):
-        pos = msg.position
-        self.latest_dvl_position = f"dvl_p:x={pos.x:.2f},y={pos.y:.2f},z={pos.z:.2f},r={msg.roll:.2f},p={msg.pitch:.2f},y={msg.yaw:.2f}"
-        self.get_logger().debug("Updated DVL position data")
+    def smoothed_odom_callback(self, msg):
+        if hasattr(msg, 'twist') and hasattr(msg.twist, 'twist'):
+            twist = msg.twist.twist
+            pose = msg.pose.pose
+            self.latest_smoothed_odom = {
+                "position_x": float(pose.position.x),
+                "position_y": float(pose.position.y),
+                "position_z": float(pose.position.z),
+                "orientation_x": float(pose.orientation.x),
+                "orientation_y": float(pose.orientation.y),
+                "orientation_z": float(pose.orientation.z),
+                "orientation_w": float(pose.orientation.w),
+                "linear_x": float(twist.linear.x),
+                "linear_y": float(twist.linear.y),
+                "linear_z": float(twist.linear.z),
+                "angular_x": float(twist.angular.x),
+                "angular_y": float(twist.angular.y),
+                "angular_z": float(twist.angular.z)
+            }
+            self.get_logger().debug("Updated smoothed odometry data")
+        else:
+            self.get_logger().error("Received message without twist field in smoothed_odom_callback")
+
+    def depth_callback(self, msg):
+        if hasattr(msg, 'pose') and hasattr(msg.pose, 'pose'):
+            pose = msg.pose.pose
+            self.latest_depth = {
+                "depth": float(pose.position.z),
+            }
+            self.get_logger().debug("Updated depth data")
+
+    def pressure_callback(self, msg):
+        if hasattr(msg, 'fluid_pressure'):
+            self.latest_pressure = {"pressure": float(msg.fluid_pressure)}
+            self.get_logger().debug(f"Updated pressure data: {self.latest_pressure}")
+        else:
+            self.get_logger().error("Received message without fluid_pressure field in pressure_callback")
 
     def tx_callback(self, msg):
         try:
@@ -177,13 +199,27 @@ class RFBridge(Node):
             self.get_logger().error(f"XBee transmission error: {str(e)}")
             self.get_logger().error(traceback.format_exc())
 
+    def send_message(self, msg, address):
+        try:
+            remote_device = RemoteXBeeDevice(self.device, address)
+            self.device.send_data(remote_device, msg)
+            self.get_logger().info(f"Sent via XBee: {msg}")
+        except TransmitException as e:
+            self.get_logger().error(f"XBee transmission error - TransmitException: {e}")
+            self.get_logger().error(traceback.format_exc())
+        except Exception as e:
+            self.get_logger().error(f"XBee transmission error - Exception: {str(e)}")
+            self.get_logger().error(traceback.format_exc())
+
     def get_all_status_data(self):
         data_dict = {
-            "odom": self.latest_odom,
-            "leak": self.latest_leak,
-            "battery": self.latest_battery,
-            "dvl_vel": self.latest_dvl_velocity,
-            "dvl_pos": self.latest_dvl_position,
+            "src_id" : self.vehicle_id,
+            "message" : "STATUS",
+            "safety_status": self.latest_safety_status,
+            "smoothed_odom": self.latest_smoothed_odom,
+            "battery_state": self.latest_battery,
+            "depth_data": self.latest_depth,
+            "pressure_data": self.latest_pressure,
         }
         data_dict = {k: v for k, v in data_dict.items() if v and v != "NO_DATA"}
         return json.dumps(data_dict, separators=(',', ':'))
@@ -191,17 +227,26 @@ class RFBridge(Node):
     def data_receive_callback(self, xbee_message):
         try:
             payload = xbee_message.data.decode('utf-8', errors='replace')
-            self.get_logger().info(f"Received from {xbee_message.remote_device.get_64bit_addr()}: {payload}")
+            return_address = xbee_message.remote_device.get_64bit_addr()
+            self.get_logger().info(f"Received from {return_address}: {payload}")
+            
             msg = String()
             msg.data = payload
             self.publisher.publish(msg)
+            self.get_logger().info(f"{payload}")
 
             # Command handling (STATUS/INIT)
             if payload == "STATUS":
                 response = self.get_all_status_data()
-                self.device.send_data_broadcast(response)
+                self.send_message(response, return_address)
                 self.get_logger().info(f"Received STATUS, responding with sensor data")
                 self.get_logger().debug(f"Status response: {response}")
+            elif payload == "PING":
+                response = {"message": "PING", "src_id": self.vehicle_id}
+                self.send_message(json.dumps(response), return_address)
+                self.get_logger().info(f"Received PING, responding with PING")
+            elif payload == "E_KILL":
+                self.get_logger().info(f"Received E_KILL message")
             #TODO: when Braden adds the init system, update this
             elif payload == "INIT":
                 init_msg = String()
@@ -211,6 +256,46 @@ class RFBridge(Node):
                 self.device.send_data_broadcast("INIT_ACK")
         except Exception as e:
             self.get_logger().error(f"Error in data_receive_callback: {e}")
+            self.get_logger().error(traceback.format_exc())
+
+    
+
+
+    
+    def kill_thruster(self):
+        self.get_logger().info("Received kill command from base station")
+        request = SetBool.Request()
+        request.data = False
+
+        while not self.thruster_client.wait_for_service(timeout_sec=1.0):
+            if not rclpy.ok():
+                self.get_logger().error("Interrupted while waiting for the arm_thruster service. Exiting.")
+                return
+            self.get_logger().info("arm_thruster service not available, waiting again...")
+
+        future = self.thruster_client.call_async(request)
+
+        def callback(fut):
+            try:
+                response = fut.result()
+                if response.success:
+                    self.get_logger().info("Thruster has been deactivated.")
+                else:
+                    self.get_logger().error("Failed to deactivate thruster.")
+
+                msg_dict = {
+                    "src_id": self.vehicle_id,  
+                    "message": "E_KILL",
+                    "success": response.success
+                }
+                msg = json.dumps(msg_dict)
+                self.send_message(msg)
+
+            except Exception as e:
+                self.get_logger().error(f"Error while trying to deactivate thruster: {str(e)}")
+
+        future.add_done_callback(callback)
+
 
     def destroy_node(self):
         self.running = False

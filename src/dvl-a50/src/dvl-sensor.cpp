@@ -7,35 +7,29 @@
 
 #include "dvl_a50/dvl-sensor.hpp"
 
-
-// BYU edit
-#include <vector>
-using json = nlohmann::json;
-// end edit
-
 namespace dvl_sensor {
 
 
 DVL_A50::DVL_A50():
-Node("dvl_a50_node"),
-old_altitude(0.0)
+Node("dvl_a50_node")
 {
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+    // rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
 
-    auto qos = rclcpp::QoS(
-            rclcpp::QoSInitialization(
-            qos_profile.history,
-            qos_profile.depth),
-            qos_profile);
+    // auto qos = rclcpp::QoS(
+    //         rclcpp::QoSInitialization(
+    //         qos_profile.history,
+    //         qos_profile.depth),
+    //         qos_profile);
+
 
     timer_receive = this->create_wall_timer(std::chrono::milliseconds(50),std::bind(&DVL_A50::handle_receive, this));
 
     //Publishers
-    dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", qos);
-    dvl_pub_pos = this->create_publisher<dvl_msgs::msg::DVLDR>("dvl/position", qos);
-    dvl_pub_config_status = this->create_publisher<dvl_msgs::msg::ConfigStatus>("dvl/config/status", qos);
-    dvl_pub_command_response = this->create_publisher<dvl_msgs::msg::CommandResponse>("dvl/command/response", qos);
-    dvl_sub_config_command = this->create_subscription<dvl_msgs::msg::ConfigCommand>("dvl/config/command", qos, std::bind(&DVL_A50::command_subscriber, this, _1));
+    dvl_pub_report = this->create_publisher<dvl_msgs::msg::DVL>("dvl/data", 10);
+    dvl_pub_pos = this->create_publisher<dvl_msgs::msg::DVLDR>("dvl/position", 10);
+    dvl_pub_config_status = this->create_publisher<dvl_msgs::msg::ConfigStatus>("dvl/config/status", 10);
+    dvl_pub_command_response = this->create_publisher<dvl_msgs::msg::CommandResponse>("dvl/command/response", 10);
+    dvl_sub_config_command = this->create_subscription<dvl_msgs::msg::ConfigCommand>("dvl/config/command", 10, std::bind(&DVL_A50::command_subscriber, this, _1));
 
     this->declare_parameter<std::string>("dvl_ip_address", "192.168.194.95");
     this->declare_parameter<std::string>("velocity_frame_id", "dvl_A50/velocity_link");
@@ -52,7 +46,7 @@ old_altitude(0.0)
     if(tcpSocket->Create() < 0)
         RCLCPP_ERROR(get_logger(), "Error creating the socket");
    
-    tcpSocket->SetRcvTimeout(500);
+    tcpSocket->SetRcvTimeout(400);
     std::string error;
     
     int error_code = 0;
@@ -75,7 +69,6 @@ old_altitude(0.0)
     	        break;
     	    }
         }
-
         else if(error_code == 103)
         {
             RCLCPP_WARN(get_logger(), "No route to host, DVL might be booting?: error_code: %d", error_code);
@@ -94,18 +87,7 @@ old_altitude(0.0)
     /*
      * Disable transducer operation to limit sensor heating out of water.
      */
-
-    bool acoustics_are_enabled = false;
-
-    if(acoustics_are_enabled){
-        this->set_json_parameter("acoustic_enabled", "true");
-        RCLCPP_INFO(get_logger(), "Acoustics enabled");
-    }
-    else{
-         this->set_json_parameter("acoustic_enabled", "false");
-         RCLCPP_INFO(get_logger(), "Acoustics disabled");
-    }
-   
+    this->set_json_parameter("acoustic_enabled", "false");
     usleep(2000);
 
 }
@@ -175,38 +157,39 @@ void DVL_A50::publish_vel_trans_report()
     dvl.header.frame_id = velocity_frame_id;
 		
     dvl.time = double(json_data["time"]);
+    dvl.time_of_validity = json_data["time_of_validity"].get<int64_t>();
+    dvl.time_of_transmission = json_data["time_of_transmission"].get<int64_t>();
+
     dvl.velocity.x = double(json_data["vx"]);
     dvl.velocity.y = double(json_data["vy"]);
     dvl.velocity.z = double(json_data["vz"]);
     dvl.fom = double(json_data["fom"]);
     double current_altitude = double(json_data["altitude"]);
     dvl.velocity_valid = json_data["velocity_valid"];
-		    
-    if(current_altitude >= 0.0 && dvl.velocity_valid)
-        old_altitude = dvl.altitude = current_altitude;
-    else
-        dvl.altitude = old_altitude;
     
-    // BYU edit
+    // Removed logic to add old altitude if not valid. Does not report accurately what is coming from the DVL.
+    // Logic should be implemented on a case by case basis.
+    dvl.altitude = current_altitude;
 
-    json covariance_matrix(json::value_t::object);
-    covariance_matrix = json_data["covariance"];
-    std::vector<std::vector<double>> m;
+
+    dvl.status = json_data["status"];
+    dvl.form = json_data["format"];
+
+    // Add covariance from message
     std::vector<double> twistCovariance;
-    m = covariance_matrix.get<std::vector<std::vector<double>>>();
-    for(auto i : m) {
-        for(auto j : i) {
-            // std::cout << j << std::endl;
-            twistCovariance.push_back(double(j));
+
+    if (json_data.contains("covariance") && json_data["covariance"].is_array()) {
+        const auto& matrix = json_data["covariance"];
+        
+        for (const auto& row : matrix) {
+            if (!row.is_array()) continue;
+            for (const auto& value : row) {
+                twistCovariance.push_back(value.get<double>());
+            }
         }
     }
 
     dvl.covariance = twistCovariance;
-
-    // end edit
-
-    dvl.status = json_data["status"];
-    dvl.form = json_data["format"];
 			
     beam0.id = json_data["transducers"][0]["id"];
     beam0.velocity = double(json_data["transducers"][0]["velocity"]);
@@ -261,7 +244,6 @@ void DVL_A50::publish_dead_reckoning_report()
     DVLDeadReckoning.status = json_data["status"];
     DVLDeadReckoning.format = json_data["format"];
     dvl_pub_pos->publish(DVLDeadReckoning);
-
 }
 
 /*
@@ -301,7 +283,6 @@ void DVL_A50::publish_config_status()
 
 void DVL_A50::command_subscriber(const dvl_msgs::msg::ConfigCommand::SharedPtr msg)
 {
-    // RCLCPP_INFO(get_logger(), "DVL heard a command");
     if(msg->command == "set_config")
         this->set_json_parameter(msg->parameter_name, msg->parameter_value);
     else if(msg->command == "get_config")

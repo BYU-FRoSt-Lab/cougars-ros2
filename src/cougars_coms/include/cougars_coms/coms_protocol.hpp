@@ -1,9 +1,8 @@
-#include <string>
 
 #ifndef _COUGARS_COMS_PROTOCOL_
 #define _COUGARS_COMS_PROTOCOL_
 
-
+#include <string>
 #include <cstdint>
 
 namespace cougars_coms {
@@ -20,6 +19,10 @@ enum COUG_MSG_ID : uint8_t {
 
     EMERGENCY_SURFACE = 0x50,
     CONFIRM_EMERGENCY_SURFACE = 0x51,
+
+    REQUEST_LOCALIZATION_INFO = 0x60,
+    LOCALIZATION_INFO = 0x61,
+
 };
 
 
@@ -48,19 +51,45 @@ struct RequestStatus {
 struct VehicleStatus {
     COUG_MSG_ID msg_id = VEHICLE_STATUS;
 
-    uint32_t timestamp;
+    uint8_t waypoint;
 
-    uint8_t moos_waypoint;
-    uint8_t moos_behavior_number;
+    uint8_t battery_voltage;
+    uint8_t battery_percentage;
 
-    int16_t x;
-    int16_t y;
-    uint16_t depth;
-    uint16_t heading;
+    uint8_t depth;
+
+    uint8_t safety_mask;
+
+    int8_t x;
+    int8_t y;
+    int8_t x_vel;
+    int8_t y_vel;
+    uint8_t pressure;
+    uint8_t heading;
 
 }__attribute__((packed));
+
+struct RequestLocalizationInfo{
+   COUG_MSG_ID msg_id = REQUEST_LOCALIZATION_INFO;
+};
+
+
+struct LocalizationInfo {
+   COUG_MSG_ID msg_id = LOCALIZATION_INFO;
+
+
+   float x;
+   float y;
+   float z;
+   float roll;
+   float pitch;
+   float yaw;
+   float depth;
+}__attribute__((packed));
+
 
 
 
 } // cougars_coms
 #endif //_COUGARS_COMS_PROTOCOL_
+

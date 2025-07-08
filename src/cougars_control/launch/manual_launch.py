@@ -12,8 +12,6 @@ import os
 
 def generate_launch_description():
     '''
-    :author: Nelson Durrant
-    :date: September 2024
 
     Launches the manual control and sensor nodes for the vehicle.
 
@@ -28,12 +26,16 @@ def generate_launch_description():
     verbose = "false"  # Default to 'false'
     fins = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
+    fleet_param = '/home/frostlab/config/fleet_params.yaml'
+    namespace = ''
 
     for arg in sys.argv:
         if arg.startswith('namespace:='):
             namespace = arg.split(':=')[1]
         if arg.startswith('param_file:='):
             param_file = arg.split(':=')[1]
+        if arg.startswith('fleet_param:='):
+            fleet_param = arg.split(':=')[1]
         if arg.startswith("sim:="):
             sim = arg.split(":=")[1].lower()
         if arg.startswith("verbose:="):
@@ -58,7 +60,7 @@ def generate_launch_description():
         fins_manual = launch_ros.actions.Node(
             package='cougars_control',
             executable='fins_manual.py',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
             emulate_tty=True,
@@ -68,14 +70,14 @@ def generate_launch_description():
         manual_mission = launch_ros.actions.Node(
             package='cougars_control',
             executable='manual_mission.py',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         )
         controls = launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
-            parameters=[param_file],
+            parameters=[param_file, fleet_param],
             namespace=namespace,
             output=output,
         )
@@ -87,40 +89,26 @@ def generate_launch_description():
         
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
-        ),
-  
-        # Start the EmergencyStop checks
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='leak_sub.py',
-        #     parameters=[param_file],
-        #     namespace=namespace,
-        # ),
-        # launch_ros.actions.Node(
-        #     package='cougars_control',
-        #     executable='battery_sub.py',
-        #     parameters=[param_file],
-        #     namespace=namespace,
-        # ),
-
-
+        ),  
+        #start factor graph for logging
         launch_ros.actions.Node(
-            package='cougars_control',
-            executable='emergency_protocols',
-            parameters=[param_file],
-            namespace=namespace,
-        ),
-        # Start the rf_bridge node
-        launch_ros.actions.Node(
-            package='cougars_coms',
-            executable='rf_bridge.py',
+            package='cougars_localization',
+            executable='factor_graph.py',
             parameters=[param_file],
             namespace=namespace,
             output=output,
         ), 
+
+
+        # Start the rf_bridge node
+        # launch_ros.actions.Node(
+        #     package='cougars_coms',
+        #     executable='rf_bridge.py',
+        #     parameters=[param_file],
+        #     namespace=namespace,
+        #     output=output,
+        # ), 
         
-
-
     ])
 
     return launch.LaunchDescription(launch_actions)
