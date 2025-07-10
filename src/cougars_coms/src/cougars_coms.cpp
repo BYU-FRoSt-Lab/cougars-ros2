@@ -16,6 +16,9 @@
 #include "frost_interfaces/msg/localization_data.hpp"
 #include "frost_interfaces/msg/localization_data_short.hpp"
 
+#include <seatrac_driver/SeatracEnums.h>
+
+
 
 
 #include "cougars_coms/coms_protocol.hpp"
@@ -335,9 +338,9 @@ public:
     // sends an acoustic message to a target vehicle
     void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
         auto request = seatrac_interfaces::msg::ModemSend();
-        request.msg_id = 0x60; //CID_DAT_SEND
+        request.msg_id = CID_DAT_SEND; //CID_DAT_SEND
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = 0x0; //MSG_OWAY, data sent one way without response or position data
+        request.msg_type = MSG_OWAY; //MSG_OWAY, data sent one way without response or position data
         request.packet_len = (uint8_t)std::min(message_len, 31);
         std::memcpy(&request.packet_data, message, request.packet_len);
        

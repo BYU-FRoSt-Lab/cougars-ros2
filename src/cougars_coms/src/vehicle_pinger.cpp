@@ -1,5 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "seatrac_interfaces/msg/modem_send.hpp"
+#include <seatrac_driver/SeatracEnums.h>
 
 
 #include "cougars_coms/coms_protocol.hpp"
@@ -11,7 +12,7 @@
 
 using namespace std::literals::chrono_literals;
 using namespace cougars_coms;
-// using namespace narval::seatrac;
+using namespace narval::seatrac;
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -60,7 +61,7 @@ public:
         auto request = seatrac_interfaces::msg::ModemSend();
         request.msg_id = 0x60; //CID_DAT_SEND
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = this->request_response ? 0x4 : 0x1; //MSG_REQU : MSG_OWAYU
+        request.msg_type = this->request_response ? MSG_REQU : MSG_OWAYU; //MSG_REQU response for range and angle: MSG_OWAYU one way no range
         RequestLocalizationInfo message;
         request.packet_len = (uint8_t)std::min((int)sizeof(message), 31);
         std::memcpy(&request.packet_data, &message, request.packet_len);
