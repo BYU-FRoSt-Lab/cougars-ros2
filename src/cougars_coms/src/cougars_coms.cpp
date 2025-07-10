@@ -32,6 +32,7 @@
 using namespace std::literals::chrono_literals;
 using std::placeholders::_1;
 using namespace cougars_coms;
+using namespace narval::seatrac;
 
 
 class ComsNode : public rclcpp::Node {
