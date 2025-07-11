@@ -16,13 +16,25 @@ find_package(nav_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(dvl_msgs REQUIRED)
 
+find_package(seatrac_driver QUIET)
+if(NOT TARGET seatrac_driver)
+    include(FetchContent)
+    FetchContent_Declare(seatrac_driver
+        GIT_REPOSITORY https://bitbucket.org/frostlab/seatrac_driver.git
+        GIT_TAG        main
+    )
+    FetchContent_MakeAvailable(seatrac_driver)
+endif()
+
 include_directories(include)
 
 add_executable(cougars_coms src/cougars_coms.cpp)
 ament_target_dependencies(cougars_coms rclcpp std_srvs seatrac_interfaces geometry_msgs frost_interfaces nav_msgs sensor_msgs dvl_msgs)
+target_link_libraries(cougars_coms seatrac_driver)
 
 add_executable(vehicle_pinger src/vehicle_pinger.cpp)
 ament_target_dependencies(vehicle_pinger rclcpp seatrac_interfaces)
+target_link_libraries(vehicle_pinger seatrac_driver)
 
 install(DIRECTORY include/
         DESTINATION include/${PROJECT_NAME})
