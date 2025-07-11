@@ -17,6 +17,10 @@
 #include "seatrac_interfaces/msg/modem_cmd_update.hpp"
 #include "seatrac_interfaces/msg/modem_send.hpp"
 
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+
 
 #define DEFAULT_SERIAL_PORT "/dev/frost/rs232_connector_seatrac"
 
@@ -111,8 +115,27 @@ public:
     wait_for_alive(beaconId, salinity);
   }
 
+  bool is_device_in_use(std::string device_path) {
+    int fd = open(device_path.c_str(), O_RDWR | O_NOCTTY | O_EXCL);
+    if (fd < 0) {
+        if (errno == EBUSY || errno == EACCES) {
+            // Device is busy or permission denied
+            return true;
+        }
+        // Handle other errors as needed
+        return false;
+    }
+    close(fd);
+    return false;
+  }
+
   void wait_for_alive(BID_E beaconId, uint16_t salinity) {
     bool got_resp = false;
+    if (is_device_in_use(this->get_serial_port())) {
+        RCLCPP_WARN(this->get_logger(), "Acoustic modem is currently in use by another process.");
+        return;
+    }
+
     while(!got_resp) {
       messages::SysAlive resp;
       CID_E msgId = CID_SYS_ALIVE;
