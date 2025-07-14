@@ -132,7 +132,7 @@ public:
   void wait_for_alive(BID_E beaconId, uint16_t salinity) {
     bool got_resp = false;
     if (is_device_in_use(this->get_serial_port())) {
-        RCLCPP_WARN(this->get_logger(), "Acoustic modem is currently in use by another process.");
+        RCLCPP_WARN(this->get_logger(), "Acoustic modem is currently in use by another process. Cannot open device.");
         return;
     }
 
