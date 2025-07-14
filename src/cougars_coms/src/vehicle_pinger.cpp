@@ -33,10 +33,8 @@ public:
         this->declare_parameter<bool>("enable_ping", false);
         bool enable_ping = this->get_parameter("enable_ping").as_bool();
 
-        // if message is one way or two way
-        // two way for range and angle calculations
-        this->declare_parameter<bool>("request_response", true);
-        this->request_response = this->get_parameter("request_response").as_bool();
+        this->declare_parameter<bool>("use_ping", true);
+        this->use_ping = this->get_parameter("use_ping").as_bool();
 
         if (enable_ping) {
             this->modem_publisher_ = this->create_publisher<seatrac_interfaces::msg::ModemSend>("modem_send", 10);
@@ -59,13 +57,16 @@ public:
 
         RCLCPP_INFO(this->get_logger(), "Pinging vehicle with ID: %d", target_id);
         auto request = seatrac_interfaces::msg::ModemSend();
-        request.msg_id = 0x60; //CID_DAT_SEND
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = this->request_response ? MSG_REQU : MSG_OWAYU; //MSG_REQU response for range and angle: MSG_OWAYU one way no range
-        RequestLocalizationInfo message;
-        request.packet_len = (uint8_t)std::min((int)sizeof(message), 31);
-        std::memcpy(&request.packet_data, &message, request.packet_len);
-
+        request.msg_type = MSG_REQU;
+        if (this->use_ping) {
+            request.msg_id = CID_PING_SEND; // Just a ping message
+        } else {
+            request.msg_id = CID_DAT_SEND; // Gets localization info
+            RequestLocalizationInfo message;
+            request.packet_len = (uint8_t)std::min((int)sizeof(message), 31);
+            std::memcpy(&request.packet_data, &message, request.packet_len);
+        }
         this->modem_publisher_->publish(request);
     }
 
@@ -78,7 +79,7 @@ private:
     int ping_frequency;  // Frequency of pings in seconds
     rclcpp::TimerBase::SharedPtr timer_;
 
-    bool request_response;  // Whether to request a response from the vehicle
+    bool use_ping;  // Whether to use pinging functionality
     
 };
 
