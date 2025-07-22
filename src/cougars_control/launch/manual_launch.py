@@ -24,8 +24,12 @@ def generate_launch_description():
     package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
 
-    param_file = '/home/frostlab/config/vehicle_params.yaml'
-    fleet_param = '/home/frostlab/config/fleet_params.yaml'
+    if LaunchConfiguration('sim') == "True":
+        param_file = '/home/frostlab/config/deploy_tmp/vehicle_params.yaml'
+        fleet_param = '/home/frostlab/config/deploy_tmp/fleet_params.yaml'
+    else:
+        param_file = '/home/frostlab/config/vehicle_params.yaml'
+        fleet_param = '/home/frostlab/config/fleet_params.yaml'
     
     namespace_launch_arg = DeclareLaunchArgument(
         'namespace',
@@ -56,7 +60,7 @@ def generate_launch_description():
     
     launch_actions = []
 
-    if LaunchConfiguration('sim') == "false":
+    if LaunchConfiguration('sim') == "False":
         sensors = launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "sensors_launch.py"))
         )
@@ -67,7 +71,7 @@ def generate_launch_description():
             package='cougars_control',
             executable='fins_manual.py',
             parameters=[param_file, fleet_param],
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
             output=output,
             emulate_tty=True,
         )
@@ -77,14 +81,14 @@ def generate_launch_description():
             package='cougars_control',
             executable='manual_mission.py',
             parameters=[param_file, fleet_param],
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
             output=output,
         )
         controls = launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_controls',
             parameters=[param_file, fleet_param],
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
             output=output,
         )
         launch_actions.append(manual_mission)
@@ -101,7 +105,7 @@ def generate_launch_description():
             package='cougars_localization',
             executable='factor_graph.py',
             parameters=[param_file],
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
             output=output,
         ), 
 
@@ -111,7 +115,7 @@ def generate_launch_description():
         #     package='cougars_coms',
         #     executable='rf_bridge.py',
         #     parameters=[param_file],
-        #     namespace=namespace,
+        #     namespace=LaunchConfiguration('namespace'),
         #     output=output,
         # ), 
         
