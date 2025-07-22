@@ -3,6 +3,8 @@ import sys
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
@@ -22,41 +24,45 @@ def generate_launch_description():
     package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
 
-    sim = "false"  # Default to 'false'
-    verbose = "false"  # Default to 'false'
-    fins = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
     fleet_param = '/home/frostlab/config/fleet_params.yaml'
-    namespace = ''
-
-    for arg in sys.argv:
-        if arg.startswith('namespace:='):
-            namespace = arg.split(':=')[1]
-        if arg.startswith('param_file:='):
-            param_file = arg.split(':=')[1]
-        if arg.startswith('fleet_param:='):
-            fleet_param = arg.split(':=')[1]
-        if arg.startswith("sim:="):
-            sim = arg.split(":=")[1].lower()
-        if arg.startswith("verbose:="):
-            verbose = arg.split(":=")[1].lower()
-        if arg.startswith("fins:="):
-            fins = arg.split(":=")[1].lower()
     
-    if verbose == "true":
+    namespace_launch_arg = DeclareLaunchArgument(
+        'namespace',
+        default_value='coug0'
+    )
+    sim_launch_arg = DeclareLaunchArgument(
+        'sim',
+        default_value='False'
+    )
+    param_file_launch_arg = DeclareLaunchArgument(
+        'param_file',
+        default_value=param_file
+    )
+    fleet_param_launch_arg = DeclareLaunchArgument(
+        'fleet_param',
+        default_value=fleet_param
+    )
+    verbose_launch_arg = DeclareLaunchArgument(
+        'verbose',
+        default_value='False',    
+    )
+    if LaunchConfiguration('verbose') == 'True':
+        print("Verbose mode is enabled.")
         output = 'screen'
     else:
+        print("Verbose mode is disabled.")
         output = 'log'
     
     launch_actions = []
 
-    if sim == "false":
+    if LaunchConfiguration('sim') == "false":
         sensors = launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(package_dir, "sensors_launch.py"))
         )
         launch_actions.append(sensors)
 
-    if fins == "true":
+    if LaunchConfiguration('fins') == "true":
         fins_manual = launch_ros.actions.Node(
             package='cougars_control',
             executable='fins_manual.py',

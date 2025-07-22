@@ -27,7 +27,7 @@ echo -e "\033[0m\033[36m########################################################
 echo ""
 
 # Parse options
-SIM_PARAM="false" # Default value for sim
+SIM="false" # Default value for sim
 VERBOSE="false"
 GPS="false"
 FINS="false"
@@ -37,9 +37,7 @@ MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
 while getopts "svgfb" opt; do
   case $opt in
     s)
-      SIM_PARAM="true"
-      VEHICLE_PARAMS_FILE="/home/frostlab/config/vehicle_params.yaml"
-      printInfo "Using SIM param file: $VEHICLE_PARAMS_FILE"
+      SIM="true"
       ;;
     v)
       VERBOSE="true"
@@ -85,7 +83,7 @@ case $1 in
         namespace:=$NAMESPACE \
         param_file:=$VEHICLE_PARAMS_FILE \
         fleet_param:=$FLEET_PARAMS_FILE \
-        sim:=$SIM_PARAM \
+        sim:=$SIM \
         verbose:=$VERBOSE \
         fins:=$FINS
         ;;
@@ -93,7 +91,7 @@ case $1 in
         ros2 launch cougars_control manual_launch.py \
           namespace:="$NAMESPACE" \
           param_file:="$VEHICLE_PARAMS_FILE" \
-          sim:="$SIM_PARAM" \
+          sim:="$SIM" \
           verbose:="$VERBOSE" \
           fins:="$FINS"
         ;;
@@ -101,7 +99,7 @@ case $1 in
         ros2 launch cougars_control moos_launch.py \
           namespace:="$NAMESPACE" \
           param_file:="$VEHICLE_PARAMS_FILE" \
-          sim:="$SIM_PARAM" \
+          sim:="$SIM" \
           verbose:="$VERBOSE" \
           GPS:="$GPS"
         ;;
@@ -118,7 +116,13 @@ case $1 in
         ;;
     "waypoint")
         # Launch with the selected mission file
-        ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=$MISSION_NAME GPS:=$GPS
+        ros2 launch cougars_control waypoint_launch.py \
+        namespace:=$NAMESPACE \
+        param_file:=$VEHICLE_PARAMS_FILE \
+        sim:=$SIM \
+        verbose:=$VERBOSE \
+        mission_file:=$MISSION_NAME \
+        GPS:=$GPS
         ;;
 
     "bluerov")
