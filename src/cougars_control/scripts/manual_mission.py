@@ -138,7 +138,8 @@ class ManualMission(Node):
                             'depth': state.get('depth'),
                             'heading': state.get('heading'),  
                             'speed': state.get('speed'),    
-                            'time_seconds': state.get('time_seconds') 
+                            'time_seconds': state.get('time_seconds'),
+                            'depth_from_bottom': state.get('depth_from_bottom', False)  # Default to False if not specified
                         }
                         self.states.append(state)
                     self.get_logger().info(f"Loaded {len(self.states)} states from YAML")
@@ -244,6 +245,7 @@ class ManualMission(Node):
             if self.state_index < len(self.states):  # Technically this is redundant
                 current_state = self.states[self.state_index]
                 depth_msg.desired_depth = current_state['depth']
+                depth_msg.dfb = current_state['depth_from_bottom']
                 heading_msg.desired_heading = current_state['heading']
                 speed_msg.desired_speed = current_state['speed']
 

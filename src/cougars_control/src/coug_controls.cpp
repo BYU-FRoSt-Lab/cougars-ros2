@@ -190,8 +190,8 @@ public:
     this->declare_parameter("wn_d_theta", 0.25);
     this->declare_parameter("outer_loop_threshold", 2.5);
     this->declare_parameter("saturation_offset", 1.7);
-    this->declare_parameter("depth_from_bottom", false);
-    this->dfb = this->get_parameter("depth_from_bottom").as_bool();
+    // this->declare_parameter("depth_from_bottom", false);
+    // this->dfb = this->get_parameter("depth_from_bottom").as_bool();
 
     update_parameters();
     /**
@@ -387,10 +387,21 @@ private:
     }
   }
 
+  void set_init_flag(bool value){
+    this->init_flag = value;
+    if(value){
+      // If the init flag is set, start the control loop
+      std::cout << "Controller Node initialized." << std::endl;
+    } else {
+      // If the init flag is not set, stop the control loop
+      
+    }
+  }
+  
   void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
   {
      // Set the boolean to the requested value
-    this->init_flag = msg->thruster_arm.data;
+    set_init_flag(msg->start.data);
     RCLCPP_INFO(this->get_logger(), this->init_flag ? "Controller Node initialized." : "Controller Node de-initialized.");
     update_parameters();
 
@@ -418,10 +429,11 @@ private:
     }
     RCLCPP_INFO(this->get_logger(), "New Depth Desired: %f, Old desired depth %f", depth_msg.desired_depth, this->desired_depth);
     this->desired_depth = depth_msg.desired_depth;
+    this->dfb = depth_msg.dfb;
 
     // TODO reset integrator term??
     // TODO in the message type specify the dfb or not
-    if (dfb){
+    if (this->dfb){
       this->depth_ref = this->altitude;
     }
     else{
