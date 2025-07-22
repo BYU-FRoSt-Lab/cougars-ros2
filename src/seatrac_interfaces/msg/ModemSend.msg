@@ -16,6 +16,9 @@ uint8 dest_id          # BID_E. Beacon id of the beacon to send the acoustic tra
 uint8 msg_type         # AMSGTYPE_E. Specifies how the remote beacon should respond to the transmission. 
                        # Used with the PING, DAT, and ECHO protocols but not for the NAV protocol. 
 
+uint8 queue_action
+
+
 uint8 packet_len       # optional packet length for data send commands (0 to 30)
 uint8[30] packet_data  # optional packet data array for data send commands
 
