@@ -338,7 +338,7 @@ public:
 
             send_acoustic_message(0, sizeof(message), (uint8_t*)&message, CID_DAT_QUEUE_SET);
 
-            RCLCPP_INFO(this->get_logger(), "[%ld] Queued localization data", this->now().nanoseconds());
+            RCLCPP_DEBUG(this->get_logger(), "[%ld] Queued localization data", this->now().nanoseconds());
         }
     }
 
