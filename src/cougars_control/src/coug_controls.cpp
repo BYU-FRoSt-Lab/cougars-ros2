@@ -371,30 +371,31 @@ private:
   void handle_service(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
                     std::shared_ptr<std_srvs::srv::SetBool::Response> response){
     // Set the initialization flag based on the request
-    this->init_flag = request->data;
+
+    set_init_flag(request->data);
 
     // Respond with success and an appropriate message
     if (request->data) {
         response->success = true;
         response->message = "Controller Node initialized.";
-
-        update_parameters();
-        RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
     } else {
         response->success = false;
         response->message = "Controller Node de-initialized.";
-        RCLCPP_INFO(this->get_logger(), "Controller Node de-initialized.");
     }
   }
 
   void set_init_flag(bool value){
     this->init_flag = value;
+    update_parameters();
+    RCLCPP_INFO(this->get_logger(), value ? "Controller Node initialized." : "Controller Node de-initialized.");
     if(value){
       // If the init flag is set, start the control loop
-      std::cout << "Controller Node initialized." << std::endl;
+      RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
     } else {
-      // If the init flag is not set, stop the control loop
-      
+      // Publish a empty command to stop the vehicle
+     RCLCPP_INFO(this->get_logger(), "published empty command to stop vehicle");
+      auto message = frost_interfaces::msg::UCommand();
+      u_command_publisher_->publish(message);
     }
   }
   
@@ -402,7 +403,6 @@ private:
   {
      // Set the boolean to the requested value
     set_init_flag(msg->start.data);
-    RCLCPP_INFO(this->get_logger(), this->init_flag ? "Controller Node initialized." : "Controller Node de-initialized.");
     update_parameters();
 
   }
