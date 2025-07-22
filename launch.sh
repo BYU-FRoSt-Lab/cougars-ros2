@@ -38,7 +38,7 @@ while getopts "svgfb" opt; do
   case $opt in
     s)
       SIM_PARAM="true"
-      VEHICLE_PARAMS_FILE="/home/frostlab/config/sim_params.yaml"
+      VEHICLE_PARAMS_FILE="/home/frostlab/config/vehicle_params.yaml"
       printInfo "Using SIM param file: $VEHICLE_PARAMS_FILE"
       ;;
     v)
@@ -81,7 +81,13 @@ source ~/ros2_ws/install/setup.bash
 
 case $1 in
     "full")
-        ros2 launch cougars_bringup persistant_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
+        ros2 launch cougars_bringup persistant_launch.py \
+        namespace:=$NAMESPACE \
+        param_file:=$VEHICLE_PARAMS_FILE \
+        fleet_param:=$FLEET_PARAMS_FILE \
+        sim:=$SIM_PARAM \
+        verbose:=$VERBOSE \
+        fins:=$FINS
         ;;
     "manual")
         ros2 launch cougars_control manual_launch.py \

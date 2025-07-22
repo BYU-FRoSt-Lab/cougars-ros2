@@ -2,6 +2,7 @@ import sys
 
 import launch
 import launch_ros.actions
+from launch.actions import DeclareLaunchArgument
 import launch_ros.descriptions
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -30,20 +31,41 @@ def generate_launch_description():
     fleet_param = '/home/frostlab/config/fleet_params.yaml'
     namespace = ''
 
-    for arg in sys.argv:
-        if arg.startswith('namespace:='):
-            namespace = arg.split(':=')[1]
-        if arg.startswith('param_file:='):
-            param_file = arg.split(':=')[1]
-        if arg.startswith('fleet_param:='):
-            fleet_param = arg.split(':=')[1]
-        if arg.startswith("sim:="):
-            sim = arg.split(":=")[1].lower()
-        if arg.startswith("verbose:="):
-            verbose = arg.split(":=")[1].lower()
-        if arg.startswith("fins:="):
-            fins = arg.split(":=")[1].lower()
+    # for arg in sys.argv:
+    #     if arg.startswith('namespace:='):
+    #         namespace = arg.split(':=')[1]
+    #     if arg.startswith('param_file:='):
+    #         param_file = arg.split(':=')[1]
+    #     if arg.startswith('fleet_param:='):
+    #         fleet_param = arg.split(':=')[1]
+    #     if arg.startswith("sim:="):
+    #         sim = arg.split(":=")[1].lower()
+    #     if arg.startswith("verbose:="):
+    #         verbose = arg.split(":=")[1].lower()
+    #     if arg.startswith("fins:="):
+    #         fins = arg.split(":=")[1].lower()
     
+    namespace_launch_arg = DeclareLaunchArgument(
+        'namespace',
+        default_value='coug0'
+    )
+    sim_launch_arg = DeclareLaunchArgument(
+        'sim',
+        default_value='False'
+    )
+    param_file_launch_arg = DeclareLaunchArgument(
+        'param_file',
+        default_value=param_file
+    )
+    fleet_param_launch_arg = DeclareLaunchArgument(
+        'fleet_param',
+        default_value=fleet_param
+    )
+    fins_launch_arg = DeclareLaunchArgument(
+        'fins',
+        default_value=fins
+    )
+
     if verbose == "true":
         output = 'screen'
     else:
