@@ -4,6 +4,7 @@ import launch
 import launch_ros.actions
 from launch.actions import DeclareLaunchArgument
 import launch_ros.descriptions
+from launch.substitutions import LaunchConfiguration
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
@@ -24,26 +25,8 @@ def generate_launch_description():
         get_package_share_directory('cougars_control'), 'launch')
 
     # TODO change this to sim_mode param
-    sim = "false"  # Default to 'false'
-    verbose = "false"  # Default to 'false'
-    fins = "false"  # Default to 'false'
     param_file = '/home/frostlab/config/vehicle_params.yaml'
     fleet_param = '/home/frostlab/config/fleet_params.yaml'
-    namespace = ''
-
-    # for arg in sys.argv:
-    #     if arg.startswith('namespace:='):
-    #         namespace = arg.split(':=')[1]
-    #     if arg.startswith('param_file:='):
-    #         param_file = arg.split(':=')[1]
-    #     if arg.startswith('fleet_param:='):
-    #         fleet_param = arg.split(':=')[1]
-    #     if arg.startswith("sim:="):
-    #         sim = arg.split(":=")[1].lower()
-    #     if arg.startswith("verbose:="):
-    #         verbose = arg.split(":=")[1].lower()
-    #     if arg.startswith("fins:="):
-    #         fins = arg.split(":=")[1].lower()
     
     namespace_launch_arg = DeclareLaunchArgument(
         'namespace',
@@ -61,16 +44,17 @@ def generate_launch_description():
         'fleet_param',
         default_value=fleet_param
     )
-    fins_launch_arg = DeclareLaunchArgument(
-        'fins',
-        default_value=fins
+    verbose_launch_arg = DeclareLaunchArgument(
+        'verbose',
+        default_value='False',    
     )
-
-    if verbose == "true":
+    if LaunchConfiguration('verbose') == 'True':
+        print("Verbose mode is enabled.")
         output = 'screen'
     else:
+        print("Verbose mode is disabled.")
         output = 'log'
-    
+
     launch_actions = []
 
     manual = launch.actions.IncludeLaunchDescription(
@@ -80,16 +64,15 @@ def generate_launch_description():
 
     # TODO add more nodes here that can be activated and disactivated
     
-    
     launch_actions.extend([
 
         launch_ros.actions.Node(
             package='cougars_bringup',
             executable='bag_recorder',
             name='bag_recorder',
-            parameters=[param_file, fleet_param], #TODO 
-            namespace=namespace,
-            output=output,
+            parameters=[param_file, fleet_param], 
+            namespace=LaunchConfiguration('namespace'),
+            output='screen',
         ),
 
     ])
