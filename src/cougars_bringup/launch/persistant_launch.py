@@ -19,14 +19,13 @@ def generate_launch_description():
 
     :return: The launch description.
     '''
-
+    # default parameter file paths
+    # TODO CHANGE THIS BACK
+    param_file = '/home/frostlab/config/deploy_tmp/vehicle_params.yaml' #TODO CHANGE THIS BACK
+    fleet_param = '/home/frostlab/config/deploy_tmp/fleet_params.yaml'
     # Get the directory of the launch files
     cougars_control_package_dir = os.path.join(
         get_package_share_directory('cougars_control'), 'launch')
-
-    # TODO change this to sim_mode param
-    param_file = '/home/frostlab/config/vehicle_params.yaml'
-    fleet_param = '/home/frostlab/config/fleet_params.yaml'
     
     namespace_launch_arg = DeclareLaunchArgument(
         'namespace',
@@ -70,7 +69,7 @@ def generate_launch_description():
             package='cougars_bringup',
             executable='bag_recorder',
             name='bag_recorder',
-            parameters=[param_file, fleet_param], 
+            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')], 
             namespace=LaunchConfiguration('namespace'),
             output='screen',
         ),
