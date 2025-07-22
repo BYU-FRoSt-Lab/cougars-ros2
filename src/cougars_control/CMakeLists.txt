@@ -22,7 +22,7 @@ find_package(frost_interfaces REQUIRED)
 find_package(seatrac_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
-find_package(MOOS 10 REQUIRED)
+# find_package(MOOS 10 REQUIRED)
 find_package(Eigen3 REQUIRED)
 # find_package(robot_localization REQUIRED) #add if using the EKF
 find_package(tf2_ros REQUIRED)
@@ -41,14 +41,14 @@ ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces sensor_
 add_executable(coug_kinematics src/coug_kinematics.cpp)
 ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces std_srvs)
 
-add_executable(moos_bridge src/moos_bridge.cpp)
-ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces)
+# add_executable(moos_bridge src/moos_bridge.cpp)
+# ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces)
 
-add_executable(moos_bridge_sim src/moos_bridge_sim.cpp)
-ament_target_dependencies(moos_bridge_sim rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
+# add_executable(moos_bridge_sim src/moos_bridge_sim.cpp)
+# ament_target_dependencies(moos_bridge_sim rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
 
-add_executable(moos_bridge_gps src/moos_bridge_gps.cpp)
-ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
+# add_executable(moos_bridge_gps src/moos_bridge_gps.cpp)
+# ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
 
 
 add_executable(emergency_protocols src/emergency_protocols.cpp)
@@ -84,18 +84,18 @@ target_link_libraries(waypoint_follower_gps yaml-cpp)
 # Link libraries
 target_link_libraries(coug_controls)
 target_link_libraries(coug_kinematics)
-target_link_libraries(moos_bridge)
-target_link_libraries(moos_bridge_sim)
-target_link_libraries(moos_bridge_gps)
+# target_link_libraries(moos_bridge)
+# target_link_libraries(moos_bridge_sim)
+# target_link_libraries(moos_bridge_gps)
 target_link_libraries(emergency_protocols)
 
 # Install executables
 install(TARGETS
   coug_controls
   coug_kinematics
-  moos_bridge
-  moos_bridge_sim
-  moos_bridge_gps
+  # moos_bridge
+  # moos_bridge_sim
+  # moos_bridge_gps
   emergency_protocols
   waypoint_follower #added for waypoint follower
   waypoint_follower_gps #added for waypoint follower
