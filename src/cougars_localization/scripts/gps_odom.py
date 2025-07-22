@@ -123,7 +123,7 @@ class NavSatFixToOdom(Node):
         if init_bool:
             self.set_origin()
         else:
-            self.get_logger.info("GPS Odom node will not set new origin - Init flag false")
+            self.get_logger().info("GPS Odom node will not set new origin - Init flag false")
     
     
     def gps_callback(self, extended_msg: GPSFix, fix_msg: NavSatFix):
