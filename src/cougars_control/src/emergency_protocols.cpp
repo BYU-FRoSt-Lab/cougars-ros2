@@ -67,7 +67,10 @@ public:
     this->declare_parameter("monitor_mission_timout", true);
     this->declare_parameter("monitor_dive_ability", true);
     this->declare_parameter("monitor_collision", true);
-
+    this->declare_parameter("monitor_dvl_timeout", true);
+    this->declare_parameter("monitor_modem_timeout", true);
+    this->declare_parameter("monitor_gps_sats", true);
+    this->declare_parameter("monitor_gps_origin",false);
 
     // safety parameters (voltage, current, depth, etc.)
     this->declare_parameter("deepest_safe_depth", -2.0); // meters
@@ -76,7 +79,6 @@ public:
     this->declare_parameter("dvl_message_timeout",2);
     this->declare_parameter("dvl_position_stddev_threshold",5.0);
     this->declare_parameter("gps_sat_num_threshold",4);
-    this->declare_parameter("gps_origin_check",false);
     this->declare_parameter("origin_gps_msgs",3);
     this->declare_parameter("origin_gps_threshold_alt",100); 
     this->declare_parameter("origin_gps_threshold",.5); //around 35 miles
@@ -116,7 +118,7 @@ public:
     this->gps_origin_lon=0;
     this->gps_origin_alt=0;
     this->gps_bad_origin=0;
-    if(this->get_parameter("gps_origin_check").as_bool()){
+    if(this->get_parameter("monitor_gps_origin").as_bool()){
       grab_gps_params();
     }
   
@@ -328,30 +330,36 @@ bool update_publishers(){
         }
 
       }
-      if(latest_dvl_message.header.stamp.sec!=0){//checking if this is a real message, not just default
-        if(((this->get_clock()->now().seconds()-latest_dvl_message.header.stamp.sec)>this->get_parameter("dvl_message_timeout").as_int())){
-          this->okay = false;
-          message.dvl_status.set__data(message.dvl_status.data|1);
-        } 
-        if(latest_dvl_message.pos_std>this->get_parameter("dvl_position_stddev_threshold").as_double()){
-          this->okay=false;
-          message.dvl_status.set__data(message.dvl_status.data|(1>>1));
+      if(this->get_parameter("monitor_dvl_timeout").as_bool()){
+        if(latest_dvl_message.header.stamp.sec!=0){//checking if this is a real message, not just default
+          if(((this->get_clock()->now().seconds()-latest_dvl_message.header.stamp.sec)>this->get_parameter("dvl_message_timeout").as_int())){
+            this->okay = false;
+            message.dvl_status.set__data(message.dvl_status.data|1);
+          } 
+          if(latest_dvl_message.pos_std>this->get_parameter("dvl_position_stddev_threshold").as_double()){
+            this->okay=false;
+            message.dvl_status.set__data(message.dvl_status.data|(1>>1));
+          }
         }
       }
-      if(latest_modem_message.header.stamp.sec!=0){ //checking if this is a real message, not just default
-        if(((this->get_clock()->now().seconds()-latest_modem_message.header.stamp.sec)>this->get_parameter("modem_message_timeout").as_int())){
-          this->okay = false;
-          message.modem_status.set__data(1);
-          surface_then_disarm();
+      if(this->get_parameter("monitor_modem_timeout").as_bool()){
+        if(latest_modem_message.header.stamp.sec!=0){ //checking if this is a real message, not just default
+          if(((this->get_clock()->now().seconds()-latest_modem_message.header.stamp.sec)>this->get_parameter("modem_message_timeout").as_int())){
+            this->okay = false;
+            message.modem_status.set__data(1);
+            surface_then_disarm();
+          }
         }
       }
-      if(gps_bad_origin&&this->get_parameter("gps_origin_check").as_bool()){
+      if(gps_bad_origin&&this->get_parameter("monitor_gps_origin").as_bool()){
         message.gps_status.set__data(2);
         this->okay=false;
       }
-      if(latest_gps_message.status.satellites_used<(this->get_parameter("gps_sat_num_threshold").as_int())){
-        //not going to set okay to false because this is expected during the mission
-        message.gps_status.set__data(message.gps_status.data|1);
+      if(this->get_parameter("monitor_gps_sats").as_bool()){
+        if(latest_gps_message.status.satellites_used<(this->get_parameter("gps_sat_num_threshold").as_int())){
+          //not going to set okay to false because this is expected during the mission
+          message.gps_status.set__data(message.gps_status.data|1);
+        }
       }
     }
 
@@ -398,7 +406,7 @@ bool update_publishers(){
   
   }
   void gps_fix_callback(const gps_msgs::msg::GPSFix &msg){
-    if(this->get_parameter("gps_origin_check").as_bool()){
+    if(this->get_parameter("monitor_gps_origin").as_bool()){
     if(this->gps_count<this->get_parameter("origin_gps_msgs").as_int()){
       this->gps_count++;
       if(gps_origin_lat!=0 && gps_origin_lon!=0 && gps_origin_alt!=0){ //params grabbed
