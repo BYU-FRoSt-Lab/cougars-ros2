@@ -56,7 +56,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "Serial port initialized");
 
         // Timer to read from serial port
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&ControlNode::readSerialData, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&ControlNode::readSerialData, this));
     }
 
     ~ControlNode() {
