@@ -54,11 +54,8 @@ public:
         write_flag_ = false;
 
 
-        rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
-        qos_profile.reliable();       // Set reliability to reliable
-        qos_profile.transient_local(); // Set durability to transient local
         system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
-            "system/status", qos_profile, std::bind(&MultiTopicBagRecorder::system_callback, this, _1));
+            "system/status", 1, std::bind(&MultiTopicBagRecorder::system_callback, this, _1));
 
         this->declare_parameter<bool>("sensors", true);
         this->declare_parameter<bool>("system", true);

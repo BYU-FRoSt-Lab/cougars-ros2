@@ -59,13 +59,9 @@ public:
         desired_speed_pub_ = this->create_publisher<frost_interfaces::msg::DesiredSpeed>("desired_speed", 10);
 
         // Subscribers
-        // Use a transient local QoS profile to get the last published system status on startup
-        rclcpp::QoS qos_profile(5);
-        qos_profile.reliable();
-        qos_profile.transient_local();
 
         system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
-            "system/status", qos_profile, std::bind(&WaypointFollowerNode::system_callback, this, std::placeholders::_1));
+            "system/status", 1, std::bind(&WaypointFollowerNode::system_callback, this, std::placeholders::_1));
 
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
             "smoothed_output", 10, std::bind(&WaypointFollowerNode::odom_callback, this, std::placeholders::_1));

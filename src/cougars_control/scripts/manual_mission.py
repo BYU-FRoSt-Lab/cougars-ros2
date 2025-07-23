@@ -111,13 +111,9 @@ class ManualMission(Node):
         '''
 
         # Create the system services subscriber and publisher
-        qos_reliable_profile = QoSProfile(depth=1)
-        qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
-        qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
-
         # TODO: Document
-        self.system_status_pub = self.create_publisher(SystemControl, 'system/status', qos_reliable_profile)
-        self.system_status_sub = self.create_subscription(SystemControl, 'system/status', self.system_status_callback, qos_reliable_profile)
+        self.system_status_pub = self.create_publisher(SystemControl, 'system/status', 1)
+        self.system_status_sub = self.create_subscription(SystemControl, 'system/status', self.system_status_callback, 1)
 
         self.get_parameters()
 
