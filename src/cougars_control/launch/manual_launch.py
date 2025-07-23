@@ -67,8 +67,11 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(os.path.join(localization_package_dir, "sensors_launch.py"))
         )
         launch_actions.append(sensors)
+        print("Sensors launch included.")
     else:
+        print("HERE")
         if LaunchConfiguration('demo') == "True":
+            print("Demo mode is enabled.")
             demo = launch.actions.IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(control_package_dir, "demo_launch.py"))
             )
