@@ -24,15 +24,21 @@ def generate_launch_description():
     param_file = '/home/frostlab/config/deploy_tmp/vehicle_params.yaml'
     fleet_param = '/home/frostlab/config/deploy_tmp/fleet_params.yaml'
     # Get the directory of the launch files
-    package_dir = os.path.join(
+    localization_package_dir = os.path.join(
         get_package_share_directory('cougars_localization'), 'launch')
-    
+    control_package_dir = os.path.join(
+        get_package_share_directory('cougars_control'), 'launch')
+
     namespace_launch_arg = DeclareLaunchArgument(
         'namespace',
         default_value='coug0'
     )
     sim_launch_arg = DeclareLaunchArgument(
         'sim',
+        default_value='False'
+    )
+    demo_launch_arg = DeclareLaunchArgument(
+        'demo',
         default_value='False'
     )
     param_file_launch_arg = DeclareLaunchArgument(
@@ -58,11 +64,17 @@ def generate_launch_description():
 
     if LaunchConfiguration('sim') == "False":
         sensors = launch.actions.IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(package_dir, "sensors_launch.py"))
+            PythonLaunchDescriptionSource(os.path.join(localization_package_dir, "sensors_launch.py"))
         )
         launch_actions.append(sensors)
+    else:
+        if LaunchConfiguration('demo') == "True":
+            demo = launch.actions.IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(control_package_dir, "demo_launch.py"))
+            )
+            launch_actions.append(demo)
 
-    if LaunchConfiguration('fins') == "true":
+    if LaunchConfiguration('fins') == "True":
         fins_manual = launch_ros.actions.Node(
             package='cougars_control',
             executable='fins_manual.py',
@@ -94,7 +106,7 @@ def generate_launch_description():
     launch_actions.extend([
         
         launch.actions.IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(package_dir, "converters_launch.py"))
+            PythonLaunchDescriptionSource(os.path.join(localization_package_dir, "converters_launch.py"))
         ),  
         #start factor graph for logging
         launch_ros.actions.Node(
