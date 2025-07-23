@@ -27,10 +27,11 @@ echo -e "\033[0m\033[36m########################################################
 echo ""
 
 # Parse options
-SIM="false" # Default value for sim
-VERBOSE="false"
-GPS="false"
-FINS="false"
+SIM="False" # Default value for sim
+DEMO="False" # Default value for demo
+VERBOSE="False"
+GPS="False"
+FINS="False"
 MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
 # Set a default vehicle parameter file. It can be overridden by the -s flag.
 
@@ -41,6 +42,7 @@ while getopts "svgfdb" opt; do
       ;;
     d)
       DEMO="True"
+      printWarning "Demo mode enabled. Depth Sensor will not publish"
       ;;
     v)
       VERBOSE="True"
@@ -88,8 +90,8 @@ case $1 in
         fleet_param:=$FLEET_PARAMS_FILE \
         sim:=$SIM \
         verbose:=$VERBOSE \
-        fins:=$FINS \ 
-        demo:=$DEMO 
+        fins:=$FINS \
+        demo:=$DEMO
         ;;
     "manual")
         ros2 launch cougars_control manual_launch.py \
