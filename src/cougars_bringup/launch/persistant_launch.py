@@ -71,7 +71,7 @@ def generate_launch_description():
             name='bag_recorder',
             parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')], 
             namespace=LaunchConfiguration('namespace'),
-            output='screen',
+            output=output,
         ),
 
     ])
