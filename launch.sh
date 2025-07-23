@@ -34,13 +34,16 @@ FINS="false"
 MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
 # Set a default vehicle parameter file. It can be overridden by the -s flag.
 
-while getopts "svgfb" opt; do
+while getopts "svgfdb" opt; do
   case $opt in
     s)
-      SIM="true"
+      SIM="True"
+      ;;
+    d)
+      DEMO="True"
       ;;
     v)
-      VERBOSE="true"
+      VERBOSE="True"
       ;;
     *)
       printError "Invalid option"
@@ -85,7 +88,8 @@ case $1 in
         fleet_param:=$FLEET_PARAMS_FILE \
         sim:=$SIM \
         verbose:=$VERBOSE \
-        fins:=$FINS
+        fins:=$FINS \ 
+        demo:=$DEMO 
         ;;
     "manual")
         ros2 launch cougars_control manual_launch.py \
@@ -93,7 +97,8 @@ case $1 in
           param_file:="$VEHICLE_PARAMS_FILE" \
           sim:="$SIM" \
           verbose:="$VERBOSE" \
-          fins:="$FINS"
+          fins:="$FINS" \
+          demo:="$DEMO"
         ;;
     "moos")
         ros2 launch cougars_control moos_launch.py \
@@ -110,7 +115,7 @@ case $1 in
         ;;
 
     "demo")
-        ros2 launch cougars_localization demo_launch.py \
+        ros2 launch cougars_control demo_launch.py \
           namespace:="$NAMESPACE" \
           param_file:="$VEHICLE_PARAMS_FILE"
         ;;
