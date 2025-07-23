@@ -27,22 +27,25 @@ echo -e "\033[0m\033[36m########################################################
 echo ""
 
 # Parse options
-SIM_PARAM="false" # Default value for sim
-VERBOSE="false"
-GPS="false"
-FINS="false"
+SIM="False" # Default value for sim
+DEMO="False" # Default value for demo
+VERBOSE="False"
+GPS="False"
+FINS="False"
 MISSION_NAME="/home/frostlab/config/mission.yaml" # Default mission file
 # Set a default vehicle parameter file. It can be overridden by the -s flag.
 
-while getopts "svgfb" opt; do
+while getopts "svgfdb" opt; do
   case $opt in
     s)
-      SIM_PARAM="true"
-      VEHICLE_PARAMS_FILE="/home/frostlab/config/sim_params.yaml"
-      printInfo "Using SIM param file: $VEHICLE_PARAMS_FILE"
+      SIM="True"
+      ;;
+    d)
+      DEMO="True"
+      printWarning "Demo mode enabled. Depth Sensor will not publish"
       ;;
     v)
-      VERBOSE="true"
+      VERBOSE="True"
       ;;
     *)
       printError "Invalid option"
@@ -81,21 +84,29 @@ source ~/ros2_ws/install/setup.bash
 
 case $1 in
     "full")
-        ros2 launch cougars_bringup persistant_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE fleet_param:=$FLEET_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE fins:=$FINS
+        ros2 launch cougars_bringup persistant_launch.py \
+        namespace:=$NAMESPACE \
+        param_file:=$VEHICLE_PARAMS_FILE \
+        fleet_param:=$FLEET_PARAMS_FILE \
+        sim:=$SIM \
+        verbose:=$VERBOSE \
+        fins:=$FINS \
+        demo:=$DEMO
         ;;
     "manual")
         ros2 launch cougars_control manual_launch.py \
           namespace:="$NAMESPACE" \
           param_file:="$VEHICLE_PARAMS_FILE" \
-          sim:="$SIM_PARAM" \
+          sim:="$SIM" \
           verbose:="$VERBOSE" \
-          fins:="$FINS"
+          fins:="$FINS" \
+          demo:="$DEMO"
         ;;
     "moos")
         ros2 launch cougars_control moos_launch.py \
           namespace:="$NAMESPACE" \
           param_file:="$VEHICLE_PARAMS_FILE" \
-          sim:="$SIM_PARAM" \
+          sim:="$SIM" \
           verbose:="$VERBOSE" \
           GPS:="$GPS"
         ;;
@@ -106,13 +117,19 @@ case $1 in
         ;;
 
     "demo")
-        ros2 launch cougars_localization demo_launch.py \
+        ros2 launch cougars_control demo_launch.py \
           namespace:="$NAMESPACE" \
           param_file:="$VEHICLE_PARAMS_FILE"
         ;;
     "waypoint")
         # Launch with the selected mission file
-        ros2 launch cougars_control waypoint_launch.py namespace:=$NAMESPACE param_file:=$VEHICLE_PARAMS_FILE sim:=$SIM_PARAM verbose:=$VERBOSE mission_file:=$MISSION_NAME GPS:=$GPS
+        ros2 launch cougars_control waypoint_launch.py \
+        namespace:=$NAMESPACE \
+        param_file:=$VEHICLE_PARAMS_FILE \
+        sim:=$SIM \
+        verbose:=$VERBOSE \
+        mission_file:=$MISSION_NAME \
+        GPS:=$GPS
         ;;
 
     "bluerov")

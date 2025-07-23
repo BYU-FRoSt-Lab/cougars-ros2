@@ -54,17 +54,14 @@ public:
         write_flag_ = false;
 
 
-        rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
-        qos_profile.reliable();       // Set reliability to reliable
-        qos_profile.transient_local(); // Set durability to transient local
         system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
-            "system/status", qos_profile, std::bind(&MultiTopicBagRecorder::system_callback, this, _1));
+            "system/status", 1, std::bind(&MultiTopicBagRecorder::system_callback, this, _1));
 
         this->declare_parameter<bool>("sensors", true);
         this->declare_parameter<bool>("system", true);
         this->declare_parameter<bool>("processed", true);
         this->declare_parameter<bool>("controls", true);
-        this->declare_parameter<std::string>("mission_file_path", "");
+        this->declare_parameter<std::string>("mission_folder_path", "");
 
         bool sensors, system, processed, controls;
         this->get_parameter("sensors", sensors);
@@ -101,6 +98,8 @@ public:
             subscribe_to_topic<nav_msgs::msg::Odometry>("gps/odom");
             subscribe_to_topic<nav_msgs::msg::Odometry>("smoothed_output");
             subscribe_to_topic<sensor_msgs::msg::Imu>("modem_imu");
+            subscribe_to_topic<geometry_msgs::msg::PoseWithCovarianceStamped>("depth_data");
+
         }
         
         if (controls){
@@ -152,20 +151,19 @@ private:
             writer_->open(bag_folder);  
             write_flag_ = true;
 
-            // Retrieve the mission file path from parameter
-            std::string mission_file_src;
-            if (this->get_parameter("mission_file_path", mission_file_src) && !mission_file_src.empty()) {
-                // TODO just get the name of the mission from the file path instead
-                std::string mission_file_dst = bag_folder + "/mission.json";
+            // Retrieve the mission folder path from parameter
+            std::string mission_folder_src;
+            if (this->get_parameter("mission_folder_path", mission_folder_src) && !mission_folder_src.empty()) {
+                std::string mission_folder_dst = bag_folder + "/mission";
                 try {
-                    std::filesystem::copy_file(mission_file_src, mission_file_dst,
-                                            std::filesystem::copy_options::overwrite_existing);
-                    RCLCPP_INFO(this->get_logger(), "Copied mission file to %s", mission_file_dst.c_str());
+                    // Copy the mission folder to the bag folder
+                    std::filesystem::copy(mission_folder_src, mission_folder_dst, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+                    RCLCPP_INFO(this->get_logger(), "Mission folder copied to: %s", mission_folder_dst.c_str());
                 } catch (std::filesystem::filesystem_error& e) {
-                    RCLCPP_WARN(this->get_logger(), "Failed to copy mission file: %s", e.what());
+                    RCLCPP_WARN(this->get_logger(), "Failed to copy mission folder: %s", e.what());
                 }
             } else {
-                RCLCPP_WARN(this->get_logger(), "mission_file_path parameter is not set or empty");
+                RCLCPP_WARN(this->get_logger(), "mission_folder_path parameter is not set or empty");
             }
 
         } else {
