@@ -80,34 +80,45 @@ private:
         int bytes_read = sp_nonblocking_read(serial_port_, temp_buffer, sizeof(temp_buffer) - 1);
         
         if (bytes_read > 0) {
-            temp_buffer[bytes_read] = '\0';  // Null terminate the buffer
-            buffer_ += temp_buffer;  // Append to existing buffer
-
-            std::cout << "Received: " << temp_buffer << std::endl;
+            temp_buffer[bytes_read] = '\0';
+            buffer_ += temp_buffer;
 
             std::vector<std::string> messages = splitMessages(buffer_);
-            
-            // Process complete messages
-            for (size_t i = 0; i < messages.size() - 1; ++i) {
-                processMessage(messages[i]);
+
+            // std::cout << "Split messages:\n";
+            for (const std::string& msg : messages) {
+                // std::cout << "message: [" << msg << "]" << std::endl;
+                processMessage(msg);  // process each message individually
             }
-            
-            // Keep the last (potentially incomplete) message in the buffer
-            buffer_ = messages.empty() ? "" : messages.back();
         } else if (bytes_read < 0) {
             RCLCPP_ERROR(this->get_logger(), "Error reading from serial port");
         }
     }
 
-    std::vector<std::string> splitMessages(const std::string& data) {
+    std::vector<std::string> splitMessages(std::string& data) {
         std::vector<std::string> messages;
-        std::istringstream stream(data);
-        std::string message;
-        while (std::getline(stream, message, delimiter_)) {
-            if (!message.empty()) {
-                messages.push_back(message);
+
+        size_t start = 0;
+        size_t end = 0;
+
+        while ((end = data.find('\n', start)) != std::string::npos) {
+            std::string msg = data.substr(start, end - start);
+
+            // Trim carriage return if present
+            if (!msg.empty() && msg.back() == '\r') {
+                msg.pop_back();
             }
+
+            if (!msg.empty()) {
+                messages.push_back(msg);
+            }
+
+            start = end + 1;
         }
+
+        // Remainder goes back to buffer
+        data = data.substr(start);
+
         return messages;
     }
 
@@ -124,8 +135,12 @@ private:
                     pressure_pub_->publish(pressure_msg);
                     std::cout << "Published pressure: " << pressure << std::endl;
                 }
+                else {
+                    // In demo mode, we can log the pressure without publishing
+                    // std::cout << "Demo mode: Pressure not published, value: " << pressure << std::endl;
+                    RCLCPP_INFO_THROTTLE(this->get_logger(),*this->get_clock(), 5000, "Demo mode: Pressure not published, value: %f", pressure);
+                }
                 
-                // RCLCPP_INFO(this->get_logger(), "Published depth: %f", pressure);
             }
         }
         if (message.rfind("$BATTE", 0) == 0){
