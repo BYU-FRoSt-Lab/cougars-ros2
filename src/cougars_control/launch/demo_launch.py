@@ -10,12 +10,7 @@ import yaml
 
 def generate_launch_description():
     '''
-    :author: Nelson Durrant
-    :date: September 2024
-    
     Launches the sensor nodes for the vehicle.
-
-    :return: The launch description.
     '''
 
     namespace_launch_arg = DeclareLaunchArgument(
@@ -36,6 +31,10 @@ def generate_launch_description():
     )
     
     return launch.LaunchDescription([
+        namespace_launch_arg,
+        sim_launch_arg,
+        param_file_launch_arg,
+        fleet_param_launch_arg,
         
         # Serial Teensy connection
         launch_ros.actions.Node(

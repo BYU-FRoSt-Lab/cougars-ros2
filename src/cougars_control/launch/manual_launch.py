@@ -1,23 +1,25 @@
-import sys
-
 import launch
-import launch_ros.actions
+from launch_ros.actions import Node
 import launch_ros.descriptions
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.conditions import IfCondition, UnlessCondition
+
 
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 
 import os
 
+def debug_launch_args(context, *args, **kwargs):
+    demo_val = LaunchConfiguration('demo').perform(context)
+    sim_val = LaunchConfiguration('sim').perform(context)
+    print(f"[DEBUG] demo = {demo_val}, sim = {sim_val}")
+    return []
 
 def generate_launch_description():
     '''
-
     Launches the manual control and sensor nodes for the vehicle.
-
-    :return: The launch description.
     '''
 
     # default parameter file paths
@@ -49,61 +51,82 @@ def generate_launch_description():
         'fleet_param',
         default_value=fleet_param
     )
+    # TODO fix verbose mode
     verbose_launch_arg = DeclareLaunchArgument(
         'verbose',
         default_value='False',    
     )
-    if LaunchConfiguration('verbose') == 'True':
-        print("Verbose mode is enabled.")
-        output = 'screen'
-    else:
-        print("Verbose mode is disabled.")
-        output = 'log'
     
     launch_actions = []
+    launch_actions.extend([
+        namespace_launch_arg,
+        sim_launch_arg,
+        demo_launch_arg,
+        param_file_launch_arg,
+        fleet_param_launch_arg,
+        verbose_launch_arg,
+    ])
 
-    if LaunchConfiguration('sim') == "False":
-        sensors = launch.actions.IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(localization_package_dir, "sensors_launch.py"))
-        )
-        launch_actions.append(sensors)
-        print("Sensors launch included.")
-    else:
-        print("HERE")
-        if LaunchConfiguration('demo') == "True":
-            print("Demo mode is enabled.")
-            demo = launch.actions.IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(os.path.join(control_package_dir, "demo_launch.py"))
-            )
-            launch_actions.append(demo)
+    # Include sensors if NOT sim
+    sensors = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(localization_package_dir, "sensors_launch.py")
+        ),
+        condition=UnlessCondition(LaunchConfiguration('sim'))
+    )
 
-    if LaunchConfiguration('fins') == "True":
-        fins_manual = launch_ros.actions.Node(
-            package='cougars_control',
-            executable='fins_manual.py',
-            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')], 
-            namespace=LaunchConfiguration('namespace'),
-            output=output,
-            emulate_tty=True,
+    # Include demo if sim == True AND demo == True
+    demo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(control_package_dir, "demo_launch.py")
+        ),
+        condition=IfCondition(
+            PythonExpression([
+                LaunchConfiguration('sim'), ' and ',
+                LaunchConfiguration('demo')
+            ])
         )
-        launch_actions.append(fins_manual)
-    else:
-        manual_mission = launch_ros.actions.Node(
-            package='cougars_control',
-            executable='manual_mission.py',
-            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
-            namespace=LaunchConfiguration('namespace'),
-            output=output,
-        )
-        controls = launch_ros.actions.Node(
-            package='cougars_control',
-            executable='coug_controls',
-            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
-            namespace=LaunchConfiguration('namespace'),
-            output=output,
-        )
-        launch_actions.append(manual_mission)
-        launch_actions.append(controls)
+    )
+
+    launch_actions.append(OpaqueFunction(function=debug_launch_args))
+    launch_actions.append(sensors)
+    launch_actions.append(demo)
+
+    # Fins manual node — only if fins is true
+    fins_manual = Node(
+        package='cougars_control',
+        executable='fins_manual.py',
+        parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+        namespace=LaunchConfiguration('namespace'),
+        output='log',
+        emulate_tty=True,
+        condition=IfCondition(LaunchConfiguration('fins'))
+    )
+
+    # Manual mission — only if fins is false
+    manual_mission = Node(
+        package='cougars_control',
+        executable='manual_mission.py',
+        parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+        namespace=LaunchConfiguration('namespace'),
+        output='log',
+        condition=UnlessCondition(LaunchConfiguration('fins'))
+    )
+
+    # Controls node — also only if fins is false
+    controls = Node(
+        package='cougars_control',
+        executable='coug_controls',
+        parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+        namespace=LaunchConfiguration('namespace'),
+        output='log',
+        condition=UnlessCondition(LaunchConfiguration('fins'))
+    )
+
+    # Add all to launch_actions (launch system will evaluate conditions at runtime)
+    launch_actions.append(fins_manual)
+    launch_actions.append(manual_mission)
+    launch_actions.append(controls)
     
     
     launch_actions.extend([
@@ -117,7 +140,7 @@ def generate_launch_description():
             executable='factor_graph.py',
             parameters=[LaunchConfiguration('param_file')],
             namespace=LaunchConfiguration('namespace'),
-            output=output,
+            output='log',
         ), 
 
 
@@ -127,7 +150,7 @@ def generate_launch_description():
         #     executable='rf_bridge.py',
         #     parameters=[LaunchConfiguration('param_file')],
         #     namespace=LaunchConfiguration('namespace'),
-        #     output=output,
+        #     output='log',
         # ), 
         
     ])
