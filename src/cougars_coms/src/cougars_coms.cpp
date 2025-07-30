@@ -234,6 +234,9 @@ public:
         status_msg.safety_mask = this->safety_mask;
         status_msg.x = this->position_x;
         status_msg.y = this->position_y;
+        status_msg.roll = this->roll;
+        status_msg.pitch = this->pitch;
+        status_msg.yaw = this->yaw;
         status_msg.heading = 0;
         status_msg.depth = this->depth; 
         status_msg.x_vel = this->velocity_x;

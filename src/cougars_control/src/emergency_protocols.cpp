@@ -313,7 +313,6 @@ bool update_publishers(){
     message.dvl_status.set__data(0);
     message.modem_status.set__data(0);
     message.gps_status.set__data(0);
-    message.sender_id.set__data(1); //message from base station
     message.imu_published.set__data(this->imuPub);
     if (counter < 1){ //dont run the first time
       counter++;
