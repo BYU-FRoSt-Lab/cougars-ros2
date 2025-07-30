@@ -291,6 +291,7 @@ public:
 
         const LocalizationInfo* info = reinterpret_cast<const LocalizationInfo*>(msg.packet_data.data());
         frost_interfaces::msg::LocalizationData localization_data;
+        localization_data.header.stamp = this->now();
         localization_data.vehicle_id = msg.src_id;
         localization_data.x = info->x;
         localization_data.y = info->y;
@@ -317,6 +318,7 @@ public:
         if (msg.includes_range && msg.includes_usbl) {
             RCLCPP_INFO(this->get_logger(), "Vehicle %d:  Range distance: %d, Azimuth: %i, Elevation: %i", msg.src_id, msg.range_dist, msg.usbl_azimuth, msg.usbl_elevation);
             frost_interfaces::msg::LocalizationDataShort localization_data_short;
+            localization_data_short.header.stamp = this->now();
             localization_data_short.vehicle_id = msg.src_id;
             localization_data_short.range = msg.range_dist;
             localization_data_short.azimuth = msg.usbl_azimuth;
