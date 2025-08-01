@@ -60,12 +60,12 @@ struct VehicleStatus {
 
     uint8_t safety_mask;
 
-    int8_t x;
-    int8_t y;
+    int16_t x;
+    int16_t y;
     int8_t x_vel;
     int8_t y_vel;
     uint8_t pressure;
-    uint8_t heading;
+    uint16_t heading;
 
 }__attribute__((packed));
 
