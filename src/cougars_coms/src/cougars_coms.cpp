@@ -327,6 +327,7 @@ public:
             localization_data_short.range = msg.range_dist;
             localization_data_short.azimuth = msg.usbl_azimuth;
             localization_data_short.elevation = msg.usbl_elevation;
+            localization_data_short.depth = msg.position_depth;
             this->localization_data_short_publisher_->publish(localization_data_short);
         }
     }
