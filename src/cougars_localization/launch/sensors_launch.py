@@ -81,12 +81,12 @@ def generate_launch_description():
         #     executable='micro_ros_agent',
         #     arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
         # ),
-        launch_ros.actions.Node(
-            package='cougars_control',
-            executable='emergency_protocols',
-            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
-            namespace=LaunchConfiguration('namespace'),
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_control',
+        #     executable='emergency_protocols',
+        #     parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+        #     namespace=LaunchConfiguration('namespace'),
+        # ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='dvl_manager.py',
