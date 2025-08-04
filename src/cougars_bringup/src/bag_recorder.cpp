@@ -41,6 +41,7 @@
 #include <std_msgs/msg/int32.hpp>
 #include <gps_msgs/msg/gps_fix.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
 
 
 using std::placeholders::_1;
@@ -87,6 +88,7 @@ public:
         if (system){
             // System
             subscribe_to_topic<frost_interfaces::msg::SystemStatus>("safety_status");
+            subscribe_to_topic<diagnostic_msgs::msg::DiagnosticArray>("diagnostics");
         }
 
 
