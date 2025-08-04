@@ -3,139 +3,138 @@ import sys
 import launch
 import launch_ros.actions
 import launch_ros.descriptions
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 
 import yaml
 
 def generate_launch_description():
     '''
-    :author: Nelson Durrant
-    :date: September 2024
-    
     Launches the sensor nodes for the vehicle.
-
-    :return: The launch description.
     '''
 
-    param_file = '/home/frostlab/config/vehicle_params.yaml'
-    fleet_param = '/home/frostlab/config/fleet_params.yaml'
-    GPS = "false"  # Default to 'false'
-    verbose = "false"
+    param_file = '/home/frostlab/config/deploy_tmp/vehicle_params.yaml'
+    fleet_param = '/home/frostlab/config/deploy_tmp/fleet_params.yaml'
+    GPS = "False"  # Default to 'False'
+    verbose = "False"
     namespace=''
-    BLUEROV = "false"
-
-    for arg in sys.argv:
-        if arg.startswith('namespace:='):
-            namespace = arg.split(':=')[1]
-        if arg.startswith('param_file:='):
-            param_file = arg.split(':=')[1]
-        if arg.startswith('fleet_param:='):
-            fleet_param = arg.split(':=')[1]
-        if arg.startswith("verbose:="):
-            verbose = arg.split(":=")[1].lower()
-        if arg.startswith("GPS:="):
-            GPS = arg.split(":=")[1].lower()
-        if arg.startswith("BLUEROV:="):
-            BLUEROV = arg.split(":=")[1].lower()
-    
-    if verbose == "true":
-        output = 'screen'
-    else:
-        output = 'log'
+    BLUEROV = "False"
+ 
+    # Declare launch arguments
+    namespace_launch_arg = DeclareLaunchArgument(
+        'namespace',
+        default_value=namespace,
+        description='Namespace for the vehicle'
+    )
+    param_file_launch_arg = DeclareLaunchArgument(
+        'param_file',
+        default_value=param_file,
+        description='Path to the vehicle parameter file'
+    )
+    fleet_param_launch_arg = DeclareLaunchArgument(
+        'fleet_param',
+        default_value=fleet_param,          
+        description='Path to the fleet parameter file'
+    )
 
     launch_actions = []
-
-    if GPS == "false":
-        dvl = launch_ros.actions.Node(
-            package='dvl_a50', 
-            executable='dvl_a50_sensor', 
-            parameters=[param_file],
-            namespace=namespace,
-        )
-        launch_actions.append(dvl)
-
-    if BLUEROV == "false":
-        # Serial Teensy connection
-        launch_actions.append(
-            launch_ros.actions.Node(
-            package='fin_sub_cpp', 
-            executable='control_node', 
-            namespace=namespace,
-            output='log',
-        ))
-        print("Launching not on blueROV")
-    else:
-        # Pressure sensor for blueROV
-        launch_actions.append(launch_ros.actions.Node(
-            package='pressure_sensor',
-            executable='get_pressure',
-            parameters=[param_file],
-            namespace=namespace,
-            output=output,
-        ))
-
-
-    with open(param_file, 'r') as f:
-        vehicle_params = yaml.safe_load(f)
-    
     launch_actions.extend([
-        
+        namespace_launch_arg,
+        param_file_launch_arg,
+        fleet_param_launch_arg,
+    ])
+
+    # TODO if GPS is false
+    dvl = launch_ros.actions.Node(
+        package='dvl_a50', 
+        executable='dvl_a50_sensor', 
+        parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+        namespace=LaunchConfiguration('namespace'),
+    )
+    launch_actions.append(dvl)
+
+    # TODO if BLUEROV is false
+    # Serial Teensy connection
+    launch_actions.append(
+        launch_ros.actions.Node(
+        package='fin_sub_cpp', 
+        executable='control_node', 
+        namespace=LaunchConfiguration('namespace'),
+        output='log',
+    ))
+    # TODO if BLUEROV is true
+    # TODO DEFINETLY NEED TO FIX THIS
+    # Pressure sensor for blueROV
+    # launch_actions.append(launch_ros.actions.Node(
+    #     package='pressure_sensor',
+    #     executable='get_pressure',
+    #     parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+    #     namespace=LaunchConfiguration('namespace'),
+    #     output='log',
+    # ))
+
+
+    launch_actions.extend([
         # # Launch microROS
         # launch_ros.actions.Node(
         #     package='micro_ros_agent',
         #     executable='micro_ros_agent',
         #     arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
         # ),
-        launch_ros.actions.Node(
-            package='cougars_control',
-            executable='emergency_protocols',
-            parameters=[param_file, fleet_param],
-            namespace=namespace,
-        ),
+        # launch_ros.actions.Node(
+        #     package='cougars_control',
+        #     executable='emergency_protocols',
+        #     parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+        #     namespace=LaunchConfiguration('namespace'),
+        # ),
         launch_ros.actions.Node(
             package='cougars_localization',
             executable='dvl_manager.py',
-            parameters=[param_file, fleet_param],
-            namespace=namespace,
+            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+            namespace=LaunchConfiguration('namespace'),
         ),
 
 
         launch_ros.actions.Node(
             package='cougars_control',
             executable='coug_kinematics',
-            parameters=[param_file, fleet_param],
-            namespace=namespace,
-            output=output,
+            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+            namespace=LaunchConfiguration('namespace'),
+            output='log',
         ),
 
         # Setup the USBL modem
         launch_ros.actions.Node(
             package='seatrac',
             executable='modem',
-            parameters=[param_file, fleet_param],
-            namespace=namespace,
-            output=output,
+            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+            namespace=LaunchConfiguration('namespace'),
+            output='log',
         ),
         launch_ros.actions.Node(
             package='cougars_coms',
             executable='vehicle_pinger',
-            parameters=[param_file, fleet_param],
-            namespace=namespace,
-            output=output,
+            parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')],
+            namespace=LaunchConfiguration('namespace'),
+            output='log',
         ),
         # Setup the GPS
+        # TODO make sure these parameters are still being loaded correctly
         launch_ros.actions.ComposableNodeContainer(
             package='rclcpp_components',
             executable='component_container',
             name='fix_and_odometry_container',
-            namespace=namespace,
+            namespace=LaunchConfiguration('namespace'),
             composable_node_descriptions=[
                 launch_ros.descriptions.ComposableNode(
                     package='gpsd_client',
                     plugin='gpsd_client::GPSDClientComponent',
-                    name='gpsd_client',
-                    namespace=namespace,
+                    # name='gpsd_client',
+                    namespace=LaunchConfiguration('namespace'),
                     parameters=[
-                        vehicle_params[namespace]['gpsd_client']['ros__parameters'],
+                        LaunchConfiguration('param_file'),
+                        LaunchConfiguration('fleet_param'),
+                        # vehicle_params[namespace]['gpsd_client']['ros__parameters'],
                         {'log_level': 'warn'}  # Add log level here
                     ],
                     extra_arguments=[{'use_intra_process_comms': True}]
@@ -143,14 +142,14 @@ def generate_launch_description():
                 launch_ros.descriptions.ComposableNode(
                     package='gps_tools',
                     plugin='gps_tools::UtmOdometryComponent',
-                    namespace=namespace,
+                    namespace=LaunchConfiguration('namespace'),
                     name='utm_gpsfix_to_odometry_node',
                     parameters=[
                         {'log_level': 'warn'}  # Add log level here
                     ],
                 ),
             ],
-            output=output,
+            output='log',
             arguments=['--ros-args', '--log-level', 'WARN'],
         ),
     ])

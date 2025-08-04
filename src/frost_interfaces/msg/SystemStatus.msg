@@ -12,5 +12,3 @@ std_msgs/Int8 modem_status
 std_msgs/Int8 dvl_status
 #0= ok, 1 = surfacing, 2=surfaced/disarmed
 std_msgs/Int8 emergency_status
-#what node is sending this, 1= coug, 0= base station
-std_msgs/Int8 sender_id

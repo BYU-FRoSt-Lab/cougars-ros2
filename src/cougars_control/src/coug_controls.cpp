@@ -190,8 +190,8 @@ public:
     this->declare_parameter("wn_d_theta", 0.25);
     this->declare_parameter("outer_loop_threshold", 2.5);
     this->declare_parameter("saturation_offset", 1.7);
-    this->declare_parameter("depth_from_bottom", false);
-    this->dfb = this->get_parameter("depth_from_bottom").as_bool();
+    // this->declare_parameter("depth_from_bottom", false);
+    // this->dfb = this->get_parameter("depth_from_bottom").as_bool();
 
     update_parameters();
     /**
@@ -298,11 +298,8 @@ public:
         "dvl/velocity", qos,
         std::bind(&CougControls::dvl_velocity_callback, this, _1));
 
-    rclcpp::QoS qos_profile(5);  // Depth of 5 messages in the queue
-    qos_profile.reliable();       // Set reliability to reliable
-    qos_profile.transient_local(); // Set durability to transient local
     system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
-            "system/status", qos_profile, std::bind(&CougControls::system_callback, this, _1));
+            "system/status", 1, std::bind(&CougControls::system_callback, this, _1));
 
 
     this->velocity[0] = 0.6f;
@@ -371,27 +368,38 @@ private:
   void handle_service(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
                     std::shared_ptr<std_srvs::srv::SetBool::Response> response){
     // Set the initialization flag based on the request
-    this->init_flag = request->data;
+
+    set_init_flag(request->data);
 
     // Respond with success and an appropriate message
     if (request->data) {
         response->success = true;
         response->message = "Controller Node initialized.";
-
-        update_parameters();
-        RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
     } else {
         response->success = false;
         response->message = "Controller Node de-initialized.";
-        RCLCPP_INFO(this->get_logger(), "Controller Node de-initialized.");
     }
   }
 
+  void set_init_flag(bool value){
+    this->init_flag = value;
+    update_parameters();
+    RCLCPP_INFO(this->get_logger(), value ? "Controller Node initialized." : "Controller Node de-initialized.");
+    if(value){
+      // If the init flag is set, start the control loop
+      RCLCPP_INFO(this->get_logger(), "Controller Node initialized.");
+    } else {
+      // Publish a empty command to stop the vehicle
+     RCLCPP_INFO(this->get_logger(), "published empty command to stop vehicle");
+      auto message = frost_interfaces::msg::UCommand();
+      u_command_publisher_->publish(message);
+    }
+  }
+  
   void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
   {
      // Set the boolean to the requested value
-    this->init_flag = msg->thruster_arm.data;
-    RCLCPP_INFO(this->get_logger(), this->init_flag ? "Controller Node initialized." : "Controller Node de-initialized.");
+    set_init_flag(msg->start.data);
     update_parameters();
 
   }
@@ -418,10 +426,11 @@ private:
     }
     RCLCPP_INFO(this->get_logger(), "New Depth Desired: %f, Old desired depth %f", depth_msg.desired_depth, this->desired_depth);
     this->desired_depth = depth_msg.desired_depth;
+    this->dfb = depth_msg.dfb;
 
     // TODO reset integrator term??
     // TODO in the message type specify the dfb or not
-    if (dfb){
+    if (this->dfb){
       this->depth_ref = this->altitude;
     }
     else{

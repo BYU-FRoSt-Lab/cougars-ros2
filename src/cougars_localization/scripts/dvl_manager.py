@@ -11,10 +11,6 @@ class DVLAcousticController(Node):
     def __init__(self):
         super().__init__('dvl_acoustic_controller')
 
-        # QoS to match the publisher
-        qos_reliable_profile = QoSProfile(depth=5)
-        qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
-        qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
         # Publisher to DVL config command
         self.publisher = self.create_publisher(ConfigCommand, 'dvl/config/command', 10)
@@ -24,7 +20,7 @@ class DVLAcousticController(Node):
             SystemControl,
             'system/status',
             self.listener_callback,
-            qos_reliable_profile
+            1
         )
 
     def listener_callback(self, msg: SystemControl):

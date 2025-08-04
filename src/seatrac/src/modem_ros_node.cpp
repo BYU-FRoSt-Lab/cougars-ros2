@@ -179,6 +179,19 @@ public:
 
       } break;
 
+      case CID_DAT_QUEUE_SET: {
+        auto msg = seatrac_interfaces::msg::ModemCmdUpdate();
+        msg.header.stamp = timestamp;
+        msg.msg_id = msgId;
+        messages::DataQueueSet report;
+        report = data;
+        msg.command_status_code = report.status;
+        msg.target_id = report.beaconId;
+        // msg.packet_len = report.packetLen;
+        handle_send_update(&msg);
+        cmd_update_pub_->publish(msg);
+      } break;
+
       case CID_ECHO_RESP: {
         auto msg = seatrac_interfaces::msg::ModemRec();
         msg.header.stamp = timestamp;
@@ -507,6 +520,14 @@ private:
         req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
         std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
         this->send(sizeof(req), (const uint8_t*)&req);
+      } break;
+
+      case CID_DAT_QUEUE_SET: {
+        messages::DataQueueSet::Request req;
+        req.destId = static_cast<BID_E>(rosmsg->dest_id);
+        req.packetLen = std::min(rosmsg->packet_len, (uint8_t)sizeof(req.packetData));
+        std::memcpy(req.packetData, rosmsg->packet_data.data(), req.packetLen);
+        this->send(sizeof(req), (const uint8_t *)&req);
       } break;
 
       case CID_ECHO_SEND: {

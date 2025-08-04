@@ -17,9 +17,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(frost_interfaces REQUIRED)
 find_package(seatrac_interfaces REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
 
 add_executable(bag_recorder src/bag_recorder.cpp)
-ament_target_dependencies(bag_recorder rclcpp std_msgs frost_interfaces sensor_msgs dvl_msgs seatrac_interfaces gps_msgs nav_msgs rosbag2_cpp)
+ament_target_dependencies(bag_recorder rclcpp std_msgs frost_interfaces sensor_msgs dvl_msgs seatrac_interfaces gps_msgs nav_msgs rosbag2_cpp diagnostic_msgs)
 
 target_link_libraries(bag_recorder)
 

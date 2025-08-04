@@ -111,13 +111,9 @@ class ManualMission(Node):
         '''
 
         # Create the system services subscriber and publisher
-        qos_reliable_profile = QoSProfile(depth=1)
-        qos_reliable_profile.reliability = ReliabilityPolicy.RELIABLE
-        qos_reliable_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
-
         # TODO: Document
-        self.system_status_pub = self.create_publisher(SystemControl, 'system/status', qos_reliable_profile)
-        self.system_status_sub = self.create_subscription(SystemControl, 'system/status', self.system_status_callback, qos_reliable_profile)
+        self.system_status_pub = self.create_publisher(SystemControl, 'system/status', 1)
+        self.system_status_sub = self.create_subscription(SystemControl, 'system/status', self.system_status_callback, 1)
 
         self.get_parameters()
 
@@ -138,7 +134,8 @@ class ManualMission(Node):
                             'depth': state.get('depth'),
                             'heading': state.get('heading'),  
                             'speed': state.get('speed'),    
-                            'time_seconds': state.get('time_seconds') 
+                            'time_seconds': state.get('time_seconds'),
+                            'depth_from_bottom': state.get('depth_from_bottom', False)  # Default to False if not specified
                         }
                         self.states.append(state)
                     self.get_logger().info(f"Loaded {len(self.states)} states from YAML")
@@ -244,6 +241,7 @@ class ManualMission(Node):
             if self.state_index < len(self.states):  # Technically this is redundant
                 current_state = self.states[self.state_index]
                 depth_msg.desired_depth = current_state['depth']
+                depth_msg.dfb = current_state['depth_from_bottom']
                 heading_msg.desired_heading = current_state['heading']
                 speed_msg.desired_speed = current_state['speed']
 

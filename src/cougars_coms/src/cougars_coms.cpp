@@ -16,6 +16,9 @@
 #include "frost_interfaces/msg/localization_data.hpp"
 #include "frost_interfaces/msg/localization_data_short.hpp"
 
+#include <seatrac_driver/SeatracEnums.h>
+
+
 
 
 #include "cougars_coms/coms_protocol.hpp"
@@ -29,37 +32,48 @@
 using namespace std::literals::chrono_literals;
 using std::placeholders::_1;
 using namespace cougars_coms;
+using namespace narval::seatrac;
 
 
 class ComsNode : public rclcpp::Node {
 public:
     ComsNode() : Node("cougars_coms") {
 
-
+        // id of base station beacon, used for messages sent to the base station
         this->declare_parameter<int>("base_station_beacon_id", 15);
-
         this->base_station_beacon_id_ = this->get_parameter("base_station_beacon_id").as_int();
 
-        this->declare_parameter<int>("localization_response_buffer_ms", 250);
+        //buffer between immediate response to localization requests and secondary packet response
+        this->declare_parameter<int>("localization_queue_buffer_ms", 1000);
+        this->localization_queue_buffer = this->get_parameter("localization_queue_buffer_ms").as_int();
 
-        this->localization_response_buffer = this->get_parameter("localization_response_buffer_ms").as_int();
+        // whether to use factor graph for status message
+        this->declare_parameter<bool>("use_factor_graph", false);
+        this->use_factor_graph_ = this->get_parameter("use_factor_graph").as_bool();
+
+        this->declare_parameter<double>("collision_guard_wait_sec", 3.0);
+        this->collision_guard_wait_ = this->get_parameter("collision_guard_wait_sec").as_double();
 
 
+        // subscriber for safety status messages
         this->safety_subscriber_ = this->create_subscription<frost_interfaces::msg::SystemStatus>(
             "safety_status", 10,
             std::bind(&ComsNode::safety_callback, this, _1)
         );
 
+        // subscriber for battery data
         this->battery_subscriber_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
             "battery/data", 10,
             std::bind(&ComsNode::battery_callback, this, _1)
         );
 
+        // subscriber for pressure data
         this->pressure_subscriber_ = this->create_subscription<sensor_msgs::msg::FluidPressure>(
             "pressure/data", 10,
             std::bind(&ComsNode::pressure_callback, this, _1)
         );
 
+        // subscriber for depth data
         this->depth_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "depth_data", 10,
 
@@ -68,6 +82,7 @@ public:
             }
         );
 
+        //subscriber for dvl data
         this->dvl_subscriber_ = this->create_subscription<dvl_msgs::msg::DVLDR>(
             "dvl/position", 10,
             [this](dvl_msgs::msg::DVLDR msg) {
@@ -80,36 +95,52 @@ public:
             }
         );
         
-
+        // subscriber to modem rec messages, sent when the modem receives a message
         this->modem_subscriber_ = this->create_subscription<seatrac_interfaces::msg::ModemRec>(
             "modem_rec", 10,
             std::bind(&ComsNode::listen_to_modem, this, _1)
         );
 
+        // publisher for sending messages via the modem
         this->modem_publisher_ = this->create_publisher<seatrac_interfaces::msg::ModemSend>("modem_send", 10);
 
-
+        // client for thruster control service
         this->thruster_client_ = this->create_client<std_srvs::srv::SetBool>(
             "arm_thruster"
         );
 
-
+        // client for surface control service
         this->surface_client_ = this->create_client<std_srvs::srv::SetBool>(
             "surface"
         );
 
+        // publisher for full localization data
         this->localization_data_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationData>("localization_data", 10);
 
+        // publisher for short localization data
         this->localization_data_short_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationDataShort>("localization_data_short", 10);
+
+        // timer for queuing localization responses
+        this->localization_response_timer_ = this->create_wall_timer(
+            std::chrono::milliseconds(this->localization_queue_buffer),
+            std::bind(&ComsNode::queue_localization_response, this)
+        );
+
+        // initialize the last modem message time to 10 seconds ago
+        last_modem_msg_time_ = this->now() - rclcpp::Duration::from_seconds(10); // 10s ago
+
     }
 
-
+    // called when a message is revieved through the modem
+    // this function checks the message id and calls the appropriate function
     void listen_to_modem(seatrac_interfaces::msg::ModemRec msg) {
+        this->last_modem_msg_time_ = this->now(); // Update the last modem message time
         COUG_MSG_ID id = (COUG_MSG_ID)msg.packet_data[0];
-        this->check_range_and_azimuth(msg);
         switch(id) {
             default: break;
-            case EMPTY: break;
+            case EMPTY: {
+                record_range_and_azimuth(msg);
+            } break;
             case EMERGENCY_SURFACE: {
                 emergency_surface();
             } break;
@@ -119,9 +150,6 @@ public:
             case REQUEST_STATUS: {
                 send_status();
             } break;
-            case REQUEST_LOCALIZATION_INFO: {
-               send_localization_info(msg.src_id);
-            } break;
             case LOCALIZATION_INFO: {
                record_localization_info(msg);
             } break;
@@ -129,11 +157,13 @@ public:
         }
     }
 
+    // updates battery data
     void battery_callback(sensor_msgs::msg::BatteryState msg) {
         // Here you can handle the battery data if needed
-        this->battery_voltage = msg.percentage * 100; 
+        this->battery_voltage = msg.voltage; 
     }
 
+    // makes a bit mask that has safety status message
     void safety_callback(frost_interfaces::msg::SystemStatus msg) {
         // Here you can handle the safety system status data if needed
         this->safety_mask =
@@ -144,10 +174,12 @@ public:
             (msg.emergency_status.data  ? 1 << 4 : 0);
     }
 
+    // updates pressure data
     void pressure_callback(sensor_msgs::msg::FluidPressure msg) {
         this->pressure = msg.fluid_pressure; 
     }
 
+    // updates position and velocity data from the smoothed odometry topic
     void smoothed_odom_callback(nav_msgs::msg::Odometry msg) {
         this->position_x = msg.pose.pose.position.x;
         this->position_y = msg.pose.pose.position.y;
@@ -155,11 +187,7 @@ public:
         this->velocity_y = msg.twist.twist.linear.y;
     }
 
-    void depth_callback(geometry_msgs::msg::PoseWithCovarianceStamped msg) {
-        this->depth = msg.pose.pose.position.z;
-    }
-
-
+    // kills the thruster using the arm_thruster service
     void kill_thruster() {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received kill command from base station");
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
@@ -192,7 +220,7 @@ public:
         );
     }
 
-
+    // sends a surface command to the vehicle using the surface service
     void emergency_surface() {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received surface command from base station");
         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
@@ -225,16 +253,28 @@ public:
         );
     }
 
+    // sends a status message to the base station
     void send_status(){
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending status to base station.");
         VehicleStatus status_msg;
+
+        //fill in x and y depending on whether we are using factor graph or DVL
+        if (this->use_factor_graph_) {
+            status_msg.x = this->position_x;
+            status_msg.y = this->position_y;            
+        } else {
+            status_msg.x = this->dvl_position_x;
+            status_msg.y = this->dvl_position_y;
+        }
         status_msg.waypoint = 0;
         status_msg.battery_voltage = this->battery_voltage;
         status_msg.battery_percentage = this->battery_percentage;
         status_msg.safety_mask = this->safety_mask;
         status_msg.x = this->position_x;
         status_msg.y = this->position_y;
-        status_msg.heading = 0;
+        status_msg.roll = this->roll;
+        status_msg.pitch = this->pitch;
+        status_msg.yaw = this->yaw;
         status_msg.depth = this->depth; 
         status_msg.x_vel = this->velocity_x;
         status_msg.y_vel = this->velocity_y;
@@ -242,24 +282,9 @@ public:
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
 
-    void send_localization_info(int src_id) {
-       RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending localization info.");
-
-       rclcpp::sleep_for(std::chrono::milliseconds(this->localization_response_buffer)); // Delay to ensure no interference
-       LocalizationInfo message;
-       message.x = this->dvl_position_x;
-       message.y = this->dvl_position_y;
-       message.z = this->dvl_position_z;
-       message.roll = this->roll;
-       message.pitch = this->pitch;
-       message.yaw = this->yaw;
-       message.depth = this->depth;
-       send_acoustic_message(src_id, sizeof(message), (uint8_t*)&message);
-   }
-
-
-   void record_localization_info(seatrac_interfaces::msg::ModemRec msg) {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received localization info.");
+    // records localization info from message received
+    void record_localization_info(seatrac_interfaces::msg::ModemRec msg) {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received localization info from vehicle %d.", msg.src_id);
 
         if (msg.packet_len < sizeof(LocalizationInfo)) {
             RCLCPP_ERROR(this->get_logger(),
@@ -270,6 +295,7 @@ public:
 
         const LocalizationInfo* info = reinterpret_cast<const LocalizationInfo*>(msg.packet_data.data());
         frost_interfaces::msg::LocalizationData localization_data;
+        localization_data.header.stamp = this->now();
         localization_data.vehicle_id = msg.src_id;
         localization_data.x = info->x;
         localization_data.y = info->y;
@@ -278,9 +304,9 @@ public:
         localization_data.pitch = info->pitch;
         localization_data.yaw = info->yaw;
         localization_data.depth = info->depth;
-        localization_data.range = this->recent_range;
-        localization_data.azimuth = this->recent_azimuth;
-        localization_data.elevation = this->recent_elevation;
+        localization_data.range = msg.range_dist;
+        localization_data.azimuth = msg.usbl_azimuth;
+        localization_data.elevation = msg.usbl_elevation;
 
 
         localization_data_publisher_->publish(localization_data);
@@ -291,27 +317,43 @@ public:
             localization_data.depth, localization_data.range, localization_data.azimuth);
    }
 
-   void check_range_and_azimuth(seatrac_interfaces::msg::ModemRec msg) {
+    // checks if the range and azimuth data is included in the message and publishes it if so
+   void record_range_and_azimuth(seatrac_interfaces::msg::ModemRec msg) {
         if (msg.includes_range && msg.includes_usbl) {
             RCLCPP_INFO(this->get_logger(), "Vehicle %d:  Range distance: %d, Azimuth: %i, Elevation: %i", msg.src_id, msg.range_dist, msg.usbl_azimuth, msg.usbl_elevation);
-            this->recent_range = msg.range_dist;
-            this->recent_azimuth = msg.usbl_azimuth;
-            this->recent_elevation = msg.usbl_elevation;
             frost_interfaces::msg::LocalizationDataShort localization_data_short;
+            localization_data_short.header.stamp = this->now();
             localization_data_short.vehicle_id = msg.src_id;
-            localization_data_short.range = this->recent_range;
-            localization_data_short.azimuth = this->recent_azimuth;
-            localization_data_short.elevation = this->recent_elevation;
+            localization_data_short.range = msg.range_dist;
+            localization_data_short.azimuth = msg.usbl_azimuth;
+            localization_data_short.elevation = msg.usbl_elevation;
             this->localization_data_short_publisher_->publish(localization_data_short);
         }
     }
 
+    void queue_localization_response() {
+        if ((this->now() - this->last_modem_msg_time_).seconds() >= this->collision_guard_wait_) {
+            LocalizationInfo message;
+            message.x = this->dvl_position_x;
+            message.y = this->dvl_position_y;
+            message.z = this->dvl_position_z;
+            message.roll = this->roll;
+            message.pitch = this->pitch;
+            message.yaw = this->yaw;
+            message.depth = this->depth;
 
-    void send_acoustic_message(int target_id, int message_len, uint8_t* message) {
+            send_acoustic_message(0, sizeof(message), (uint8_t*)&message, CID_DAT_QUEUE_SET);
+
+            RCLCPP_DEBUG(this->get_logger(), "[%ld] Queued localization data", this->now().nanoseconds());
+        }
+    }
+
+    // sends an acoustic message to a target vehicle
+    void send_acoustic_message(int target_id, int message_len, uint8_t* message, CID_E msg_id = CID_DAT_SEND) {
         auto request = seatrac_interfaces::msg::ModemSend();
-        request.msg_id = 0x60; //CID_DAT_SEND
+        request.msg_id = msg_id;
         request.dest_id = (uint8_t)target_id;
-        request.msg_type = 0x0; //MSG_OWAY, data sent one way without response or position data
+        request.msg_type = MSG_OWAY; //MSG_OWAY, data sent one way without response or position data
         request.packet_len = (uint8_t)std::min(message_len, 31);
         std::memcpy(&request.packet_data, message, request.packet_len);
        
@@ -323,7 +365,6 @@ private:
 
 
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
     rclcpp::Subscription<frost_interfaces::msg::SystemStatus>::SharedPtr safety_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_subscriber_;
@@ -358,13 +399,19 @@ private:
     float roll;
     float pitch;
     float yaw;
-    float depth;
+    float depth; 
 
     float recent_range;
     float recent_azimuth;
     float recent_elevation;
 
-    int localization_response_buffer;
+    int localization_queue_buffer;
+    float collision_guard_wait_;
+    rclcpp::TimerBase::SharedPtr localization_response_timer_;
+    bool use_factor_graph_;
+
+    rclcpp::Time last_modem_msg_time_;
+
 };
 
 
