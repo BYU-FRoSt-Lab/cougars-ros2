@@ -1,3 +1,5 @@
+std_msgs/Header header
+
 uint8 vehicle_id
 
 float32 x
