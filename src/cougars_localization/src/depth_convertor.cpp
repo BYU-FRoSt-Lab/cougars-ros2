@@ -192,13 +192,14 @@ private:
 
       // Check if calibration was successful
       // Check both the offset and the variance
-      const double MAX_VARIANCE = 10000.0; // Adjust this value as needed (in Pa^2)
-      if (std::abs(offset) > 3000.0 || variance > MAX_VARIANCE) {
-          RCLCPP_INFO(this->get_logger(), "Calibration failed. Offset: %.2f Pa, Variance: %.2f Pa^2, Calibrated Pressure: %.2f Pa", 
-                      offset, variance, average_pressure_);
-          average_pressure_ = prev_pressure;
-          return;
-      }
+      // TODO make it so we can use this without hardcoded values
+      // const double MAX_VARIANCE = 10000.0; // Adjust this value as needed (in Pa^2)
+      // if (std::abs(offset) > 3000.0 || variance > MAX_VARIANCE) {
+      //     RCLCPP_INFO(this->get_logger(), "Calibration failed. Offset: %.2f Pa, Variance: %.2f Pa^2, Calibrated Pressure: %.2f Pa", 
+      //                 offset, variance, average_pressure_);
+      //     average_pressure_ = prev_pressure;
+      //     return;
+      // }
 
       // Calibration successful
       RCLCPP_INFO(this->get_logger(), "Calibration successful. Offset: %.2f Pa, Variance: %.2f Pa^2, Calibrated Pressure: %.2f Pa", 
