@@ -275,7 +275,6 @@ public:
         status_msg.roll = this->roll;
         status_msg.pitch = this->pitch;
         status_msg.yaw = this->yaw;
-        status_msg.heading = 0;
         status_msg.depth = this->depth; 
         status_msg.x_vel = this->velocity_x;
         status_msg.y_vel = this->velocity_y;
