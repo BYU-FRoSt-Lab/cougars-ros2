@@ -66,7 +66,7 @@ class RFBridge(Node):
 
         # Data storage
         self.latest_safety_status = "NO_DATA"
-        self.latest_smoothed_odom = "NO_DATA"
+        self.latest_dvl_pos = "NO_DATA"
         self.latest_battery = "NO_DATA"
         self.latest_depth = "NO_DATA"
         self.latest_pressure = "NO_DATA"
@@ -109,10 +109,10 @@ class RFBridge(Node):
             self.battery_callback,
             10)
         
-        self.smoothed_odom_sub = self.create_subscription(
-            Odometry,
-            'smoothed_odom',
-            self.smoothed_odom_callback,
+        self.dvl_sub = self.create_subscription(
+            DVLDR,
+            'dvl/position',
+            self.dvl_callback,
             10)
         
         self.depth_sub = self.create_subscription(
@@ -152,28 +152,16 @@ class RFBridge(Node):
         }
         self.get_logger().debug("Updated safety status data")
 
-    def smoothed_odom_callback(self, msg):
-        if hasattr(msg, 'twist') and hasattr(msg.twist, 'twist'):
-            twist = msg.twist.twist
-            pose = msg.pose.pose
-            self.latest_smoothed_odom = {
-                "position_x": float(pose.position.x),
-                "position_y": float(pose.position.y),
-                "position_z": float(pose.position.z),
-                "orientation_x": float(pose.orientation.x),
-                "orientation_y": float(pose.orientation.y),
-                "orientation_z": float(pose.orientation.z),
-                "orientation_w": float(pose.orientation.w),
-                "linear_x": float(twist.linear.x),
-                "linear_y": float(twist.linear.y),
-                "linear_z": float(twist.linear.z),
-                "angular_x": float(twist.angular.x),
-                "angular_y": float(twist.angular.y),
-                "angular_z": float(twist.angular.z)
-            }
-            self.get_logger().debug("Updated smoothed odometry data")
-        else:
-            self.get_logger().error("Received message without twist field in smoothed_odom_callback")
+    def dvl_callback(self, msg):
+        self.latest_dvl_pos = {
+            "x": float(msg.position.x),
+            "y": float(msg.position.y),
+            "z": float(msg.position.z),
+            "roll": float(msg.orientation.x),
+            "pitch": float(msg.orientation.y),
+            "yaw": float(msg.orientation.z)
+        }
+        self.get_logger().debug("Updated DVL position data")
 
     def depth_callback(self, msg):
         if hasattr(msg, 'pose') and hasattr(msg.pose, 'pose'):
@@ -216,7 +204,7 @@ class RFBridge(Node):
             "src_id" : self.vehicle_id,
             "message" : "STATUS",
             "safety_status": self.latest_safety_status,
-            "smoothed_odom": self.latest_smoothed_odom,
+            "dvl_pos": self.latest_dvl_pos,
             "battery_state": self.latest_battery,
             "depth_data": self.latest_depth,
             "pressure_data": self.latest_pressure,

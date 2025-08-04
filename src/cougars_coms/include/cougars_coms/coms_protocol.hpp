@@ -53,19 +53,21 @@ struct VehicleStatus {
 
     uint8_t waypoint;
 
-    uint8_t battery_voltage;
-    uint8_t battery_percentage;
+    float battery_voltage;
+    int8_t battery_percentage;
 
     uint8_t depth;
 
     uint8_t safety_mask;
 
-    int8_t x;
-    int8_t y;
+    float x;
+    float y;
     int8_t x_vel;
     int8_t y_vel;
     uint8_t pressure;
-    uint8_t heading;
+    int16_t roll;
+    int16_t pitch;
+    int16_t yaw;
 
 }__attribute__((packed));
 
