@@ -28,6 +28,7 @@ jobs:
 
       - name: Build with colcon
         working-directory: ros2_ws
+        shell: bash  # 👈 force bash instead of sh
         run: |
           source /opt/ros/humble/setup.bash
           colcon build --event-handlers console_cohesion+
