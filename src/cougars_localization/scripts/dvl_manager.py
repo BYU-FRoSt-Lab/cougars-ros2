@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
-from frost_interfaces.msg import SystemControl
+from cougars_interfaces.msg import SystemControl
 from dvl_msgs.msg import ConfigCommand  # Replace with correct package
 
 class DVLAcousticController(Node):

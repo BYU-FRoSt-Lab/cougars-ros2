@@ -10,9 +10,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/imu.hpp"
-#include "frost_interfaces/msg/desired_depth.hpp"
-#include "frost_interfaces/msg/desired_heading.hpp"
-#include "frost_interfaces/msg/desired_speed.hpp"
+#include "cougars_interfaces/msg/desired_depth.hpp"
+#include "cougars_interfaces/msg/desired_heading.hpp"
+#include "cougars_interfaces/msg/desired_speed.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "yaml-cpp/yaml.h"
@@ -49,9 +49,9 @@ public:
         RCLCPP_INFO(this->get_logger(), " - Using /gps_odom for position and /modem_imu for heading.");
 
         // Publishers
-        desired_depth_pub_ = this->create_publisher<frost_interfaces::msg::DesiredDepth>("desired_depth", 10);
-        desired_heading_pub_ = this->create_publisher<frost_interfaces::msg::DesiredHeading>("desired_heading", 10);
-        desired_speed_pub_ = this->create_publisher<frost_interfaces::msg::DesiredSpeed>("desired_speed", 10);
+        desired_depth_pub_ = this->create_publisher<cougars_interfaces::msg::DesiredDepth>("desired_depth", 10);
+        desired_heading_pub_ = this->create_publisher<cougars_interfaces::msg::DesiredHeading>("desired_heading", 10);
+        desired_speed_pub_ = this->create_publisher<cougars_interfaces::msg::DesiredSpeed>("desired_speed", 10);
 
         // Subscribers (Only GPS Odom and IMU)
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
@@ -148,15 +148,15 @@ private:
     // Publish control commands
     void publish_control_commands(double heading_deg, double depth, double speed)
     {
-        auto depth_msg = frost_interfaces::msg::DesiredDepth();
+        auto depth_msg = cougars_interfaces::msg::DesiredDepth();
         depth_msg.desired_depth = static_cast<float>(depth);
         desired_depth_pub_->publish(depth_msg);
 
-        auto heading_msg = frost_interfaces::msg::DesiredHeading();
+        auto heading_msg = cougars_interfaces::msg::DesiredHeading();
         heading_msg.desired_heading = static_cast<float>(heading_deg);
         desired_heading_pub_->publish(heading_msg);
 
-        auto speed_msg = frost_interfaces::msg::DesiredSpeed();
+        auto speed_msg = cougars_interfaces::msg::DesiredSpeed();
         speed_msg.desired_speed = static_cast<float>(speed);
         desired_speed_pub_->publish(speed_msg);
     }
@@ -234,9 +234,9 @@ private:
     }
 
     // Member variables
-    rclcpp::Publisher<frost_interfaces::msg::DesiredDepth>::SharedPtr desired_depth_pub_;
-    rclcpp::Publisher<frost_interfaces::msg::DesiredHeading>::SharedPtr desired_heading_pub_;
-    rclcpp::Publisher<frost_interfaces::msg::DesiredSpeed>::SharedPtr desired_speed_pub_;
+    rclcpp::Publisher<cougars_interfaces::msg::DesiredDepth>::SharedPtr desired_depth_pub_;
+    rclcpp::Publisher<cougars_interfaces::msg::DesiredHeading>::SharedPtr desired_heading_pub_;
+    rclcpp::Publisher<cougars_interfaces::msg::DesiredSpeed>::SharedPtr desired_speed_pub_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
     rclcpp::TimerBase::SharedPtr control_loop_timer_;

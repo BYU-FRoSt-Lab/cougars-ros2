@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from frost_interfaces.msg import UCommand
+from cougars_interfaces.msg import UCommand
 from std_srvs.srv import SetBool
 import ast
 from rclpy.qos import qos_profile_system_default
@@ -16,7 +16,7 @@ class FinsManual(Node):
     A ROS2 node that publishes to controls/command for control surface commands manual defined from parameters
 
     Publishes:
-        - controls/command (frost_interfaces/msg/UCommand)
+        - controls/command (cougars_interfaces/msg/UCommand)
         
     Services:
         - init_manual (std_srvs/srv/SetBool) 

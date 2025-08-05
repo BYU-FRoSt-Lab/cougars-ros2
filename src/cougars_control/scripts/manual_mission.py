@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from frost_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed, SystemControl
+from cougars_interfaces.msg import DesiredDepth, DesiredHeading, DesiredSpeed, SystemControl
 from std_srvs.srv import SetBool
 from rclpy.qos import qos_profile_system_default
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
@@ -21,9 +21,9 @@ class ManualMission(Node):
     The desired values are set based on a simple state machine that transitions between three states.
 
     Publishes:
-        - desired_depth (frost_interfaces/msg/DesiredDepth)
-        - desired_heading (frost_interfaces/msg/DesiredHeading)
-        - desired_speed (frost_interfaces/msg/DesiredSpeed)
+        - desired_depth (cougars_interfaces/msg/DesiredDepth)
+        - desired_heading (cougars_interfaces/msg/DesiredHeading)
+        - desired_speed (cougars_interfaces/msg/DesiredSpeed)
         - system_status (indicate the termination of the mission)
         
     Services:

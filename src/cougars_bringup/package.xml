@@ -15,7 +15,7 @@
   <depend>dvl_msgs</depend>
   <depend>gps_msgs</depend>
   <depend>sensor_msgs</depend>
-  <depend>frost_interfaces</depend>
+  <depend>cougars_interfaces</depend>
   <depend>seatrac_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>

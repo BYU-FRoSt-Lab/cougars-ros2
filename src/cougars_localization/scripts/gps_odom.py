@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from gps_msgs.msg import GPSFix
 from sensor_msgs.msg import NavSatFix
-from frost_interfaces.msg import SystemControl
+from cougars_interfaces.msg import SystemControl
 from nav_msgs.msg import Odometry
 from message_filters import Subscriber, ApproximateTimeSynchronizer
 from rclpy.qos import qos_profile_system_default

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 from std_msgs.msg import Header, Bool
-from frost_interfaces.msg import SystemControl  # Change to your actual package name
+from cougars_interfaces.msg import SystemControl  # Change to your actual package name
 
 import time
 

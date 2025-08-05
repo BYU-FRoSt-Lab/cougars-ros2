@@ -25,13 +25,13 @@
 #include <seatrac_interfaces/msg/modem_cmd_update.hpp>
 
 // Frost interfaces
-#include <frost_interfaces/msg/u_command.hpp>
-#include <frost_interfaces/msg/controls_debug.hpp>
-#include <frost_interfaces/msg/desired_depth.hpp>
-#include <frost_interfaces/msg/desired_heading.hpp>
-#include <frost_interfaces/msg/desired_speed.hpp>
-#include <frost_interfaces/msg/system_control.hpp>
-#include <frost_interfaces/msg/system_status.hpp>
+#include <cougars_interfaces/msg/u_command.hpp>
+#include <cougars_interfaces/msg/controls_debug.hpp>
+#include <cougars_interfaces/msg/desired_depth.hpp>
+#include <cougars_interfaces/msg/desired_heading.hpp>
+#include <cougars_interfaces/msg/desired_speed.hpp>
+#include <cougars_interfaces/msg/system_control.hpp>
+#include <cougars_interfaces/msg/system_status.hpp>
 
 // Geometry Messages
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
@@ -55,7 +55,7 @@ public:
         write_flag_ = false;
 
 
-        system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
+        system_control_sub_ = this->create_subscription<cougars_interfaces::msg::SystemControl>(
             "system/status", 1, std::bind(&MultiTopicBagRecorder::system_callback, this, _1));
 
         this->declare_parameter<bool>("sensors", true);
@@ -87,7 +87,7 @@ public:
 
         if (system){
             // System
-            subscribe_to_topic<frost_interfaces::msg::SystemStatus>("safety_status");
+            subscribe_to_topic<cougars_interfaces::msg::SystemStatus>("safety_status");
             subscribe_to_topic<diagnostic_msgs::msg::DiagnosticArray>("diagnostics");
         }
 
@@ -106,12 +106,12 @@ public:
         
         if (controls){
             // Mission and Controls
-            subscribe_to_topic<frost_interfaces::msg::UCommand>("kinematics/command");
-            subscribe_to_topic<frost_interfaces::msg::UCommand>("controls/command");
-            subscribe_to_topic<frost_interfaces::msg::ControlsDebug>("controls/debug");
-            subscribe_to_topic<frost_interfaces::msg::DesiredDepth>("desired_depth");
-            subscribe_to_topic<frost_interfaces::msg::DesiredHeading>("desired_heading");
-            subscribe_to_topic<frost_interfaces::msg::DesiredSpeed>("desired_speed");
+            subscribe_to_topic<cougars_interfaces::msg::UCommand>("kinematics/command");
+            subscribe_to_topic<cougars_interfaces::msg::UCommand>("controls/command");
+            subscribe_to_topic<cougars_interfaces::msg::ControlsDebug>("controls/debug");
+            subscribe_to_topic<cougars_interfaces::msg::DesiredDepth>("desired_depth");
+            subscribe_to_topic<cougars_interfaces::msg::DesiredHeading>("desired_heading");
+            subscribe_to_topic<cougars_interfaces::msg::DesiredSpeed>("desired_speed");
         }
 
     }
@@ -143,7 +143,7 @@ private:
         subscriptions_.push_back(sub);
     }
 
-    void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
+    void system_callback(const cougars_interfaces::msg::SystemControl::SharedPtr msg)
     {
         RCLCPP_INFO(this->get_logger(), "Received system control message: start=%d, rosbag_flag=%d", msg->start.data, msg->rosbag_flag.data);
 
@@ -186,7 +186,7 @@ private:
     }
 
     std::vector<rclcpp::SubscriptionBase::SharedPtr> subscriptions_;
-    rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
+    rclcpp::Subscription<cougars_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
     std::unique_ptr<rosbag2_cpp::Writer> writer_;
 
     bool write_flag_;

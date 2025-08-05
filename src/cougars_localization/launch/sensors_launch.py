@@ -58,7 +58,7 @@ def generate_launch_description():
     launch_actions.append(
         launch_ros.actions.Node(
         package='fin_sub_cpp', 
-        executable='control_node', 
+        executable='mc_serial_node', 
         namespace=LaunchConfiguration('namespace'),
         output='log',
     ))
@@ -75,12 +75,6 @@ def generate_launch_description():
 
 
     launch_actions.extend([
-        # # Launch microROS
-        # launch_ros.actions.Node(
-        #     package='micro_ros_agent',
-        #     executable='micro_ros_agent',
-        #     arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '6000000'],
-        # ),
         # launch_ros.actions.Node(
         #     package='cougars_control',
         #     executable='emergency_protocols',

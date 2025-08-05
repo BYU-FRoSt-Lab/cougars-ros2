@@ -9,8 +9,8 @@
 #include "std_srvs/srv/set_bool.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "frost_interfaces/msg/u_command.hpp"
-#include "frost_interfaces/msg/system_status.hpp"
+#include "cougars_interfaces/msg/u_command.hpp"
+#include "cougars_interfaces/msg/system_status.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include <sensor_msgs/msg/fluid_pressure.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
@@ -96,17 +96,17 @@ public:
     dvl_subscription_ = this->create_subscription<dvl_msgs::msg::DVLDR>("dvl/position",1,std::bind(&EmergencyProtocols::dvl_callback, this, _1));
     modem_subscription_ = this->create_subscription<seatrac_interfaces::msg::ModemStatus>("modem_status",1,std::bind(&EmergencyProtocols::modem_callback,this,_1));
     //         qos,std::bind(&EmergencyProtocols::factor_graph_callback, this, _1));
-    // vehicle_status_moos_subscription_ = this->create_subscription<frost_interfaces::msg::VehicleStatus>("vehicle_status", 
+    // vehicle_status_moos_subscription_ = this->create_subscription<cougars_interfaces::msg::VehicleStatus>("vehicle_status", 
     //         qos, std::bind(&EmergencyProtocols::moos_status_callback, this, _1));
 
 
     command_subscription_ =
-    this->create_subscription<frost_interfaces::msg::UCommand>(
+    this->create_subscription<cougars_interfaces::msg::UCommand>(
         "controls/command", 10,
         std::bind(&EmergencyProtocols::command_callback, this, _1));
 
 
-    status_publisher_ = this->create_publisher<frost_interfaces::msg::SystemStatus>("safety_status", 10);
+    status_publisher_ = this->create_publisher<cougars_interfaces::msg::SystemStatus>("safety_status", 10);
 
     this->okay = true;
     this->init = false;
@@ -309,7 +309,7 @@ bool update_publishers(){
   // this timer looks through all topics on the network and checks for crucial topics such as 
   // smoothed_output, leak/data, etc. Key topics are in topics_publishing map
   void monitor_timer_callback() {
-    auto message = frost_interfaces::msg::SystemStatus();
+    auto message = cougars_interfaces::msg::SystemStatus();
     message.dvl_status.set__data(0);
     message.modem_status.set__data(0);
     message.gps_status.set__data(0);
@@ -420,7 +420,7 @@ bool update_publishers(){
     latest_modem_message=msg;
   }
 
-  void command_callback(const frost_interfaces::msg::UCommand &msg) {
+  void command_callback(const cougars_interfaces::msg::UCommand &msg) {
       this->init = true;
   }
   void imu_callback(const sensor_msgs::msg::Imu &msg){
@@ -601,8 +601,8 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr smoothed_output_subscription_;
-//   rclcpp::Subscription<frost_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr command_subscription_;
+//   rclcpp::Subscription<cougars_interfaces::msg::VehicleStatus>::SharedPtr vehicle_status_moos_subscription_;
+  rclcpp::Subscription<cougars_interfaces::msg::UCommand>::SharedPtr command_subscription_;
   rclcpp::Subscription<gps_msgs::msg::GPSFix>::SharedPtr gps_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscription_;
   rclcpp::Subscription<seatrac_interfaces::msg::ModemStatus>::SharedPtr modem_subscription_;
@@ -610,7 +610,7 @@ void leak_callback(const sensor_msgs::msg::FluidPressure &msg){
 
 
   //publisher
-  rclcpp::Publisher<frost_interfaces::msg::SystemStatus>::SharedPtr status_publisher_;
+  rclcpp::Publisher<cougars_interfaces::msg::SystemStatus>::SharedPtr status_publisher_;
 
   // timers 
   rclcpp::TimerBase::SharedPtr monitor_timer_;

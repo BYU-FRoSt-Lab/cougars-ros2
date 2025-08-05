@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 
-#include "frost_interfaces/msg/u_command.hpp"
-#include "frost_interfaces/msg/system_control.hpp"
+#include "cougars_interfaces/msg/u_command.hpp"
+#include "cougars_interfaces/msg/system_control.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -26,10 +26,10 @@ auto qos = rclcpp::QoS(
  * are then published to the "kinematics/command" topic.
  *
  * Subscribes:
- * - controls/command (frost_interfaces/msg/UCommand)
+ * - controls/command (cougars_interfaces/msg/UCommand)
  * 
  * Publishes:
- * - kinematics/command (frost_interfaces/msg/UCommand)
+ * - kinematics/command (cougars_interfaces/msg/UCommand)
  */
 class CougKinematics : public rclcpp::Node {
 public:
@@ -122,7 +122,7 @@ public:
             std::bind(&CougKinematics::surface, this, std::placeholders::_1, std::placeholders::_2));
 
 
-    surface_command_ = frost_interfaces::msg::UCommand();
+    surface_command_ = cougars_interfaces::msg::UCommand();
     surface_command_.fin[0] = 0 * this->get_parameter("fin_0_direction").as_int() + this->get_parameter("top_fin_offset").as_double();
     surface_command_.fin[1] = -30 * this->get_parameter("fin_1_direction").as_int() + this->get_parameter("right_fin_offset").as_double();
     surface_command_.fin[2] = 30 * this->get_parameter("fin_2_direction").as_int() + this->get_parameter("left_fin_offset").as_double() ;
@@ -145,7 +145,7 @@ public:
      * It uses the UCommand message type.
      */
     command_publisher_ =
-        this->create_publisher<frost_interfaces::msg::UCommand>(
+        this->create_publisher<cougars_interfaces::msg::UCommand>(
             "kinematics/command", 10);
 
     /**
@@ -155,11 +155,11 @@ public:
      * UCommand message type.
      */
     command_subscription_ =
-        this->create_subscription<frost_interfaces::msg::UCommand>(
+        this->create_subscription<cougars_interfaces::msg::UCommand>(
             "controls/command", 10,
             std::bind(&CougKinematics::command_callback, this, _1));
 
-    system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
+    system_control_sub_ = this->create_subscription<cougars_interfaces::msg::SystemControl>(
             "system/status", 1, std::bind(&CougKinematics::system_callback, this, _1));
   }
 
@@ -174,9 +174,9 @@ private:
    *
    * @param msg The received UCommand message
    */
-  void command_callback(const frost_interfaces::msg::UCommand &msg) {
+  void command_callback(const cougars_interfaces::msg::UCommand &msg) {
 
-    auto command = frost_interfaces::msg::UCommand();
+    auto command = cougars_interfaces::msg::UCommand();
     command.header.stamp = msg.header.stamp;
     
     if(!surface_override_){
@@ -211,7 +211,7 @@ private:
     command_publisher_->publish(command);
   }
 
-  void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
+  void system_callback(const cougars_interfaces::msg::SystemControl::SharedPtr msg)
   {
      // Set the boolean to the requested value
     arm_thruster_ = msg->thruster_arm.data;
@@ -259,15 +259,15 @@ private:
   bool arm_thruster_ = false;
   bool surface_override_ = false;
 
-  frost_interfaces::msg::UCommand surface_command_;
+  cougars_interfaces::msg::UCommand surface_command_;
 
   // ROS objects
   rclcpp::TimerBase::SharedPtr backup_timer_;
-  rclcpp::Publisher<frost_interfaces::msg::UCommand>::SharedPtr
+  rclcpp::Publisher<cougars_interfaces::msg::UCommand>::SharedPtr
       command_publisher_;
-  rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr
+  rclcpp::Subscription<cougars_interfaces::msg::UCommand>::SharedPtr
       command_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
+  rclcpp::Subscription<cougars_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr arm_service_;
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr surface_service_;

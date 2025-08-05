@@ -18,7 +18,7 @@ find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(frost_interfaces REQUIRED)
+find_package(cougars_interfaces REQUIRED)
 find_package(seatrac_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
@@ -36,23 +36,23 @@ find_package(yaml-cpp REQUIRED)
 include_directories(include/${PROJECT_NAME})
 
 add_executable(coug_controls src/coug_controls.cpp src/pid.cpp)
-ament_target_dependencies(coug_controls rclcpp std_msgs frost_interfaces sensor_msgs geometry_msgs std_srvs dvl_msgs)
+ament_target_dependencies(coug_controls rclcpp std_msgs cougars_interfaces sensor_msgs geometry_msgs std_srvs dvl_msgs)
 
 add_executable(coug_kinematics src/coug_kinematics.cpp)
-ament_target_dependencies(coug_kinematics rclcpp std_msgs frost_interfaces std_srvs)
+ament_target_dependencies(coug_kinematics rclcpp std_msgs cougars_interfaces std_srvs)
 
 # add_executable(moos_bridge src/moos_bridge.cpp)
-# ament_target_dependencies(moos_bridge rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces)
+# ament_target_dependencies(moos_bridge rclcpp std_msgs cougars_interfaces MOOS nav_msgs seatrac_interfaces)
 
 # add_executable(moos_bridge_sim src/moos_bridge_sim.cpp)
-# ament_target_dependencies(moos_bridge_sim rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
+# ament_target_dependencies(moos_bridge_sim rclcpp std_msgs cougars_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
 
 # add_executable(moos_bridge_gps src/moos_bridge_gps.cpp)
-# ament_target_dependencies(moos_bridge_gps rclcpp std_msgs frost_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
+# ament_target_dependencies(moos_bridge_gps rclcpp std_msgs cougars_interfaces MOOS nav_msgs seatrac_interfaces geometry_msgs)
 
 
 add_executable(emergency_protocols src/emergency_protocols.cpp)
-ament_target_dependencies(emergency_protocols rclcpp std_msgs gps_msgs dvl_msgs frost_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
+ament_target_dependencies(emergency_protocols rclcpp std_msgs gps_msgs dvl_msgs cougars_interfaces nav_msgs seatrac_interfaces geometry_msgs std_srvs sensor_msgs)
 
 # Add executable for the waypoint follower node
 add_executable(waypoint_follower src/waypoint_follower.cpp)
@@ -60,7 +60,7 @@ ament_target_dependencies(waypoint_follower
   rclcpp
   nav_msgs
   sensor_msgs
-  frost_interfaces
+  cougars_interfaces
   tf2
   tf2_ros
   tf2_geometry_msgs
@@ -71,14 +71,20 @@ ament_target_dependencies(waypoint_follower_gps
   rclcpp
   nav_msgs
   sensor_msgs
-  frost_interfaces
+  cougars_interfaces
   tf2
   tf2_ros
   tf2_geometry_msgs
   yaml-cpp  # Add yaml-cpp dependency
 )
 
+add_executable(mc_serial_node src/mc_serial_node.cpp)
+ament_target_dependencies(mc_serial_node rclcpp std_msgs cougars_interfaces sensor_msgs)
 
+# Link libraries
+target_link_libraries(mc_serial_node
+  serialport
+)
 target_link_libraries(waypoint_follower yaml-cpp)
 target_link_libraries(waypoint_follower_gps yaml-cpp)
 # Link libraries
@@ -93,9 +99,7 @@ target_link_libraries(emergency_protocols)
 install(TARGETS
   coug_controls
   coug_kinematics
-  # moos_bridge
-  # moos_bridge_sim
-  # moos_bridge_gps
+  mc_serial_node
   emergency_protocols
   waypoint_follower #added for waypoint follower
   waypoint_follower_gps #added for waypoint follower

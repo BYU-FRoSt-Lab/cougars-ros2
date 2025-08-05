@@ -18,7 +18,7 @@ find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(frost_interfaces REQUIRED)
+find_package(cougars_interfaces REQUIRED)
 find_package(seatrac_interfaces REQUIRED)
 find_package(dvl_msgs REQUIRED)
 find_package(gps_msgs REQUIRED)
@@ -30,10 +30,10 @@ find_package(visualization_msgs REQUIRED)
 include_directories(include/${PROJECT_NAME})
 
 add_executable(depth_convertor src/depth_convertor.cpp)
-ament_target_dependencies(depth_convertor rclcpp std_msgs std_srvs frost_interfaces geometry_msgs sensor_msgs)
+ament_target_dependencies(depth_convertor rclcpp std_msgs std_srvs cougars_interfaces geometry_msgs sensor_msgs)
 
 add_executable(dvl_convertor src/dvl_convertor.cpp)
-ament_target_dependencies(dvl_convertor rclcpp std_msgs frost_interfaces geometry_msgs dvl_msgs)
+ament_target_dependencies(dvl_convertor rclcpp std_msgs cougars_interfaces geometry_msgs dvl_msgs)
 
 add_executable(seatrac_ahrs_convertor src/seatrac_ahrs_convertor.cpp)
 ament_target_dependencies(

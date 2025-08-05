@@ -12,9 +12,9 @@
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
-#include "frost_interfaces/msg/system_status.hpp"
-#include "frost_interfaces/msg/localization_data.hpp"
-#include "frost_interfaces/msg/localization_data_short.hpp"
+#include "cougars_interfaces/msg/system_status.hpp"
+#include "cougars_interfaces/msg/localization_data.hpp"
+#include "cougars_interfaces/msg/localization_data_short.hpp"
 
 #include <seatrac_driver/SeatracEnums.h>
 
@@ -56,7 +56,7 @@ public:
 
 
         // subscriber for safety status messages
-        this->safety_subscriber_ = this->create_subscription<frost_interfaces::msg::SystemStatus>(
+        this->safety_subscriber_ = this->create_subscription<cougars_interfaces::msg::SystemStatus>(
             "safety_status", 10,
             std::bind(&ComsNode::safety_callback, this, _1)
         );
@@ -115,10 +115,10 @@ public:
         );
 
         // publisher for full localization data
-        this->localization_data_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationData>("localization_data", 10);
+        this->localization_data_publisher_ = this->create_publisher<cougars_interfaces::msg::LocalizationData>("localization_data", 10);
 
         // publisher for short localization data
-        this->localization_data_short_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationDataShort>("localization_data_short", 10);
+        this->localization_data_short_publisher_ = this->create_publisher<cougars_interfaces::msg::LocalizationDataShort>("localization_data_short", 10);
 
         // timer for queuing localization responses
         this->localization_response_timer_ = this->create_wall_timer(
@@ -164,7 +164,7 @@ public:
     }
 
     // makes a bit mask that has safety status message
-    void safety_callback(frost_interfaces::msg::SystemStatus msg) {
+    void safety_callback(cougars_interfaces::msg::SystemStatus msg) {
         // Here you can handle the safety system status data if needed
         this->safety_mask =
             (msg.depth_status.data      ? 1 << 0 : 0) |
@@ -294,7 +294,7 @@ public:
         }   
 
         const LocalizationInfo* info = reinterpret_cast<const LocalizationInfo*>(msg.packet_data.data());
-        frost_interfaces::msg::LocalizationData localization_data;
+        cougars_interfaces::msg::LocalizationData localization_data;
         localization_data.header.stamp = this->now();
         localization_data.vehicle_id = msg.src_id;
         localization_data.x = info->x;
@@ -321,7 +321,7 @@ public:
    void record_range_and_azimuth(seatrac_interfaces::msg::ModemRec msg) {
         if (msg.includes_range && msg.includes_usbl) {
             RCLCPP_INFO(this->get_logger(), "Vehicle %d:  Range distance: %d, Azimuth: %i, Elevation: %i", msg.src_id, msg.range_dist, msg.usbl_azimuth, msg.usbl_elevation);
-            frost_interfaces::msg::LocalizationDataShort localization_data_short;
+            cougars_interfaces::msg::LocalizationDataShort localization_data_short;
             localization_data_short.header.stamp = this->now();
             localization_data_short.vehicle_id = msg.src_id;
             localization_data_short.range = msg.range_dist;
@@ -365,14 +365,14 @@ private:
 
 
     rclcpp::Subscription<seatrac_interfaces::msg::ModemRec>::SharedPtr modem_subscriber_;
-    rclcpp::Subscription<frost_interfaces::msg::SystemStatus>::SharedPtr safety_subscriber_;
+    rclcpp::Subscription<cougars_interfaces::msg::SystemStatus>::SharedPtr safety_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscriber_;
     rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscriber_;
 
-    rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
-    rclcpp::Publisher<frost_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
+    rclcpp::Publisher<cougars_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
+    rclcpp::Publisher<cougars_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
 
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;

@@ -10,17 +10,17 @@
 #include "actuator.cpp"
 // #include "pid_int2.cpp"
 #include "dvl_msgs/msg/dvl.hpp"
-#include "frost_interfaces/msg/desired_depth.hpp"
-#include "frost_interfaces/msg/desired_heading.hpp"
-#include "frost_interfaces/msg/desired_speed.hpp"
-#include "frost_interfaces/msg/u_command.hpp"
+#include "cougars_interfaces/msg/desired_depth.hpp"
+#include "cougars_interfaces/msg/desired_heading.hpp"
+#include "cougars_interfaces/msg/desired_speed.hpp"
+#include "cougars_interfaces/msg/u_command.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
-#include "frost_interfaces/msg/controls_debug.hpp"
+#include "cougars_interfaces/msg/controls_debug.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/set_bool.hpp"
-#include <frost_interfaces/msg/system_control.hpp>
+#include <cougars_interfaces/msg/system_control.hpp>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -40,14 +40,14 @@ auto qos = rclcpp::QoS(
  * - init_controls (std_srvs/srv/SetBool) 
  *
  * Subscribes:
- * - desired_depth (frost_interfaces/msg/DesiredDepth)
- * - desired_heading (frost_interfaces/msg/DesiredHeading)
- * - desired_speed (frost_interfaces/msg/DesiredSpeed)
+ * - desired_depth (cougars_interfaces/msg/DesiredDepth)
+ * - desired_heading (cougars_interfaces/msg/DesiredHeading)
+ * - desired_speed (cougars_interfaces/msg/DesiredSpeed)
  * - depth_data (geometry_msgs/msg/PoseWithCovarianceStamped)
  * - modem_status (seatrac_interfaces/msg/ModemStatus)
  * 
  * Publishes:
- * - controls/command (frost_interfaces/msg/UCommand)
+ * - controls/command (cougars_interfaces/msg/UCommand)
  */
 class CougControls : public rclcpp::Node {
 public:
@@ -201,7 +201,7 @@ public:
      * topic. It uses the UCommand message type.
      */
     u_command_publisher_ =
-        this->create_publisher<frost_interfaces::msg::UCommand>(
+        this->create_publisher<cougars_interfaces::msg::UCommand>(
             "controls/command", 10);
 
     /**
@@ -210,7 +210,7 @@ public:
      * This publisher is used for debugging pitch and depth by publishing reference values.
      */
     debug_controls_pub_ =
-        this->create_publisher<frost_interfaces::msg::ControlsDebug>(
+        this->create_publisher<cougars_interfaces::msg::ControlsDebug>(
             "controls/debug", 10);
 
     /**
@@ -230,7 +230,7 @@ public:
      * DesiredDepth message type. 
      */
     desired_depth_subscription_ =
-        this->create_subscription<frost_interfaces::msg::DesiredDepth>(
+        this->create_subscription<cougars_interfaces::msg::DesiredDepth>(
             "desired_depth", 10,
             std::bind(&CougControls::desired_depth_callback, this, _1));
 
@@ -241,7 +241,7 @@ public:
      * DesiredHeading message type. Expects the value to be in degrees from -180 to 180. ENU coordinate frame (0 being true east) 
      */
     desired_heading_subscription_ =
-        this->create_subscription<frost_interfaces::msg::DesiredHeading>(
+        this->create_subscription<cougars_interfaces::msg::DesiredHeading>(
             "desired_heading", 10,
             std::bind(&CougControls::desired_heading_callback, this, _1));
 
@@ -252,7 +252,7 @@ public:
      * DesiredSpeed message type. Expected value from 0 to 100 (Non-dimensional)
      */
     desired_speed_subscription_ =
-        this->create_subscription<frost_interfaces::msg::DesiredSpeed>(
+        this->create_subscription<cougars_interfaces::msg::DesiredSpeed>(
             "desired_speed", 10,
             std::bind(&CougControls::desired_speed_callback, this, _1));
 
@@ -298,7 +298,7 @@ public:
         "dvl/velocity", qos,
         std::bind(&CougControls::dvl_velocity_callback, this, _1));
 
-    system_control_sub_ = this->create_subscription<frost_interfaces::msg::SystemControl>(
+    system_control_sub_ = this->create_subscription<cougars_interfaces::msg::SystemControl>(
             "system/status", 1, std::bind(&CougControls::system_callback, this, _1));
 
 
@@ -391,12 +391,12 @@ private:
     } else {
       // Publish a empty command to stop the vehicle
      RCLCPP_INFO(this->get_logger(), "published empty command to stop vehicle");
-      auto message = frost_interfaces::msg::UCommand();
+      auto message = cougars_interfaces::msg::UCommand();
       u_command_publisher_->publish(message);
     }
   }
   
-  void system_callback(const frost_interfaces::msg::SystemControl::SharedPtr msg)
+  void system_callback(const cougars_interfaces::msg::SystemControl::SharedPtr msg)
   {
      // Set the boolean to the requested value
     set_init_flag(msg->start.data);
@@ -415,7 +415,7 @@ private:
    * topic.
    */
   void
-  desired_depth_callback(const frost_interfaces::msg::DesiredDepth &depth_msg) {
+  desired_depth_callback(const cougars_interfaces::msg::DesiredDepth &depth_msg) {
     constexpr double EPSILON = 1e-6; // Small tolerance value
     // KEEP THIS OR BAD THINGS WILL HAPPEN - BRADEN MEYERS
     // floating point precicision issue bug fix
@@ -449,7 +449,7 @@ private:
    * desired_heading topic.
    */
   void desired_heading_callback(
-      const frost_interfaces::msg::DesiredHeading &heading_msg) {
+      const cougars_interfaces::msg::DesiredHeading &heading_msg) {
     this->desired_heading = heading_msg.desired_heading;
   }
 
@@ -463,7 +463,7 @@ private:
    * topic. The 
    */
   void
-  desired_speed_callback(const frost_interfaces::msg::DesiredSpeed &speed_msg) {
+  desired_speed_callback(const cougars_interfaces::msg::DesiredSpeed &speed_msg) {
     this->desired_speed = speed_msg.desired_speed;
   }
 
@@ -655,7 +655,7 @@ private:
    * publishes the control commands to the controls/command topic.
    */
   void timer_callback() {
-      auto message = frost_interfaces::msg::UCommand();
+      auto message = cougars_interfaces::msg::UCommand();
       message.header.stamp = this->now();
 
       int depth_pos;
@@ -690,7 +690,7 @@ private:
         // std::cout <<  "Yaw: " << this->actual_heading << "Desired Yaw: " << this->desired_heading << "Yaw Error: " << yaw_err << std::endl;
         
         // Debugging Message
-        auto message = frost_interfaces::msg::ControlsDebug();
+        auto message = cougars_interfaces::msg::ControlsDebug();
         message.header.stamp = this->now();
         message.pitch.actual = this->actual_pitch;
         message.pitch.rate = this->pitch_rate;
@@ -735,13 +735,13 @@ private:
 
   // micro-ROS objects
   rclcpp::TimerBase::SharedPtr controls_timer_;
-  rclcpp::Publisher<frost_interfaces::msg::UCommand>::SharedPtr
+  rclcpp::Publisher<cougars_interfaces::msg::UCommand>::SharedPtr
       u_command_publisher_;
-  rclcpp::Subscription<frost_interfaces::msg::DesiredDepth>::SharedPtr
+  rclcpp::Subscription<cougars_interfaces::msg::DesiredDepth>::SharedPtr
       desired_depth_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::DesiredHeading>::SharedPtr
+  rclcpp::Subscription<cougars_interfaces::msg::DesiredHeading>::SharedPtr
       desired_heading_subscription_;
-  rclcpp::Subscription<frost_interfaces::msg::DesiredSpeed>::SharedPtr
+  rclcpp::Subscription<cougars_interfaces::msg::DesiredSpeed>::SharedPtr
       desired_speed_subscription_;
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
       actual_depth_subscription_;
@@ -750,9 +750,9 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr
       actual_orientation_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
-  rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
+  rclcpp::Subscription<cougars_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
 
-  rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
+  rclcpp::Publisher<cougars_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr init_service_;
 
