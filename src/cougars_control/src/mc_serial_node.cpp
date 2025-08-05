@@ -2,7 +2,7 @@
 #include <std_msgs/msg/header.hpp>
 #include <sensor_msgs/msg/fluid_pressure.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
-#include "frost_interfaces/msg/u_command.hpp"
+#include "cougars_interfaces/msg/u_command.hpp"
 #include <libserialport.h>
 #include <string>
 #include <sstream>
@@ -12,10 +12,10 @@
 
 class ControlNode : public rclcpp::Node {
 public:
-    ControlNode() : Node("control_node") {
+    ControlNode() : Node("mc_serial_node") {
         // Initialize subscriber
         // TODO: Look at remappings for holoocean namespace??
-        control_command_sub_ = this->create_subscription<frost_interfaces::msg::UCommand>(
+        control_command_sub_ = this->create_subscription<cougars_interfaces::msg::UCommand>(
             "kinematics/command", 10, std::bind(&ControlNode::controlCommandCallback, this, std::placeholders::_1));
 
         // Initialize publisher
@@ -65,7 +65,7 @@ public:
     }
 
 private:
-    void controlCommandCallback(const frost_interfaces::msg::UCommand::SharedPtr msg) {
+    void controlCommandCallback(const cougars_interfaces::msg::UCommand::SharedPtr msg) {
         std::stringstream ss;
         // (Currently have 3 fins)
         ss << "$CONTR," << msg->fin[0] << "," << msg->fin[1] << "," << msg->fin[2] << "," << msg->thruster << "\n";
@@ -171,7 +171,7 @@ private:
     std::string buffer_;
     const char delimiter_ = '\n';
 
-    rclcpp::Subscription<frost_interfaces::msg::UCommand>::SharedPtr control_command_sub_;
+    rclcpp::Subscription<cougars_interfaces::msg::UCommand>::SharedPtr control_command_sub_;
     rclcpp::Publisher<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_pub_;
     rclcpp::Publisher<sensor_msgs::msg::FluidPressure>::SharedPtr leak_pub_;
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
