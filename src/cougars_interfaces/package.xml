@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>frost_interfaces</name>
+  <name>cougars_interfaces</name>
   <version>1.0.0</version>
   <description>Custom ROS messages and services for use in the BYU FRoSt Lab</description>
   <maintainer email="snelsondurrant@gmail.com">Nelson Durrant</maintainer>
