@@ -12,7 +12,7 @@ jobs:
 
     container:
       image: frostlab/cougars:vehicle
-      # options: --user frostlab
+      options: --user root
 
     steps:
       - name: Checkout your repo into ros2_ws/src
