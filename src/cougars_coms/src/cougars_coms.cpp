@@ -320,7 +320,7 @@ public:
     // checks if the range and azimuth data is included in the message and publishes it if so
    void record_range_and_azimuth(seatrac_interfaces::msg::ModemRec msg) {
         if (msg.includes_range && msg.includes_usbl) {
-            RCLCPP_INFO(this->get_logger(), "Vehicle %d:  Range distance: %d, Azimuth: %i, Elevation: %i", msg.src_id, msg.range_dist, msg.usbl_azimuth, msg.usbl_elevation);
+            RCLCPP_INFO(this->get_logger(), "Vehicle %d:  Range distance: %d, Azimuth: %i, Elevation: %i, depth: %i", msg.src_id, msg.range_dist, msg.usbl_azimuth, msg.usbl_elevation, msg.position_depth);
             frost_interfaces::msg::LocalizationDataShort localization_data_short;
             localization_data_short.header.stamp = this->now();
             localization_data_short.vehicle_id = msg.src_id;
