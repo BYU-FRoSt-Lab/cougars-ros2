@@ -82,14 +82,14 @@ def generate_launch_description():
             # parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')], 
             namespace=LaunchConfiguration('namespace'),
             output='log',
-            remappings=[('/diagnostics', '/coug2/diagnostics')],
+            remappings=[('/diagnostics', 'diagnostics')],   # remap to a relative topic that can be namespaced
         ),
         launch_ros.actions.Node(
             package='diagnostic_common_diagnostics',
             executable='ram_monitor.py',
             # parameters=[LaunchConfiguration('param_file'), LaunchConfiguration('fleet_param')], 
             namespace=LaunchConfiguration('namespace'),
-            remappings=[('/diagnostics', '/coug2/diagnostics')],
+            remappings=[('/diagnostics', 'diagnostics')],       # remap to a relative topic that can be namespaced
             output='log',
         ),
 
