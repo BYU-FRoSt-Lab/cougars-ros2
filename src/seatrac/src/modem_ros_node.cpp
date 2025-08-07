@@ -106,6 +106,7 @@ public:
     if(logging_verbosity >= 2) {
       RCLCPP_INFO(this->get_logger(), "Beacon ID: %d", beaconId);
       RCLCPP_INFO(this->get_logger(), "Salinity: %d ppt", salinity);
+
     }
 
     wait_for_alive(beaconId, salinity);
@@ -122,12 +123,17 @@ public:
 
     //Set beacon ID once connected
     SETTINGS_T settings = command::settings_get(*this).settings;
+
+    RCLCPP_INFO(this->get_logger(), "Auto Calculate Pressure Offset: %s",
+                (settings.envFlags & AUTO_PRESSURE_OFS) ? "True" : "False");
+    RCLCPP_INFO(this->get_logger(), "Pressure_offset: %d", settings.envPressureOfs);
+
     settings.xcvrBeaconId = beaconId;
     settings.envSalinity = salinity;
     settings.statusFlags = STATUS_MODE_10HZ;
     settings.status_output = ATTITUDE | AHRS_COMP_DATA | ENVIRONMENT;
-    command::settings_set(*this, settings);
-    command::settings_save(*this);    
+    auto response = command::settings_set(*this, settings);
+    command::settings_save(*this);
     beacon_connected = true;
   }
 
