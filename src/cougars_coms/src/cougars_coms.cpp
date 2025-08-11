@@ -15,6 +15,7 @@
 #include "frost_interfaces/msg/system_status.hpp"
 #include "frost_interfaces/msg/localization_data.hpp"
 #include "frost_interfaces/msg/localization_data_short.hpp"
+#include "frost_interfaces/msg/system_control.hpp"
 
 #include <seatrac_driver/SeatracEnums.h>
 
@@ -114,6 +115,11 @@ public:
             "surface"
         );
 
+        // publisher to start mission
+        this->init_publisher_ = this->create_publisher<frost_interfaces::msg::SystemControl>(
+            "system/status", 10
+        );
+
         // publisher for full localization data
         this->localization_data_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationData>("localization_data", 10);
 
@@ -141,14 +147,17 @@ public:
             case EMPTY: {
                 record_range_and_azimuth(msg);
             } break;
-            case EMERGENCY_SURFACE: {
-                emergency_surface();
+            case REQUEST_STATUS: {
+                send_status();
+            } break;
+            case INIT: {
+                init(&msg);
             } break;
             case EMERGENCY_KILL: {
                 kill_thruster();
             } break;
-            case REQUEST_STATUS: {
-                send_status();
+            case EMERGENCY_SURFACE: {
+                emergency_surface();
             } break;
             case LOCALIZATION_INFO: {
                record_localization_info(msg);
@@ -185,6 +194,19 @@ public:
         this->position_y = msg.pose.pose.position.y;
         this->velocity_x = msg.twist.twist.linear.x;
         this->velocity_y = msg.twist.twist.linear.y;
+    }
+
+    void init(seatrac_interfaces::msg::ModemRec* msg) {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Initializing system.");
+        frost_interfaces::msg::SystemControl control_msg;
+        const Init* msg_recieved = reinterpret_cast<const Init*>(msg->packet_data.data());
+        control_msg.start.data = (msg_recieved->init_bitmask & 0x01) != 0;
+        control_msg.rosbag_flag.data = (msg_recieved->init_bitmask & 0x02) != 0;
+        control_msg.thruster_arm.data = (msg_recieved->init_bitmask & 0x04) != 0;
+        control_msg.dvl_acoustics.data = (msg_recieved->init_bitmask & 0x08) != 0;
+        // turns char[32] to std::string
+        control_msg.rosbag_prefix = std::string(msg_recieved->rosbag_prefix);
+        this->init_publisher_->publish(control_msg);
     }
 
     // kills the thruster using the arm_thruster service
@@ -374,8 +396,9 @@ private:
 
     rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
     rclcpp::Publisher<frost_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
-
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
+    rclcpp::Publisher<frost_interfaces::msg::SystemControl>::SharedPtr init_publisher_;
+
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr init_controls_client_;

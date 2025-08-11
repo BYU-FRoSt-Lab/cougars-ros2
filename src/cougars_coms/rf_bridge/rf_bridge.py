@@ -9,6 +9,7 @@ from sensor_msgs.msg import BatteryState, FluidPressure
 from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from dvl_msgs.msg import DVLDR
 from std_srvs.srv import SetBool
+from frost_interfaces.msg import SystemControl
 
 from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
 from digi.xbee.exception import TransmitException
@@ -87,7 +88,7 @@ class RFBridge(Node):
 
         # ROS publishers and subscribers
         self.publisher = self.create_publisher(String, 'rf_received', 10)
-        self.init_publisher = self.create_publisher(String, 'init', 10)
+        self.init_publisher = self.create_publisher(SystemControl, 'system/status', 10)
 
         self.e_kill_client = self.create_client(SetBool, "arm_thruster")
 
@@ -222,32 +223,34 @@ class RFBridge(Node):
             msg.data = payload
             self.publisher.publish(msg)
             self.get_logger().info(f"{payload}")
-
-            # Command handling (STATUS/INIT)
             if payload == "STATUS":
                 response = self.get_all_status_data()
                 self.send_message(response, return_address)
-                self.get_logger().info(f"Received STATUS, responding with sensor data")
+                self.get_logger().debug(f"Received STATUS, responding with sensor data")
                 self.get_logger().debug(f"Status response: {response}")
             elif payload == "PING":
                 response = {"message": "PING", "src_id": self.vehicle_id}
                 self.send_message(json.dumps(response), return_address)
                 self.get_logger().info(f"Received PING, responding with PING")
             elif payload == "E_KILL":
-                self.get_logger().info(f"Received E_KILL message")
-            #TODO: when Braden adds the init system, update this
+                self.kill_thruster()
             elif payload == "INIT":
-                init_msg = String()
-                init_msg.data = "INIT_COMMAND"
-                self.init_publisher.publish(init_msg)
-                self.get_logger().info(f"Received INIT, published to init topic")
-                self.device.send_data_broadcast("INIT_ACK")
+                self.init_vehicle(payload)
         except Exception as e:
             self.get_logger().error(f"Error in data_receive_callback: {e}")
             self.get_logger().error(traceback.format_exc())
 
     
-
+    def init_vehicle(self, msg):
+        init_msg = SystemControl()
+        init_msg.start = msg.start
+        init_msg.rosbag_flag = msg.rosbag_flag
+        init_msg.rosbag_prefix = msg.rosbag_prefix
+        init_msg.thruster_arm = msg.thruster_arm
+        init_msg.dvl_acoustic = msg.dvl_acoustic
+        self.init_publisher.publish(init_msg)
+        self.get_logger().info(f"Received INIT, published to init topic")
+        self.device.send_data_broadcast("INIT_ACK")
 
     
     def kill_thruster(self):
