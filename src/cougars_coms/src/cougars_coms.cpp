@@ -282,8 +282,6 @@ public:
         status_msg.battery_voltage = this->battery_voltage;
         status_msg.battery_percentage = this->battery_percentage;
         status_msg.safety_mask = this->safety_mask;
-        status_msg.x = this->position_x;
-        status_msg.y = this->position_y;
         status_msg.roll = this->roll;
         status_msg.pitch = this->pitch;
         status_msg.yaw = this->yaw;
