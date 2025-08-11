@@ -12,6 +12,7 @@
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
+#include "dvl_msgs/msg/dvl.hpp"
 #include "frost_interfaces/msg/system_status.hpp"
 #include "frost_interfaces/msg/localization_data.hpp"
 #include "frost_interfaces/msg/localization_data_short.hpp"
@@ -41,19 +42,12 @@ public:
     ComsNode() : Node("cougars_coms") {
 
         // id of base station beacon, used for messages sent to the base station
-        this->declare_parameter<int>("base_station_beacon_id", 15);
-        this->base_station_beacon_id_ = this->get_parameter("base_station_beacon_id").as_int();
+        this->base_station_beacon_id_ = this->declare_parameter<int>("base_station_beacon_id", 15);
 
         //buffer between immediate response to localization requests and secondary packet response
-        this->declare_parameter<int>("localization_queue_buffer_ms", 1000);
-        this->localization_queue_buffer = this->get_parameter("localization_queue_buffer_ms").as_int();
+        this->localization_queue_buffer = this->declare_parameter<int>("localization_queue_buffer_ms", 1000);
 
-        // whether to use factor graph for status message
-        this->declare_parameter<bool>("use_factor_graph", false);
-        this->use_factor_graph_ = this->get_parameter("use_factor_graph").as_bool();
-
-        this->declare_parameter<double>("collision_guard_wait_sec", 3.0);
-        this->collision_guard_wait_ = this->get_parameter("collision_guard_wait_sec").as_double();
+        this->collision_guard_wait_ = this->declare_parameter<double>("collision_guard_wait_sec", 3.0);
 
 
         // subscriber for safety status messages
@@ -95,7 +89,16 @@ public:
                 this->yaw = msg.yaw;
             }
         );
-        
+
+        this->dvl_vel_subscriber_ = this->create_subscription<dvl_msgs::msg::DVL>(
+            "dvl/data", 10,
+            [this](dvl_msgs::msg::DVL msg) {
+                this->velocity_x = msg.velocity.x;
+                this->velocity_y = msg.velocity.y;
+                this->velocity_z = msg.velocity.z;
+            }
+        );
+
         // subscriber to modem rec messages, sent when the modem receives a message
         this->modem_subscriber_ = this->create_subscription<seatrac_interfaces::msg::ModemRec>(
             "modem_rec", 10,
@@ -127,7 +130,7 @@ public:
         this->localization_data_short_publisher_ = this->create_publisher<frost_interfaces::msg::LocalizationDataShort>("localization_data_short", 10);
 
         // timer for queuing localization responses
-        this->localization_response_timer_ = this->create_wall_timer(
+        this->localization_queue_timer_ = this->create_wall_timer(
             std::chrono::milliseconds(this->localization_queue_buffer),
             std::bind(&ComsNode::queue_localization_response, this)
         );
@@ -186,14 +189,6 @@ public:
     // updates pressure data
     void pressure_callback(sensor_msgs::msg::FluidPressure msg) {
         this->pressure = msg.fluid_pressure; 
-    }
-
-    // updates position and velocity data from the smoothed odometry topic
-    void smoothed_odom_callback(nav_msgs::msg::Odometry msg) {
-        this->position_x = msg.pose.pose.position.x;
-        this->position_y = msg.pose.pose.position.y;
-        this->velocity_x = msg.twist.twist.linear.x;
-        this->velocity_y = msg.twist.twist.linear.y;
     }
 
     void init(seatrac_interfaces::msg::ModemRec* msg) {
@@ -281,13 +276,8 @@ public:
         VehicleStatus status_msg;
 
         //fill in x and y depending on whether we are using factor graph or DVL
-        if (this->use_factor_graph_) {
-            status_msg.x = this->position_x;
-            status_msg.y = this->position_y;            
-        } else {
-            status_msg.x = this->dvl_position_x;
-            status_msg.y = this->dvl_position_y;
-        }
+        status_msg.x = this->dvl_position_x;
+        status_msg.y = this->dvl_position_y;
         status_msg.waypoint = 0;
         status_msg.battery_voltage = this->battery_voltage;
         status_msg.battery_percentage = this->battery_percentage;
@@ -300,6 +290,7 @@ public:
         status_msg.depth = this->depth; 
         status_msg.x_vel = this->velocity_x;
         status_msg.y_vel = this->velocity_y;
+        status_msg.z_vel = this->velocity_z;
         status_msg.pressure = this->pressure;
         send_acoustic_message(base_station_beacon_id_, sizeof(status_msg), (uint8_t*)&status_msg);
     }
@@ -393,6 +384,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr pressure_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr depth_subscriber_;
     rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscriber_;
+    rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr dvl_vel_subscriber_;
 
     rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
     rclcpp::Publisher<frost_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
@@ -410,6 +402,7 @@ private:
     uint8_t position_z;
     uint8_t velocity_x;
     uint8_t velocity_y;
+    uint8_t velocity_z;
     uint8_t base_station_beacon_id_;
     uint8_t safety_mask;
     uint8_t battery_voltage;
@@ -431,7 +424,7 @@ private:
 
     int localization_queue_buffer;
     float collision_guard_wait_;
-    rclcpp::TimerBase::SharedPtr localization_response_timer_;
+    rclcpp::TimerBase::SharedPtr localization_queue_timer_;
     bool use_factor_graph_;
 
     rclcpp::Time last_modem_msg_time_;
