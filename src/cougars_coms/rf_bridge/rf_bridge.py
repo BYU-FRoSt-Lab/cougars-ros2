@@ -72,7 +72,7 @@ class RFBridge(Node):
         self.latest_depth = "NO_DATA"
         self.latest_pressure = "NO_DATA"
 
-        self.vehicle_id = self.declare_parameter('vehicle_id', 0).value
+        self.vehicle_id = self.declare_parameter('vehicle_ID', 0).value
         self.base_station_id = self.declare_parameter('base_station_id', 15).value
 
         # XBee configuration
