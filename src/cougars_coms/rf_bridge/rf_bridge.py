@@ -145,11 +145,11 @@ class RFBridge(Node):
 
     def safety_status_callback(self, msg):
         self.latest_safety_status = {
-            "depth_status": int(msg.depth_status),
-            "gps_status": int(msg.gps_status),
-            "modem_status": int(msg.modem_status),
-            "dvl_status": int(msg.dvl_status),
-            "emergency_status": int(msg.emergency_status)
+            "depth_status": msg.depth_status,
+            "gps_status": msg.gps_status,
+            "modem_status": msg.modem_status,
+            "dvl_status": msg.dvl_status,
+            "emergency_status": msg.emergency_status
         }
         self.get_logger().debug("Updated safety status data")
 
