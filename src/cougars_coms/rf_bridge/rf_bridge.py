@@ -176,6 +176,14 @@ class RFBridge(Node):
         }
         self.get_logger().debug("Updated DVL position data")
 
+    def depth_callback(self, msg):
+        if hasattr(msg, 'pose') and hasattr(msg.pose, 'pose'):
+            pose = msg.pose.pose
+            self.latest_depth = {
+                "depth": self.safe_numeric_convert(pose.position.z, float)
+            }
+            self.get_logger().debug("Updated depth data")
+
     def tx_callback(self, msg):
         try:
             message = msg.data
