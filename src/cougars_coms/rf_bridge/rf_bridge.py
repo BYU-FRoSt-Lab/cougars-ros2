@@ -136,48 +136,45 @@ class RFBridge(Node):
         # Thread-safe shutdown flag
         self.running = True
 
+    def safe_numeric_convert(self, value, convert_func=float):
+        """Safely convert ROS2 message fields to Python numeric types"""
+        try:
+            # Handle numpy/ROS2 integer types (int8, int16, etc.)
+            if hasattr(value, 'item'):
+                return convert_func(value.item())
+            # Handle regular Python types
+            else:
+                return convert_func(value)
+        except (ValueError, TypeError, AttributeError):
+            return convert_func(0)  # Default fallback value
+
     def battery_callback(self, msg):
         self.latest_battery = {
-            "voltage": float(msg.voltage),
-            "percentage": float(msg.percentage)
+            "voltage": self.safe_numeric_convert(msg.voltage, float),
+            "percentage": self.safe_numeric_convert(msg.percentage, float)
         }
         self.get_logger().debug("Updated battery data")
 
     def safety_status_callback(self, msg):
         self.latest_safety_status = {
-            "depth_status": msg.depth_status,
-            "gps_status": msg.gps_status,
-            "modem_status": msg.modem_status,
-            "dvl_status": msg.dvl_status,
-            "emergency_status": msg.emergency_status
+            "depth_status": self.safe_numeric_convert(msg.depth_status, int),
+            "gps_status": self.safe_numeric_convert(msg.gps_status, int),
+            "modem_status": self.safe_numeric_convert(msg.modem_status, int),
+            "dvl_status": self.safe_numeric_convert(msg.dvl_status, int),
+            "emergency_status": self.safe_numeric_convert(msg.emergency_status, int)
         }
         self.get_logger().debug("Updated safety status data")
 
     def dvl_callback(self, msg):
         self.latest_dvl_pos = {
-            "x": float(msg.position.x),
-            "y": float(msg.position.y),
-            "z": float(msg.position.z),
-            "roll": float(msg.roll),
-            "pitch": float(msg.pitch),
-            "yaw": float(msg.yaw)
+            "x": self.safe_numeric_convert(msg.position.x, float),
+            "y": self.safe_numeric_convert(msg.position.y, float),
+            "z": self.safe_numeric_convert(msg.position.z, float),
+            "roll": self.safe_numeric_convert(msg.roll, float),
+            "pitch": self.safe_numeric_convert(msg.pitch, float),
+            "yaw": self.safe_numeric_convert(msg.yaw, float)
         }
         self.get_logger().debug("Updated DVL position data")
-
-    def depth_callback(self, msg):
-        if hasattr(msg, 'pose') and hasattr(msg.pose, 'pose'):
-            pose = msg.pose.pose
-            self.latest_depth = {
-                "depth": float(pose.position.z),
-            }
-            self.get_logger().debug("Updated depth data")
-
-    def pressure_callback(self, msg):
-        if hasattr(msg, 'fluid_pressure'):
-            self.latest_pressure = {"pressure": float(msg.fluid_pressure)}
-            self.get_logger().debug(f"Updated pressure data: {self.latest_pressure}")
-        else:
-            self.get_logger().error("Received message without fluid_pressure field in pressure_callback")
 
     def tx_callback(self, msg):
         try:
