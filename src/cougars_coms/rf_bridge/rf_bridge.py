@@ -158,9 +158,9 @@ class RFBridge(Node):
             "x": float(msg.position.x),
             "y": float(msg.position.y),
             "z": float(msg.position.z),
-            "roll": float(msg.orientation.x),
-            "pitch": float(msg.orientation.y),
-            "yaw": float(msg.orientation.z)
+            "roll": float(msg.roll),
+            "pitch": float(msg.pitch),
+            "yaw": float(msg.yaw)
         }
         self.get_logger().debug("Updated DVL position data")
 
