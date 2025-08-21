@@ -228,12 +228,11 @@ class RFBridge(Node):
         try:
             payload = xbee_message.data.decode('utf-8', errors='replace')
             return_address = xbee_message.remote_device.get_64bit_addr()
-            self.get_logger().info(f"Received from {return_address}: {payload}")
+            self.get_logger().debug(f"Received from {return_address}: {payload}")
             
             msg = String()
             msg.data = payload
             self.publisher.publish(msg)
-            self.get_logger().info(f"{payload}")
             if payload == "STATUS":
                 response = self.get_all_status_data()
                 self.send_message(response, return_address)
@@ -242,7 +241,7 @@ class RFBridge(Node):
             elif payload == "PING":
                 response = {"message": "PING", "src_id": self.vehicle_id}
                 self.send_message(json.dumps(response), return_address)
-                self.get_logger().info(f"Received PING, responding with PING")
+                self.get_logger().debug(f"Received PING, responding with PING")
             elif payload == "E_KILL":
                 self.kill_thruster()
             elif payload == "INIT":
