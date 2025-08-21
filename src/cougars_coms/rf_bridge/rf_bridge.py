@@ -203,7 +203,7 @@ class RFBridge(Node):
         try:
             remote_device = RemoteXBeeDevice(self.device, address)
             self.device.send_data(remote_device, msg)
-            self.get_logger().info(f"Sent via XBee: {msg}")
+            self.get_logger().debug(f"Sent via XBee: {msg}")
         except TransmitException as e:
             self.get_logger().error(f"XBee transmission error - TransmitException: {e}")
             self.get_logger().error(traceback.format_exc())
