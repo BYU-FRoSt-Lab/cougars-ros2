@@ -183,6 +183,12 @@ class RFBridge(Node):
                 "depth": self.safe_numeric_convert(pose.position.z, float)
             }
             self.get_logger().debug("Updated depth data")
+    
+    def pressure_callback(self, msg):
+        self.latest_pressure = {
+            "pressure": self.safe_numeric_convert(msg.fluid_pressure, float),
+        }
+        self.get_logger().debug("Updated pressure data")
 
     def tx_callback(self, msg):
         try:
