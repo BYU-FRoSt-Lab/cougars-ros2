@@ -9,7 +9,7 @@ from sensor_msgs.msg import BatteryState, FluidPressure
 from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from dvl_msgs.msg import DVLDR
 from std_srvs.srv import SetBool
-from frost_interfaces.msg import SystemControl
+from frost_interfaces.msg import SystemControl, SystemStatus
 
 from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
 from digi.xbee.exception import TransmitException
