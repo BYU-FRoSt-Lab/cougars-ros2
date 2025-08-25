@@ -189,11 +189,11 @@ class RFBridge(Node):
         data_dict = {
             "src_id" : self.vehicle_id,
             "message" : "STATUS",
-            "safety": self.latest_safety_status,
-            "dvl": self.latest_dvl_pos,
-            "bat": self.latest_battery,
-            "dep": self.latest_depth,
-            "pres": self.latest_pressure,
+            "s": self.latest_safety_status,
+            "dv": self.latest_dvl_pos,
+            "b": self.latest_battery,
+            "d": self.latest_depth,
+            "p": self.latest_pressure,
         }
         data_dict = {k: v for k, v in data_dict.items() if v and v != "NO_DATA"}
         return json.dumps(data_dict, separators=(',', ':'))
