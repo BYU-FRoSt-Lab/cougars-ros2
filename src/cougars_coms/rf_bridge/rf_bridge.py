@@ -9,6 +9,7 @@ from sensor_msgs.msg import BatteryState, FluidPressure
 from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from dvl_msgs.msg import DVLDR
 from std_srvs.srv import SetBool
+from std_msgs.msg import Bool
 from frost_interfaces.msg import SystemControl, SystemStatus
 
 from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
@@ -21,32 +22,6 @@ import traceback
 class RFBridge(Node):
     def __init__(self):
         super().__init__('rf_bridge')
-
-        # Namespace logic not needed if you use the launch file
-
-        # vehicle_ns = ''
-        # try:
-        #     params = self.get_node_parameters_interface().get_parameter_overrides()
-        #     vehicle_namespaces = [key.split('.')[0] for key in params.keys()
-        #                           if key.startswith('coug') and not key.startswith('/**')]
-        #     if vehicle_namespaces:
-        #         vehicle_ns = vehicle_namespaces[0]
-        #         self.get_logger().info(f"Found vehicle namespace from params: {vehicle_ns}")
-        # except Exception as e:
-        #     self.get_logger().debug(f"Couldn't get namespace from parameters: {str(e)}")
-        # if not vehicle_ns:
-        #     node_namespace = self.get_namespace()
-        #     if node_namespace and node_namespace != '/':
-        #         vehicle_ns = node_namespace.strip('/')
-        #         # self.get_logger().info(f"Using parent namespace: {vehicle_ns}")
-        # if not vehicle_ns:
-        #     vehicle_ns = self.declare_parameter('namespace', '').value
-        #     if vehicle_ns:
-        #         self.get_logger().info(f"Using explicitly provided namespace: {vehicle_ns}")
-        # self.namespace = vehicle_ns.strip('/')
-        # if self.namespace and not self.namespace.endswith('/'):
-        #     self.namespace += '/'
-        # # self.get_logger().info(f"Final vehicle namespace: '{self.namespace}'")
 
         # Debug mode
         self.debug_mode = self.declare_parameter('debug_mode', False).value
@@ -76,7 +51,7 @@ class RFBridge(Node):
         self.base_station_id = self.declare_parameter('base_station_id', 15).value
 
         # XBee configuration
-        self.xbee_port = self.declare_parameter('xbee_port', '/dev/ttyUSB0').value
+        self.xbee_port = self.declare_parameter('xbee_port', '/dev/frost/frost_xbee_radio').value
         self.xbee_baud = self.declare_parameter('xbee_baud', 9600).value
         self.device = XBeeDevice(self.xbee_port, self.xbee_baud)
         try:
@@ -151,17 +126,16 @@ class RFBridge(Node):
     def battery_callback(self, msg):
         self.latest_battery = {
             "voltage": self.safe_numeric_convert(msg.voltage, float),
-            "percentage": self.safe_numeric_convert(msg.percentage, float)
         }
         self.get_logger().debug("Updated battery data")
 
     def safety_status_callback(self, msg):
         self.latest_safety_status = {
-            "depth_status": self.safe_numeric_convert(msg.depth_status, int),
-            "gps_status": self.safe_numeric_convert(msg.gps_status, int),
-            "modem_status": self.safe_numeric_convert(msg.modem_status, int),
-            "dvl_status": self.safe_numeric_convert(msg.dvl_status, int),
-            "emergency_status": self.safe_numeric_convert(msg.emergency_status, int)
+            "d_s": self.safe_numeric_convert(msg.depth_status, int),
+            "g_s": self.safe_numeric_convert(msg.gps_status, int),
+            "m_s": self.safe_numeric_convert(msg.modem_status, int),
+            "d_s": self.safe_numeric_convert(msg.dvl_status, int),
+            "e_s": self.safe_numeric_convert(msg.emergency_status, int)
         }
         self.get_logger().debug("Updated safety status data")
 
@@ -170,9 +144,9 @@ class RFBridge(Node):
             "x": self.safe_numeric_convert(msg.position.x, float),
             "y": self.safe_numeric_convert(msg.position.y, float),
             "z": self.safe_numeric_convert(msg.position.z, float),
-            "roll": self.safe_numeric_convert(msg.roll, float),
-            "pitch": self.safe_numeric_convert(msg.pitch, float),
-            "yaw": self.safe_numeric_convert(msg.yaw, float)
+            "r": self.safe_numeric_convert(msg.roll, float),
+            "p": self.safe_numeric_convert(msg.pitch, float),
+            "y": self.safe_numeric_convert(msg.yaw, float)
         }
         self.get_logger().debug("Updated DVL position data")
 
@@ -186,7 +160,7 @@ class RFBridge(Node):
     
     def pressure_callback(self, msg):
         self.latest_pressure = {
-            "pressure": self.safe_numeric_convert(msg.fluid_pressure, float),
+            "pres": self.safe_numeric_convert(msg.fluid_pressure, float),
         }
         self.get_logger().debug("Updated pressure data")
 
@@ -197,7 +171,7 @@ class RFBridge(Node):
             self.get_logger().debug(f"Sent via XBee: {message}")
         except Exception as e:
             self.get_logger().error(f"XBee transmission error: {str(e)}")
-            self.get_logger().error(traceback.format_exc())
+            # self.get_logger().error(traceback.format_exc())
 
     def send_message(self, msg, address):
         try:
@@ -206,20 +180,20 @@ class RFBridge(Node):
             self.get_logger().debug(f"Sent via XBee: {msg}")
         except TransmitException as e:
             self.get_logger().error(f"XBee transmission error - TransmitException: {e}")
-            self.get_logger().error(traceback.format_exc())
+            # self.get_logger().error(traceback.format_exc())
         except Exception as e:
             self.get_logger().error(f"XBee transmission error - Exception: {str(e)}")
-            self.get_logger().error(traceback.format_exc())
+            # self.get_logger().error(traceback.format_exc())
 
     def get_all_status_data(self):
         data_dict = {
             "src_id" : self.vehicle_id,
             "message" : "STATUS",
-            "safety_status": self.latest_safety_status,
-            "dvl_pos": self.latest_dvl_pos,
-            "battery_state": self.latest_battery,
-            "depth_data": self.latest_depth,
-            "pressure_data": self.latest_pressure,
+            "safety": self.latest_safety_status,
+            "dvl": self.latest_dvl_pos,
+            "bat": self.latest_battery,
+            "dep": self.latest_depth,
+            "pres": self.latest_pressure,
         }
         data_dict = {k: v for k, v in data_dict.items() if v and v != "NO_DATA"}
         return json.dumps(data_dict, separators=(',', ':'))
@@ -233,50 +207,68 @@ class RFBridge(Node):
             msg = String()
             msg.data = payload
             self.publisher.publish(msg)
-            if payload == "STATUS":
+
+            try:
+                data = json.loads(payload)
+            except json.JSONDecodeError:
+                data = payload  # If JSON decoding fails, treat payload as a string
+
+            if isinstance(data, dict):
+                message_type = data.get("message")
+            else:
+                message_type = data
+
+            self.get_logger().debug(f"Published message: {payload}")
+            if message_type == "STATUS":
                 response = self.get_all_status_data()
                 self.send_message(response, return_address)
                 self.get_logger().debug(f"Received STATUS, responding with sensor data")
                 self.get_logger().debug(f"Status response: {response}")
-            elif payload == "PING":
+            elif message_type == "PING":
                 response = {"message": "PING", "src_id": self.vehicle_id}
                 self.send_message(json.dumps(response), return_address)
                 self.get_logger().debug(f"Received PING, responding with PING")
-            elif payload == "E_KILL":
-                self.kill_thruster()
-            elif payload == "INIT":
-                self.init_vehicle(payload)
+            elif message_type == "E_KILL":
+                self.kill_thruster(return_address)
+            elif message_type == "INIT":
+                self.get_logger().info(f"Received INIT, with message {data}")   
+                self.init_vehicle(data)
         except Exception as e:
             self.get_logger().error(f"Error in data_receive_callback: {e}")
-            self.get_logger().error(traceback.format_exc())
+            # self.get_logger().error(traceback.format_exc())
 
     
     def init_vehicle(self, msg):
         init_msg = SystemControl()
-        init_msg.start = msg.start
-        init_msg.rosbag_flag = msg.rosbag_flag
-        init_msg.rosbag_prefix = msg.rosbag_prefix
-        init_msg.thruster_arm = msg.thruster_arm
-        init_msg.dvl_acoustic = msg.dvl_acoustic
+        init_msg.start = Bool(data=msg["start"])
+        init_msg.rosbag_flag = Bool(data=msg["rosbag_flag"])
+        init_msg.rosbag_prefix = msg["rosbag_prefix"]
+        init_msg.thruster_arm = Bool(data=msg["thruster_arm"])
+        init_msg.dvl_acoustics = Bool(data=msg["dvl_acoustics"])
         self.init_publisher.publish(init_msg)
         self.get_logger().info(f"Received INIT, published to init topic")
-        self.device.send_data_broadcast("INIT_ACK")
+        self.device.send_data_broadcast(
+                json.dumps({
+                    "src_id": self.vehicle_id,
+                    "message": "INIT"
+                })
+        )
 
     
-    def kill_thruster(self):
+    def kill_thruster(self, return_address):
         self.get_logger().info("Received kill command from base station")
         request = SetBool.Request()
         request.data = False
 
-        while not self.thruster_client.wait_for_service(timeout_sec=1.0):
+        while not self.e_kill_client.wait_for_service(timeout_sec=1.0):
             if not rclpy.ok():
-                self.get_logger().error("Interrupted while waiting for the arm_thruster service. Exiting.")
+                self.get_logger().error("Interrupted while waiting for the e_kill service. Exiting.")
                 return
-            self.get_logger().info("arm_thruster service not available, waiting again...")
+            self.get_logger().info("e_kill service not available, waiting again...")
 
-        future = self.thruster_client.call_async(request)
+        future = self.e_kill_client.call_async(request)
 
-        def callback(fut):
+        def callback(fut, return_address):
             try:
                 response = fut.result()
                 if response.success:
@@ -290,13 +282,12 @@ class RFBridge(Node):
                     "success": response.success
                 }
                 msg = json.dumps(msg_dict)
-                self.send_message(msg)
+                self.send_message(msg, return_address)
 
             except Exception as e:
                 self.get_logger().error(f"Error while trying to deactivate thruster: {str(e)}")
 
-        future.add_done_callback(callback)
-
+        future.add_done_callback(lambda fut: callback(fut, return_address))
 
     def destroy_node(self):
         self.running = False
