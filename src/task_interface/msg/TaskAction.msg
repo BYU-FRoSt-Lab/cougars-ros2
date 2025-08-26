@@ -1,0 +1,10 @@
+# TaskAction.msg
+int32 COMPLETE=0
+int32 CANCLETASK=1
+int32 GETTASK=2
+int32 GETTASKLIST=3
+int32 OVERRIDE=4
+int32 APPEND=5
+int32 INSERT=6
+int32 value
+
