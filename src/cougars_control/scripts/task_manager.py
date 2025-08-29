@@ -51,8 +51,8 @@ class TaskManagerNode(Node):
             case TaskAction.CANCLETASK:
                 response.success = self.task_manager.cancel_task(request.task_index)
             case TaskAction.GETTASK:
-                response.tasktask = self.task_manager.get_task(request.task_index)
-                if task:
+                response.task = self.task_manager.get_task(request.task_index)
+                if response.task:
                     response.success = True
                 else:
                     response.success = False
