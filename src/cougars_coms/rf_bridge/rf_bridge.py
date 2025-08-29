@@ -185,8 +185,9 @@ class RFBridge(Node):
             self.device.send_data_broadcast(message)
             self.get_logger().debug(f"Sent via XBee: {message}")
         except Exception as e:
-            self.get_logger().error(f"XBee transmission error: {str(e)}")
+            # self.get_logger().error(f"XBee transmission error: {str(e)}")
             # self.get_logger().error(traceback.format_exc())
+            pass 
 
     def send_message(self, msg, address):
         try:
@@ -194,10 +195,12 @@ class RFBridge(Node):
             self.device.send_data(remote_device, msg)
             self.get_logger().debug(f"Sent via XBee: {msg}")
         except TransmitException as e:
-            self.get_logger().error(f"XBee transmission error - TransmitException: {e}")
+            pass
+            # self.get_logger().error(f"XBee transmission error - TransmitException: {e}")
             # self.get_logger().error(traceback.format_exc())
         except Exception as e:
-            self.get_logger().error(f"XBee transmission error - Exception: {str(e)}")
+            pass
+            # self.get_logger().error(f"XBee transmission error - Exception: {str(e)}")
             # self.get_logger().error(traceback.format_exc())
 
     def get_all_status_data(self):
@@ -440,7 +443,7 @@ class RFBridge(Node):
         """Process a received mission file"""
         try:
             # Copy mission file to the expected location
-            mission_file_path = Path("/home/frostlab/config/mission.yaml")
+            mission_file_path = Path("/home/frostlab/config/deploy_tmp/mission.yaml")
 
             shutil.copy2(received_mission_path, mission_file_path)
 
@@ -453,7 +456,7 @@ class RFBridge(Node):
         """Process a received fleet params file"""
         try:
             # Copy fleet params file to the expected location
-            fleet_params_path = Path("/home/frostlab/config/fleet_params.yaml")  # Adjust this path as needed for your system
+            fleet_params_path = Path("/home/frostlab/config/deploy_tmp/fleet_params.yaml")  # Adjust this path as needed for your system
 
             shutil.copy2(received_fleet_params_path, fleet_params_path)
 
@@ -466,7 +469,7 @@ class RFBridge(Node):
         """Process a received vehicle params file"""
         try:
             # Copy vehicle params file to the expected location
-            vehicle_params_path = Path("/tmp/vehicle_params.yaml")  # Adjust this path as needed for your system
+            vehicle_params_path = Path(f"/home/frostlab/config/deploy_tmp/coug{self.vehicle_id}_params.yaml")
 
             shutil.copy2(received_vehicle_params_path, vehicle_params_path)
 
