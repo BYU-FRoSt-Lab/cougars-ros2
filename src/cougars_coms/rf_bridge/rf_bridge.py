@@ -14,10 +14,15 @@ from frost_interfaces.msg import SystemControl, SystemStatus
 
 from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
 from digi.xbee.exception import TransmitException
+from pathlib import Path
 
 import json
 import threading
 import traceback
+import base64
+import os
+import time
+import shutil
 
 class RFBridge(Node):
     def __init__(self):
@@ -110,6 +115,16 @@ class RFBridge(Node):
 
         # Thread-safe shutdown flag
         self.running = True
+        
+        # File transfer state tracking
+        self.active_transfers = {}  # transfer_id -> transfer_info
+        self.file_chunks = {}       # transfer_id -> {chunk_num -> data}
+        self.received_files_dir = "/tmp/received_missions"  # Directory to save received files
+        os.makedirs(self.received_files_dir, exist_ok=True)
+
+        self.VEHICLE_PARAMS_FILE = f"coug{self.vehicle_id}params.yaml"
+        self.FLEET_PARAMS_FILE = "fleet_params.yaml"
+        self.MISSION_FILE = "mission.yaml"
 
     def safe_numeric_convert(self, value, convert_func=float):
         """Safely convert ROS2 message fields to Python numeric types"""
@@ -233,6 +248,12 @@ class RFBridge(Node):
             elif message_type == "INIT":
                 self.get_logger().info(f"Received INIT, with message {data}")   
                 self.init_vehicle(data)
+            elif message_type == "FILE_START":
+                self.handle_file_start(data, return_address)
+            elif message_type == "FILE_CHUNK":
+                self.handle_file_chunk(data, return_address)
+            elif message_type == "FILE_END":
+                self.handle_file_end(data, return_address)
         except Exception as e:
             self.get_logger().error(f"Error in data_receive_callback: {e}")
             # self.get_logger().error(traceback.format_exc())
@@ -288,6 +309,171 @@ class RFBridge(Node):
                 self.get_logger().error(f"Error while trying to deactivate thruster: {str(e)}")
 
         future.add_done_callback(lambda fut: callback(fut, return_address))
+
+    def handle_file_start(self, data, sender_address):
+        """Handle FILE_START message to initialize file transfer"""
+        try:
+            transfer_id = data.get("transfer_id")
+            filename = data.get("filename")
+            total_chunks = data.get("total_chunks")
+            file_size = data.get("file_size")
+            
+            self.get_logger().info(f"Starting file transfer: {filename} ({file_size} bytes, {total_chunks} chunks)")
+            
+            # Initialize transfer state
+            self.active_transfers[transfer_id] = {
+                "filename": filename,
+                "total_chunks": total_chunks,
+                "file_size": file_size,
+                "sender_address": sender_address,
+                "received_chunks": 0,
+                "start_time": time.time()
+            }
+            
+            # Initialize chunk storage
+            self.file_chunks[transfer_id] = {}
+            
+        except Exception as e:
+            self.get_logger().error(f"Error handling FILE_START: {e}")
+            self.send_file_ack(sender_address, "error", f"Failed to initialize transfer: {str(e)}")
+
+    def handle_file_chunk(self, data, sender_address):
+        """Handle FILE_CHUNK message to receive file data"""
+        try:
+            transfer_id = data.get("transfer_id")
+            chunk_num = data.get("chunk_num")
+            chunk_data = data.get("data")
+            
+            if transfer_id not in self.active_transfers:
+                self.get_logger().warn(f"Received chunk for unknown transfer {transfer_id}")
+                return
+            
+            # Decode base64 data
+            chunk_bytes = base64.b64decode(chunk_data)
+            
+            # Store chunk
+            self.file_chunks[transfer_id][chunk_num] = chunk_bytes
+            self.active_transfers[transfer_id]["received_chunks"] += 1
+            
+            received = self.active_transfers[transfer_id]["received_chunks"]
+            total = self.active_transfers[transfer_id]["total_chunks"]
+            
+            self.get_logger().debug(f"Received chunk {chunk_num + 1}/{total} for transfer {transfer_id}")
+            
+            # Check if we have all chunks
+            if received == total:
+                self.get_logger().info(f"All chunks received for transfer {transfer_id}")
+                
+        except Exception as e:
+            self.get_logger().error(f"Error handling FILE_CHUNK: {e}")
+            self.send_file_ack(sender_address, "error", f"Failed to process chunk: {str(e)}")
+
+    def handle_file_end(self, data, sender_address):
+        """Handle FILE_END message to finalize file transfer"""
+        try:
+            transfer_id = data.get("transfer_id")
+            filename = data.get("filename")
+            
+            if transfer_id not in self.active_transfers:
+                self.get_logger().warn(f"Received FILE_END for unknown transfer {transfer_id}")
+                return
+            
+            transfer_info = self.active_transfers[transfer_id]
+            
+            # Check if we have all chunks
+            if len(self.file_chunks[transfer_id]) != transfer_info["total_chunks"]:
+                missing_chunks = transfer_info["total_chunks"] - len(self.file_chunks[transfer_id])
+                error_msg = f"Missing {missing_chunks} chunks"
+                self.get_logger().error(error_msg)
+                self.send_file_ack(sender_address, "error", error_msg)
+                return
+            
+            # Reassemble file
+            file_data = bytearray()
+            for chunk_num in sorted(self.file_chunks[transfer_id].keys()):
+                file_data.extend(self.file_chunks[transfer_id][chunk_num])
+            
+            # Save file
+            file_path = os.path.join(self.received_files_dir, filename)
+            with open(file_path, 'wb') as f:
+                f.write(file_data)
+            
+            elapsed_time = time.time() - transfer_info["start_time"]
+            self.get_logger().info(f"File transfer complete: {filename} saved to {file_path} ({len(file_data)} bytes in {elapsed_time:.2f}s)")
+            
+            # Send success acknowledgment
+            self.send_file_ack(sender_address, "complete", transfer_id)
+            
+            # Process the mission file if it's a mission
+            if filename == self.MISSION_FILE:
+                self.process_received_mission(file_path)
+            elif filename == self.FLEET_PARAMS_FILE:
+                self.process_received_fleet_params(file_path)
+            elif filename == self.VEHICLE_PARAMS_FILE:
+                self.process_received_vehicle_params(file_path)
+            else:
+                self.get_logger().info(f"Received unrecognized file: {filename}, saved to {file_path}")
+
+            # Clean up transfer state
+            del self.active_transfers[transfer_id]
+            del self.file_chunks[transfer_id]
+            
+        except Exception as e:
+            self.get_logger().error(f"Error handling FILE_END: {e}")
+            self.send_file_ack(sender_address, "error", f"Failed to finalize transfer: {str(e)}")
+
+    def send_file_ack(self, sender_address, status, transfer_id_or_error):
+        """Send file transfer acknowledgment to base station"""
+        try:
+            ack_msg = {
+                "message": "FILE_ACK",
+                "src_id": self.vehicle_id,
+                "status": status,
+                "transfer_id": transfer_id_or_error if status == "complete" else None,
+                "error": transfer_id_or_error if status == "error" else None
+            }
+            self.send_message(json.dumps(ack_msg), sender_address)
+        except Exception as e:
+            self.get_logger().error(f"Failed to send file ACK: {e}")
+
+    def process_received_mission(self, received_mission_path):
+        """Process a received mission file"""
+        try:
+            # Copy mission file to the expected location
+            mission_file_path = Path("/home/frostlab/config/mission.yaml")
+
+            shutil.copy2(received_mission_path, mission_file_path)
+
+            self.get_logger().info(f"Mission file processed and copied to {mission_file_path}")
+            
+        except Exception as e:
+            self.get_logger().error(f"Error processing mission file: {e}")
+
+    def process_received_fleet_params(self, received_fleet_params_path):
+        """Process a received fleet params file"""
+        try:
+            # Copy fleet params file to the expected location
+            fleet_params_path = Path("/home/frostlab/config/fleet_params.yaml")  # Adjust this path as needed for your system
+
+            shutil.copy2(received_fleet_params_path, fleet_params_path)
+
+            self.get_logger().info(f"Fleet params file processed and copied to {fleet_params_path}")
+
+        except Exception as e:
+            self.get_logger().error(f"Error processing fleet params file: {e}")
+
+    def process_received_vehicle_params(self, received_vehicle_params_path):
+        """Process a received vehicle params file"""
+        try:
+            # Copy vehicle params file to the expected location
+            vehicle_params_path = Path("/tmp/vehicle_params.yaml")  # Adjust this path as needed for your system
+
+            shutil.copy2(received_vehicle_params_path, vehicle_params_path)
+
+            self.get_logger().info(f"Vehicle params file processed and copied to {vehicle_params_path}")
+
+        except Exception as e:
+            self.get_logger().error(f"Error processing vehicle params file: {e}")
 
     def destroy_node(self):
         self.running = False
