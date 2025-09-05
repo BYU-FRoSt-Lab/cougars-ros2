@@ -57,7 +57,7 @@ def generate_launch_description():
     # Serial Teensy connection
     launch_actions.append(
         launch_ros.actions.Node(
-        package='fin_sub_cpp', 
+        package='cougars_control', 
         executable='mc_serial_node', 
         namespace=LaunchConfiguration('namespace'),
         output='log',
