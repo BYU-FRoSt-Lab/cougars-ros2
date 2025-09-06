@@ -64,7 +64,7 @@ def generate_launch_description():
             output=output,
         ),
         launch_ros.actions.Node(
-            package='mavlink_bridge',
+            package='cougars_localization',
             executable='mavlink_bridge',
             parameters=[param_file],
             namespace=namespace,
