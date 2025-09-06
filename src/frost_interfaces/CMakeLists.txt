@@ -23,6 +23,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LeakStatus.msg"
   "msg/LocalizationData.msg"
   "msg/UCommand.msg"
+  "msg/VehicleStatus.msg"
   "srv/EmergencyStop.srv"
   "msg/ControlDebug.msg"
   "msg/ControlsDebug.msg"
