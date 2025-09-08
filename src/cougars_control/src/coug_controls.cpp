@@ -231,7 +231,7 @@ public:
      * This subscriber subscribes to the "reload_parameters" topic. It uses the
      * Empty message type.
      */
-    reload_parameters_subscriber_ = this->create_subscriber<std_msgs::msg::Empty>(
+    reload_parameters_subscription_ = this->create_subscription<std_msgs::msg::Empty>(
             "reload_parameters", 10,
             std::bind(&CougControls::reload_parameters_callback, this, _1));
 
@@ -783,6 +783,8 @@ private:
       actual_orientation_subscription_;
   rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr subscriber_dvl_data;
   rclcpp::Subscription<frost_interfaces::msg::SystemControl>::SharedPtr system_control_sub_;
+  rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr
+      reload_parameters_subscription_;
 
   rclcpp::Publisher<frost_interfaces::msg::ControlsDebug>::SharedPtr debug_controls_pub_;
 
