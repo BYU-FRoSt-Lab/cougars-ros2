@@ -9,7 +9,7 @@ from sensor_msgs.msg import BatteryState, FluidPressure
 from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStamped
 from dvl_msgs.msg import DVLDR
 from std_srvs.srv import SetBool
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Empty
 from frost_interfaces.msg import SystemControl, SystemStatus
 
 from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
@@ -69,6 +69,8 @@ class RFBridge(Node):
         # ROS publishers and subscribers
         self.publisher = self.create_publisher(String, 'rf_received', 10)
         self.init_publisher = self.create_publisher(SystemControl, 'system/status', 10)
+
+        self.reload_params_publisher = self.create_publisher(Empty, 'reload_parameters', 10)
 
         self.e_kill_client = self.create_client(SetBool, "arm_thruster")
 
@@ -469,8 +471,8 @@ class RFBridge(Node):
             vehicle_params_path = Path("/tmp/vehicle_params.yaml")  # Adjust this path as needed for your system
 
             shutil.copy2(received_vehicle_params_path, vehicle_params_path)
-
-            self.get_logger().info(f"Vehicle params file processed and copied to {vehicle_params_path}")
+            self.reload_params_publisher.publish(Empty())
+            self.get_logger().info(f"Vehicle params file processed and copied to {vehicle_params_path}. Params were reloaded.")
 
         except Exception as e:
             self.get_logger().error(f"Error processing vehicle params file: {e}")

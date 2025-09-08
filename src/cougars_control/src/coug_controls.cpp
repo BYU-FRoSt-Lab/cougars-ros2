@@ -5,6 +5,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/Dense>
 #include <cmath>  // For atan2, M_PI, fmin, fmax
+#include <cstdlib> // For std::system
 
 #include "pid.cpp"
 #include "actuator.cpp"
@@ -224,6 +225,16 @@ public:
             std::bind(&CougControls::handle_service, this, std::placeholders::_1, std::placeholders::_2));
 
     /**
+     * @brief Reload parameters subscriber.
+     *
+     * This subscriber subscribes to the "reload_parameters" topic. It uses the
+     * Empty message type.
+     */
+    reload_parameters_subscriber_ = this->create_subscriber<std_msgs::msg::Empty>(
+            "reload_parameters", 10,
+            std::bind(&CougControls::reload_parameters_callback, this, _1));
+
+      /**
      * @brief Desired depth subscriber.
      *
      * This subscriber subscribes to the "desired_depth" topic. It uses the
@@ -356,6 +367,26 @@ private:
     std::cout << "Heading Controller Values -";
     myHeadingPID.print_values();
 
+  }
+
+  void reload_parameters_callback(const std_msgs::msg::Empty::SharedPtr msg){
+    (void)msg; // Unused parameter
+    RCLCPP_INFO(this->get_logger(), "Reloading parameters using bash script...");
+    
+    // Execute the bash script to reload parameters
+    std::string script_path = "ros2_ws/reload_params.sh";  // Adjust path as needed
+    
+    RCLCPP_INFO(this->get_logger(), "Executing command: %s", command.c_str());
+    
+    int result = std::system(command.c_str());
+    
+    if (result == 0) {
+        RCLCPP_INFO(this->get_logger(), "Bash script executed successfully, updating internal parameters...");
+        update_parameters();
+        RCLCPP_INFO(this->get_logger(), "Parameters reloaded successfully.");
+    } else {
+        RCLCPP_ERROR(this->get_logger(), "Failed to execute bash script (exit code: %d)", result);
+    }
   }
   
   
