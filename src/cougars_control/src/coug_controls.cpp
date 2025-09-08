@@ -375,7 +375,7 @@ private:
     RCLCPP_INFO(this->get_logger(), "Reloading parameters using bash script...");
     
     // Execute the bash script to reload parameters
-    std::string script_path = "ros2_ws/reload_params.sh";  // Adjust path as needed
+    std::string command = "ros2_ws/reload_params.sh";  // Adjust path as needed
     
     RCLCPP_INFO(this->get_logger(), "Executing command: %s", command.c_str());
     
