@@ -12,7 +12,9 @@
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
+#include "dvl_msgs/msg/dvl.hpp"
 #include "cougars_interfaces/msg/system_status.hpp"
+#include "cougars_interfaces/msg/system_control.hpp"
 #include "cougars_interfaces/msg/localization_data.hpp"
 #include "cougars_interfaces/msg/localization_data_short.hpp"
 
@@ -117,7 +119,7 @@ public:
         );
 
         // publisher to start mission
-        this->init_publisher_ = this->create_publisher<frost_interfaces::msg::SystemControl>(
+        this->init_publisher_ = this->create_publisher<cougars_interfaces::msg::SystemControl>(
             "system/status", 10
         );
 
@@ -191,7 +193,7 @@ public:
 
     void init(seatrac_interfaces::msg::ModemRec* msg) {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Initializing system.");
-        frost_interfaces::msg::SystemControl control_msg;
+        cougars_interfaces::msg::SystemControl control_msg;
         const Init* msg_recieved = reinterpret_cast<const Init*>(msg->packet_data.data());
         control_msg.start.data = (msg_recieved->init_bitmask & 0x01) != 0;
         control_msg.rosbag_flag.data = (msg_recieved->init_bitmask & 0x02) != 0;
@@ -386,7 +388,7 @@ private:
     rclcpp::Publisher<cougars_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
 
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
-    rclcpp::Publisher<frost_interfaces::msg::SystemControl>::SharedPtr init_publisher_;
+    rclcpp::Publisher<cougars_interfaces::msg::SystemControl>::SharedPtr init_publisher_;
 
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_client_;
