@@ -13,6 +13,9 @@ on:
     branches: [ "main" ]
 jobs:
   run-lint:
+    permissions:
+      contents: read
+      statuses: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
