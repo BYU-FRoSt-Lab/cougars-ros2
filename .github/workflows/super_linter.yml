@@ -24,16 +24,17 @@ jobs:
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
-
+      - name: Load super-linter configuration
+        # Use grep inverse matching to exclude eventual comments in the .env file
+        # because the GitHub Actions command to set environment variables doesn't
+        # support comments.
+        # Ref: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-environment-variable
+        run: grep -v '^#' .github/super-linter.env >> "$GITHUB_ENV"
       - name: Lint Code Base
         uses: github/super-linter@v4
         env:
-          VALIDATE_ALL_CODEBASE: false
-          FIX_PYTHON_BLACK: true
-          FIX_CLANG_FORMAT: true
-          FIX_YAML_PRETTIER: true
-          DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #Settings set by super_linter.env
       - name: Commit and push linting fixes
         # Run only on:
         # - Pull requests
