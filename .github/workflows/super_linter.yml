@@ -8,10 +8,10 @@ name: Lint Code Base
 
 on:
   push:
-  #branches to enforce on
-    branches: [ "main" , "dev" ] 
+    #branches to enforce on
+    branches: ["main", "dev"]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: ["main", "dev"]
 jobs:
   run-lint:
     permissions:
@@ -29,7 +29,7 @@ jobs:
         # because the GitHub Actions command to set environment variables doesn't
         # support comments.
         # Ref: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-environment-variable
-        run: grep -v '^#' .github/super-linter.env >> "$GITHUB_ENV"
+        run: grep -v '^#' .github/super_linter.env >> "$GITHUB_ENV"
       - name: Lint Code Base
         uses: github/super-linter@v4
         env:
