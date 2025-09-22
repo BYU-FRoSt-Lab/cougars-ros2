@@ -235,18 +235,22 @@ class RFBridge(Node):
                 self.get_logger().info(f"Received PING, responding with PING")
             elif payload == "E_KILL":
                 self.get_logger().info(f"Received E_KILL message")
-            #TODO: when Braden adds the init system, update this
+                self.kill_thruster()
             elif payload == "INIT":
                 init_msg = String()
                 init_msg.data = "INIT_COMMAND"
                 self.init_publisher.publish(init_msg)
                 self.get_logger().info(f"Received INIT, published to init topic")
                 self.device.send_data_broadcast("INIT_ACK")
+            elif payload == "KEY_CONTROL":
+                self.get_logger().info(f"Received KEY_CONTROL command")
+                self.handle_key_control()
         except Exception as e:
             self.get_logger().error(f"Error in data_receive_callback: {e}")
             self.get_logger().error(traceback.format_exc())
 
-    
+    def handle_key_control(self):
+        
 
 
     
