@@ -13,10 +13,10 @@
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "dvl_msgs/msg/dvldr.hpp"
 #include "dvl_msgs/msg/dvl.hpp"
-#include "frost_interfaces/msg/system_status.hpp"
-#include "frost_interfaces/msg/localization_data.hpp"
-#include "frost_interfaces/msg/localization_data_short.hpp"
-#include "frost_interfaces/msg/system_control.hpp"
+#include "cougars_interfaces/msg/system_status.hpp"
+#include "cougars_interfaces/msg/localization_data.hpp"
+#include "cougars_interfaces/msg/localization_data_short.hpp"
+#include "cougars_interfaces/msg/system_control.hpp"
 
 #include <seatrac_driver/SeatracEnums.h>
 
@@ -119,7 +119,7 @@ public:
         );
 
         // publisher to start mission
-        this->init_publisher_ = this->create_publisher<frost_interfaces::msg::SystemControl>(
+        this->init_publisher_ = this->create_publisher<cougars_interfaces::msg::SystemControl>(
             "system/status", 10
         );
 
@@ -193,7 +193,7 @@ public:
 
     void init(seatrac_interfaces::msg::ModemRec* msg) {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Initializing system.");
-        frost_interfaces::msg::SystemControl control_msg;
+        cougars_interfaces::msg::SystemControl control_msg;
         const Init* msg_recieved = reinterpret_cast<const Init*>(msg->packet_data.data());
         control_msg.start.data = (msg_recieved->init_bitmask & 0x01) != 0;
         control_msg.rosbag_flag.data = (msg_recieved->init_bitmask & 0x02) != 0;
@@ -332,7 +332,7 @@ public:
    void record_range_and_azimuth(seatrac_interfaces::msg::ModemRec msg) {
         if (msg.includes_range && msg.includes_usbl) {
             RCLCPP_INFO(this->get_logger(), "Vehicle %d:  Range distance: %d, Azimuth: %i, Elevation: %i, depth: %i", msg.src_id, msg.range_dist, msg.usbl_azimuth, msg.usbl_elevation, msg.position_depth);
-            frost_interfaces::msg::LocalizationDataShort localization_data_short;
+            cougars_interfaces::msg::LocalizationDataShort localization_data_short;
             localization_data_short.header.stamp = this->now();
             localization_data_short.vehicle_id = msg.src_id;
             localization_data_short.range = msg.range_dist;
@@ -384,10 +384,10 @@ private:
     rclcpp::Subscription<dvl_msgs::msg::DVLDR>::SharedPtr dvl_subscriber_;
     rclcpp::Subscription<dvl_msgs::msg::DVL>::SharedPtr dvl_vel_subscriber_;
 
-    rclcpp::Publisher<frost_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
-    rclcpp::Publisher<frost_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
+    rclcpp::Publisher<cougars_interfaces::msg::LocalizationData>::SharedPtr localization_data_publisher_;
+    rclcpp::Publisher<cougars_interfaces::msg::LocalizationDataShort>::SharedPtr localization_data_short_publisher_;
     rclcpp::Publisher<seatrac_interfaces::msg::ModemSend>::SharedPtr modem_publisher_;
-    rclcpp::Publisher<frost_interfaces::msg::SystemControl>::SharedPtr init_publisher_;
+    rclcpp::Publisher<cougars_interfaces::msg::SystemControl>::SharedPtr init_publisher_;
 
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr thruster_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr surface_client_;

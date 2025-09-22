@@ -10,9 +10,9 @@ from geometry_msgs.msg import TwistWithCovarianceStamped, PoseWithCovarianceStam
 from dvl_msgs.msg import DVLDR
 from std_srvs.srv import SetBool
 from std_msgs.msg import Bool
-from frost_interfaces.msg import SystemControl, SystemStatus
+from cougars_interfaces.msg import SystemControl, SystemStatus, UCommand
 
-from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice, XBee64BitAddress
+from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice
 from digi.xbee.exception import TransmitException
 from pathlib import Path
 
@@ -107,6 +107,8 @@ class RFBridge(Node):
             'pressure/data',
             self.pressure_callback,
             10)
+        
+        self.ucommand_pub = self.create_publisher(UCommand, 'ucommand', 10)
 
 
         # Register XBee data receive callback
@@ -257,7 +259,7 @@ class RFBridge(Node):
                 self.device.send_data_broadcast("INIT_ACK")
             elif payload == "KEY_CONTROL":
                 self.get_logger().info(f"Received KEY_CONTROL command")
-                self.handle_key_control()
+                self.handle_key_control(data)
             elif message_type == "FILE_START":
                 self.handle_file_start(data, return_address)
             elif message_type == "FILE_CHUNK":
@@ -268,8 +270,11 @@ class RFBridge(Node):
             self.get_logger().error(f"Error in data_receive_callback: {e}")
             # self.get_logger().error(traceback.format_exc())
 
-    def handle_key_control(self):
-        
+    def handle_key_control(self, msg):
+        ucommand_msg = UCommand()
+        ucommand_msg.fin = msg.get("fin", 0)
+        ucommand_msg.thr = msg.get("thr", 0)
+        self.ucommand_pub.publish(ucommand_msg)
 
     
     def init_vehicle(self, msg):
