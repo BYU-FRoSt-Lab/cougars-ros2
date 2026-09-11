@@ -70,7 +70,9 @@ def generate_launch_description():
         ],
         output='screen',
         emulate_tty=True,
-        condition=UnlessCondition(sim)
+        condition=UnlessCondition(sim),
+        remappings=[('odometry/global', 'gps/odom')]
+
     )
 
     vehicle_pinger_node = Node(

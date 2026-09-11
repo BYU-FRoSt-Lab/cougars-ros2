@@ -30,10 +30,38 @@
 #include <cougars_interfaces/msg/vehicle_setpoint.hpp>
 #include <cougars_interfaces/msg/system_control.hpp>
 #include <cougars_interfaces/msg/system_status.hpp>
+#include <cougars_interfaces/msg/waypoint_feedback.hpp>
+#include <cougars_interfaces/msg/mission_feedback.hpp>
 
 // Geometry Messages
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+
+// Geographic Messages
+#include <geographic_msgs/msg/route_network.hpp>
+#include <geographic_msgs/msg/way_point.hpp>
+#include <geographic_msgs/msg/geo_point.hpp>
+
+// SBG Messages
+#include <sbg_driver/msg/sbg_status.hpp>
+#include <sbg_driver/msg/sbg_utc_time.hpp>
+#include <sbg_driver/msg/sbg_imu_data.hpp>
+#include <sbg_driver/msg/sbg_mag.hpp>
+#include <sbg_driver/msg/sbg_mag_calib.hpp>
+#include <sbg_driver/msg/sbg_ekf_euler.hpp>
+#include <sbg_driver/msg/sbg_ekf_quat.hpp>
+#include <sbg_driver/msg/sbg_ekf_nav.hpp>
+#include <sbg_driver/msg/sbg_ekf_vel_body.hpp>
+#include <sbg_driver/msg/sbg_ekf_rot_accel.hpp>
+#include <sbg_driver/msg/sbg_ship_motion.hpp>
+#include <sbg_driver/msg/sbg_gps_vel.hpp>
+#include <sbg_driver/msg/sbg_gps_pos.hpp>
+#include <sbg_driver/msg/sbg_gps_hdt.hpp>
+#include <sbg_driver/msg/sbg_gps_raw.hpp>
+#include <sbg_driver/msg/sbg_odo_vel.hpp>
+#include <sbg_driver/msg/sbg_event.hpp>
+#include <sbg_driver/msg/sbg_air_data.hpp>
+#include <sbg_driver/msg/sbg_imu_short.hpp>
 
 // Other
 #include <std_msgs/msg/int32.hpp>
@@ -62,16 +90,18 @@ public:
         this->declare_parameter<bool>("system", true);
         this->declare_parameter<bool>("processed", true);
         this->declare_parameter<bool>("controls", true);
+        this->declare_parameter<bool>("sbg", true);
         this->declare_parameter<std::string>("bag_dir", home + "/bag/");
         this->declare_parameter<std::string>("mission_file_path", "");
         this->declare_parameter<std::string>("vehicle_params_file", home + "/config/agent/vehicle_params.yaml");
         this->declare_parameter<std::string>("fleet_params_file", home + "/config/fleet/fleet_params.yaml");
 
-        bool sensors, system, processed, controls;
+        bool sensors, system, processed, controls, sbg;
         this->get_parameter("sensors", sensors);
         this->get_parameter("system", system);
         this->get_parameter("processed", processed);
         this->get_parameter("controls", controls);
+        this->get_parameter("sbg", sbg);
 
         if (sensors) {
             // Sensor Data
@@ -113,6 +143,44 @@ public:
             subscribe_to_topic<cougars_interfaces::msg::ActuatorCommand>("control/u_cmd");
             subscribe_to_topic<cougars_interfaces::msg::ControlsDebug>("control/debug");
             subscribe_to_topic<cougars_interfaces::msg::VehicleSetpoint>("control/setpoint");
+
+            // Mission topics (cougars_nav)
+            subscribe_to_topic<geographic_msgs::msg::RouteNetwork>("mission");
+            subscribe_to_topic<geographic_msgs::msg::WayPoint>("waypoint");
+            subscribe_to_topic<cougars_interfaces::msg::WaypointFeedback>("waypoint_feedback");
+            subscribe_to_topic<cougars_interfaces::msg::MissionFeedback>("mission_feedback");
+            subscribe_to_topic<geographic_msgs::msg::GeoPoint>("/origin");
+            subscribe_to_topic<nav_msgs::msg::Odometry>("odometry/global");
+            subscribe_to_topic<cougars_interfaces::msg::VehicleSetpoint>("guidance/setpoint_raw");
+        }
+
+        if (sbg){
+            // SBG IMU/GNSS data
+            subscribe_to_topic<sensor_msgs::msg::Imu>("sbg/imu/data");
+            subscribe_to_topic<sbg_driver::msg::SbgStatus>("sbg/status");
+            subscribe_to_topic<sbg_driver::msg::SbgUtcTime>("sbg/utc_time");
+            subscribe_to_topic<sbg_driver::msg::SbgImuData>("sbg/imu_data");
+            subscribe_to_topic<sbg_driver::msg::SbgMag>("sbg/mag");
+            subscribe_to_topic<sbg_driver::msg::SbgMagCalib>("sbg/mag_calib");
+            subscribe_to_topic<sbg_driver::msg::SbgEkfEuler>("sbg/ekf_euler");
+            subscribe_to_topic<sbg_driver::msg::SbgEkfQuat>("sbg/ekf_quat");
+            subscribe_to_topic<sbg_driver::msg::SbgEkfNav>("sbg/ekf_nav");
+            subscribe_to_topic<sbg_driver::msg::SbgEkfVelBody>("sbg/ekf_vel_body");
+            subscribe_to_topic<sbg_driver::msg::SbgEkfRotAccel>("sbg/ekf_rot_accel_body");
+            subscribe_to_topic<sbg_driver::msg::SbgEkfRotAccel>("sbg/ekf_rot_accel_ned");
+            subscribe_to_topic<sbg_driver::msg::SbgShipMotion>("sbg/ship_motion");
+            subscribe_to_topic<sbg_driver::msg::SbgGpsVel>("sbg/gps_vel");
+            subscribe_to_topic<sbg_driver::msg::SbgGpsPos>("sbg/gps_pos");
+            subscribe_to_topic<sbg_driver::msg::SbgGpsHdt>("sbg/gps_hdt");
+            subscribe_to_topic<sbg_driver::msg::SbgGpsRaw>("sbg/gps_raw");
+            subscribe_to_topic<sbg_driver::msg::SbgOdoVel>("sbg/odo_vel");
+            subscribe_to_topic<sbg_driver::msg::SbgEvent>("sbg/eventA");
+            subscribe_to_topic<sbg_driver::msg::SbgEvent>("sbg/eventB");
+            subscribe_to_topic<sbg_driver::msg::SbgEvent>("sbg/eventC");
+            subscribe_to_topic<sbg_driver::msg::SbgEvent>("sbg/eventD");
+            subscribe_to_topic<sbg_driver::msg::SbgEvent>("sbg/eventE");
+            subscribe_to_topic<sbg_driver::msg::SbgAirData>("sbg/air_data");
+            subscribe_to_topic<sbg_driver::msg::SbgImuShort>("sbg/imu_short");
         }
 
     }
